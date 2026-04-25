@@ -1729,7 +1729,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function toggleLayer(id) {
   const el = document.getElementById(id);
-  const btn = el.querySelector('.cat-header');
+  const btn = el.querySelector('.layer-header');
   const isOpen = el.classList.contains('open');
   el.classList.toggle('open', !isOpen);
   btn.setAttribute('aria-expanded', String(!isOpen));
