@@ -1,0 +1,3666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subnet Topology Builder</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230F6E56'/%3E%3Ccircle cx='8' cy='16' r='4' fill='white' opacity='0.9'/%3E%3Ccircle cx='24' cy='8' r='4' fill='white' opacity='0.9'/%3E%3Ccircle cx='24' cy='24' r='4' fill='white' opacity='0.9'/%3E%3Cline x1='12' y1='16' x2='20' y2='10' stroke='white' stroke-width='1.5'/%3E%3Cline x1='12' y1='16' x2='20' y2='22' stroke='white' stroke-width='1.5'/%3E%3C/svg%3E">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#f8f7f4; --bg2:#ffffff; --bg3:#eeedea;
+  --text:#1a1a18; --text2:#6b6a65; --text3:#9e9d98;
+  --border:rgba(0,0,0,0.1); --border2:rgba(0,0,0,0.2);
+  --green:#0F6E56; --green-l:#E1F5EE; --green-m:#5DCAA5; --green-t:#085041;
+  --blue:#185FA5; --blue-l:#E6F1FB; --blue-m:#85B7EB; --blue-t:#0C447C;
+  --amber:#854F0B; --amber-l:#FAEEDA; --amber-m:#EF9F27;
+  --red:#A32D2D; --red-l:#FCEBEB;
+  --router-f:#EEF2FF; --router-s:#4338CA; --router-t:#312E81;
+  --transit-f:#FFF7ED; --transit-s:#C2410C; --transit-t:#7C2D12;
+  --r:8px; --hh:48px; --sw:292px; --pw:272px;
+}
+body { background:var(--bg); color:var(--text); font-family:-apple-system,"Helvetica Neue",sans-serif; font-size:13px; line-height:1.5; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+
+.hdr { height:var(--hh); display:flex; align-items:center; justify-content:space-between; padding:0 1rem; border-bottom:0.5px solid var(--border2); background:var(--bg2); flex-shrink:0; }
+.hl { display:flex; align-items:center; gap:10px; }
+.hi { width:28px; height:28px; background:var(--green); border-radius:6px; display:flex; align-items:center; justify-content:center; }
+.ht { font-size:14px; font-weight:500; }
+.hr { font-size:11px; color:var(--text3); display:flex; align-items:center; gap:6px; }
+.hla { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:5px; text-decoration:none; color:var(--text3); }
+.hla.brd { border:1.5px solid var(--border2); }
+.hla.fil { background:#0A66C2; color:white; }
+
+.ab { display:flex; flex:1; overflow:hidden; }
+.sb { width:var(--sw); background:var(--bg2); border-right:0.5px solid var(--border); display:flex; flex-direction:column; overflow-y:auto; flex-shrink:0; }
+.ss { padding:.8rem 1rem; border-bottom:0.5px solid var(--border); }
+.ss:last-child { border-bottom:none; flex:1; }
+.st { font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text3); margin-bottom:8px; margin:-0.8rem -1rem 8px; padding:6px 1rem; background:var(--bg3); border-bottom:0.5px solid var(--border); }
+.cw { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.ptb { background:var(--bg2); border-bottom:0.5px solid var(--border2); display:flex; align-items:center; gap:10px; padding:0 1rem; flex-shrink:0; height:44px; }
+.ptb label { font-size:11px; color:var(--text2); white-space:nowrap; margin-bottom:0; }
+.ptb select { width:auto; flex:1; min-width:100px; max-width:180px; font-size:11px; padding:4px 6px; }
+.ptb .btn { flex-shrink:0; }
+.ptb .tsep { width:0.5px; height:24px; background:var(--border2); margin:0 2px; }
+#pres-tb { font-size:11px; white-space:nowrap; color:var(--green-t); }
+.tb { height:38px; background:var(--bg2); border-bottom:0.5px solid var(--border); display:flex; align-items:center; gap:8px; padding:0 1rem; flex-shrink:0; }
+.tsep { width:0.5px; height:18px; background:var(--border2); margin:0 2px; }
+#cv { flex:1; display:block; background:#ffffff; }
+.rp { width:var(--pw); background:var(--bg2); border-left:0.5px solid var(--border); display:flex; flex-direction:column; overflow-y:auto; flex-shrink:0; }
+.ps { padding:.8rem 1rem; border-bottom:0.5px solid var(--border); }
+.ps:last-child { border-bottom:none; flex:1; }
+.pt { font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text3); margin-bottom:8px; margin:-0.8rem -1rem 8px; padding:6px 1rem; background:var(--bg3); border-bottom:0.5px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+
+input[type=text],input[type=number],select { width:100%; padding:5px 8px; border:0.5px solid var(--border2); border-radius:var(--r); background:var(--bg); color:var(--text); font-size:12px; font-family:inherit; outline:none; }
+input:focus,select:focus { border-color:var(--green-m); box-shadow:0 0 0 2px rgba(93,202,165,0.15); }
+input[type=range] { width:100%; accent-color:var(--green); }
+label { font-size:11px; color:var(--text2); display:block; margin-bottom:2px; }
+.f { margin-bottom:8px; } .f:last-child { margin-bottom:0; }
+.fr { display:flex; gap:6px; } .fr .f { flex:1; }
+
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:5px 11px; border-radius:var(--r); border:0.5px solid var(--border2); background:var(--bg2); color:var(--text); font-size:12px; cursor:pointer; font-family:inherit; transition:background .15s; white-space:nowrap; }
+.btn:hover { background:var(--bg3); }
+.btn.pri { background:var(--green); color:white; border-color:var(--green); }
+.btn.pri:hover { background:var(--green-t); }
+.btn.sec { background:var(--router-f); color:var(--router-t); border-color:var(--router-s); }
+.btn.sec:hover { background:#dde1ff; }
+.btn.sm { padding:3px 8px; font-size:11px; }
+.btn-row { display:flex; gap:6px; }
+
+.nlist { display:flex; flex-direction:column; gap:3px; }
+.nitem { display:flex; align-items:center; gap:7px; padding:5px 8px; border-radius:var(--r); border:0.5px solid var(--border); background:var(--bg); cursor:pointer; transition:border-color .15s; }
+.nitem:hover { border-color:var(--border2); }
+.nitem.sel { border-color:var(--green-m); background:var(--green-l); }
+.nitem.rsel { border-color:var(--router-s); background:var(--router-f); }
+.ndot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.nname { font-weight:500; font-size:12px; flex:1; }
+.nsub { font-family:monospace; font-size:10px; color:var(--text3); }
+.ndel { background:none; border:none; cursor:pointer; color:var(--text3); font-size:13px; padding:0 2px; }
+.ndel:hover { color:var(--red); }
+
+.igrid { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+.ic { background:var(--bg3); border-radius:var(--r); padding:7px 9px; }
+.ic .l { font-size:10px; color:var(--text3); margin-bottom:1px; }
+.ic .v { font-size:11px; font-weight:500; font-family:monospace; }
+
+.atrack { height:6px; border-radius:3px; background:var(--bg3); overflow:hidden; border:0.5px solid var(--border); margin:4px 0; }
+.afill { height:100%; border-radius:3px; transition:width .3s,background .3s; }
+
+.al { padding:6px 9px; border-radius:var(--r); font-size:11px; margin-bottom:6px; }
+.al:last-child { margin-bottom:0; }
+.al.err  { background:var(--red-l);   color:var(--red);    border:0.5px solid #f09595; }
+.al.warn { background:var(--amber-l); color:var(--amber);  border:0.5px solid var(--amber-m); }
+.al.inf  { background:var(--blue-l);  color:var(--blue-t); border:0.5px solid var(--blue-m); }
+.al.ok   { background:var(--green-l); color:var(--green-t);border:0.5px solid var(--green-m); }
+
+.log { font-family:monospace; font-size:11px; color:var(--text2); height:130px; overflow-y:auto; background:var(--bg3); border-radius:var(--r); padding:7px; display:flex; flex-direction:column; gap:2px; }
+.le { display:flex; gap:6px; }
+.ln { color:var(--text3); flex-shrink:0; }
+.lok { color:var(--green-t); } .lerr { color:var(--red); } .linf { color:var(--blue-t); }
+
+.cpick { display:flex; gap:5px; flex-wrap:wrap; margin-top:3px; }
+.csw { width:18px; height:18px; border-radius:50%; cursor:pointer; border:2.5px solid transparent; transition:border-color .15s,transform .15s; }
+.csw:hover,.csw.on { transform:scale(1.18); }
+
+.empty { color:var(--text3); font-size:12px; font-style:italic; padding:4px 0; }
+/* Host node items in list */
+.hitem { display:flex; align-items:center; gap:7px; padding:4px 8px; border-radius:var(--r); border:0.5px solid var(--border); background:var(--bg); cursor:pointer; transition:border-color .15s; }
+.hitem:hover { border-color:var(--border2); }
+.hitem.sel { border-color:var(--green-m); background:var(--green-l); }
+.hdot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+#tip { position:fixed; background:var(--text); color:white; font-size:11px; padding:4px 8px; border-radius:4px; pointer-events:none; display:none; z-index:1000; font-family:monospace; white-space:nowrap; }
+.leg { display:flex; flex-wrap:wrap; gap:6px 12px; }
+.li { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text2); }
+.ld { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+
+/* Key/value grid */
+.kvgrid { width:100%; }
+.kvrow { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:0.5px solid var(--border); }
+.kvrow:last-of-type { border-bottom:none; }
+.kvkey { font-size:12px; font-weight:600; color:var(--text2); display:flex; align-items:center; gap:4px; flex-shrink:0; }
+.kvval { font-family:monospace; font-size:11px; color:var(--text); text-align:right; }
+
+/* Calc button */
+.cbtn { background:none; border:none; cursor:pointer; padding:0; margin-left:4px; color:var(--text3); display:inline-flex; align-items:center; line-height:1; transition:color .15s; flex-shrink:0; }
+.cbtn:hover { color:var(--blue-t); }
+
+/* Inline calc overlay */
+.cov { background:var(--bg2); border:0.5px solid var(--border2); border-radius:var(--r); overflow:hidden; display:none; margin:2px 0 8px; }
+.cov.open { display:block; }
+.cov-head { display:flex; align-items:center; justify-content:space-between; padding:7px 10px 6px; background:var(--bg3); border-bottom:0.5px solid var(--border); }
+.cov-head-l { display:flex; align-items:center; gap:7px; }
+.cov-icon { width:22px; height:22px; border-radius:5px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.cov-icon.blue  { background:var(--blue-l);  color:var(--blue-t); }
+.cov-icon.teal  { background:var(--green-l); color:var(--green-t); }
+.cov-icon.amber { background:var(--amber-l); color:var(--amber); }
+.cov-title { font-size:11px; font-weight:600; color:var(--text); }
+.cov-close { background:none; border:none; cursor:pointer; color:var(--text3); font-size:13px; padding:0; line-height:1; }
+.cov-close:hover { color:var(--text); }
+.cov-body { padding:8px 10px; display:flex; flex-direction:column; gap:4px; }
+.cov-row { display:flex; align-items:baseline; gap:6px; font-size:11px; }
+.cov-num { font-size:10px; color:var(--text3); min-width:14px; font-weight:600; }
+.cov-desc { color:var(--text2); flex:1; }
+.cov-formula { font-family:monospace; font-size:11px; color:var(--text); background:var(--bg3); border:0.5px solid var(--border); border-radius:5px; padding:6px 10px; white-space:pre; line-height:1.6; }
+.cov-note { font-size:10px; color:var(--text3); font-style:italic; padding-top:2px; }
+
+/* Modals */
+.modal-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:500; align-items:center; justify-content:center; }
+.modal-backdrop.open { display:flex; }
+.modal { background:var(--bg2); border-radius:12px; width:100%; max-width:360px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.18); }
+.modal-hd { display:flex; align-items:center; justify-content:space-between; padding:14px 16px 12px; background:var(--bg3); border-bottom:0.5px solid var(--border2); }
+.modal-hd-l { display:flex; align-items:center; gap:8px; }
+.modal-badge { width:26px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.modal-badge.green { background:var(--green-l); color:var(--green-t); }
+.modal-badge.blue  { background:var(--blue-l);  color:var(--blue-t); }
+.modal-badge.amber { background:var(--amber-l); color:var(--amber); }
+.modal-title { font-size:14px; font-weight:600; color:var(--text); }
+.modal-x { background:none; border:none; cursor:pointer; color:var(--text3); font-size:16px; padding:0; line-height:1; }
+.modal-x:hover { color:var(--text); }
+.modal-body { padding:16px; display:flex; flex-direction:column; gap:10px; }
+.modal-err { display:none; }
+.modal-foot { padding:0 16px 16px; display:flex; gap:8px; justify-content:flex-end; }
+/* + add button in section header */
+.st-add { background:none; border:none; cursor:pointer; color:var(--text3); display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:4px; padding:0; transition:background .15s,color .15s; }
+.st-add:hover { background:var(--border); color:var(--text); }
+
+/* Bit display in right panel */
+
+
+  /* Log overlay */
+  .log-overlay-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:600; align-items:center; justify-content:center; }
+  .log-overlay-backdrop.open { display:flex; }
+  .log-overlay { background:var(--bg2); border-radius:12px; width:min(720px,92vw); max-height:80vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,0.22); }
+  .log-overlay-hd { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg3); border-bottom:0.5px solid var(--border2); flex-shrink:0; }
+  .log-overlay-hd-l { display:flex; align-items:center; gap:8px; }
+  .log-overlay-badge { width:26px; height:26px; border-radius:6px; background:var(--bg2); border:0.5px solid var(--border2); display:flex; align-items:center; justify-content:center; color:var(--text2); flex-shrink:0; }
+  .log-overlay-title { font-size:14px; font-weight:600; color:var(--text); }
+  .log-overlay-body { flex:1; overflow-y:auto; padding:10px 14px; }
+  .log-big { font-family:monospace; font-size:12px; color:var(--text2); display:flex; flex-direction:column; gap:3px; }
+  .log-overlay-foot { padding:10px 16px; border-top:0.5px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-shrink:0; background:var(--bg3); }
+  .log-count { font-size:11px; color:var(--text3); font-family:monospace; }
+  /* DHCP server node */
+  .dhcp-badge { display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:2px 5px;border-radius:10px;background:#FEF3C7;color:#92400E;border:0.5px solid #F59E0B;letter-spacing:.04em;text-transform:uppercase; }
+
+  /* Router Console Terminal */
+  .console-backdrop { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:800;align-items:center;justify-content:center;padding:20px; }
+  .console-backdrop.open { display:flex; }
+  .console-panel { background:#0d1117;border-radius:10px;width:min(780px,94vw);height:min(560px,88vh);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);border:1px solid #30363d; }
+  .console-hd { display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#161b22;border-bottom:1px solid #30363d;flex-shrink:0; }
+  .console-hd-l { display:flex;align-items:center;gap:10px; }
+  .console-dots { display:flex;gap:6px; }
+  .console-dot { width:12px;height:12px;border-radius:50%; }
+  .console-title { font-size:13px;font-weight:600;color:#e6edf3;font-family:monospace; }
+  .console-subtitle { font-size:11px;color:#7d8590;font-family:monospace; }
+  .console-body { flex:1;overflow-y:auto;padding:12px 16px;font-family:'SF Mono',Monaco,Consolas,monospace;font-size:12px;line-height:1.6;color:#e6edf3; }
+  .console-body::-webkit-scrollbar { width:6px; }
+  .console-body::-webkit-scrollbar-track { background:#0d1117; }
+  .console-body::-webkit-scrollbar-thumb { background:#30363d;border-radius:3px; }
+  .console-input-row { display:flex;align-items:center;padding:8px 16px;background:#161b22;border-top:1px solid #30363d;flex-shrink:0;gap:6px; }
+  .console-prompt { color:#58a6ff;font-family:monospace;font-size:12px;white-space:nowrap; }
+  .console-input { flex:1;background:transparent;border:none;outline:none;color:#e6edf3;font-family:monospace;font-size:12px;caret-color:#58a6ff; }
+  /* Terminal output colors */
+  .co-prompt { color:#58a6ff; }
+  .co-cmd    { color:#e6edf3; }
+  .co-ok     { color:#3fb950; }
+  .co-err    { color:#f85149; }
+  .co-warn   { color:#d29922; }
+  .co-key    { color:#79c0ff; }
+  .co-val    { color:#a5d6ff; }
+  .co-dim    { color:#7d8590; }
+  .co-head   { color:#d2a8ff;font-weight:600; }
+  .co-c      { color:#3fb950; }
+  .co-s      { color:#79c0ff; }
+  .nat-table { width:100%; border-collapse:collapse; font-size:11px; font-family:monospace; }
+  .nat-table th { font-size:10px; color:var(--text3); padding:4px 6px; border-bottom:0.5px solid var(--border); text-align:left; background:var(--bg3); }
+  .nat-table td { padding:4px 6px; border-bottom:0.5px solid var(--border); color:var(--text); }
+  .nat-table tr:last-child td { border-bottom:none; }
+  /* NAT Examine overlay */
+  .nex-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:700; align-items:center; justify-content:center; padding:16px; }
+  .nex-backdrop.open { display:flex; }
+  .nex-panel { background:var(--bg2); border-radius:14px; width:min(640px,96vw); max-height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 16px 48px rgba(0,0,0,0.28); }
+  .nex-hd { display:flex; align-items:center; justify-content:space-between; padding:14px 18px 12px; background:var(--green-l); border-bottom:1px solid var(--green-m); flex-shrink:0; }
+  .nex-hd-l { display:flex; align-items:center; gap:10px; }
+  .nex-badge { width:30px; height:30px; border-radius:8px; background:var(--green); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .nex-hd-text { display:flex; flex-direction:column; gap:1px; }
+  .nex-hd-sup { font-size:10px; color:var(--green-t); font-weight:600; letter-spacing:.06em; text-transform:uppercase; }
+  .nex-hd-title { font-size:14px; font-weight:700; color:var(--green-t); }
+  .nex-body { flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:14px; }
+  .nex-ft { padding:12px 18px; border-top:0.5px solid var(--border2); display:flex; align-items:center; justify-content:space-between; background:var(--bg3); flex-shrink:0; }
+  .nex-ft-note { font-size:11px; color:var(--text3); }
+  .nex-phase { display:flex; flex-direction:column; gap:6px; }
+  .nex-phase-label { font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--text3); }
+  .nex-pkt { border-radius:8px; overflow:hidden; border:0.5px solid var(--border2); }
+  .nex-pkt-before { border-color:#FDA4AF; }
+  .nex-pkt-after  { border-color:var(--green-m); }
+  .nex-pkt-row { display:flex; align-items:center; gap:8px; padding:6px 12px; border-bottom:0.5px solid var(--border); font-size:12px; }
+  .nex-pkt-row:last-child { border-bottom:none; }
+  .nex-pkt-before .nex-pkt-row { background:#FFF1F2; }
+  .nex-pkt-after  .nex-pkt-row { background:var(--green-l); }
+  .nex-f { font-size:10px; color:var(--text3); width:82px; flex-shrink:0; }
+  .nex-v { font-family:monospace; font-size:12px; flex:1; }
+  .nex-v.priv { color:var(--red); font-weight:600; }
+  .nex-v.pub  { color:var(--green-t); font-weight:600; }
+  .nex-tag { font-size:9px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; padding:2px 6px; border-radius:10px; flex-shrink:0; }
+  .priv-tag { background:#FEE2E2; color:var(--red); }
+  .pub-tag  { background:var(--green-l); color:var(--green-t); border:0.5px solid var(--green-m); }
+  .nex-arrow-row { display:flex; align-items:center; gap:10px; padding:2px 0; }
+  .nex-arrow-line { flex:1; height:1.5px; background:linear-gradient(to right, var(--border), var(--green-m), var(--border)); }
+  .nex-arrow-label { font-size:11px; color:var(--text2); text-align:center; max-width:320px; line-height:1.5; padding:6px 10px; background:var(--bg3); border-radius:6px; border:0.5px solid var(--border); }
+  .nex-insight { background:var(--amber-l); border:0.5px solid var(--amber-m); border-radius:8px; padding:10px 14px; font-size:12px; color:var(--amber); line-height:1.6; }
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hl">
+    <div class="hi">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="4" cy="8" r="3" fill="white" opacity="0.9"/>
+        <circle cx="12" cy="3" r="2.5" fill="white" opacity="0.9"/>
+        <circle cx="12" cy="13" r="2.5" fill="white" opacity="0.9"/>
+        <line x1="7" y1="8" x2="9.5" y2="4.5" stroke="white" stroke-width="1.2"/>
+        <line x1="7" y1="8" x2="9.5" y2="11.5" stroke="white" stroke-width="1.2"/>
+      </svg>
+    </div>
+    <span class="ht">Subnet Topology Builder</span>
+  </div>
+  <div class="hr">
+    Developed by Professor Chris Rosa &mdash; CS339 Networks, Sacred Heart University
+    <a href="/cdn-cgi/l/email-protection#2f5d405c4e4c181a1f19196f5c4e4c5d4a4b474a4e5d5b014a4b5a" class="hla brd" title="Email">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="14" height="10" rx="2"/><path d="M1 5l7 5 7-5"/></svg>
+    </a>
+    <a href="https://linkedin.com/in/chris-rosa-3192326" target="_blank" class="hla fil">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="white"><path d="M2.5 1A1.5 1.5 0 1 0 2.5 4 1.5 1.5 0 0 0 2.5 1zM1 5.5h3V15H1zM6 5.5h2.9v1.3h.04C9.36 5.9 10.5 5.3 12 5.3c3.1 0 3.7 2 3.7 4.7V15h-3v-4.4c0-1.1 0-2.4-1.5-2.4s-1.7 1.2-1.7 2.4V15H6z"/></svg>
+    </a>
+  </div>
+</header>
+
+<div class="ab">
+<div class="sb">
+
+  <div class="ss">
+    <div class="st">Internet Zone</div>
+    <div class="f"><label>NAT public IP</label><input type="text" id="nat-ip" value="203.0.113.1" placeholder="e.g. 203.0.113.1" oninput="draw()"></div>
+    <div class="f"><label>External host IP</label><input type="text" id="ext-ip" value="8.8.8.8" placeholder="e.g. 8.8.8.8" oninput="draw()"></div>
+    <div class="f"><label>External host name</label><input type="text" id="ext-name" value="External Server" maxlength="20" oninput="draw()"></div>
+  </div>
+
+  <div class="ss">
+    <div class="st">Base Network</div>
+    <div class="f"><label>Network address</label><input type="text" id="bip" value="10.0.0.0" oninput="onBase()"></div>
+    <div class="f"><label>Prefix &nbsp;<strong id="bpl">/16</strong></label><input type="range" id="bpx" min="8" max="28" value="16" step="1" oninput="onBase()"></div>
+    <div id="binfo" style="margin-top:6px"></div>
+  </div>
+
+  <div class="ss">
+    <div class="st" style="display:flex;align-items:center;justify-content:space-between">
+      <span>DHCP Server</span>
+      <span id="dhcp-status" style="font-size:10px;color:var(--text3);font-weight:400;letter-spacing:0;text-transform:none"></span>
+    </div>
+    <div id="dhcp-panel">
+      <div class="empty" id="dhcp-empty">No routers yet — add a router to place DHCP server</div>
+      <div id="dhcp-controls" style="display:none">
+        <div class="f">
+          <label>Attach to router</label>
+          <select id="dhcp-router-sel" onchange="onDhcpRouterChange()">
+            <option value="">— none (disable DHCP) —</option>
+          </select>
+        </div>
+        <div id="dhcp-info" style="margin-top:4px"></div>
+      </div>
+    </div>
+  </div>
+  <div class="ss">
+    <div class="st" style="display:flex;align-items:center;justify-content:space-between">
+      <span>Subnets &nbsp;<span id="scnt" style="font-weight:400;color:var(--text3);font-size:10px;text-transform:none;letter-spacing:0"></span></span>
+      <button class="st-add" onclick="openModal('modal-subnet')" title="Add subnet">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+      </button>
+    </div>
+    <div id="slist" class="nlist"><div class="empty">No subnets yet</div></div>
+    <div id="awrap" style="display:none;margin-top:10px">
+      <div style="font-size:10px;color:var(--text3)">Address space used</div>
+      <div class="atrack"><div class="afill" id="afill"></div></div>
+      <div id="albl" style="font-size:10px;color:var(--text2)"></div>
+    </div>
+  </div>
+
+  <div class="ss">
+    <div class="st" style="display:flex;align-items:center;justify-content:space-between">
+      <span>Hosts &nbsp;<span id="hcnt" style="font-weight:400;color:var(--text3);font-size:10px;text-transform:none;letter-spacing:0"></span></span>
+      <button class="st-add" onclick="openModal('modal-host')" title="Add host">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+      </button>
+    </div>
+    <div id="hlist" class="nlist"><div class="empty">No hosts yet</div></div>
+  </div>
+
+</div>
+
+<div class="cw">
+  <div class="ptb">
+    <span style="font-size:11px;font-weight:600;color:var(--text2);white-space:nowrap">Send Packet</span>
+    <div class="tsep"></div>
+    <label>From</label>
+    <select id="pfrom"></select>
+    <label>To</label>
+    <select id="pto"></select>
+    <button class="btn pri sm" onclick="sendPacket()">&#9654;&nbsp; Send</button>
+    <div class="tsep"></div>
+    <div id="pres-tb"></div>
+    <div id="pres" style="display:none"></div>
+  </div>
+  <div class="tb">
+    <span style="font-size:11px;color:var(--text3);font-weight:500">Topology Canvas</span>
+    <div class="tsep"></div>
+    <button class="btn sm" onclick="autoLayout()">Auto layout</button>
+    <button class="btn sm" onclick="clearAll()">Clear all</button>
+    <div class="tsep"></div>
+    <span style="font-size:11px;color:var(--text3)">Drag nodes &nbsp;·&nbsp; Click to inspect</span>
+  </div>
+  <canvas id="cv"></canvas>
+</div>
+
+<div class="rp">
+  <div class="ps">
+    <div class="pt">Selected Node</div>
+    <div id="selinfo"><div class="empty">Click a node to inspect</div></div>
+  </div>
+
+  <div class="ps">
+    <div class="pt">Event Log
+      <div style="display:flex;align-items:center;gap:5px">
+        <button class="btn sm" onclick="clearLog()">Clear</button>
+        <button class="btn sm" onclick="openLogOverlay()" title="Expand log" style="padding:3px 6px">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3,9 1,15 7,13"/><polyline points="13,7 15,1 9,3"/>
+            <line x1="1" y1="15" x2="15" y2="1"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="log" id="elog"></div>
+  </div>
+</div>
+</div>
+<div id="tip"></div>
+
+<script>
+// ── Colors ────────────────────────────────────────────────────────────────────
+const COLORS=[
+  {name:'teal',  fill:'#E1F5EE',stroke:'#0F6E56',text:'#085041',node:'#5DCAA5'},
+  {name:'blue',  fill:'#E6F1FB',stroke:'#185FA5',text:'#0C447C',node:'#85B7EB'},
+  {name:'amber', fill:'#FAEEDA',stroke:'#854F0B',text:'#633806',node:'#EF9F27'},
+  {name:'coral', fill:'#FAECE7',stroke:'#993C1D',text:'#712B13',node:'#F0997B'},
+  {name:'purple',fill:'#EEEDFE',stroke:'#534AB7',text:'#3C3489',node:'#AFA9EC'},
+  {name:'green', fill:'#EAF3DE',stroke:'#3B6D11',text:'#27500A',node:'#97C459'},
+];
+const SR=44, RR=32, TR=20, HR=10; // subnet radius, router radius, transit radius, host radius
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let S={
+  baseIP:'10.0.0.0', basePrefix:16,
+  routers:[],   // {id,name,x,y}
+  subnets:[],   // {id,name,prefix,color,routerId,x,y, cidr,broadcast,firstHost,lastHost,usable,overflow}
+  transits:[],  // {id,r1id,r2id, cidr,r1ip,r2ip, x,y} — auto-generated /30s
+  hosts:[],      // {id,name,subnetId,ip,x,y}
+  sel:null,     // {type:'router'|'subnet'|'transit', id}
+  drag:null, dragOX:0,dragOY:0,dragMoved:false,
+  selColor:0, logEntries:[], logN:0,
+  packet:null,  // {steps:[{fx,fy,tx,ty,label}], step,t,active}
+  positioned:false,
+  natTable:[],   // [{privIP, privPort, pubIP, pubPort, destIP, destPort, host}]
+  natTransits:[], // [{routerId, natIP, routerIP, cidr}]
+  natRouter:{x:0,y:0}, // position set in resizeCV
+  extHost:{x:0,y:0},   // position set in resizeCV
+  natExamineMode:false, // when true, pause at NAT boundary and show overlay
+  routerExamineSet: new Set(), // router ids with examine mode enabled
+  dhcpServer: null, // {id, routerId, x, y, leases:[{host,ip,subnet}]}
+  dhcpExamineMode: false, // pause at DHCP server node and show overlay
+};
+let nid=1;
+
+// ── IP utils ──────────────────────────────────────────────────────────────────
+function parseIP(s){const p=s.trim().split('.').map(Number);if(p.length!==4||p.some(o=>isNaN(o)||o<0||o>255))return null;return p;}
+function ip2n(o){return((o[0]<<24)|(o[1]<<16)|(o[2]<<8)|o[3])>>>0;}
+function n2ip(n){return[n>>>24,(n>>>16)&255,(n>>>8)&255,n&255].join('.');}
+function bs(p){return Math.pow(2,32-p);}
+function hc(p){return p>=31?bs(p):bs(p)-2;}
+function mkMask(p){return p===0?0:(0xFFFFFFFF<<(32-p))>>>0;}
+
+// ── NAT port helpers ──────────────────────────────────────────────────────────
+const WELL_KNOWN_PORTS = {
+  '8.8.8.8':'53', '8.8.4.4':'53',   // DNS
+  'default':'80'                      // HTTP for everything else
+};
+function destPort(destIP){ return WELL_KNOWN_PORTS[destIP]||WELL_KNOWN_PORTS['default']; }
+function ephemeralPort(){ return Math.floor(Math.random()*(65535-49152+1))+49152; }
+function srcPort(){ return Math.floor(Math.random()*(60999-49152+1))+49152; }
+
+// ── Allocation ────────────────────────────────────────────────────────────────
+function alloc(){
+  allocNatTransits();
+  const base=parseIP(S.baseIP); if(!base)return;
+  const baseNet=(ip2n(base)&mkMask(S.basePrefix))>>>0;
+  const baseEnd=baseNet+bs(S.basePrefix)-1;
+  // collect all blocks: subnets + /30 transits (sorted by prefix desc = smallest first)
+  // We allocate sequentially — subnets in order added, transits at end
+  let cur=baseNet;
+  function allocBlock(obj, prefix){
+    const b=bs(prefix);
+    if(cur%b!==0)cur=((Math.floor(cur/b)+1)*b)>>>0;
+    const m=mkMask(prefix),inv=(~m)>>>0;
+    obj.netNum=cur>>>0;
+    obj.cidr=n2ip(cur)+'/'+prefix;
+    obj.broadcast=prefix<31?n2ip((cur|inv)>>>0):'—';
+    obj.firstHost=n2ip((cur+1)>>>0);
+    obj.lastHost=prefix<31?n2ip(((cur|inv)-1)>>>0):n2ip(cur>>>0);
+    obj.usable=hc(prefix);
+    obj.overflow=(cur>>>0)+b-1>baseEnd;
+    cur=(cur+b)>>>0;
+  }
+  S.subnets.forEach(s=>allocBlock(s,s.prefix));
+  S.transits.forEach(t=>{ allocBlock(t,30); t.r1ip=t.firstHost; t.r2ip=t.lastHost; });
+  S.natTransits.forEach(t=>{ allocBlock(t,30); t.natIP=t.firstHost; t.routerIP=t.lastHost; });
+}
+
+function totalUsed(){
+  return S.subnets.reduce((a,s)=>a+bs(s.prefix),0)+S.transits.reduce((a,t)=>a+bs(30),0);
+}
+
+// ── Base network ──────────────────────────────────────────────────────────────
+function onBase(){
+  S.baseIP=document.getElementById('bip').value.trim();
+  S.basePrefix=parseInt(document.getElementById('bpx').value);
+  document.getElementById('bpl').textContent='/'+S.basePrefix;
+  alloc(); updateAll();
+}
+function calcIcon(id){
+  return `<button class="cbtn" onclick="toggleOv('${id}')" title="Show calculation">
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#378ADD" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="6.5" cy="6.5" r="4.5"/>
+      <line x1="10" y1="10" x2="14" y2="14"/>
+    </svg>
+  </button>`;
+}
+
+function toggleOv(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  const wasOpen=el.classList.contains('open');
+  // close all overlays in the same container
+  el.closest('.ps, .ss').querySelectorAll('.cov.open').forEach(e=>e.classList.remove('open'));
+  el.classList.toggle('open',!wasOpen);
+}
+
+function covHtml(id,iconClass,title,bodyHtml){
+  return `<div class="cov" id="${id}">
+    <div class="cov-head">
+      <div class="cov-head-l">
+        <div class="cov-icon ${iconClass}"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.5" cy="6.5" r="4.5"/><line x1="10" y1="10" x2="14" y2="14"/></svg></div>
+        <span class="cov-title">${title}</span>
+      </div>
+      <button class="cov-close" onclick="toggleOv('${id}')">✕</button>
+    </div>
+    <div class="cov-body">${bodyHtml}</div>
+  </div>`;
+}
+
+function broadcastCalc(netIP, maskIP, bcastIP, prefix, uid){
+  const inv=n2ip((~mkMask(prefix))>>>0);
+  return covHtml(uid,'amber','How broadcast is calculated',`
+    <div class="cov-row"><span class="cov-num">1</span><span class="cov-desc">Start with the network address</span></div>
+    <div class="cov-formula">${netIP}</div>
+    <div class="cov-row"><span class="cov-num">2</span><span class="cov-desc">Invert the subnet mask → wildcard mask</span></div>
+    <div class="cov-formula">mask:     ${maskIP}\ninverted: ${inv}</div>
+    <div class="cov-row"><span class="cov-num">3</span><span class="cov-desc">OR network with wildcard — sets all host bits to 1</span></div>
+    <div class="cov-formula">${netIP}\nOR ${inv}\n= ${bcastIP}</div>
+    <div class="cov-note">The broadcast address is the last address in the block.</div>`);
+}
+
+function usableCalc(blockSz, netIP, bcastIP, prefix, usable, uid){
+  return covHtml(uid,'teal','Why usable = block size − 2',`
+    <div class="cov-row"><span class="cov-num">1</span><span class="cov-desc">Block size = all addresses in subnet</span></div>
+    <div class="cov-formula">2^${32-prefix} = ${blockSz.toLocaleString()} addresses</div>
+    <div class="cov-row"><span class="cov-num">2</span><span class="cov-desc"><strong>${netIP}</strong> — reserved as network address</span></div>
+    ${prefix<31?`<div class="cov-row"><span class="cov-num">3</span><span class="cov-desc"><strong>${bcastIP}</strong> — reserved as broadcast address</span></div>
+    <div class="cov-formula">${blockSz.toLocaleString()} − 2 = ${usable.toLocaleString()} usable hosts</div>`
+    :`<div class="cov-note">Point-to-point /31 — both addresses usable.</div>`}
+    <div class="cov-note">Only these addresses can be assigned to devices.</div>`);
+}
+
+function blockSizeCalc(prefix, uid){
+  const hostBits=32-prefix;
+  const splitOctet=Math.floor(prefix/8);
+  const bitsInOctet=prefix%8;
+  const hostInOctet=8-bitsInOctet;
+  const splitBS=Math.pow(2,hostInOctet);
+  const aligned=bitsInOctet===0;
+  const octetNames=['first','second','third','fourth'];
+  const boundaries=Array.from({length:Math.min(Math.ceil(256/splitBS),8)},(_,i)=>i*splitBS);
+  return covHtml(uid,'blue','How block size is calculated',
+    aligned
+    ? `<div class="cov-row"><span class="cov-num">1</span><span class="cov-desc">/${prefix} falls on an octet boundary — no split</span></div>
+       <div class="cov-formula">2^${hostBits} = ${bs(prefix).toLocaleString()} addresses</div>
+       <div class="cov-note">Each subnet is ${bs(prefix).toLocaleString()} addresses wide.</div>`
+    : `<div class="cov-row"><span class="cov-num">1</span><span class="cov-desc">/${prefix} splits the <strong>${octetNames[splitOctet]} octet</strong></span></div>
+       <div class="cov-row"><span class="cov-num">2</span><span class="cov-desc">${hostInOctet} host bit${hostInOctet!==1?'s':''} remain in that octet</span></div>
+       <div class="cov-formula">2^${hostInOctet} = ${splitBS}  (block size in split octet)</div>
+       <div class="cov-row"><span class="cov-num">3</span><span class="cov-desc">Subnet boundaries in octet ${splitOctet+1}:</span></div>
+       <div class="cov-formula">${boundaries.join(', ')}${Math.ceil(256/splitBS)>8?', …':''}</div>
+       <div class="cov-note">Total subnet = 2^${hostBits} = ${bs(prefix).toLocaleString()} addresses.</div>`);
+}
+
+function gatewayCalc(firstHost, netIP, prefix, routerName, uid){
+  return covHtml(uid,'teal','What is the gateway address?',`
+    <div class="cov-row"><span class="cov-num">1</span><span class="cov-desc">The network address is reserved — not assignable</span></div>
+    <div class="cov-formula">${netIP}  ← network address</div>
+    <div class="cov-row"><span class="cov-num">2</span><span class="cov-desc">The next address (first usable) becomes the router interface</span></div>
+    <div class="cov-formula">${firstHost}  ← gateway (${routerName||'router'})</div>
+    <div class="cov-note">Hosts in this subnet send traffic to ${firstHost} as their default gateway.</div>`);
+}
+
+function kvRow(key, val, calcHtml){
+  const ovId = calcHtml ? calcHtml.match(/id="([^"]+)"/)[1] : null;
+  return `<div class="kvrow">
+    <span class="kvkey">${key}${ovId ? calcIcon(ovId) : ''}</span>
+    <span class="kvval">${val}</span>
+  </div>${calcHtml ? `<div style="padding:0 0 4px">${calcHtml}</div>` : ''}`;
+}
+
+function updateBaseInfo(){
+  const base=parseIP(S.baseIP); if(!base){document.getElementById('binfo').innerHTML='';return;}
+  const num=ip2n(base),m=mkMask(S.basePrefix),net=(num&m)>>>0,inv=(~m)>>>0,bcast=(net|inv)>>>0;
+  const netIP=n2ip(net), bcastIP=n2ip(bcast), maskIP=n2ip(m);
+  const usable=hc(S.basePrefix), blockSz=bs(S.basePrefix);
+  document.getElementById('binfo').innerHTML=`<div class="kvgrid">
+    ${kvRow('Network', netIP, null)}
+    ${kvRow('Subnet mask', maskIP, null)}
+    ${kvRow('Broadcast', bcastIP, broadcastCalc(netIP,maskIP,bcastIP,S.basePrefix,'b-bcast'))}
+    ${kvRow('Block size', blockSz.toLocaleString(), blockSizeCalc(S.basePrefix,'b-bsz'))}
+    ${kvRow('Usable hosts', usable.toLocaleString(), usableCalc(blockSz,netIP,bcastIP,S.basePrefix,usable,'b-usable'))}
+  </div>`;
+}
+
+function allocNatTransits(){
+  // Create natTransit stubs — alloc() will fill in cidr/natIP/routerIP from base network
+  const existing = new Map(S.natTransits.map(t=>[t.routerId,t]));
+  S.natTransits = S.routers.map(r=>{
+    const prev = existing.get(r.id)||{};
+    return {routerId:r.id, natIP:prev.natIP||'', routerIP:prev.routerIP||'', cidr:prev.cidr||''};
+  });
+}
+
+// ── Routers ───────────────────────────────────────────────────────────────────
+function addRouter(){
+  const nameEl=document.getElementById('rname');
+  const name=nameEl.value.trim()||`R${S.routers.length+1}`;
+  const c=cv();
+  // place offset from center
+  const angle=(S.routers.length/Math.max(S.routers.length+1,4))*Math.PI*2-Math.PI/2;
+  const r=100;
+  S.routers.push({id:nid++,name,x:c.width/2+Math.cos(angle)*r,y:c.height/2+Math.sin(angle)*r});
+  nameEl.value='';
+  syncTransits();
+  alloc(); updateAll();
+  log(`Added router ${name}`,'inf');
+  closeModal('modal-router');
+}
+
+function removeRouter(id){
+  const remaining=S.routers.filter(r=>r.id!==id);
+  S.routers=remaining;
+  // if another router exists, reassign orphaned subnets to it; otherwise null
+  const fallback=remaining.length?remaining[0]:null;
+  S.subnets.forEach(s=>{
+    if(s.routerId===id){
+      s.routerId=fallback?fallback.id:null;
+      if(fallback) log(`${s.name} reassigned to ${fallback.name}`,'inf');
+      else log(`${s.name} is now unattached — add a router`,'warn');
+    }
+  });
+  if(S.sel&&S.sel.type==='router'&&S.sel.id===id)S.sel=null;
+  syncTransits(); alloc(); updateAll();
+}
+
+function routerById(id){return S.routers.find(r=>r.id===id);}
+
+// ── Transit links ─────────────────────────────────────────────────────────────
+// Auto-create /30 between every pair of routers
+function syncTransits(){
+  const pairs=[];
+  for(let i=0;i<S.routers.length;i++)
+    for(let j=i+1;j<S.routers.length;j++)
+      pairs.push([S.routers[i].id,S.routers[j].id]);
+
+  // remove transits for pairs that no longer exist
+  S.transits=S.transits.filter(t=>pairs.some(([a,b])=>(t.r1id===a&&t.r2id===b)||(t.r1id===b&&t.r2id===a)));
+
+  // add missing
+  pairs.forEach(([a,b])=>{
+    if(!S.transits.find(t=>(t.r1id===a&&t.r2id===b)||(t.r1id===b&&t.r2id===a))){
+      const ra=routerById(a),rb=routerById(b);
+      S.transits.push({
+        id:nid++, r1id:a, r2id:b,
+        x:(ra.x+rb.x)/2, y:(ra.y+rb.y)/2,
+      });
+    }
+  });
+}
+
+function transitById(id){return S.transits.find(t=>t.id===id);}
+
+// ── Subnets ───────────────────────────────────────────────────────────────────
+function addSubnet(){
+  const nn=document.getElementById('nn'),px=document.getElementById('npx'),aerr=document.getElementById('merr-subnet');
+  const routerId=parseInt(document.getElementById('nrouter').value)||null;
+  const name=nn.value.trim()||`Subnet ${nid}`;
+  const prefix=parseInt(px.value);
+  if(aerr)aerr.style.display='none';
+  if(!parseIP(S.baseIP)){showAerr('Invalid base network IP');return;}
+  if(prefix<=S.basePrefix){showAerr(`Prefix must be longer than /${S.basePrefix}`);return;}
+  if(!routerId){showAerr('Select a router to attach to');return;}
+  if(totalUsed()+bs(prefix)>bs(S.basePrefix)){showAerr('Not enough address space');return;}
+  const color=COLORS[S.selColor];
+  const router=routerById(routerId);
+  const n=S.subnets.filter(s=>s.routerId===routerId).length;
+  const angle=(n/Math.max(n+1,5))*Math.PI*2-Math.PI/2;
+  S.subnets.push({id:nid++,name,prefix,color,routerId,
+    x:router.x+Math.cos(angle)*180,
+    y:router.y+Math.sin(angle)*180});
+  S.selColor=(S.selColor+1)%COLORS.length;
+  nn.value='';
+  alloc(); updateAll();
+  log(`Added ${name} (/${prefix}) → ${router.name}`,'inf');
+  closeModal('modal-subnet');
+}
+
+function showAerr(m){const e=document.getElementById('merr-subnet');if(e){e.textContent=m;e.style.display='block';}}
+function removeSubnet(id){
+  S.subnets=S.subnets.filter(s=>s.id!==id);
+  if(S.sel&&S.sel.type==='subnet'&&S.sel.id===id)S.sel=null;
+  alloc(); updateAll();
+}
+function subnetById(id){return S.subnets.find(s=>s.id===id);}
+
+// ── Selection ─────────────────────────────────────────────────────────────────
+function selectNode(type,id){
+  if(type==='natRouter'||type==='extHost'||type==='natTransit'||type==='dhcpServer'){
+    S.sel=(S.sel&&S.sel.type===type&&S.sel.id===id)?null:{type,id:id||null};
+  } else {
+    S.sel=(S.sel&&S.sel.type===type&&S.sel.id===id)?null:{type,id};
+  }
+  updateRList(); updateSList(); updateSelPanel(); draw();
+}
+
+// ── Color picker ──────────────────────────────────────────────────────────────
+function buildCP(){
+  const el=document.getElementById('cpick'); el.innerHTML='';
+  COLORS.forEach((c,i)=>{
+    const d=document.createElement('div');
+    d.className='csw'+(i===S.selColor?' on':'');
+    d.style.cssText=`background:${c.node};border-color:${i===S.selColor?c.stroke:'transparent'}`;
+    d.onclick=()=>{S.selColor=i;buildCP();};
+    el.appendChild(d);
+  });
+}
+
+// ── UI updates ────────────────────────────────────────────────────────────────
+// ── Hosts ─────────────────────────────────────────────────────────────────────
+function nextHostIP(subnetId){
+  const s=subnetById(subnetId); if(!s||!s.netNum)return null;
+  // gateway = firstHost (reserved for router), user hosts start at +2
+  const taken=new Set(S.hosts.filter(h=>h.subnetId===subnetId).map(h=>h.ip));
+  const start=(s.netNum+2)>>>0;
+  const end=s.prefix<31?(s.netNum+bs(s.prefix)-2)>>>0:(s.netNum+1)>>>0;
+  for(let n=start;n<=end;n++){
+    const ip=n2ip(n>>>0);
+    if(!taken.has(ip))return ip;
+  }
+  return null; // full
+}
+
+function hostsInSubnet(subnetId){ return S.hosts.filter(h=>h.subnetId===subnetId); }
+function hostSlotsFree(s){ return Math.max(0, s.usable - 1 - hostsInSubnet(s.id).length); } // -1 for gateway
+
+function addHost(){
+  const nameEl=document.getElementById('hn');
+  const subEl=document.getElementById('hsubnet');
+  const ipEl=document.getElementById('hip');
+  const errEl=document.getElementById('merr-host');
+  errEl.style.display='none';
+
+  const name=nameEl.value.trim()||`Host ${nid}`;
+  const subnetId=parseInt(subEl.value)||null;
+  if(!subnetId){ showHerr('Select a subnet'); return; }
+
+  const s=subnetById(subnetId);
+  if(!s){ showHerr('Subnet not found'); return; }
+  if(hostSlotsFree(s)<=0){ showHerr('Subnet is full — no usable addresses remain'); return; }
+
+  let ip=ipEl.value.trim();
+  if(!ip){
+    ip=nextHostIP(subnetId);
+    if(!ip){ showHerr('No addresses available'); return; }
+  } else {
+    // validate IP is in subnet and not taken
+    const parsed=parseIP(ip);
+    if(!parsed){ showHerr('Invalid IP address'); return; }
+    const num=ip2n(parsed);
+    if((num&mkMask(s.prefix))>>>0 !== s.netNum){ showHerr('IP not in subnet range'); return; }
+    if(ip===s.firstHost){ showHerr('That IP is reserved for the gateway ('+s.firstHost+')'); return; }
+    if(ip===s.broadcast){ showHerr('That IP is the broadcast address'); return; }
+    if(S.hosts.find(h=>h.subnetId===subnetId&&h.ip===ip)){ showHerr('IP already in use'); return; }
+  }
+
+  // position host in orbit around subnet node
+  const peers=hostsInSubnet(subnetId);
+  const angle=(peers.length/Math.max(peers.length+1,6))*Math.PI*2 - Math.PI/2;
+  const orbitR=SR+28;
+  const hx=s.x+Math.cos(angle)*orbitR;
+  const hy=s.y+Math.sin(angle)*orbitR;
+
+  const hostData={id:nid++, name, subnetId, ip, x:hx, y:hy};
+
+  // If DHCP server is active and no manual IP was given, run DORA first then place host
+  const manualIp=ipEl.value.trim();
+  if(S.dhcpServer && !manualIp){
+    const r=routerById(s.routerId);
+    if(r){
+      nameEl.value=''; ipEl.value='';
+      closeModal('modal-host');
+      // Place host on canvas immediately (so animation has a target) but mark as pending
+      hostData.dhcpPending=true;
+      S.hosts.push(hostData);
+      updateAll();
+      runDoraSequence(hostData, s, r, ()=>{
+        // DORA complete — finalize host
+        hostData.dhcpPending=false;
+        // Record lease
+        S.dhcpServer.leases.push({host:name, ip, subnet:s.name});
+        if(S.dhcpServer.leases.length>20) S.dhcpServer.leases.shift();
+        updateAll();
+        log(`✓ ${name} leased ${ip} via DHCP`,'ok');
+      });
+      return;
+    }
+  }
+
+  S.hosts.push(hostData);
+  nameEl.value=''; ipEl.value='';
+  updateAll();
+  log(`Added host ${name} (${ip}) in ${s.name}`,'inf');
+  closeModal('modal-host');
+}
+
+function showHerr(m){ const e=document.getElementById('merr-host'); e.textContent=m; e.style.display='block'; }
+function removeHost(id){
+  S.hosts=S.hosts.filter(h=>h.id!==id);
+  if(S.sel&&S.sel.type==='host'&&S.sel.id===id) S.sel=null;
+  updateAll();
+}
+function hostById(id){ return S.hosts.find(h=>h.id===id); }
+
+function updateHostSubnetSelect(){
+  const el=document.getElementById('hsubnet');
+  if(!el) return;
+  const cur=el.value;
+  el.innerHTML='<option value="">— select subnet —</option>'+
+    S.subnets.map(s=>`<option value="${s.id}">${s.name} (${s.cidr||'?'}) — ${hostSlotsFree(s)} free</option>`).join('');
+  if(cur) el.value=cur;
+}
+
+function updateHList(){
+  const el=document.getElementById('hlist');
+  const cnt=document.getElementById('hcnt');
+  if(!S.hosts.length){ el.innerHTML='<div class="empty">No hosts yet</div>'; cnt.textContent=''; return; }
+  cnt.textContent=`(${S.hosts.length})`;
+  const isSel=id=>S.sel&&S.sel.type==='host'&&S.sel.id===id;
+  el.innerHTML=S.hosts.map(h=>{
+    const s=subnetById(h.subnetId);
+    return `<div class="hitem ${isSel(h.id)?'sel':''}" onclick="selectNode('host',${h.id})">
+      <div class="hdot" style="background:${s?s.color.node:'#888'}"></div>
+      <div style="flex:1;min-width:0">
+        <div class="nname">${h.name}</div>
+        <div class="nsub">${h.ip}${s?' → '+s.name:''}</div>
+      </div>
+      <button class="ndel" onclick="event.stopPropagation();removeHost(${h.id})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function updateAll(){updateBaseInfo();updateRList();updateSList();updateHostSubnetSelect();updateHList();updateRouterSelect();updatePktSel();updateSelPanel();updateDhcpPanel();draw();}
+
+function updateRList(){
+  const el=document.getElementById('rlist');
+  if(!el) return;
+  if(!S.routers.length){el.innerHTML='<div class="empty">No routers yet</div>';return;}
+  const isSel=id=>S.sel&&S.sel.type==='router'&&S.sel.id===id;
+  el.innerHTML=S.routers.map(r=>`
+    <div class="nitem ${isSel(r.id)?'rsel':''}" onclick="selectNode('router',${r.id})">
+      <div class="ndot" style="background:#4338CA;border-radius:2px"></div>
+      <div style="flex:1;min-width:0"><div class="nname">${r.name}</div>
+        <div class="nsub">${S.subnets.filter(s=>s.routerId===r.id).length} subnet(s)</div></div>
+      <button class="ndel" onclick="event.stopPropagation();removeRouter(${r.id})">✕</button>
+    </div>`).join('');
+}
+
+function updateSList(){
+  const el=document.getElementById('slist'),cnt=document.getElementById('scnt'),aw=document.getElementById('awrap');
+  if(!S.subnets.length){el.innerHTML='<div class="empty">No subnets yet</div>';cnt.textContent='';aw.style.display='none';return;}
+  cnt.textContent=`(${S.subnets.length})`;
+  aw.style.display='block';
+  const used=totalUsed(),total=bs(S.basePrefix),pct=Math.min(100,used/total*100);
+  document.getElementById('afill').style.width=pct.toFixed(1)+'%';
+  document.getElementById('afill').style.background=used>total?'#E24B4A':'var(--green)';
+  document.getElementById('albl').textContent=`${used.toLocaleString()} / ${total.toLocaleString()} (${pct.toFixed(1)}%)`;
+  const isSel=id=>S.sel&&S.sel.type==='subnet'&&S.sel.id===id;
+  el.innerHTML=S.subnets.map(s=>{
+    const r=routerById(s.routerId);
+    return `<div class="nitem ${isSel(s.id)?'sel':''}" onclick="selectNode('subnet',${s.id})">
+      <div class="ndot" style="background:${s.color.node}"></div>
+      <div style="flex:1;min-width:0">
+        <div class="nname">${s.name}</div>
+        <div class="nsub">${s.cidr||''}${r?' → '+r.name:''}${s.overflow?' ⚠':''}</div>
+      </div>
+      <button class="ndel" onclick="event.stopPropagation();removeSubnet(${s.id})">✕</button>
+    </div>`;}).join('');
+}
+
+function updateRouterSelect(){
+  const el=document.getElementById('nrouter');
+  if(!el) return;
+  const cur=el.value;
+  el.innerHTML='<option value="">— select router —</option>'+
+    S.routers.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');
+  if(cur)el.value=cur;
+}
+
+function updatePktSel(){
+  const extName=document.getElementById('ext-name').value||'External Server';
+  const extIP=document.getElementById('ext-ip').value||'8.8.8.8';
+  const opts=S.hosts.map(h=>{
+    const s=subnetById(h.subnetId);
+    return `<option value="h${h.id}">${h.name} (${h.ip})${s?' — '+s.name:''}</option>`;
+  }).join('');
+  const extOpt=`<option value="ext">${extName} (${extIP}) — Internet</option>`;
+  const blank='<option value="">— select host —</option>';
+  ['pfrom','pto'].forEach(id=>document.getElementById(id).innerHTML=blank+opts+extOpt);
+}
+
+function updateSelPanel(){
+  const el=document.getElementById('selinfo');
+  if(!S.sel){el.innerHTML='<div class="empty">Click a node to inspect</div>';return;}
+
+  if(S.sel.type==='natTransit'){
+    const r=routerById(S.sel.id);
+    const nt=S.natTransits.find(t=>t.routerId===S.sel.id);
+    if(!r||!nt){el.innerHTML='';return;}
+    el.innerHTML=`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="width:12px;height:12px;border-radius:3px;background:#C2410C"></div>
+        <strong>NAT Transit /30 — ${r.name}</strong>
+      </div>
+      <div class="kvgrid">
+        <div class="kvrow"><span class="kvkey">CIDR</span><span class="kvval">${nt.cidr}</span></div>
+        <div class="kvrow"><span class="kvkey">NAT interface</span><span class="kvval">${nt.natIP}</span></div>
+        <div class="kvrow"><span class="kvkey">${r.name} interface</span><span class="kvval">${nt.routerIP}</span></div>
+        <div class="kvrow"><span class="kvkey">Usable hosts</span><span class="kvval">2</span></div>
+      </div>
+      <div class="al inf" style="margin-top:8px;margin-bottom:0">This /30 point-to-point link connects ${r.name} to the NAT router. A /30 provides exactly 2 usable addresses — one per router interface.</div>`;
+    return;
+  }
+
+  if(S.sel.type==='dhcpServer'){
+    if(!S.dhcpServer){el.innerHTML='';return;}
+    const r=routerById(S.dhcpServer.routerId);
+    const servedSubnets=S.subnets;
+    const leases=S.dhcpServer.leases;
+    el.innerHTML=`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="width:12px;height:12px;border-radius:2px;background:#F59E0B"></div>
+        <strong>DHCP Server</strong>
+      </div>
+      <div class="kvgrid">
+        <div class="kvrow"><span class="kvkey">Hosted on</span><span class="kvval">${r?r.name:'—'}</span></div>
+        <div class="kvrow"><span class="kvkey">Subnets served</span><span class="kvval">${servedSubnets.length}</span></div>
+        <div class="kvrow"><span class="kvkey">Active leases</span><span class="kvval">${leases.length}</span></div>
+        <div class="kvrow"><span class="kvkey">Protocol</span><span class="kvval">UDP 67/68</span></div>
+      </div>
+      <div style="margin-top:10px;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Lease Table</div>
+      ${leases.length?`<div style="border:0.5px solid var(--border);border-radius:var(--r);overflow:hidden">
+        <table style="width:100%;border-collapse:collapse;font-size:11px">
+          <thead><tr style="background:var(--bg3)">
+            <th style="padding:4px 8px;text-align:left;font-size:10px;color:var(--text3);font-weight:600;border-bottom:0.5px solid var(--border)">Host</th>
+            <th style="padding:4px 8px;text-align:left;font-size:10px;color:var(--text3);font-weight:600;border-bottom:0.5px solid var(--border)">IP Leased</th>
+            <th style="padding:4px 8px;text-align:left;font-size:10px;color:var(--text3);font-weight:600;border-bottom:0.5px solid var(--border)">Subnet</th>
+          </tr></thead>
+          <tbody>${leases.map(l=>`<tr style="border-bottom:0.5px solid var(--border)">
+            <td style="padding:4px 8px;font-size:11px">${l.host}</td>
+            <td style="padding:4px 8px;font-family:monospace;font-size:11px">${l.ip}</td>
+            <td style="padding:4px 8px;font-size:10px;color:var(--text3)">${l.subnet}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>`:`<div class="empty">No leases yet — add a host to trigger DORA</div>`}
+      <div class="al inf" style="margin-top:8px;margin-bottom:0">This DHCP server handles all subnets. Hosts on R1's subnets receive IPs directly. Hosts on other routers' subnets receive IPs via the DHCP relay agent (ip helper-address) — broadcasts are intercepted and forwarded as unicast.</div>
+      <div style="margin-top:10px;padding:10px;border-radius:var(--r);border:0.5px solid ${S.dhcpExamineMode?'#F59E0B':'var(--border2)'};background:${S.dhcpExamineMode?'#FFFBEB':'var(--bg3)'}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="${S.dhcpExamineMode?'#D97706':'var(--text2)'}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="4"/><line x1="9.5" y1="9.5" x2="14" y2="14"/><line x1="6" y1="4" x2="6" y2="8"/><line x1="4" y1="6" x2="8" y2="6"/></svg>
+            <span style="font-size:11px;font-weight:600;color:${S.dhcpExamineMode?'#92400E':'var(--text)'}">Examine DHCP Mode</span>
+          </div>
+          <button class="btn sm" style="${S.dhcpExamineMode?'background:#F59E0B;color:white;border-color:#D97706;':''}" onclick="S.dhcpExamineMode=!S.dhcpExamineMode;log('DHCP Examine Mode '+(S.dhcpExamineMode?'enabled':'disabled'),'inf');updateSelPanel();draw();">
+            ${S.dhcpExamineMode?'ON — click to disable':'OFF — click to enable'}
+          </button>
+        </div>
+        <div style="font-size:11px;color:${S.dhcpExamineMode?'#92400E':'var(--text2)'}">
+          ${S.dhcpExamineMode
+            ? 'Packet flow will pause at the DHCP server during DORA. An overlay will explain each step.'
+            : 'Enable to pause when a DORA packet hits the DHCP server and step through the exchange.'}
+        </div>
+      </div>`;
+    return;
+  }
+
+  if(S.sel.type==='natRouter'){
+    const natIP=document.getElementById('nat-ip').value||'203.0.113.1';
+    const rows=S.natTable.length?S.natTable.map(e=>`
+        <tr>
+          <td style="color:var(--text3)">${e.host}</td>
+          <td>${e.privIP}:<strong>${e.privPort}</strong></td>
+          <td>→</td>
+          <td>${e.pubIP}:<strong>${e.pubPort}</strong></td>
+          <td style="color:var(--text3)">${e.destIP}:${e.destPort}</td>
+        </tr>`).join('')
+      :'<tr><td colspan="5" style="color:var(--text3);font-style:italic;padding:6px">No translations yet — send a packet</td></tr>';
+    el.innerHTML=`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="width:12px;height:12px;border-radius:3px;background:#0F6E56"></div>
+        <strong>NAT Router</strong>
+      </div>
+      <div class="kvgrid">
+        <div class="kvrow"><span class="kvkey">Public IP</span><span class="kvval">${natIP}</span></div>
+        ${S.natTransits.map(t=>{const r=routerById(t.routerId);return `<div class="kvrow"><span class="kvkey">${r?r.name:''} link</span><span class="kvval">${t.cidr}</span></div>`;}).join('')}
+      </div>
+      <div style="margin-top:10px;padding:10px;border-radius:var(--r);border:0.5px solid ${S.natExamineMode?'var(--green-m)':'var(--border2)'};background:${S.natExamineMode?'var(--green-l)':'var(--bg3)'}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="${S.natExamineMode?'var(--green-t)':'var(--text2)'}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="4"/><line x1="9.5" y1="9.5" x2="14" y2="14"/><line x1="6" y1="4" x2="6" y2="8"/><line x1="4" y1="6" x2="8" y2="6"/></svg>
+            <span style="font-size:11px;font-weight:600;color:${S.natExamineMode?'var(--green-t)':'var(--text)'}">Examine NAT Mode</span>
+          </div>
+          <button class="btn sm ${S.natExamineMode?'pri':''}" onclick="toggleNatExamine()" style="${S.natExamineMode?'':''}">
+            ${S.natExamineMode?'ON — click to disable':'OFF — click to enable'}
+          </button>
+        </div>
+        <div style="font-size:11px;color:${S.natExamineMode?'var(--green-t)':'var(--text2)'}">
+          ${S.natExamineMode
+            ? 'Packet flow will pause at the NAT router. An overlay will explain each translation before continuing.'
+            : 'Enable to pause at the NAT boundary and step through each translation with a detailed explanation.'}
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">NAT Translation Table (PAT)</div>
+        <div style="overflow-x:auto">
+        <table class="nat-table">
+          <thead><tr><th>Host</th><th>Private IP:Port</th><th></th><th>Public IP:Port</th><th>Dest IP:Port</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        </div>
+      </div>
+      <div class="al inf" style="margin-top:8px;margin-bottom:0">PAT (Port Address Translation) lets multiple private hosts share one public IP — each gets a unique ephemeral port so return traffic can be mapped back to the right host.</div>`;
+    return;
+  }
+
+  if(S.sel.type==='extHost'){
+    const extIP=document.getElementById('ext-ip').value||'8.8.8.8';
+    const extName=document.getElementById('ext-name').value||'External Server';
+    el.innerHTML=`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="width:12px;height:12px;border-radius:50%;background:#3B82F6"></div>
+        <strong>${extName}</strong>
+      </div>
+      <div class="kvgrid">
+        <div class="kvrow"><span class="kvkey">IP address</span><span class="kvval">${extIP}</span></div>
+        <div class="kvrow"><span class="kvkey">Zone</span><span class="kvval">Internet</span></div>
+      </div>
+      <div class="al inf" style="margin-top:8px;margin-bottom:0">This host is on the public internet. Internal hosts reach it via NAT — their private IPs are rewritten to the NAT public IP before leaving the private network.</div>`;
+    return;
+  }
+
+  if(S.sel.type==='router'){
+    const r=routerById(S.sel.id); if(!r){el.innerHTML='';return;}
+    const mySubnets=S.subnets.filter(s=>s.routerId===r.id);
+    const myTransits=S.transits.filter(t=>t.r1id===r.id||t.r2id===r.id);
+    const myNatTransit=S.natTransits.find(t=>t.routerId===r.id);
+    const transitCount=myTransits.length+(myNatTransit?1:0);
+
+    // Build forwarding table rows
+    // Row shape: {prefix, nextHop, iface, type, note}
+    const fwdRows=buildRouterFwdRows(r);
+
+    const typeBadge=t=>({
+      C:`<span style="display:inline-block;width:16px;height:16px;line-height:16px;text-align:center;border-radius:3px;font-size:9px;font-weight:700;background:var(--green-l);color:var(--green-t);border:0.5px solid var(--green-m)">C</span>`,
+      S:`<span style="display:inline-block;width:16px;height:16px;line-height:16px;text-align:center;border-radius:3px;font-size:9px;font-weight:700;background:var(--blue-l);color:var(--blue-t);border:0.5px solid var(--blue-m)">S</span>`,
+    })[t]||t;
+
+    const fwdTableHtml=`
+      <div style="margin-top:12px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);
+                    padding:5px 0 6px;border-bottom:0.5px solid var(--border);margin-bottom:0;
+                    display:flex;align-items:center;gap:6px">
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="var(--router-s)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="3" width="14" height="10" rx="1.5"/>
+            <line x1="1" y1="7" x2="15" y2="7"/>
+            <line x1="5" y1="7" x2="5" y2="13"/>
+            <line x1="10" y1="7" x2="10" y2="13"/>
+          </svg>
+          Forwarding Table
+        </div>
+        <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:11px">
+          <thead>
+            <tr style="background:var(--bg3)">
+              <th style="padding:5px 6px;text-align:left;font-size:10px;color:var(--text3);font-weight:600;border-bottom:0.5px solid var(--border);white-space:nowrap">Type</th>
+              <th style="padding:5px 6px;text-align:left;font-size:10px;color:var(--text3);font-weight:600;border-bottom:0.5px solid var(--border);white-space:nowrap">Destination</th>
+              <th style="padding:5px 6px;text-align:left;font-size:10px;color:var(--text3);font-weight:600;border-bottom:0.5px solid var(--border);white-space:nowrap">Next Hop</th>
+              <th style="padding:5px 6px;text-align:left;font-size:10px;color:var(--text3);font-weight:600;border-bottom:0.5px solid var(--border);white-space:nowrap">Interface</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${fwdRows.length?fwdRows.map((row,i)=>`
+              <tr style="border-bottom:0.5px solid var(--border);${i%2===1?'background:var(--bg3)':''}">
+                <td style="padding:5px 6px;vertical-align:middle">${typeBadge(row.type)}</td>
+                <td style="padding:5px 6px;font-family:monospace;font-size:11px;font-weight:${row.prefix==='0.0.0.0/0'?'700':'400'}">${row.prefix}</td>
+                <td style="padding:5px 6px;font-family:monospace;font-size:11px;color:${row.nextHop==='—'?'var(--text3)':'var(--blue-t)'}">${row.nextHop}</td>
+                <td style="padding:5px 6px;font-family:monospace;font-size:11px;color:var(--text2)">${row.iface}</td>
+              </tr>
+              <tr style="${i%2===1?'background:var(--bg3)':''}">
+                <td></td>
+                <td colspan="3" style="padding:0 6px 5px;font-size:10px;color:var(--text3);font-style:italic">${row.note}</td>
+              </tr>`).join('')
+            :'<tr><td colspan="4" style="padding:8px 6px;color:var(--text3);font-style:italic;font-size:11px">No routes — add subnets</td></tr>'}
+          </tbody>
+        </table>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:6px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text3)">
+            <span style="display:inline-block;width:14px;height:14px;line-height:14px;text-align:center;border-radius:3px;font-size:9px;font-weight:700;background:var(--green-l);color:var(--green-t);border:0.5px solid var(--green-m)">C</span> Directly connected
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text3)">
+            <span style="display:inline-block;width:14px;height:14px;line-height:14px;text-align:center;border-radius:3px;font-size:9px;font-weight:700;background:var(--blue-l);color:var(--blue-t);border:0.5px solid var(--blue-m)">S</span> Static / default
+          </div>
+        </div>
+      </div>`;
+
+    const examineOn=S.routerExamineSet.has(r.id);
+    const examineCard=`
+      <div style="margin-bottom:10px;padding:10px;border-radius:var(--r);border:0.5px solid ${examineOn?'var(--router-s)':'var(--border2)'};background:${examineOn?'var(--router-f)':'var(--bg3)'}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="${examineOn?'var(--router-t)':'var(--text2)'}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="4"/><line x1="9.5" y1="9.5" x2="14" y2="14"/><line x1="6" y1="4" x2="6" y2="8"/><line x1="4" y1="6" x2="8" y2="6"/></svg>
+            <span style="font-size:11px;font-weight:600;color:${examineOn?'var(--router-t)':'var(--text)'}">Examine Forwarding</span>
+          </div>
+          <button class="btn sm ${examineOn?'sec':''}" onclick="toggleRouterExamine(${r.id})">
+            ${examineOn?'ON — click to disable':'OFF — click to enable'}
+          </button>
+        </div>
+        <div style="font-size:11px;color:${examineOn?'var(--router-t)':'var(--text2)'}">
+          ${examineOn
+            ? 'Packet flow will pause at this router. An overlay will show forwarding table resolution hop-by-hop.'
+            : 'Enable to pause when a packet hits this router and step through forwarding table lookup.'}
+        </div>
+      </div>`;
+
+    el.innerHTML=`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="width:14px;height:14px;border-radius:3px;background:#4338CA"></div>
+        <strong>${r.name} — Router</strong>
+        <button class="btn sm sec" onclick="openConsole(${r.id})" style="margin-left:auto;font-family:monospace;font-size:10px;padding:3px 9px">
+          &gt;_ Console
+        </button>
+      </div>
+      <div class="igrid" style="margin-bottom:8px">
+        <div class="ic"><div class="l">Subnets</div><div class="v">${mySubnets.length}</div></div>
+        <div class="ic"><div class="l">Transit links</div><div class="v">${transitCount}</div></div>
+      </div>
+      ${examineCard}
+      ${fwdTableHtml}`;
+    return;
+  }
+
+  if(S.sel.type==='transit'){
+    const t=transitById(S.sel.id); if(!t){el.innerHTML='';return;}
+    const r1=routerById(t.r1id),r2=routerById(t.r2id);
+    el.innerHTML=`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <div style="width:12px;height:12px;border-radius:3px;background:#C2410C"></div>
+        <strong style="font-size:13px">Transit Link /30</strong>
+      </div>
+      <div class="kvgrid">
+        <div class="kvrow"><span class="kvkey">CIDR</span><span class="kvval">${t.cidr||'—'}</span></div>
+        <div class="kvrow"><span class="kvkey">Usable hosts</span><span class="kvval">2</span></div>
+        <div class="kvrow"><span class="kvkey">${r1?r1.name:'R?'} interface</span><span class="kvval">${t.r1ip||'—'}</span></div>
+        <div class="kvrow"><span class="kvkey">${r2?r2.name:'R?'} interface</span><span class="kvval">${t.r2ip||'—'}</span></div>
+      </div>
+      <div class="al inf" style="margin-top:8px;margin-bottom:0">A /30 gives exactly 2 usable addresses — one per router interface. This is the standard for point-to-point router links.</div>`;
+    return;
+  }
+
+  if(S.sel.type==='host'){
+    const h=hostById(S.sel.id); if(!h){el.innerHTML='';return;}
+    const s=subnetById(h.subnetId);
+    const r=s?routerById(s.routerId):null;
+    el.innerHTML=`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="width:12px;height:12px;border-radius:50%;background:${s?s.color.node:'#888'}"></div>
+        <strong style="font-size:13px">${h.name}</strong>
+      </div>
+      <div class="kvgrid">
+        <div class="kvrow"><span class="kvkey">IP address</span><span class="kvval">${h.ip}</span></div>
+        <div class="kvrow"><span class="kvkey">Subnet</span><span class="kvval">${s?s.name:'—'}</span></div>
+        <div class="kvrow"><span class="kvkey">Subnet CIDR</span><span class="kvval">${s?s.cidr:'—'}</span></div>
+        <div class="kvrow"><span class="kvkey">Default gateway</span><span class="kvval">${s?s.firstHost:'—'}</span></div>
+        <div class="kvrow"><span class="kvkey">Router</span><span class="kvval">${r?r.name:'—'}</span></div>
+      </div>
+      <div class="al inf" style="margin-top:8px;margin-bottom:0">To reach another subnet, the host sends traffic to its default gateway (${s?s.firstHost:'—'}), which is ${r?r.name:'the router'}. ${r?r.name:'The router'} then forwards the packet toward the destination network.</div>`;
+    return;
+  }
+
+  const s=subnetById(S.sel.id); if(!s){el.innerHTML='<div class="empty">Click a node to inspect</div>';return;}
+  const r=routerById(s.routerId);
+  const netIP=s.cidr?s.cidr.split('/')[0]:'—';
+  const maskIP=n2ip(mkMask(s.prefix));
+  const blockSz=bs(s.prefix);
+  const uid=`s${s.id}`;
+
+  // DHCP scope calculations
+  const dhcpHtml = (()=>{
+    if(!s.netNum || s.prefix >= 31) return '';
+    const gateway    = s.firstHost;
+    const scopeStart = n2ip((s.netNum + 2) >>> 0);
+    const scopeEnd   = s.lastHost;
+    const totalUsable = Math.max(0, s.usable - 1); // minus 1 for gateway
+
+    const allHosts = hostsInSubnet(s.id);
+    const ds = S.dhcpServer;
+
+    // If no DHCP server, show simple address usage (no lease framing)
+    if(!ds){
+      const used = allHosts.length;
+      const free = Math.max(0, totalUsable - used);
+      const pct  = totalUsable > 0 ? Math.min(100, (used / totalUsable) * 100) : 0;
+      const barColor = pct > 85 ? 'var(--red)' : pct > 60 ? 'var(--amber-m)' : 'var(--green)';
+      return `
+      <div style="margin-top:12px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);
+                    padding:5px 0 6px;border-bottom:0.5px solid var(--border);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="12" height="10" rx="1.5"/><line x1="5" y1="7" x2="11" y2="7"/><line x1="5" y1="10" x2="9" y2="10"/>
+          </svg>
+          Address Pool
+        </div>
+        <div class="kvgrid">
+          <div class="kvrow"><span class="kvkey">Excluded (gateway)</span><span class="kvval">${gateway}</span></div>
+          <div class="kvrow"><span class="kvkey">Usable range</span><span class="kvval">${scopeStart} – ${scopeEnd}</span></div>
+          <div class="kvrow"><span class="kvkey">Pool size</span><span class="kvval">${totalUsable.toLocaleString()} addresses</span></div>
+          <div class="kvrow"><span class="kvkey">Assigned (static)</span><span class="kvval">${used} / ${totalUsable}</span></div>
+          <div class="kvrow"><span class="kvkey">Free</span><span class="kvval" style="color:${free===0?'var(--red)':'inherit'}">${free}</span></div>
+        </div>
+        <div style="margin-top:6px">
+          <div class="atrack"><div class="afill" style="width:${pct.toFixed(1)}%;background:${barColor}"></div></div>
+          <div style="font-size:10px;color:var(--text2)">${used} of ${totalUsable} addresses assigned (${pct.toFixed(1)}%)</div>
+        </div>
+        <div class="al inf" style="margin-top:8px;margin-bottom:0">No DHCP server configured — all addresses are statically assigned.</div>
+      </div>`;
+    }
+
+    // DHCP server active — split into DHCP leases vs static
+    const dhcpLeases  = ds.leases.filter(l=>l.subnet===s.name);
+    const staticHosts = allHosts.filter(h=>!ds.leases.find(l=>l.ip===h.ip&&l.subnet===s.name));
+    const leasedCount = dhcpLeases.length;
+    const staticCount = staticHosts.length;
+    const usedCount   = leasedCount + staticCount;
+    const leasesAvail = Math.max(0, totalUsable - usedCount);
+    const pct = totalUsable > 0 ? Math.min(100, (usedCount / totalUsable) * 100) : 0;
+    const barColor = pct > 85 ? 'var(--red)' : pct > 60 ? 'var(--amber-m)' : 'var(--green)';
+
+    return `
+    <div style="margin-top:12px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);
+                  padding:5px 0 6px;border-bottom:0.5px solid var(--border);margin-bottom:6px;
+                  display:flex;align-items:center;gap:6px">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="12" height="10" rx="1.5"/>
+          <line x1="5" y1="7" x2="11" y2="7"/><line x1="5" y1="10" x2="9" y2="10"/>
+        </svg>
+        DHCP Scope
+      </div>
+      <div class="kvgrid">
+        <div class="kvrow">
+          <span class="kvkey" title="Gateway is statically assigned to the router — excluded from DHCP pool">Excluded (gateway)</span>
+          <span class="kvval">${gateway}</span>
+        </div>
+        <div class="kvrow"><span class="kvkey">Scope start</span><span class="kvval">${scopeStart}</span></div>
+        <div class="kvrow"><span class="kvkey">Scope end</span><span class="kvval">${scopeEnd}</span></div>
+        <div class="kvrow"><span class="kvkey">Pool size</span><span class="kvval">${totalUsable.toLocaleString()} addresses</span></div>
+        <div class="kvrow"><span class="kvkey">DHCP leases</span><span class="kvval">${leasedCount} / ${totalUsable.toLocaleString()}</span></div>
+        ${staticCount>0?`<div class="kvrow"><span class="kvkey">Static hosts</span><span class="kvval" style="color:var(--text3)">${staticCount} (outside pool)</span></div>`:''}
+        <div class="kvrow">
+          <span class="kvkey">Leases free</span>
+          <span class="kvval" style="color:${leasesAvail===0?'var(--red)':'inherit'}">${leasesAvail.toLocaleString()}</span>
+        </div>
+      </div>
+      <div style="margin-top:6px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Lease pool utilization</div>
+        <div class="atrack"><div class="afill" style="width:${pct.toFixed(1)}%;background:${barColor}"></div></div>
+        <div style="font-size:10px;color:var(--text2)">${leasedCount} of ${totalUsable} addresses leased via DHCP (${pct.toFixed(1)}%)</div>
+      </div>
+      <div class="al inf" style="margin-top:8px;margin-bottom:0">
+        The DHCP server hands out addresses from <strong>${scopeStart}</strong> to <strong>${scopeEnd}</strong>.
+        <strong>${gateway}</strong> is excluded (router gateway).
+        ${staticCount>0?`${staticCount} host${staticCount!==1?'s':''} in this subnet used static assignment and are not tracked in the DHCP pool.`:''}
+        ${leasesAvail===0?'<br><strong style="color:var(--red)">⚠ Pool exhausted.</strong>':''}
+      </div>
+    </div>`;
+  })();
+
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div style="width:12px;height:12px;border-radius:50%;background:${s.color.node}"></div>
+      <strong style="font-size:13px">${s.name}</strong>
+    </div>
+    <div class="kvgrid">
+      ${kvRow('CIDR', s.cidr||'—', null)}
+      ${kvRow('Prefix', '/'+s.prefix, null)}
+      ${kvRow('Network addr', netIP, null)}
+      ${kvRow('Broadcast', s.broadcast||'—', s.prefix<31?broadcastCalc(netIP,maskIP,s.broadcast,s.prefix,uid+'-bcast'):null)}
+      ${kvRow('Gateway'+(r?' ('+r.name+')':''), s.firstHost||'—', gatewayCalc(s.firstHost,netIP,s.prefix,r?r.name:'router',uid+'-gw'))}
+      ${kvRow('Last host', s.lastHost||'—', null)}
+      ${kvRow('Block size', blockSz.toLocaleString(), blockSizeCalc(s.prefix,uid+'-bsz'))}
+      ${kvRow('Usable hosts', s.usable?s.usable.toLocaleString():'—', usableCalc(blockSz,netIP,s.broadcast,s.prefix,s.usable,uid+'-usable'))}
+    </div>
+    ${s.overflow?'<div class="al warn" style="margin-top:6px">⚠ Overflows base network</div>':''}
+    ${dhcpHtml}
+    `;
+}
+
+
+function log(msg,type='inf'){
+  S.logN++;
+  S.logEntries.push({n:S.logN,msg,type});
+  if(S.logEntries.length>80)S.logEntries.shift();
+  const el=document.getElementById('elog');
+  const html=S.logEntries.map(e=>`<div class="le"><span class="ln">${String(e.n).padStart(4,'0')}</span><span class="l${e.type}">${e.msg}</span></div>`).join('');
+  el.innerHTML=html;
+  el.scrollTop=el.scrollHeight;
+  if(typeof syncLogOverlay==='function') syncLogOverlay();
+}
+function clearLog(){
+  S.logEntries=[];S.logN=0;
+  document.getElementById('elog').innerHTML='';
+  if(typeof syncLogOverlay==='function') syncLogOverlay();
+}
+
+// ── Packet routing ────────────────────────────────────────────────────────────
+function sendPacket(){
+  const fiRaw=document.getElementById('pfrom').value;
+  const tiRaw=document.getElementById('pto').value;
+  const fi=fiRaw.startsWith('h')?parseInt(fiRaw.slice(1)):(fiRaw==='ext'?'ext':parseInt(fiRaw));
+  const ti=tiRaw.startsWith('h')?parseInt(tiRaw.slice(1)):(tiRaw==='ext'?'ext':parseInt(tiRaw));
+  const resEl=document.getElementById('pres');
+  resEl.innerHTML='';
+  document.getElementById('pres-tb').textContent='';
+  if(!fi||!ti){log('Select source and destination hosts','err');return;}
+  if(fi===ti){log('Same host','err');return;}
+
+  const natIP=document.getElementById('nat-ip').value||'203.0.113.1';
+  const extIP=document.getElementById('ext-ip').value||'8.8.8.8';
+  const extName=document.getElementById('ext-name').value||'External Server';
+
+  // External host virtual object
+  const extHostObj={id:'ext',name:extName,ip:extIP,subnetId:null,x:S.extHost.x,y:S.extHost.y};
+
+  const fromH=fi==='ext'?extHostObj:hostById(fi);
+  const toH  =ti==='ext'?extHostObj:hostById(ti);
+  if(!fromH||!toH)return;
+  // Handle external host (NAT crossing)
+  const fromExt=fromH.id==='ext', toExt=toH.id==='ext';
+  if(fromExt&&toExt){log('Both hosts are external','err');return;}
+
+  if(fromExt){
+    log(`NAT blocked — ${fromH.name} (${fromH.ip}) cannot initiate inbound connections. NAT only translates outbound private traffic.`,'err');
+    document.getElementById('pres-tb').textContent='✗ NAT blocked inbound connection';
+    // Animate packet to NAT router, pause with drop overlay, then burst
+    const arriveStep={
+      fx:fromH.x,fy:fromH.y,tx:S.natRouter.x,ty:S.natRouter.y,
+      label:`${fromH.name} (${fromH.ip}) → NAT Router`,
+      examineInfo:{
+        title:'Inbound Connection — Packet Dropped',
+        html:natDropBlockedHtml(fromH,natIP),
+        isBlock:true,
+      },
+    };
+    const rejSteps=[
+      arriveStep,
+      {fx:S.natRouter.x,fy:S.natRouter.y,tx:S.natRouter.x,ty:S.natRouter.y,
+       label:'NAT router drops packet — no inbound mapping exists',reject:true},
+    ];
+    S.packet={steps:rejSteps,step:0,t:0,active:true,rejected:false};
+    requestAnimationFrame(tickPkt);
+    return;
+  }
+
+  if(fromExt||toExt){
+    // Cross-NAT packet
+    const internalH=fromExt?toH:fromH;
+    const internalS=subnetById(internalH.subnetId);
+    if(!internalS){log('Internal host has no subnet','err');return;}
+    const internalR=routerById(internalS.routerId);
+    if(!internalR){log(`${internalS.name} has no router`,'err');return;}
+    const steps=[];
+    if(fromExt){
+      // External → NAT → internal (already blocked above, unreachable)
+      steps.push({fx:fromH.x,fy:fromH.y,tx:S.natRouter.x,ty:S.natRouter.y,label:`${fromH.name} (${fromH.ip}) → NAT Router`});
+      steps.push({fx:S.natRouter.x,fy:S.natRouter.y,tx:internalR.x,ty:internalR.y,label:`NAT translates dst ${natIP} → ${internalH.ip}, routes to ${internalR.name}`});
+      steps.push({fx:internalR.x,fy:internalR.y,tx:internalH.x,ty:internalH.y,label:`${internalR.name} → ${internalH.name} (${internalH.ip})`});
+      log(`${fromH.name} → NAT → ${internalH.name}`,'ok');
+      log(`  NAT: dst ${natIP} → ${internalH.ip} (inbound translation)`,'inf');
+    } else {
+      // Internal → NAT → external
+      const sPort=srcPort(), ePort=ephemeralPort(), dPort=destPort(toH.ip);
+
+      steps.push({fx:fromH.x,fy:fromH.y,tx:internalR.x,ty:internalR.y,
+        routerId:internalR.id,
+        label:`${fromH.name} (${fromH.ip}) → ${internalR.name}`});
+
+      const arriveNatR={
+        fx:internalR.x,fy:internalR.y,tx:S.natRouter.x,ty:S.natRouter.y,
+        label:`${internalR.name} → NAT Router`,
+      };
+      if(S.natExamineMode){
+        arriveNatR.examineInfo={
+          title:'Outbound NAT Translation',
+          html:natExamineOutboundHtml(fromH,toH,internalR,natIP,sPort,ePort,dPort),
+        };
+      }
+      steps.push(arriveNatR);
+
+      steps.push({
+        fx:S.natRouter.x,fy:S.natRouter.y,tx:toH.x,ty:toH.y,
+        label:`NAT rewrites src ${fromH.ip}:${sPort} → ${natIP}:${ePort}, dst ${toH.ip}:${dPort}`,
+      });
+
+      log(`NAT translates src ${fromH.ip} → ${natIP}`,'inf');
+      log(`${fromH.name} → NAT → ${toH.name}`,'ok');
+      const natEntry={host:fromH.name,privIP:fromH.ip,privPort:sPort,pubIP:natIP,pubPort:ePort,destIP:toH.ip,destPort:dPort,
+        _fromH:fromH, _toH:toH, _internalR:internalR};
+      S.natTable.push(natEntry);
+      if(S.natTable.length>8)S.natTable.shift();
+      log(`  NAT table: ${fromH.ip}:${sPort} → ${natIP}:${ePort} (dst ${toH.ip}:${dPort})`,'inf');
+    }
+    const res=`✓ ${fromH.name} → ${toH.name} via NAT`;
+    log(res,'ok');
+    document.getElementById('pres-tb').textContent=res;
+    // Attach echo-back info if outbound (internal→external)
+    const echoInfo = (!fromExt && toExt) ? {fromH, toH, internalR, natIP} : null;
+    S.packet={steps,step:0,t:0,active:true,echoInfo,destIP:toH.ip,fromLabel:fromH.name,ttl:64};
+    requestAnimationFrame(tickPkt);
+    if(S.sel&&S.sel.type==='natRouter')updateSelPanel();
+    return;
+  }
+
+  const fromS=subnetById(fromH.subnetId), toS=subnetById(toH.subnetId);
+  if(!fromS||!toS)return;
+  const rFrom=routerById(fromS.routerId), rTo=routerById(toS.routerId);
+  if(!rFrom){log(`${fromS.name} has no router`,'err');return;}
+  if(!rTo){log(`${toS.name} has no router`,'err');return;}
+
+  const steps=[];
+
+  // Step 1: source host → subnet node
+  steps.push({fx:fromH.x,fy:fromH.y,tx:fromS.x,ty:fromS.y,
+    label:`${fromH.name} (${fromH.ip}) → subnet ${fromS.name}`});
+
+  // Step 2: subnet → its router (gateway)
+  steps.push({fx:fromS.x,fy:fromS.y,tx:rFrom.x,ty:rFrom.y,
+    routerId:rFrom.id,
+    label:`${fromS.name} → ${rFrom.name} via gateway ${fromS.firstHost}`});
+
+  if(rFrom.id!==rTo.id){
+    const transit=S.transits.find(t=>(t.r1id===rFrom.id&&t.r2id===rTo.id)||(t.r1id===rTo.id&&t.r2id===rFrom.id));
+    if(!transit){log(`No transit link between ${rFrom.name} and ${rTo.name}`,'err');return;}
+    const myIP=transit.r1id===rFrom.id?transit.r1ip:transit.r2ip;
+    const peerIP=transit.r1id===rTo.id?transit.r1ip:transit.r2ip;
+    steps.push({fx:rFrom.x,fy:rFrom.y,tx:transit.x,ty:transit.y,
+      label:`${rFrom.name} (${myIP}) → transit ${transit.cidr}`});
+    steps.push({fx:transit.x,fy:transit.y,tx:rTo.x,ty:rTo.y,
+      routerId:rTo.id,
+      label:`transit → ${rTo.name} (${peerIP})`});
+  }
+
+  // dest router → dest subnet
+  steps.push({fx:rTo.x,fy:rTo.y,tx:toS.x,ty:toS.y,
+    label:`${rTo.name} → ${toS.name} (${toS.cidr})`});
+
+  // dest subnet → dest host
+  steps.push({fx:toS.x,fy:toS.y,tx:toH.x,ty:toH.y,
+    label:`${toS.name} → ${toH.name} (${toH.ip})`});
+
+  steps.forEach(s=>log('  '+s.label,'inf'));
+  log(`✓ ${fromH.name} → ${toH.name} (TTL start: 64)`,'ok');
+  resEl.innerHTML='';
+  const tbRes=document.getElementById('pres-tb');
+  if(tbRes) tbRes.textContent=`✓ ${fromH.name} → ${toH.name}`;
+
+  S.packet={steps,step:0,t:0,active:true,destIP:toH.ip,fromLabel:fromH.name,ttl:64};
+  requestAnimationFrame(tickPkt);
+}
+
+function natDropBlockedHtml(fromH, natIP){
+  return `
+  <div class="nex-phase">
+    <div class="nex-phase-label">Packet arriving at NAT router from the internet</div>
+    <div class="nex-pkt nex-pkt-before">
+      <div class="nex-pkt-row"><span class="nex-f">Source IP</span><span class="nex-v">${fromH.ip}</span><span class="nex-tag pub-tag">Internet</span></div>
+      <div class="nex-pkt-row"><span class="nex-f">Dest IP</span><span class="nex-v pub">${natIP}</span></div>
+      <div class="nex-pkt-row"><span class="nex-f">NAT table</span><span class="nex-v" style="color:var(--red)">No matching entry found</span></div>
+    </div>
+  </div>
+  <div class="nex-arrow-row">
+    <div class="nex-arrow-line"></div>
+    <div class="nex-arrow-label" style="border-color:#FDA4AF;background:#FFF1F2;color:var(--red)">
+      <strong>❌ Packet dropped</strong><br>
+      NAT only translates <em>outbound</em> sessions. There is no existing mapping to forward this packet to an internal host.
+    </div>
+    <div class="nex-arrow-line"></div>
+  </div>
+  <div class="nex-insight" style="background:#FFF1F2;border-color:#FDA4AF;color:var(--red)">
+    <strong>Why is this blocked?</strong> Stateful NAT only allows inbound traffic that is a <em>response</em> to a connection initiated from inside. An unsolicited packet from ${fromH.ip} has no corresponding outbound session entry in the NAT table, so the router drops it.<br><br>
+    <strong>How could this be allowed?</strong> Port forwarding (DNAT) or a DMZ configuration would create a static mapping that pre-authorises inbound traffic to a specific internal host — but that is not modelled in this tool.
+  </div>`;
+}
+
+function natExamineOutboundHtml(fromH, toH, internalR, natIP, sPort, ePort, dPort){
+  return `
+  <div class="nex-phase">
+    <div class="nex-phase-label">What the packet looks like BEFORE the NAT router</div>
+    <div class="nex-pkt nex-pkt-before">
+      <div class="nex-pkt-row"><span class="nex-f">Source IP</span><span class="nex-v priv">${fromH.ip}</span><span class="nex-tag priv-tag">Private</span></div>
+      <div class="nex-pkt-row"><span class="nex-f">Source Port</span><span class="nex-v">${sPort}</span></div>
+      <div class="nex-pkt-row"><span class="nex-f">Dest IP</span><span class="nex-v">${toH.ip}</span></div>
+      <div class="nex-pkt-row"><span class="nex-f">Dest Port</span><span class="nex-v">${dPort}</span></div>
+    </div>
+  </div>
+  <div class="nex-arrow-row">
+    <div class="nex-arrow-line"></div>
+    <div class="nex-arrow-label">
+      <strong>NAT/PAT rewrites the source</strong><br>
+      Private IP:Port → Public IP:Ephemeral Port<br>
+      <span style="font-family:monospace;font-size:11px;color:var(--green-t)">${fromH.ip}:${sPort} → ${natIP}:${ePort}</span><br>
+      <span style="font-size:10px;color:var(--text3)">A new entry is written to the NAT table so the return packet can be de-muxed back to ${fromH.name}</span>
+    </div>
+    <div class="nex-arrow-line"></div>
+  </div>
+  <div class="nex-phase">
+    <div class="nex-phase-label">What the packet looks like AFTER the NAT router (on the internet)</div>
+    <div class="nex-pkt nex-pkt-after">
+      <div class="nex-pkt-row"><span class="nex-f">Source IP</span><span class="nex-v pub">${natIP}</span><span class="nex-tag pub-tag">Public</span></div>
+      <div class="nex-pkt-row"><span class="nex-f">Source Port</span><span class="nex-v">${ePort} <span style="color:var(--text3);font-size:10px">(ephemeral)</span></span></div>
+      <div class="nex-pkt-row"><span class="nex-f">Dest IP</span><span class="nex-v">${toH.ip}</span></div>
+      <div class="nex-pkt-row"><span class="nex-f">Dest Port</span><span class="nex-v">${dPort}</span></div>
+    </div>
+  </div>
+  <div class="nex-insight">
+    <strong>Why does this work?</strong> ${toH.name} sees a packet <em>from</em> ${natIP}:${ePort} — it has no idea ${fromH.name} (${fromH.ip}) exists. When it responds, it sends back to ${natIP}:${ePort}. The NAT router uses port ${ePort} as the key to look up the original sender and forward the reply correctly.
+  </div>`;
+}
+
+function natExamineInboundHtml(fromH, toH, internalR, natIP, pubPort, privPort, dPort){
+  return `
+  <div class="nex-phase">
+    <div class="nex-phase-label">What the RESPONSE packet looks like arriving at the NAT router</div>
+    <div class="nex-pkt nex-pkt-before">
+      <div class="nex-pkt-row"><span class="nex-f">Source IP</span><span class="nex-v">${toH.ip}</span></div>
+      <div class="nex-pkt-row"><span class="nex-f">Source Port</span><span class="nex-v">${dPort}</span></div>
+      <div class="nex-pkt-row"><span class="nex-f">Dest IP</span><span class="nex-v pub">${natIP}</span><span class="nex-tag pub-tag">Public</span></div>
+      <div class="nex-pkt-row"><span class="nex-f">Dest Port</span><span class="nex-v">${pubPort} <span style="color:var(--text3);font-size:10px">(ephemeral key)</span></span></div>
+    </div>
+  </div>
+  <div class="nex-arrow-row">
+    <div class="nex-arrow-line"></div>
+    <div class="nex-arrow-label">
+      <strong>NAT table lookup on dest port ${pubPort}</strong><br>
+      Port ${pubPort} maps to <span style="font-family:monospace">${fromH.ip}:${privPort}</span><br>
+      <span style="font-size:10px;color:var(--text3)">The NAT router rewrites the destination from the public address to the original private host, then the NAT table entry is removed.</span>
+    </div>
+    <div class="nex-arrow-line"></div>
+  </div>
+  <div class="nex-phase">
+    <div class="nex-phase-label">What the packet looks like AFTER reverse translation (inside the private network)</div>
+    <div class="nex-pkt nex-pkt-after">
+      <div class="nex-pkt-row"><span class="nex-f">Source IP</span><span class="nex-v">${toH.ip}</span></div>
+      <div class="nex-pkt-row"><span class="nex-f">Source Port</span><span class="nex-v">${dPort}</span></div>
+      <div class="nex-pkt-row"><span class="nex-f">Dest IP</span><span class="nex-v priv">${fromH.ip}</span><span class="nex-tag priv-tag">Private</span></div>
+      <div class="nex-pkt-row"><span class="nex-f">Dest Port</span><span class="nex-v">${privPort}</span></div>
+    </div>
+  </div>
+  <div class="nex-insight">
+    <strong>The NAT table entry is now removed.</strong> The mapping ${natIP}:${pubPort} → ${fromH.ip}:${privPort} only existed for the duration of this exchange. If ${toH.name} tries to send another unsolicited packet to ${natIP}:${pubPort} now, the NAT router has no mapping — the packet is dropped. This is why NAT provides a natural firewall effect.
+  </div>`;
+}
+
+function toggleRouterExamine(id){
+  if(S.routerExamineSet.has(id)) S.routerExamineSet.delete(id);
+  else S.routerExamineSet.add(id);
+  if(S.sel&&S.sel.type==='router'&&S.sel.id===id) updateSelPanel();
+  const r=routerById(id);
+  log(`Router Examine Mode ${S.routerExamineSet.has(id)?'enabled':'disabled'} on ${r?r.name:'?'}`,'inf');
+}
+
+// Build forwarding table rows — single source of truth used by both the panel and the examine overlay
+function buildRouterFwdRows(r){
+  const mySubnets=S.subnets.filter(s=>s.routerId===r.id);
+  const myTransits=S.transits.filter(t=>t.r1id===r.id||t.r2id===r.id);
+  const myNatTransit=S.natTransits.find(t=>t.routerId===r.id);
+  const rows=[];
+
+  // 1. Directly connected subnets
+  mySubnets.forEach(s=>{
+    if(!s.cidr)return;
+    rows.push({prefix:s.cidr,netNum:s.netNum,prefixLen:s.prefix,nextHop:'—',iface:s.firstHost||'—',type:'C',note:s.name});
+  });
+
+  // 2. Directly connected router-to-router transit /30s
+  myTransits.forEach(t=>{
+    if(!t.cidr)return;
+    const myIP=t.r1id===r.id?t.r1ip:t.r2ip;
+    const peer=routerById(t.r1id===r.id?t.r2id:t.r1id);
+    rows.push({prefix:t.cidr,netNum:t.netNum,prefixLen:30,nextHop:'—',iface:myIP||'—',type:'C',note:`Transit to ${peer?peer.name:'?'}`});
+  });
+
+  // 3. NAT transit /30
+  if(myNatTransit&&myNatTransit.cidr){
+    rows.push({prefix:myNatTransit.cidr,netNum:myNatTransit.netNum,prefixLen:30,nextHop:'—',iface:myNatTransit.routerIP||'—',type:'C',note:'Transit to NAT Router'});
+  }
+
+  // 4. Remote subnets via transit peers
+  myTransits.forEach(t=>{
+    const peerId=t.r1id===r.id?t.r2id:t.r1id;
+    const peerNextHop=t.r1id===r.id?t.r2ip:t.r1ip;
+    const myTransitIP=t.r1id===r.id?t.r1ip:t.r2ip;
+    const peer=routerById(peerId);
+    S.subnets.filter(s=>s.routerId===peerId).forEach(s=>{
+      if(!s.cidr)return;
+      rows.push({prefix:s.cidr,netNum:s.netNum,prefixLen:s.prefix,nextHop:peerNextHop||'—',iface:myTransitIP||'—',type:'S',note:`via ${peer?peer.name:'?'} (${s.name})`});
+    });
+    // Peer's own transit /30s (multi-hop awareness)
+    S.transits.filter(tx=>(tx.r1id===peerId||tx.r2id===peerId)&&tx.r1id!==r.id&&tx.r2id!==r.id).forEach(tx=>{
+      if(!tx.cidr)return;
+      rows.push({prefix:tx.cidr,netNum:tx.netNum,prefixLen:30,nextHop:peerNextHop||'—',iface:myTransitIP||'—',type:'S',note:`via ${peer?peer.name:'?'} (transit)`});
+    });
+  });
+
+  // 5. Default route → NAT router
+  if(myNatTransit&&myNatTransit.natIP){
+    rows.push({prefix:'0.0.0.0/0',netNum:0,prefixLen:0,nextHop:myNatTransit.natIP,iface:myNatTransit.routerIP||'—',type:'S',note:'Default → NAT Router'});
+  }
+
+  return rows;
+}
+
+// Find the longest-prefix match for destIP in a router's forwarding table
+function lpmMatch(rows, destIP){
+  const parsed=parseIP(destIP); if(!parsed)return null;
+  const destNum=ip2n(parsed);
+  let best=null, bestLen=-1;
+  rows.forEach(row=>{
+    if(row.prefixLen===undefined||row.prefixLen===null)return;
+    // Resolve netNum — use stored value or parse from prefix string
+    let netNum=row.netNum;
+    if(netNum===undefined||netNum===null){
+      if(row.prefix==='0.0.0.0/0'){netNum=0;}
+      else {
+        const net=row.prefix?row.prefix.split('/')[0]:null;
+        const p=net?parseIP(net):null;
+        if(!p)return;
+        netNum=ip2n(p);
+      }
+    }
+    const mask=mkMask(row.prefixLen);
+    if((destNum&mask)>>>0 === (netNum&mask)>>>0){
+      if(row.prefixLen>bestLen){bestLen=row.prefixLen;best=row;}
+    }
+  });
+  return best;
+}
+
+function routerForwardHtml(r, destIP, fromName, ttlIn, ttlOut){
+  const rows=buildRouterFwdRows(r);
+  const match=lpmMatch(rows,destIP);
+  const matchIdx=match?rows.indexOf(match):-1;
+  const typeBadge=t=>({
+    C:`<span style="display:inline-block;width:15px;height:15px;line-height:15px;text-align:center;border-radius:3px;font-size:9px;font-weight:700;background:var(--green-l);color:var(--green-t);border:0.5px solid var(--green-m)">C</span>`,
+    S:`<span style="display:inline-block;width:15px;height:15px;line-height:15px;text-align:center;border-radius:3px;font-size:9px;font-weight:700;background:var(--blue-l);color:var(--blue-t);border:0.5px solid var(--blue-m)">S</span>`,
+  })[t]||t;
+
+  const tableRows=rows.map((row,i)=>{
+    const isMatch=i===matchIdx;
+    const bg=isMatch?'background:var(--router-f);box-shadow:inset 0 0 0 1.5px var(--router-s);':'';
+    return `<tr style="${bg}">
+      <td style="padding:5px 6px">${typeBadge(row.type)}</td>
+      <td style="padding:5px 6px;font-family:monospace;font-size:11px;font-weight:${isMatch?'700':'400'}">${row.prefix}</td>
+      <td style="padding:5px 6px;font-family:monospace;font-size:11px;color:${row.nextHop==='—'?'var(--text3)':'var(--blue-t)'}">${row.nextHop}</td>
+      <td style="padding:5px 6px;font-family:monospace;font-size:11px;color:var(--text2)">${row.iface}</td>
+      <td style="padding:5px 6px;font-size:10px;color:${isMatch?'var(--router-t)':'var(--text3)'};font-style:italic">${row.note}${isMatch?' ✓':''}</td>
+    </tr>`;
+  }).join('');
+
+  const matchExpl = match
+    ? `<div style="margin-top:10px;padding:10px;border-radius:var(--r);background:var(--router-f);border:1px solid var(--router-s)">
+        <div style="font-size:11px;font-weight:700;color:var(--router-t);margin-bottom:4px">✓ Longest-prefix match: <code style="font-size:12px">${match.prefix}</code></div>
+        <div style="font-size:11px;color:var(--router-t);line-height:1.6">
+          Destination <code>${destIP}</code> falls within <code>${match.prefix}</code>.<br>
+          ${match.nextHop==='—'
+            ? `This network is <strong>directly connected</strong> — ${r.name} delivers the packet out interface <code>${match.iface}</code>.`
+            : `Next hop: <code>${match.nextHop}</code> out interface <code>${match.iface}</code>.`}
+        </div>
+      </div>`
+    : `<div class="nex-insight" style="background:#FFF1F2;border-color:#FDA4AF;color:var(--red);margin-top:10px">No matching route found — packet would be dropped.</div>`;
+
+  const ttlHtml = (ttlIn!=null && ttlOut!=null) ? `
+    <div style="margin-top:10px;padding:8px 12px;border-radius:var(--r);background:var(--bg3);border:0.5px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--text2)" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><line x1="8" y1="11" x2="8.01" y2="11"/></svg>
+        <span style="color:var(--text2);font-weight:600">TTL</span>
+      </div>
+      <div style="font-family:monospace;font-size:13px">
+        <span style="color:var(--text3)">${ttlIn}</span>
+        <span style="color:var(--text3);margin:0 6px">→</span>
+        <span style="color:${ttlOut<=1?'var(--red)':ttlOut<=10?'var(--amber)':'var(--green-t)'};font-weight:700">${ttlOut}</span>
+      </div>
+      <div style="font-size:10px;color:var(--text3);flex:1">
+        ${ttlOut===0
+          ? '<strong style="color:var(--red)">TTL reached 0 — router drops packet and sends ICMP Time Exceeded to source</strong>'
+          : `Decremented by 1 at this hop. Packet dropped if TTL reaches 0.`}
+      </div>
+    </div>` : '';
+
+  // IP datagram header diagram
+  const ttlDisplay = ttlIn!=null ? ttlIn : '—';
+  const cell=(label,highlight,title='')=>{
+    const bg = highlight==='ttl'   ? 'background:#FEF3C7;border-color:#F59E0B;'
+             : highlight==='dst'   ? 'background:var(--router-f);border-color:var(--router-s);'
+             : highlight==='src'   ? 'background:#EFF6FF;border-color:#93C5FD;'
+             : 'background:var(--bg3);border-color:var(--border2);';
+    const fc = highlight==='ttl'   ? 'color:#92400E;font-weight:700;'
+             : highlight==='dst'   ? 'color:var(--router-t);font-weight:700;'
+             : highlight==='src'   ? 'color:#1E40AF;font-weight:600;'
+             : 'color:var(--text3);';
+    return `<div title="${title}" style="border:0.5px solid;${bg}${fc}display:flex;align-items:center;justify-content:center;font-size:9px;font-family:monospace;padding:3px 2px;text-align:center;line-height:1.2;min-height:22px;">${label}</div>`;
+  };
+
+  const datagramHtml = `
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:5px;display:flex;align-items:center;gap:5px">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="1" y="3" width="14" height="10" rx="1.5"/><line x1="1" y1="7" x2="15" y2="7"/><line x1="6" y1="3" x2="6" y2="7"/><line x1="10" y1="3" x2="10" y2="7"/></svg>
+        IP Datagram Header
+      </div>
+      <div style="border:0.5px solid var(--border2);border-radius:4px;overflow:hidden;font-size:9px;font-family:monospace">
+        <div style="display:grid;grid-template-columns:2fr 2fr 3fr 5fr;gap:0;border-bottom:0.5px solid var(--border2)">
+          ${cell('ver','','IP version (4)')}
+          ${cell('IHL','','Header length')}
+          ${cell('DSCP/ECN','','Type of service')}
+          ${cell('total length','','Total datagram length')}
+        </div>
+        <div style="display:grid;grid-template-columns:4fr 2fr 6fr;gap:0;border-bottom:0.5px solid var(--border2)">
+          ${cell('16-bit identifier','','')}
+          ${cell('flgs','','')}
+          ${cell('fragment offset','','Fragmentation/reassembly')}
+        </div>
+        <div style="display:grid;grid-template-columns:3fr 3fr 6fr;gap:0;border-bottom:0.5px solid var(--border2)">
+          ${cell(`TTL=${ttlDisplay}→${ttlOut!=null?ttlOut:'?'}`,'ttl','Time To Live — decremented here')}
+          ${cell('TCP','','Upper layer protocol (TCP=6)')}
+          ${cell('header checksum','','Recalculated after TTL decrement')}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr;gap:0;border-bottom:0.5px solid var(--border2)">
+          ${cell('source IP address','src','')}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr;gap:0;border-bottom:0.5px solid var(--border2)">
+          ${cell(`dest IP address = ${destIP}`,'dst','Matched against forwarding table')}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr;gap:0">
+          ${cell('options (if any)','','')}
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:4px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text3)"><div style="width:10px;height:10px;background:#FEF3C7;border:0.5px solid #F59E0B;border-radius:2px"></div>TTL — read &amp; decremented</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text3)"><div style="width:10px;height:10px;background:var(--router-f);border:0.5px solid var(--router-s);border-radius:2px"></div>Destination IP — matched to table</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text3)"><div style="width:10px;height:10px;background:#EFF6FF;border:0.5px solid #93C5FD;border-radius:2px"></div>Source IP — unchanged</div>
+      </div>
+    </div>`;
+
+  return `
+    <div style="font-size:12px;color:var(--text2);margin-bottom:10px">
+      Packet arriving at <strong>${r.name}</strong> — destination <code style="font-family:monospace;background:var(--bg3);padding:1px 5px;border-radius:3px">${destIP}</code>
+      ${fromName?`<span style="color:var(--text3)"> from ${fromName}</span>`:''}
+    </div>
+    ${datagramHtml}
+    <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Forwarding Table — Longest Prefix Match</div>
+    <div style="overflow-x:auto;border-radius:var(--r);border:0.5px solid var(--border)">
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead><tr style="background:var(--bg3)">
+        <th style="padding:5px 6px;text-align:left;font-size:10px;color:var(--text3);font-weight:600;border-bottom:0.5px solid var(--border)">Type</th>
+        <th style="padding:5px 6px;text-align:left;font-size:10px;color:var(--text3);font-weight:600;border-bottom:0.5px solid var(--border)">Destination</th>
+        <th style="padding:5px 6px;text-align:left;font-size:10px;color:var(--text3);font-weight:600;border-bottom:0.5px solid var(--border)">Next Hop</th>
+        <th style="padding:5px 6px;text-align:left;font-size:10px;color:var(--text3);font-weight:600;border-bottom:0.5px solid var(--border)">Interface</th>
+        <th style="padding:5px 6px;text-align:left;font-size:10px;color:var(--text3);font-weight:600;border-bottom:0.5px solid var(--border)">Note</th>
+      </tr></thead>
+      <tbody>${tableRows||'<tr><td colspan="5" style="padding:8px;color:var(--text3);font-style:italic">No routes</td></tr>'}</tbody>
+    </table>
+    </div>
+    ${matchExpl}
+    ${ttlHtml}`;
+}
+
+// ── DHCP Server ───────────────────────────────────────────────────────────────
+const DHCP_R=18; // DHCP server node radius
+
+function updateDhcpPanel(){
+  const empty=document.getElementById('dhcp-empty');
+  const controls=document.getElementById('dhcp-controls');
+  const sel=document.getElementById('dhcp-router-sel');
+  const info=document.getElementById('dhcp-info');
+  const status=document.getElementById('dhcp-status');
+
+  if(!S.routers.length){
+    empty.style.display=''; controls.style.display='none'; return;
+  }
+  empty.style.display='none'; controls.style.display='';
+
+  const cur=sel.value;
+  sel.innerHTML='<option value="">— none (disable DHCP) —</option>'+
+    S.routers.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');
+
+  if(S.dhcpServer){
+    sel.value=S.dhcpServer.routerId;
+    status.textContent='Active';
+    status.style.color='var(--green-t)';
+    const r=routerById(S.dhcpServer.routerId);
+    const leases=S.dhcpServer.leases;
+    info.innerHTML=`<div style="font-size:11px;color:var(--text2)">
+      Serving all subnets via <strong>${r?r.name:'?'}</strong><br>
+      <span style="color:var(--text3)">${leases.length} lease${leases.length!==1?'s':''} issued</span>
+    </div>
+    ${leases.length?`<div style="margin-top:6px;border:0.5px solid var(--border);border-radius:var(--r);overflow:hidden">
+      ${leases.map(l=>`<div style="display:flex;justify-content:space-between;padding:4px 8px;border-bottom:0.5px solid var(--border);font-size:10px;font-family:monospace">
+        <span style="color:var(--text2)">${l.host}</span><span>${l.ip}</span>
+      </div>`).join('')}
+    </div>`:''}`;
+  } else {
+    if(cur) sel.value=cur;
+    status.textContent='';
+    info.innerHTML='';
+  }
+}
+
+function onDhcpRouterChange(){
+  const val=document.getElementById('dhcp-router-sel').value;
+  if(!val){
+    if(S.dhcpServer){ S.dhcpServer=null; log('DHCP server removed','inf'); updateAll(); }
+    return;
+  }
+  const rid=parseInt(val);
+  const r=routerById(rid); if(!r)return;
+  if(!S.dhcpServer){
+    // Place near the router
+    S.dhcpServer={id:nid++, routerId:rid, x:r.x+60, y:r.y-50, leases:[]};
+    log(`DHCP server placed on ${r.name}`,'ok');
+  } else {
+    S.dhcpServer.routerId=rid;
+    log(`DHCP server moved to ${r.name}`,'inf');
+  }
+  updateAll();
+}
+
+function drawDhcpServer(g){
+  if(!S.dhcpServer) return;
+  const {x,y}=S.dhcpServer;
+  const r=routerById(S.dhcpServer.routerId);
+  const isSel=S.sel&&S.sel.type==='dhcpServer';
+  const isExamine=S.dhcpExamineMode;
+  const hw=DHCP_R, hh=DHCP_R*0.75;
+
+  // Link to router
+  if(r){
+    g.beginPath();g.moveTo(x,y);g.lineTo(r.x,r.y);
+    g.strokeStyle='rgba(180,130,0,0.3)';g.lineWidth=1.2;g.setLineDash([4,3]);g.stroke();g.setLineDash([]);
+  }
+
+  // Examine mode — dashed outer ring
+  if(isExamine){
+    g.beginPath();g.arc(x,y,DHCP_R+10,0,Math.PI*2);
+    g.strokeStyle='#F59E0B';g.lineWidth=1.5;g.setLineDash([4,3]);g.stroke();g.setLineDash([]);
+  }
+
+  // Selection glow
+  if(isSel){g.beginPath();g.arc(x,y,DHCP_R+5,0,Math.PI*2);g.fillStyle='rgba(245,158,11,0.15)';g.fill();}
+
+  // Server body — rounded rect
+  g.beginPath();g.roundRect(x-hw,y-hh,hw*2,hh*2,4);
+  g.fillStyle='#FFFBEB';g.fill();
+  g.strokeStyle=isSel?'#D97706':'#F59E0B';g.lineWidth=isSel?2:1.5;g.stroke();
+
+  // Server icon — stack of disks
+  g.fillStyle='#F59E0B';g.strokeStyle='#D97706';g.lineWidth=1;
+  [-5,0,5].forEach(dy=>{
+    g.beginPath();g.ellipse(x,y+dy,8,3,0,0,Math.PI*2);g.fill();g.stroke();
+  });
+
+  // Label
+  g.fillStyle='#92400E';g.font='600 9px -apple-system,sans-serif';
+  g.textAlign='center';g.textBaseline='top';
+  g.fillText('DHCP',x,y+hh+3);
+  if(r){g.fillStyle='#B45309';g.font='8px -apple-system,sans-serif';g.fillText(r.name,x,y+hh+13);}
+
+  // Magnifier badge — top-right corner, always visible
+  const bx=x+hw*Math.cos(-Math.PI/4), by=y-hh*0.6;
+  g.beginPath();g.arc(bx,by,8,0,Math.PI*2);
+  if(isExamine){
+    g.fillStyle='#F59E0B';g.fill();
+    g.strokeStyle='white';g.lineWidth=1.5;g.stroke();
+    g.strokeStyle='white';g.lineWidth=1.2;g.lineCap='round';
+    g.beginPath();g.arc(bx-1,by-1,3,0,Math.PI*2);g.stroke();
+    g.beginPath();g.moveTo(bx+1.5,by+1.5);g.lineTo(bx+4,by+4);g.stroke();
+  } else {
+    g.fillStyle='rgba(255,255,255,0.85)';g.fill();
+    g.strokeStyle='rgba(245,158,11,0.25)';g.lineWidth=1;g.stroke();
+    g.strokeStyle='rgba(245,158,11,0.3)';g.lineWidth=1.1;g.lineCap='round';
+    g.beginPath();g.arc(bx-1,by-1,3,0,Math.PI*2);g.stroke();
+    g.beginPath();g.moveTo(bx+1.5,by+1.5);g.lineTo(bx+4,by+4);g.stroke();
+  }
+}
+
+// ── DORA Animation ────────────────────────────────────────────────────────────
+function runDoraSequence(hostData, subnet, router, onComplete){
+  // hostData: {name, subnetId, ip, x, y}
+  const ds=S.dhcpServer;
+  const dhcpRouter=routerById(ds.routerId);
+  const isRelay=(router.id !== dhcpRouter.id);
+
+  // Find transit between subnet's router and DHCP router (for relay)
+  let relayTransit=null, relayMyIP=null, relayPeerIP=null;
+  if(isRelay){
+    relayTransit=S.transits.find(t=>(t.r1id===router.id&&t.r2id===dhcpRouter.id)||(t.r1id===dhcpRouter.id&&t.r2id===router.id));
+    if(relayTransit){
+      relayMyIP=relayTransit.r1id===router.id?relayTransit.r1ip:relayTransit.r2ip;
+      relayPeerIP=relayTransit.r1id===dhcpRouter.id?relayTransit.r1ip:relayTransit.r2ip;
+    }
+  }
+
+  const steps=[];
+  const hx=hostData.x, hy=hostData.y;
+  const sx=subnet.x, sy=subnet.y;
+  const rx=router.x, ry=router.y;
+  const drx=dhcpRouter.x, dry=dhcpRouter.y;
+  const dvx=ds.x, dvy=ds.y;
+
+  // ── DISCOVER ──
+  steps.push({fx:hx,fy:hy,tx:sx,ty:sy,
+    label:`DHCP Discover — ${hostData.name} broadcasts on 255.255.255.255:67`,
+    dhcpPhase:'discover', color:'#F59E0B'});
+  steps.push({fx:sx,fy:sy,tx:rx,ty:ry,
+    label:`Broadcast reaches ${router.name} (gateway ${subnet.firstHost})`,
+    dhcpPhase:'discover', color:'#F59E0B',
+    routerId:router.id, isDhcpRelay:isRelay});
+
+  if(isRelay && relayTransit){
+    steps.push({fx:rx,fy:ry,tx:relayTransit.x,ty:relayTransit.y,
+      label:`${router.name} relays Discover → DHCP server (giaddr=${relayMyIP})`,
+      dhcpPhase:'discover', color:'#F59E0B'});
+    steps.push({fx:relayTransit.x,fy:relayTransit.y,tx:drx,ty:dry,
+      label:`Relay unicast arrives at ${dhcpRouter.name}`,
+      dhcpPhase:'discover', color:'#F59E0B', routerId:dhcpRouter.id});
+  }
+  steps.push({fx:isRelay?drx:rx,fy:isRelay?dry:ry,tx:dvx,ty:dvy,
+    label:`${dhcpRouter.name} → DHCP server (selecting IP from pool)`,
+    dhcpPhase:'discover', color:'#F59E0B', dhcpArriveServer:true});
+
+  // ── OFFER ──
+  steps.push({fx:dvx,fy:dvy,tx:isRelay?drx:rx,ty:isRelay?dry:ry,
+    label:`DHCP Offer — server offers ${hostData.ip} to ${hostData.name}`,
+    dhcpPhase:'offer', color:'#10B981'});
+  if(isRelay && relayTransit){
+    steps.push({fx:drx,fy:dry,tx:relayTransit.x,ty:relayTransit.y,
+      label:`${dhcpRouter.name} forwards Offer toward ${router.name}`,
+      dhcpPhase:'offer', color:'#10B981'});
+    steps.push({fx:relayTransit.x,fy:relayTransit.y,tx:rx,ty:ry,
+      label:`Offer arrives at ${router.name}`,
+      dhcpPhase:'offer', color:'#10B981', routerId:router.id});
+  }
+  steps.push({fx:rx,fy:ry,tx:sx,ty:sy,
+    label:`${router.name} delivers Offer to subnet ${subnet.name}`,
+    dhcpPhase:'offer', color:'#10B981'});
+  steps.push({fx:sx,fy:sy,tx:hx,ty:hy,
+    label:`${hostData.name} receives Offer — IP ${hostData.ip} offered`,
+    dhcpPhase:'offer', color:'#10B981'});
+
+  // ── REQUEST ──
+  steps.push({fx:hx,fy:hy,tx:sx,ty:sy,
+    label:`DHCP Request — ${hostData.name} formally requests ${hostData.ip}`,
+    dhcpPhase:'request', color:'#6366F1'});
+  steps.push({fx:sx,fy:sy,tx:rx,ty:ry,
+    label:`Request broadcast reaches ${router.name}`,
+    dhcpPhase:'request', color:'#6366F1',
+    routerId:router.id, isDhcpRelay:isRelay});
+  if(isRelay && relayTransit){
+    steps.push({fx:rx,fy:ry,tx:relayTransit.x,ty:relayTransit.y,
+      label:`${router.name} relays Request → DHCP server`,
+      dhcpPhase:'request', color:'#6366F1'});
+    steps.push({fx:relayTransit.x,fy:relayTransit.y,tx:drx,ty:dry,
+      label:`Request arrives at ${dhcpRouter.name}`,
+      dhcpPhase:'request', color:'#6366F1', routerId:dhcpRouter.id});
+  }
+  steps.push({fx:isRelay?drx:rx,fy:isRelay?dry:ry,tx:dvx,ty:dvy,
+    label:`Request forwarded to DHCP server`,
+    dhcpPhase:'request', color:'#6366F1', dhcpArriveServer:true});
+
+  // ── ACK ──
+  steps.push({fx:dvx,fy:dvy,tx:isRelay?drx:rx,ty:isRelay?dry:ry,
+    label:`DHCP Ack — server confirms lease of ${hostData.ip} to ${hostData.name}`,
+    dhcpPhase:'ack', color:'#10B981'});
+  if(isRelay && relayTransit){
+    steps.push({fx:drx,fy:dry,tx:relayTransit.x,ty:relayTransit.y,
+      label:`${dhcpRouter.name} forwards Ack toward ${router.name}`,
+      dhcpPhase:'ack', color:'#10B981'});
+    steps.push({fx:relayTransit.x,fy:relayTransit.y,tx:rx,ty:ry,
+      label:`Ack arrives at ${router.name}`,
+      dhcpPhase:'ack', color:'#10B981', routerId:router.id});
+  }
+  steps.push({fx:rx,fy:ry,tx:sx,ty:sy,
+    label:`${router.name} delivers Ack to subnet`,
+    dhcpPhase:'ack', color:'#10B981'});
+  steps.push({fx:sx,fy:sy,tx:hx,ty:hy,
+    label:`${hostData.name} configured with IP ${hostData.ip} ✓`,
+    dhcpPhase:'ack', color:'#10B981'});
+
+  log(`DHCP DORA starting for ${hostData.name} (${hostData.ip})${isRelay?' — relay via '+router.name:''}`, 'inf');
+
+  S.packet={
+    steps, step:0, t:0, active:true,
+    isDhcp:true, dhcpColor:'#F59E0B',
+    destIP:hostData.ip, fromLabel:hostData.name,
+    onDhcpComplete: onComplete,
+  };
+  requestAnimationFrame(tickPkt);
+}
+
+function dhcpServerExamineHtml(phase, offeredIP, hostName){
+  const phaseInfo={
+    discover:{
+      title:'Processing DHCP Discover',
+      color:'#F59E0B', bg:'#FFFBEB', border:'#F59E0B',
+      action:'The server receives the Discover, checks its pool for an available address, and prepares an Offer.',
+      detail:`Selected IP from pool: <strong style="font-family:monospace">${offeredIP||'(next available)'}</strong><br>The server temporarily reserves this address while awaiting a Request from the client.`,
+    },
+    request:{
+      title:'Processing DHCP Request',
+      color:'#6366F1', bg:'#EEF2FF', border:'#6366F1',
+      action:'The client has confirmed it wants the offered IP. The server now commits the lease and prepares an Ack.',
+      detail:`Lease committed: <strong style="font-family:monospace">${offeredIP}</strong> → <strong>${hostName||'client'}</strong><br>The server records this binding in its lease table. The lease includes an expiry time after which the client must renew.`,
+    },
+  }[phase]||{title:'DHCP Server Processing',color:'#F59E0B',bg:'#FFFBEB',border:'#F59E0B',action:'',detail:''};
+
+  return `
+    <div style="font-size:12px;color:var(--text2);margin-bottom:10px">
+      DHCP server receives <span style="font-weight:700;color:${phaseInfo.color}">${phase?.charAt(0).toUpperCase()+phase?.slice(1)||'packet'}</span>
+      ${hostName?`from <strong>${hostName}</strong>`:''}
+    </div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">DORA Sequence</div>
+    <div style="display:flex;gap:0;border:0.5px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:12px">
+      ${['Discover','Offer','Request','Ack'].map((p,i)=>{
+        const cur=(phase==='discover'&&i===0)||(phase==='offer'&&i===1)||(phase==='request'&&i===2)||(phase==='ack'&&i===3);
+        const done=(phase==='offer'&&i===0)||(phase==='request'&&i<=1)||(phase==='ack'&&i<=2);
+        return `<div style="flex:1;padding:5px 4px;text-align:center;font-size:10px;font-weight:${cur?'700':'400'};
+          background:${cur?phaseInfo.bg:done?'var(--green-l)':'var(--bg)'};
+          color:${cur?phaseInfo.color:done?'var(--green-t)':'var(--text3)'};
+          border-right:${i<3?'0.5px solid var(--border)':'none'}">${done&&!cur?'✓ ':''} ${p}</div>`;
+      }).join('')}
+    </div>
+    <div style="padding:10px 12px;border-radius:var(--r);background:${phaseInfo.bg};border:1px solid ${phaseInfo.border};margin-bottom:10px">
+      <div style="font-size:11px;font-weight:700;color:${phaseInfo.color};margin-bottom:5px">${phaseInfo.title}</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.7">${phaseInfo.action}</div>
+    </div>
+    ${phaseInfo.detail?`<div style="padding:8px 12px;border-radius:var(--r);background:var(--bg3);border:0.5px solid var(--border);font-size:11px;color:var(--text2);line-height:1.7">${phaseInfo.detail}</div>`:''}
+    <div class="nex-insight" style="margin-top:10px">
+      <strong>Why UDP?</strong> DHCP uses UDP (not TCP) because the client has no IP address yet — a TCP connection requires both parties to have IPs. UDP allows the server to broadcast or unicast a response without an established session.
+    </div>`;
+}
+
+function dhcpRelayHtml(router, phase, subnet, dhcpServerRouter, isRelay, giaddr){
+  const phaseInfo={
+    discover:{label:'DHCP Discover',color:'#F59E0B',bg:'#FFFBEB',border:'#F59E0B',
+      desc:'A client broadcasts a Discover on 255.255.255.255:67. Broadcasts do not cross router boundaries — the router must intercept and relay.'},
+    request:{label:'DHCP Request',color:'#6366F1',bg:'#EEF2FF',border:'#6366F1',
+      desc:'The client broadcasts a Request to confirm the offered IP. The relay agent forwards it to the DHCP server again so it can record the lease.'},
+  }[phase]||{label:'DHCP',color:'#F59E0B',bg:'#FFFBEB',border:'#F59E0B',desc:''};
+
+  const relaySection = isRelay ? `
+    <div style="margin-top:10px;padding:10px;border-radius:var(--r);background:${phaseInfo.bg};border:1px solid ${phaseInfo.border}">
+      <div style="font-size:11px;font-weight:700;color:${phaseInfo.color};margin-bottom:6px">🔀 Relay Agent Active (ip helper-address)</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.7">
+        <strong>${router.name}</strong> intercepts the broadcast from <strong>${subnet?subnet.name:'?'}</strong>.<br>
+        It sets <code>giaddr = ${giaddr||router.name+' interface'}</code> (gateway IP address — tells the server which subnet the client is on).<br>
+        The broadcast is re-encapsulated as a <strong>unicast UDP packet</strong> sent directly to the DHCP server at <strong>${dhcpServerRouter?dhcpServerRouter.name:'?'}</strong>.
+      </div>
+    </div>
+    <div class="nex-insight" style="margin-top:8px">
+      <strong>Why can't the Discover reach the DHCP server directly?</strong> IP broadcasts are scoped to a single subnet — routers drop them by default. The relay agent (configured with <code>ip helper-address</code>) is the mechanism that bridges this gap, making a single DHCP server able to serve multiple subnets.
+    </div>` :
+    `<div style="margin-top:10px;padding:10px;border-radius:var(--r);background:var(--green-l);border:1px solid var(--green-m)">
+      <div style="font-size:11px;color:var(--green-t)">✓ DHCP server is on this router's network — no relay needed. The Discover is handled locally.</div>
+    </div>`;
+
+  return `
+    <div style="font-size:12px;color:var(--text2);margin-bottom:10px">
+      <strong>${router.name}</strong> receives a <span style="font-weight:700;color:${phaseInfo.color}">${phaseInfo.label}</span>
+      ${subnet?`from subnet <strong>${subnet.name}</strong>`:''}
+    </div>
+    <div style="padding:8px 12px;border-radius:var(--r);background:var(--bg3);border:0.5px solid var(--border);font-size:11px;color:var(--text2);margin-bottom:8px">
+      ${phaseInfo.desc}
+    </div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">DORA Sequence</div>
+    <div style="display:flex;gap:0;border:0.5px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:10px">
+      ${['Discover','Offer','Request','Ack'].map((p,i)=>{
+        const active=(phase==='discover'&&i<=0)||(phase==='offer'&&i<=1)||(phase==='request'&&i<=2)||(phase==='ack'&&i<=3);
+        const cur=(phase==='discover'&&i===0)||(phase==='offer'&&i===1)||(phase==='request'&&i===2)||(phase==='ack'&&i===3);
+        return `<div style="flex:1;padding:5px 4px;text-align:center;font-size:10px;font-weight:${cur?'700':'400'};
+          background:${cur?phaseInfo.bg:active?'var(--bg3)':'var(--bg)'};
+          color:${cur?phaseInfo.color:'var(--text3)'};
+          border-right:${i<3?'0.5px solid var(--border)':'none'}">${p}</div>`;
+      }).join('')}
+    </div>
+    ${relaySection}`;
+}
+
+function toggleNatExamine(){
+  S.natExamineMode=!S.natExamineMode;
+  if(S.sel&&S.sel.type==='natRouter') updateSelPanel();
+  log(`NAT Examine Mode ${S.natExamineMode?'enabled':'disabled'}`,'inf');
+}
+
+function showRouterExamineOverlay(info, onForward){
+  const el=document.getElementById('router-examine-overlay');
+  document.getElementById('rex-title').textContent=info.title;
+  document.getElementById('rex-body').innerHTML=info.html;
+  el.classList.add('open');
+  document.body.style.overflow='hidden';
+  const btn=document.getElementById('rex-forward');
+  const handler=()=>{
+    btn.removeEventListener('click',handler);
+    el.classList.remove('open');
+    document.body.style.overflow='';
+    onForward();
+  };
+  btn.addEventListener('click',handler);
+}
+
+// Called by tickPkt when packet arrives at NAT router and examine mode is on.
+// Pauses the animation and shows the overlay. onContinue() resumes.
+function showNatExamineOverlay(info, onContinue){
+  const el=document.getElementById('nat-examine-overlay');
+  const title=document.getElementById('nex-title');
+  const body=document.getElementById('nex-body');
+  const btn=document.getElementById('nex-continue');
+  const hd=document.getElementById('nex-hd-sup');
+
+  title.textContent=info.title;
+  body.innerHTML=info.html;
+  btn.innerHTML=info.isBlock?'Dismiss ✕':'Continue &nbsp;&#9654;';
+  btn.className='btn '+(info.isBlock?'':'pri');
+  if(hd) hd.textContent=info.isBlock?'NAT Examine Mode — Packet dropped':'NAT Examine Mode — Packet paused';
+
+  el.classList.add('open');
+  document.body.style.overflow='hidden';
+
+  const handler=()=>{
+    btn.removeEventListener('click',handler);
+    el.classList.remove('open');
+    document.body.style.overflow='';
+    onContinue();
+  };
+  btn.addEventListener('click',handler);
+}
+
+function closeNatExamineOverlay(){
+  // Only close visually — does NOT resume packet (use Continue for that)
+  document.getElementById('nat-examine-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+
+function tickPkt(){
+  if(!S.packet||!S.packet.active)return;
+
+  // Rejection burst timer
+  if(S.packet.rejected){
+    S.packet.rejectTimer=(S.packet.rejectTimer||0)+1;
+    if(S.packet.rejectTimer>40){S.packet.active=false;S.packet.rejected=false;draw();return;}
+    draw(); requestAnimationFrame(tickPkt); return;
+  }
+
+  S.packet.t+=0.04;
+  if(S.packet.t>=1){
+    const completedStep=S.packet.steps[S.packet.step];
+
+    // Dynamic router examine check — does this step's destination land on an examined router?
+    if(completedStep&&!S.packet.routerExamined){
+      // For DHCP packets with examine mode on, also check relay-tagged steps even if router isn't in routerExamineSet
+      let hitR = completedStep.routerId
+        ? S.routers.find(r=>S.routerExamineSet.has(r.id)&&r.id===completedStep.routerId)
+        : S.routers.find(r=>S.routerExamineSet.has(r.id)&&Math.hypot(completedStep.tx-r.x,completedStep.ty-r.y)<=RR+10);
+
+      // DHCP examine mode: also catch relay steps on any router tagged with isDhcpRelay
+      if(!hitR && S.packet.isDhcp && S.dhcpExamineMode && completedStep.isDhcpRelay!==undefined && completedStep.routerId){
+        hitR=S.routers.find(r=>r.id===completedStep.routerId);
+      }
+
+      if(hitR){
+        const ttlIn=S.packet.ttl!=null?S.packet.ttl:64;
+        const ttlOut=ttlIn-1;
+        S.packet.ttl=ttlOut;
+        const destIP=S.packet.destIP||'?';
+        const fromLabel=S.packet.fromLabel||'';
+
+        // For DHCP packets, show relay overlay instead of forwarding table
+        if(S.packet.isDhcp && completedStep.isDhcpRelay!==undefined){
+          log(`  ${hitR.name}: DHCP ${completedStep.dhcpPhase||''} ${completedStep.isDhcpRelay?'— relay agent active':'— local delivery'}`, 'inf');
+          S.packet.routerExamined=true;
+          draw();
+          const subnet=S.subnets.find(s=>s.routerId===hitR.id&&completedStep.fy&&Math.hypot(completedStep.fx-s.x,completedStep.fy-s.y)<SR+20)||
+                       S.subnets.find(s=>s.routerId===hitR.id);
+          const dhcpR=S.dhcpServer?routerById(S.dhcpServer.routerId):null;
+          const myTransitIP=completedStep.isDhcpRelay?
+            (()=>{const t=S.transits.find(tx=>(tx.r1id===hitR.id&&tx.r2id===dhcpR?.id)||(tx.r2id===hitR.id&&tx.r1id===dhcpR?.id));
+              return t?(t.r1id===hitR.id?t.r1ip:t.r2ip):hitR.name+' iface';})():null;
+          showRouterExamineOverlay({
+            title:`${hitR.name} — DHCP ${(completedStep.dhcpPhase||'').charAt(0).toUpperCase()+(completedStep.dhcpPhase||'').slice(1)}`,
+            html:dhcpRelayHtml(hitR, completedStep.dhcpPhase, subnet, dhcpR, completedStep.isDhcpRelay, myTransitIP),
+          },()=>{
+            S.packet.routerExamined=false;
+            advanceStep();
+          });
+          return;
+        }
+
+        log(`  ${hitR.name}: TTL ${ttlIn} → ${ttlOut}`,'inf');
+        S.packet.routerExamined=true;
+        draw();
+        // Build overlay HTML now (at display time) so it reflects current routing state
+        showRouterExamineOverlay({
+          title:`${hitR.name} — Forwarding Decision`,
+          html:routerForwardHtml(hitR, destIP, fromLabel, ttlIn, ttlOut),
+        },()=>{
+          S.packet.routerExamined=false;
+          if(completedStep.examineInfo&&!S.packet.examined){
+            S.packet.examined=true;
+            showNatExamineOverlay(completedStep.examineInfo,()=>{
+              S.packet.examined=false;
+              advanceStep();
+            });
+          } else {
+            advanceStep();
+          }
+        });
+        return;
+      }
+
+      // Non-examined router hop — still decrement TTL and log
+      const anyR = completedStep.routerId
+        ? S.routers.find(r=>r.id===completedStep.routerId)
+        : S.routers.find(r=>Math.hypot(completedStep.tx-r.x,completedStep.ty-r.y)<=RR+10);
+      if(anyR&&S.packet.ttl!=null){
+        const ttlIn=S.packet.ttl;
+        S.packet.ttl=ttlIn-1;
+        log(`  ${anyR.name}: TTL ${ttlIn} → ${S.packet.ttl}`,'inf');
+      }
+    }
+
+    // DHCP server examine — only fires on steps explicitly tagged as arriving at the server
+    if(completedStep&&S.packet.isDhcp&&S.dhcpExamineMode&&S.dhcpServer&&completedStep.dhcpArriveServer&&!S.packet.dhcpServerExamined){
+      S.packet.dhcpServerExamined=true;
+      draw();
+      showRouterExamineOverlay({
+        title:`DHCP Server — ${(completedStep.dhcpPhase||'').charAt(0).toUpperCase()+(completedStep.dhcpPhase||'').slice(1)}`,
+        html: dhcpServerExamineHtml(completedStep.dhcpPhase, S.packet.destIP, S.packet.fromLabel),
+      },()=>{
+        S.packet.dhcpServerExamined=false;
+        advanceStep();
+      });
+      return;
+    }
+
+    // NAT examine
+    if(completedStep&&completedStep.examineInfo&&!S.packet.examined){
+      S.packet.examined=true;
+      draw();
+      showNatExamineOverlay(completedStep.examineInfo,()=>{
+        S.packet.examined=false;
+        if(completedStep.examineInfo.isBlock){
+          S.packet.rejected=true;
+          S.packet.rejectTimer=0;
+          requestAnimationFrame(tickPkt);
+        } else {
+          advanceStep();
+        }
+      });
+      return;
+    }
+
+    advanceStep();
+    return;
+  }
+  draw(); requestAnimationFrame(tickPkt);
+}
+
+function advanceStep(){
+  S.packet.t=0; S.packet.step++;
+  if(S.packet.step>=S.packet.steps.length){ finishPacketSequence(); return; }
+  requestAnimationFrame(tickPkt);
+}
+
+function finishPacketSequence(){
+  // DHCP DORA complete
+  if(S.packet&&S.packet.isDhcp&&S.packet.onDhcpComplete){
+    const cb=S.packet.onDhcpComplete;
+    S.packet=null; draw();
+    cb();
+    return;
+  }
+  if(S.packet&&S.packet.echoInfo){
+    const {fromH,toH,internalR,natIP}=S.packet.echoInfo;
+    const entry=S.natTable.find(e=>e._fromH===fromH&&e._toH===toH);
+    const pubPort=entry?entry.pubPort:'?';
+    const privPort=entry?entry.privPort:'?';
+    const dPort=entry?entry.destPort:'?';
+    setTimeout(()=>{
+      log(`← Echo: ${toH.name} (${toH.ip}:${dPort}) → ${natIP}:${pubPort}`,'inf');
+      log(`← NAT lookup port ${pubPort} → ${fromH.ip}:${privPort}`,'inf');
+      log(`← ${fromH.name} receives response from ${toH.name}`,'ok');
+      const echoArriveStep={
+        fx:toH.x,fy:toH.y,tx:S.natRouter.x,ty:S.natRouter.y,
+        label:`${toH.name} (${toH.ip}:${dPort}) → NAT Router (dst ${natIP}:${pubPort})`,
+      };
+      if(S.natExamineMode){
+        echoArriveStep.examineInfo={
+          title:'Inbound Response — NAT Reverse Translation',
+          html:natExamineInboundHtml(fromH,toH,internalR,natIP,pubPort,privPort,dPort),
+        };
+      }
+      const echoNatStep={
+        fx:S.natRouter.x,fy:S.natRouter.y,tx:internalR.x,ty:internalR.y,
+        label:`NAT: port ${pubPort} → ${fromH.ip}:${privPort}, routes to ${internalR.name}`,
+      };
+      const echoSteps=[
+        echoArriveStep,
+        echoNatStep,
+        {fx:internalR.x,fy:internalR.y,tx:fromH.x,ty:fromH.y,
+         label:`${internalR.name} → ${fromH.name} (${fromH.ip}:${privPort})`},
+      ];
+      document.getElementById('pres-tb').textContent=`↩ Echo: ${toH.name} → ${fromH.name}`;
+      S.natTable=S.natTable.filter(e=>e!==entry);
+      log(`  NAT entry removed — mapping ${natIP}:${pubPort} → ${fromH.ip}:${privPort} expired`,'inf');
+      if(S.sel&&S.sel.type==='natRouter')updateSelPanel();
+      S.packet={steps:echoSteps,step:0,t:0,active:true,isEcho:true,destIP:fromH.ip,fromLabel:toH.name,ttl:64};
+      requestAnimationFrame(tickPkt);
+    },400);
+    S.packet=null; draw(); return;
+  }
+  S.packet=null; draw();
+}
+
+// ── Canvas ────────────────────────────────────────────────────────────────────
+function cv(){return document.getElementById('cv');}
+function ctx(){return cv().getContext('2d');}
+
+function resizeCV(){
+  const c=cv(),w=c.parentElement;
+  c.width=w.clientWidth; c.height=w.clientHeight;
+  if(!S.positioned){
+    S.positioned=true;
+    // reposition seeded nodes relative to canvas center
+    const cx=c.width/2,cy=c.height/2;
+    // Set NAT router and external host initial positions
+    const BAND=Math.round(c.height*0.13);
+    S.natRouter.x=c.width/2; S.natRouter.y=BAND;
+    S.extHost.x=c.width*0.75; S.extHost.y=BAND*0.45;
+    // Use autoLayout logic after canvas is sized
+    setTimeout(autoLayout, 0);
+  }
+  draw();
+}
+
+function draw(){
+  const c=cv(),g=ctx(),W=c.width,H=c.height;
+  g.clearRect(0,0,W,H);
+
+  // ── Zone backgrounds ────────────────────────────────────────────────────────
+  const BAND=Math.round(H*0.13);
+
+  // Private zone — white background
+  g.fillStyle='#ffffff';
+  g.fillRect(0,BAND,W,H-BAND);
+  // Grid for private zone
+  g.strokeStyle='rgba(0,0,0,0.04)';g.lineWidth=0.5;
+  for(let x=0;x<W;x+=40){g.beginPath();g.moveTo(x,BAND);g.lineTo(x,H);g.stroke();}
+  for(let y=BAND;y<H;y+=40){g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke();}
+
+  // Internet zone background — light blue
+  g.fillStyle='#EBF4FF';
+  g.fillRect(0,0,W,BAND);
+  // Grid override for internet zone
+  g.strokeStyle='rgba(59,130,246,0.1)';g.lineWidth=0.5;
+  for(let x=0;x<W;x+=40){g.beginPath();g.moveTo(x,0);g.lineTo(x,BAND);g.stroke();}
+  for(let y=0;y<BAND;y+=40){g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke();}
+  // Boundary line
+  g.beginPath();g.moveTo(0,BAND);g.lineTo(W,BAND);
+  g.strokeStyle='rgba(59,130,246,0.35)';g.lineWidth=1.5;g.setLineDash([8,5]);g.stroke();g.setLineDash([]);
+  // Zone labels
+  g.fillStyle='rgba(59,130,246,0.5)';g.font='500 10px -apple-system,sans-serif';
+  g.textAlign='left';g.textBaseline='top';
+  g.fillText('INTERNET',8,6);
+  g.fillStyle='rgba(0,0,0,0.2)';g.font='500 10px -apple-system,sans-serif';
+  g.fillText('PRIVATE NETWORK',8,BAND+6);
+
+  // External host
+  const extName=document.getElementById('ext-name').value||'External Server';
+  const extIP=document.getElementById('ext-ip').value||'8.8.8.8';
+  const isSelExt=S.sel&&S.sel.type==='extHost';
+  if(isSelExt){g.beginPath();g.arc(S.extHost.x,S.extHost.y,HR+5,0,Math.PI*2);g.fillStyle='rgba(59,130,246,0.15)';g.fill();}
+  g.beginPath();g.arc(S.extHost.x,S.extHost.y,HR,0,Math.PI*2);
+  g.fillStyle='#DBEAFE';g.fill();
+  g.strokeStyle=isSelExt?'#1D4ED8':'#3B82F6';g.lineWidth=isSelExt?2:1.2;g.stroke();
+  // Monitor icon
+  g.fillStyle='#1D4ED8';g.font='7px sans-serif';g.textAlign='center';g.textBaseline='middle';
+  const ehic=5;
+  g.fillStyle='#1D4ED8';
+  g.fillRect(S.extHost.x-ehic,S.extHost.y-ehic*0.9,ehic*2,ehic*1.4);
+  g.beginPath();g.moveTo(S.extHost.x-ehic*0.5,S.extHost.y+ehic*0.5);g.lineTo(S.extHost.x+ehic*0.5,S.extHost.y+ehic*0.5);g.lineWidth=1.2;g.stroke();
+  g.beginPath();g.moveTo(S.extHost.x,S.extHost.y+ehic*0.3);g.lineTo(S.extHost.x,S.extHost.y+ehic*0.5);g.stroke();
+  g.fillStyle='#1D4ED8';g.font='500 9px -apple-system,sans-serif';g.textAlign='center';g.textBaseline='top';
+  g.fillText(extName,S.extHost.x,S.extHost.y+HR+2);
+  g.font='8px monospace';g.fillStyle='#3B82F6';
+  g.fillText(extIP,S.extHost.x,S.extHost.y+HR+12);
+
+  // Link: NAT router → external host
+  g.beginPath();g.moveTo(S.natRouter.x,S.natRouter.y-RR);g.lineTo(S.extHost.x,S.extHost.y+HR);
+  g.strokeStyle='rgba(59,130,246,0.25)';g.lineWidth=1.2;g.setLineDash([]);g.stroke();
+
+  // NAT /30 transit links — styled like router-router transits
+  S.routers.forEach(r=>{
+    const nt=S.natTransits.find(t=>t.routerId===r.id);
+    const isSel=S.sel&&S.sel.type==='natTransit'&&S.sel.id===r.id;
+    const mx=(r.x+S.natRouter.x)/2, my=(r.y+S.natRouter.y)/2;
+    // line
+    g.beginPath();g.moveTo(r.x,r.y);g.lineTo(S.natRouter.x,S.natRouter.y);
+    g.strokeStyle=isSel?'#C2410C':'rgba(194,65,12,0.3)';
+    g.lineWidth=isSel?2.5:1.5;g.setLineDash([5,4]);g.stroke();g.setLineDash([]);
+    // midpoint glow on select
+    if(isSel){g.beginPath();g.arc(mx,my,TR+4,0,Math.PI*2);g.fillStyle='rgba(194,65,12,0.1)';g.fill();}
+    // midpoint /30 node
+    g.beginPath();g.arc(mx,my,TR,0,Math.PI*2);
+    g.fillStyle='#FFF7ED';g.fill();
+    g.strokeStyle=isSel?'#9A3412':'#C2410C';g.lineWidth=isSel?2:1.2;g.stroke();
+    g.fillStyle='#7C2D12';g.font='500 9px monospace';g.textAlign='center';g.textBaseline='middle';
+    g.fillText('/30',mx,my-5);
+    if(nt){g.font='8px monospace';g.fillText(nt.cidr.split('/')[0],mx,my+5);}
+  });
+
+  if(!S.routers.length&&!S.subnets.length){
+    g.fillStyle='rgba(0,0,0,0.16)';g.font='14px -apple-system,sans-serif';
+    g.textAlign='center';g.textBaseline='middle';
+    g.fillText('Add a router to get started',W/2,H/2);
+    return;
+  }
+
+  // Transit links (router–router)
+  S.transits.forEach(t=>{
+    const r1=routerById(t.r1id),r2=routerById(t.r2id);if(!r1||!r2)return;
+    const isSel=S.sel&&S.sel.type==='transit'&&S.sel.id===t.id;
+    // Draw line r1→r2
+    g.beginPath();g.moveTo(r1.x,r1.y);g.lineTo(r2.x,r2.y);
+    g.strokeStyle=isSel?'#C2410C':'rgba(194,65,12,0.3)';
+    g.lineWidth=isSel?2.5:1.5;g.setLineDash([5,4]);g.stroke();g.setLineDash([]);
+    // Transit node at midpoint
+    const tx=t.x,ty=t.y;
+    if(isSel){g.beginPath();g.arc(tx,ty,TR+4,0,Math.PI*2);g.fillStyle='rgba(194,65,12,0.1)';g.fill();}
+    g.beginPath();g.arc(tx,ty,TR,0,Math.PI*2);
+    g.fillStyle='#FFF7ED';g.fill();
+    g.strokeStyle=isSel?'#9A3412':'#C2410C';g.lineWidth=isSel?2:1.2;g.stroke();
+    g.fillStyle='#7C2D12';g.font='500 9px monospace';g.textAlign='center';g.textBaseline='middle';
+    g.fillText('/30',tx,ty-5);
+    if(t.cidr){g.font='8px monospace';g.fillText(t.cidr.split('/')[0],tx,ty+5);}
+  });
+
+  // Subnet → router links
+  S.subnets.forEach(s=>{
+    const r=routerById(s.routerId);if(!r)return;
+    const isSel=S.sel&&S.sel.type==='subnet'&&S.sel.id===s.id;
+    const dx=r.x-s.x,dy=r.y-s.y,dist=Math.hypot(dx,dy)||1;
+    const ux=dx/dist,uy=dy/dist;
+    const x1=s.x+ux*SR,y1=s.y+uy*SR;
+    const x2=r.x-ux*RR,y2=r.y-uy*RR;
+    g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);
+    g.strokeStyle=isSel?s.color.stroke:'rgba(0,0,0,0.12)';
+    g.lineWidth=isSel?2:1.5;g.setLineDash([]);g.stroke();
+    // Gateway label
+    if(s.firstHost&&dist>90){
+      g.fillStyle=s.color.stroke;g.font='8px monospace';
+      g.textAlign='center';g.textBaseline='middle';
+      g.fillText(s.firstHost,s.x+ux*(SR+20),s.y+uy*(SR+20));
+    }
+  });
+
+  // Subnet nodes
+  S.subnets.forEach(s=>{
+    const isSel=S.sel&&S.sel.type==='subnet'&&S.sel.id===s.id;
+    const c=s.color;
+    if(isSel){g.beginPath();g.arc(s.x,s.y,SR+6,0,Math.PI*2);g.fillStyle=c.node+'28';g.fill();}
+    g.beginPath();g.arc(s.x,s.y,SR,0,Math.PI*2);g.fillStyle=c.fill;g.fill();
+    g.strokeStyle=isSel?c.stroke:c.node;g.lineWidth=isSel?2.5:1.5;g.setLineDash([]);g.stroke();
+    g.beginPath();g.arc(s.x,s.y,SR-7,0,Math.PI*2);g.strokeStyle=c.node+'50';g.lineWidth=0.5;g.stroke();
+    g.fillStyle=c.text;g.font='500 11px -apple-system,sans-serif';g.textAlign='center';g.textBaseline='middle';
+    const lines=wrap(s.name,70),lh=14,sy=s.y-(lines.length-1)*lh/2-7;
+    lines.forEach((l,i)=>g.fillText(l,s.x,sy+i*lh));
+    if(s.cidr){g.font='9px monospace';g.fillStyle=c.stroke;g.fillText(s.cidr,s.x,s.y+(lines.length-1)*lh/2+8);}
+    if(s.overflow){g.fillStyle='#E24B4A';g.font='11px sans-serif';g.fillText('⚠',s.x+SR-6,s.y-SR+8);}
+  });
+
+  // Host nodes
+  S.hosts.forEach(h=>{
+    const s=subnetById(h.subnetId); if(!s)return;
+    const isSel=S.sel&&S.sel.type==='host'&&S.sel.id===h.id;
+    const isPending=h.dhcpPending;
+    // line from host to subnet
+    g.beginPath();g.moveTo(h.x,h.y);g.lineTo(s.x,s.y);
+    g.strokeStyle=isPending?'rgba(245,158,11,0.3)':isSel?s.color.stroke:'rgba(0,0,0,0.1)';
+    g.lineWidth=1;g.setLineDash([3,3]);g.stroke();g.setLineDash([]);
+    // host circle — dashed if pending
+    if(isSel&&!isPending){g.beginPath();g.arc(h.x,h.y,HR+4,0,Math.PI*2);g.fillStyle=s.color.node+'30';g.fill();}
+    g.beginPath();g.arc(h.x,h.y,HR,0,Math.PI*2);
+    g.fillStyle=isPending?'#FFFBEB':s.color.fill;g.fill();
+    if(isPending){g.setLineDash([3,2]);}
+    g.strokeStyle=isPending?'#F59E0B':isSel?s.color.stroke:s.color.node;
+    g.lineWidth=isPending?1.5:isSel?2:1.2;g.stroke();g.setLineDash([]);
+    if(!isPending){
+      // host icon — small monitor shape
+      const hic=5;
+      g.fillStyle=s.color.stroke;g.strokeStyle=s.color.stroke;g.lineWidth=1;
+      g.beginPath();g.roundRect(h.x-hic,h.y-hic*0.9,hic*2,hic*1.4,1);g.fill();
+      g.beginPath();g.moveTo(h.x-hic*0.5,h.y+hic*0.5);g.lineTo(h.x+hic*0.5,h.y+hic*0.5);
+      g.lineWidth=1.2;g.stroke();
+      g.beginPath();g.moveTo(h.x,h.y+hic*0.3);g.lineTo(h.x,h.y+hic*0.5);g.stroke();
+    } else {
+      // DHCP pending — question mark
+      g.fillStyle='#D97706';g.font='bold 8px -apple-system,sans-serif';
+      g.textAlign='center';g.textBaseline='middle';g.fillText('?',h.x,h.y);
+    }
+    // name + IP/status below
+    g.fillStyle=isPending?'#D97706':isSel?s.color.stroke:s.color.text;
+    g.font=isSel?'500 9px -apple-system,sans-serif':'9px -apple-system,sans-serif';
+    g.textAlign='center';g.textBaseline='top';
+    g.fillText(h.name,h.x,h.y+HR+2);
+    g.fillStyle=isPending?'#F59E0B':s.color.stroke;g.font='8px monospace';
+    g.fillText(isPending?'DHCP...':h.ip,h.x,h.y+HR+12);
+  });
+
+  // DHCP server node
+  if(S.dhcpServer) drawDhcpServer(g);
+
+  // Router nodes
+  S.routers.forEach(r=>drawRouter(g,r));
+  // NAT router (always on top, straddles boundary)
+  drawNatRouter(g);
+
+  // Packet animation — always on top of everything
+  if(S.packet&&S.packet.active){
+    const st=S.packet.steps[S.packet.step],t=S.packet.t;
+    if(S.packet.rejected){
+      // Red rejection burst at NAT router
+      const rx=S.natRouter.x,ry=S.natRouter.y;
+      const age=S.packet.rejectTimer/40;
+      // Expanding red ring
+      g.beginPath();g.arc(rx,ry,10+30*age,0,Math.PI*2);
+      g.strokeStyle=`rgba(180,30,30,${0.7*(1-age)})`;g.lineWidth=2.5;g.stroke();
+      g.beginPath();g.arc(rx,ry,5+15*age,0,Math.PI*2);
+      g.strokeStyle=`rgba(220,50,50,${0.5*(1-age)})`;g.lineWidth=1.5;g.stroke();
+      // X mark
+      const xs=12*(1-age*0.3);
+      g.strokeStyle=`rgba(200,30,30,${1-age})`;g.lineWidth=2.5;g.lineCap='round';
+      g.beginPath();g.moveTo(rx-xs,ry-xs);g.lineTo(rx+xs,ry+xs);g.stroke();
+      g.beginPath();g.moveTo(rx+xs,ry-xs);g.lineTo(rx-xs,ry+xs);g.stroke();
+      // "BLOCKED" label
+      g.fillStyle=`rgba(180,30,30,${1-age})`;
+      g.font='bold 11px -apple-system,sans-serif';g.textAlign='center';g.textBaseline='top';
+      g.fillText('BLOCKED',rx,ry+RR+8);
+    } else {
+      const px=st.fx+(st.tx-st.fx)*t,py=st.fy+(st.ty-st.fy)*t;
+      const pktColor=st.color||(S.packet.isDhcp?S.packet.dhcpColor:'#0F6E56');
+      const pulseRgb=S.packet.isDhcp?'245,158,11':'15,110,86';
+      // pulse ring
+      g.beginPath();g.arc(px,py,8+14*t,0,Math.PI*2);
+      g.strokeStyle=`rgba(${pulseRgb},${0.55*(1-t)})`;g.lineWidth=2;g.setLineDash([]);g.stroke();
+      // packet dot
+      g.beginPath();g.arc(px,py,7,0,Math.PI*2);g.fillStyle=pktColor;g.fill();
+      g.strokeStyle='white';g.lineWidth=2;g.stroke();
+      // DHCP phase label above dot
+      if(S.packet.isDhcp&&st.dhcpPhase){
+        const label={discover:'D',offer:'O',request:'R',ack:'A'}[st.dhcpPhase]||'';
+        g.fillStyle='white';g.font='bold 8px -apple-system,sans-serif';
+        g.textAlign='center';g.textBaseline='middle';
+        g.fillText(label,px,py);
+      }
+      // direction arrow
+      if(t>0.1){
+        const dx=st.tx-st.fx,dy=st.ty-st.fy,len=Math.hypot(dx,dy)||1;
+        const ux=dx/len,uy=dy/len;
+        g.beginPath();g.moveTo(px+ux*8,py+uy*8);
+        g.lineTo(px+ux*8-ux*5+uy*3,py+uy*8-uy*5-ux*3);
+        g.lineTo(px+ux*8-ux*5-uy*3,py+uy*8-uy*5+ux*3);
+        g.fillStyle='white';g.fill();
+      }
+    }
+  }
+}
+
+function drawNatRouter(g){
+  const rx=S.natRouter.x,ry=S.natRouter.y,R=RR+4;
+  const isSel=S.sel&&S.sel.type==='natRouter';
+  const isExamine=S.natExamineMode;
+  const natIP=document.getElementById('nat-ip').value||'203.0.113.1';
+
+  // Examine mode — dashed outer ring
+  if(isExamine){
+    g.beginPath();g.arc(rx,ry,R+10,0,Math.PI*2);
+    g.strokeStyle='#0F6E56';g.lineWidth=1.5;g.setLineDash([4,3]);g.stroke();g.setLineDash([]);
+  }
+
+  if(isSel){g.beginPath();g.arc(rx,ry,R+6,0,Math.PI*2);g.fillStyle='rgba(15,110,86,0.12)';g.fill();}
+  // Outer circle — green themed
+  g.beginPath();g.arc(rx,ry,R,0,Math.PI*2);
+  g.fillStyle='#E1F5EE';g.fill();
+  g.strokeStyle=isSel?'#085041':'#0F6E56';g.lineWidth=isSel?2.5:1.8;g.stroke();
+  // Inner circle
+  g.beginPath();g.arc(rx,ry,R-7,0,Math.PI*2);g.strokeStyle='rgba(15,110,86,0.25)';g.lineWidth=0.5;g.stroke();
+  // Compass arrows
+  const ar=R-11;
+  g.strokeStyle='#0F6E56';g.lineWidth=1.4;g.lineCap='round';
+  [0,90,180,270].forEach(deg=>{
+    const rad=deg*Math.PI/180;
+    const x1=rx+Math.cos(rad)*ar*0.25,y1=ry+Math.sin(rad)*ar*0.25;
+    const x2=rx+Math.cos(rad)*ar,y2=ry+Math.sin(rad)*ar;
+    g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();
+    const back=rad+Math.PI,hl=4,ha=Math.PI/6;
+    g.beginPath();
+    g.moveTo(x2,y2);g.lineTo(x2+Math.cos(back+ha)*hl,y2+Math.sin(back+ha)*hl);
+    g.moveTo(x2,y2);g.lineTo(x2+Math.cos(back-ha)*hl,y2+Math.sin(back-ha)*hl);
+    g.stroke();
+  });
+  // NAT label
+  g.fillStyle='#085041';g.font='600 10px -apple-system,sans-serif';
+  g.textAlign='center';g.textBaseline='middle';
+  g.fillText('NAT',rx,ry);
+  // Public IP above
+  g.font='8px monospace';g.fillStyle='#0F6E56';g.textBaseline='bottom';
+  g.fillText(natIP,rx,ry-R-2);
+  // Label below
+  g.fillStyle='#085041';g.font='600 10px -apple-system,sans-serif';g.textBaseline='top';
+  g.fillText('NAT Router',rx,ry+R+4);
+
+  // Magnifier badge — always visible, top-right corner
+  {
+    const bx=rx+R*Math.cos(-Math.PI/4), by=ry+R*Math.sin(-Math.PI/4);
+    g.beginPath();g.arc(bx,by,8,0,Math.PI*2);
+    if(isExamine){
+      g.fillStyle='#0F6E56';g.fill();
+      g.strokeStyle='white';g.lineWidth=1.5;g.stroke();
+      g.strokeStyle='white';g.lineWidth=1.2;g.lineCap='round';
+      g.beginPath();g.arc(bx-1,by-1,3,0,Math.PI*2);g.stroke();
+      g.beginPath();g.moveTo(bx+1.5,by+1.5);g.lineTo(bx+4,by+4);g.stroke();
+    } else {
+      g.fillStyle='rgba(255,255,255,0.85)';g.fill();
+      g.strokeStyle='rgba(15,110,86,0.25)';g.lineWidth=1;g.stroke();
+      g.strokeStyle='rgba(15,110,86,0.3)';g.lineWidth=1.1;g.lineCap='round';
+      g.beginPath();g.arc(bx-1,by-1,3,0,Math.PI*2);g.stroke();
+      g.beginPath();g.moveTo(bx+1.5,by+1.5);g.lineTo(bx+4,by+4);g.stroke();
+    }
+  }
+}
+
+function drawRouter(g,r){
+  const isSel=S.sel&&S.sel.type==='router'&&S.sel.id===r.id;
+  const isExamine=S.routerExamineSet.has(r.id);
+
+  // Examine mode — dashed outer ring
+  if(isExamine){
+    g.beginPath();g.arc(r.x,r.y,RR+10,0,Math.PI*2);
+    g.strokeStyle='#4338CA';g.lineWidth=1.5;g.setLineDash([4,3]);g.stroke();g.setLineDash([]);
+  }
+
+  if(isSel){g.beginPath();g.arc(r.x,r.y,RR+6,0,Math.PI*2);g.fillStyle='rgba(67,56,202,0.1)';g.fill();}
+  g.beginPath();g.arc(r.x,r.y,RR,0,Math.PI*2);g.fillStyle='#EEF2FF';g.fill();
+  g.strokeStyle=isSel?'#3730A3':'#4338CA';g.lineWidth=isSel?2.5:1.5;g.setLineDash([]);g.stroke();
+  g.beginPath();g.arc(r.x,r.y,RR-6,0,Math.PI*2);g.strokeStyle='rgba(67,56,202,0.2)';g.lineWidth=0.5;g.stroke();
+  // Compass arrows
+  const ar=RR-10;
+  g.strokeStyle='#4338CA';g.lineWidth=1.4;g.lineCap='round';
+  [0,90,180,270].forEach(deg=>{
+    const rad=deg*Math.PI/180;
+    const x1=r.x+Math.cos(rad)*ar*0.25,y1=r.y+Math.sin(rad)*ar*0.25;
+    const x2=r.x+Math.cos(rad)*ar,y2=r.y+Math.sin(rad)*ar;
+    g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();
+    const back=rad+Math.PI,hl=4,ha=Math.PI/6;
+    g.beginPath();
+    g.moveTo(x2,y2);g.lineTo(x2+Math.cos(back+ha)*hl,y2+Math.sin(back+ha)*hl);
+    g.moveTo(x2,y2);g.lineTo(x2+Math.cos(back-ha)*hl,y2+Math.sin(back-ha)*hl);
+    g.stroke();
+  });
+  g.fillStyle='#312E81';g.font='600 11px -apple-system,sans-serif';
+  g.textAlign='center';g.textBaseline='middle';
+  g.fillText(r.name,r.x,r.y+RR+12);
+
+  // Magnifier badge — top-right corner
+  {
+    const bx=r.x+RR*Math.cos(-Math.PI/4), by=r.y+RR*Math.sin(-Math.PI/4);
+    g.beginPath();g.arc(bx,by,8,0,Math.PI*2);
+    if(isExamine){
+      g.fillStyle='#4338CA';g.fill();
+      g.strokeStyle='white';g.lineWidth=1.5;g.stroke();
+      g.strokeStyle='white';g.lineWidth=1.2;g.lineCap='round';
+      g.beginPath();g.arc(bx-1,by-1,3,0,Math.PI*2);g.stroke();
+      g.beginPath();g.moveTo(bx+1.5,by+1.5);g.lineTo(bx+4,by+4);g.stroke();
+    } else {
+      g.fillStyle='rgba(255,255,255,0.85)';g.fill();
+      g.strokeStyle='rgba(67,56,202,0.25)';g.lineWidth=1;g.stroke();
+      g.strokeStyle='rgba(67,56,202,0.3)';g.lineWidth=1.1;g.lineCap='round';
+      g.beginPath();g.arc(bx-1,by-1,3,0,Math.PI*2);g.stroke();
+      g.beginPath();g.moveTo(bx+1.5,by+1.5);g.lineTo(bx+4,by+4);g.stroke();
+    }
+  }
+
+  // Console badge — bottom-right corner
+  {
+    const bx=r.x+RR*Math.cos(Math.PI/4), by=r.y+RR*Math.sin(Math.PI/4);
+    g.beginPath();g.arc(bx,by,8,0,Math.PI*2);
+    g.fillStyle='rgba(255,255,255,0.85)';g.fill();
+    g.strokeStyle='rgba(67,56,202,0.25)';g.lineWidth=1;g.stroke();
+    // ">" prompt symbol
+    g.fillStyle='rgba(67,56,202,0.55)';
+    g.font='bold 9px monospace';g.textAlign='center';g.textBaseline='middle';
+    g.fillText('>',bx+0.5,by+0.5);
+  }
+}
+
+function wrap(text,maxPx){
+  const words=text.split(' '),lines=[];let cur='';
+  words.forEach(w=>{const t=cur?cur+' '+w:w;if(t.length*6.5>maxPx&&cur){lines.push(cur);cur=w;}else cur=t;});
+  if(cur)lines.push(cur);return lines;
+}
+
+// ── Layout ────────────────────────────────────────────────────────────────────
+function autoLayout(){
+  const c=cv(),W=c.width,H=c.height;
+  const n=S.routers.length; if(!n){draw();return;}
+  const subnetOrbit=170, hostOrbit=SR+32;
+  const BAND=Math.round(H*0.13);
+
+  // Keep NAT router straddling the band boundary
+  S.natRouter.x=W/2; S.natRouter.y=BAND;
+  S.extHost.x=W*0.75; S.extHost.y=BAND*0.45;
+  // Space routers in private zone, strictly below band
+  const privateTop=BAND+RR+30;
+  const privateH=H-privateTop;
+  const routerY = privateTop + privateH*0.35;
+  S.routers.forEach((r,i)=>{
+    r.x = n===1 ? W/2 : W*0.12 + (W*0.76/(n-1||1))*i;
+    r.y = routerY;
+  });
+
+  // Spread each router's subnets in a fan away from center
+  S.routers.forEach((r,ri)=>{
+    const mine=S.subnets.filter(s=>s.routerId===r.id);
+    if(!mine.length) return;
+    // Base fan direction: left routers fan left, right routers fan right, single fans all around
+    const centerAngle = n===1 ? -Math.PI/2 :
+      ri < n/2 ? Math.PI : 0; // left half fans left, right half fans right
+    const spread = n===1 ? Math.PI*2 : Math.PI*1.1;
+    const startAngle = centerAngle - spread/2;
+    mine.forEach((s,i)=>{
+      const a = mine.length===1 ? centerAngle : startAngle + (spread/(mine.length-1||1))*i;
+      s.x=Math.max(SR+8, Math.min(W-SR-8, r.x+Math.cos(a)*subnetOrbit));
+      // ensure room for hosts below (hostOrbit+label) and above band
+      s.y=Math.max(BAND+SR+10, Math.min(H*0.95-SR-hostOrbit-20, r.y+Math.sin(a)*subnetOrbit));
+    });
+  });
+
+  // Transit midpoints
+  S.transits.forEach(t=>{
+    const r1=routerById(t.r1id),r2=routerById(t.r2id);
+    if(r1&&r2){t.x=(r1.x+r2.x)/2;t.y=(r1.y+r2.y)/2;}
+  });
+
+  // Hosts orbit their subnet node
+  S.subnets.forEach(s=>{
+    const mine=S.hosts.filter(h=>h.subnetId===s.id);
+    const r=routerById(s.routerId);
+    // Fan hosts away from the router so they don't overlap
+    const awayAngle=r?Math.atan2(s.y-r.y,s.x-r.x):0;
+    const spread=mine.length===1?0:Math.PI*0.8;
+    mine.forEach((h,i)=>{
+      const a=mine.length===1?awayAngle:awayAngle-spread/2+(spread/(mine.length-1))*i;
+      h.x=s.x+Math.cos(a)*hostOrbit;
+      // keep host below band AND below its subnet node (not behind it)
+      const minY=Math.max(BAND+HR+14, s.y+SR+HR+8);
+      h.y=Math.max(minY, s.y+Math.sin(a)*hostOrbit);
+    });
+  });
+
+  // DHCP server — offset above-left of its router
+  if(S.dhcpServer){
+    const r=routerById(S.dhcpServer.routerId);
+    if(r){ S.dhcpServer.x=r.x-70; S.dhcpServer.y=r.y-60; }
+  }
+
+  draw();
+}
+
+function clearAll(){S.routers=[];S.subnets=[];S.transits=[];S.hosts=[];S.sel=null;S.packet=null;S.dhcpServer=null;alloc();updateAll();log('Canvas cleared','inf');}
+
+// ── Mouse ─────────────────────────────────────────────────────────────────────
+function mpos(e){const r=cv().getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+
+function hitTest(x,y){
+  if(Math.hypot(x-S.natRouter.x,y-S.natRouter.y)<=RR)return{type:'natRouter'};
+  for(const t of S.natTransits){
+    const r=routerById(t.routerId);if(!r)continue;
+    const mx=(r.x+S.natRouter.x)/2,my=(r.y+S.natRouter.y)/2;
+    if(Math.hypot(x-mx,y-my)<=TR)return{type:'natTransit',id:t.routerId};
+  }
+  if(Math.hypot(x-S.extHost.x,y-S.extHost.y)<=HR+4)return{type:'extHost'};
+  if(S.dhcpServer&&Math.hypot(x-S.dhcpServer.x,y-S.dhcpServer.y)<=DHCP_R+2)return{type:'dhcpServer'};
+  for(const r of S.routers)if(Math.hypot(x-r.x,y-r.y)<=RR)return{type:'router',id:r.id};
+  for(const t of S.transits)if(Math.hypot(x-t.x,y-t.y)<=TR)return{type:'transit',id:t.id};
+  for(const s of S.subnets)if(Math.hypot(x-s.x,y-s.y)<=SR)return{type:'subnet',id:s.id};
+  for(const h of S.hosts)if(Math.hypot(x-h.x,y-h.y)<=HR+2)return{type:'host',id:h.id};
+  return null;
+}
+
+// Badge hit test — checks the magnifier badge on each router (top-right, 45°)
+// Returns {type:'routerBadge',id} or {type:'natBadge'} or null
+function badgeHitTest(x,y){
+  // NAT router badge
+  const R=RR+4;
+  const nbx=S.natRouter.x+R*Math.cos(-Math.PI/4);
+  const nby=S.natRouter.y+R*Math.sin(-Math.PI/4);
+  if(Math.hypot(x-nbx,y-nby)<=10)return{type:'natBadge'};
+  // DHCP server badge
+  if(S.dhcpServer){
+    const hw=DHCP_R;
+    const bx=S.dhcpServer.x+hw*Math.cos(-Math.PI/4);
+    const by=S.dhcpServer.y-DHCP_R*0.75*0.6;
+    if(Math.hypot(x-bx,y-by)<=10)return{type:'dhcpBadge'};
+  }
+  // Regular router badges — magnifier (top-right) and console (bottom-right)
+  for(const r of S.routers){
+    const mbx=r.x+RR*Math.cos(-Math.PI/4), mby=r.y+RR*Math.sin(-Math.PI/4);
+    if(Math.hypot(x-mbx,y-mby)<=10)return{type:'routerBadge',id:r.id};
+    const cbx=r.x+RR*Math.cos(Math.PI/4),  cby=r.y+RR*Math.sin(Math.PI/4);
+    if(Math.hypot(x-cbx,y-cby)<=10)return{type:'consoleBadge',id:r.id};
+  }
+  return null;
+}
+
+function getNodePos(hit){
+  if(hit.type==='natRouter')return{x:S.natRouter.x,y:S.natRouter.y};
+  if(hit.type==='natTransit'){const r=routerById(hit.id);if(r)return{x:(r.x+S.natRouter.x)/2,y:(r.y+S.natRouter.y)/2}; return{x:0,y:0};}
+  if(hit.type==='extHost')return{x:S.extHost.x,y:S.extHost.y};
+  if(hit.type==='dhcpServer')return{x:S.dhcpServer.x,y:S.dhcpServer.y};
+  if(hit.type==='router'){const r=routerById(hit.id);return{x:r.x,y:r.y};}
+  if(hit.type==='transit'){const t=transitById(hit.id);return{x:t.x,y:t.y};}
+  if(hit.type==='host'){const h=hostById(hit.id);return{x:h.x,y:h.y};}
+  const s=subnetById(hit.id);return{x:s.x,y:s.y};
+}
+
+function setNodePos(hit,x,y){
+  const c=cv();
+  const BAND_H=Math.round(c.height*0.13);
+  if(hit.type==='router'){
+    const r=routerById(hit.id);r.x=x;r.y=Math.max(BAND_H+RR+4,y);
+    S.transits.forEach(t=>{
+      if(t.r1id===r.id||t.r2id===r.id){
+        const r1=routerById(t.r1id),r2=routerById(t.r2id);
+        if(r1&&r2){t.x=(r1.x+r2.x)/2;t.y=(r1.y+r2.y)/2;}
+      }
+    });
+  } else if(hit.type==='natRouter'){
+    S.natRouter.x=x;S.natRouter.y=y;
+  } else if(hit.type==='extHost'){
+    S.extHost.x=x;S.extHost.y=Math.max(HR+6,Math.min(BAND_H-HR-4,y));
+  } else if(hit.type==='dhcpServer'){
+    S.dhcpServer.x=x;S.dhcpServer.y=Math.max(BAND_H+DHCP_R+4,y);
+  } else if(hit.type==='transit'){
+    const t=transitById(hit.id);t.x=x;t.y=y;
+  } else if(hit.type==='host'){
+    const h=hostById(hit.id);
+    const s=subnetById(h.subnetId);
+    const W=cv().width, H2=cv().height;
+    // keep in private zone and within canvas bounds
+    const clampedX=Math.max(HR+4, Math.min(W-HR-4, x));
+    const clampedY=Math.max(BAND_H+HR+6, Math.min(H2-HR-20, y));
+    // keep outside subnet circle
+    if(s){
+      const dx=clampedX-s.x,dy=clampedY-s.y,dist=Math.hypot(dx,dy);
+      if(dist<SR+HR+6){
+        const angle=Math.atan2(dy,dx);
+        h.x=Math.max(HR+4,Math.min(W-HR-4, s.x+Math.cos(angle)*(SR+HR+6)));
+        h.y=Math.max(BAND_H+HR+6, Math.min(H2-HR-20, s.y+Math.sin(angle)*(SR+HR+6)));
+      } else { h.x=clampedX;h.y=clampedY; }
+    } else { h.x=clampedX;h.y=clampedY; }
+  } else {
+    const s=subnetById(hit.id);s.x=x;s.y=Math.max(BAND_H+SR+6,y);
+  }
+}
+
+cv().addEventListener('mousedown',e=>{
+  const{x,y}=mpos(e);
+
+  // Badge click — toggle examine mode AND always keep the node selected
+  const badge=badgeHitTest(x,y);
+  if(badge){
+    if(badge.type==='natBadge'){
+      toggleNatExamine();
+      S.sel={type:'natRouter',id:null};
+    } else if(badge.type==='dhcpBadge'){
+      S.dhcpExamineMode=!S.dhcpExamineMode;
+      S.sel={type:'dhcpServer',id:null};
+      log(`DHCP Examine Mode ${S.dhcpExamineMode?'enabled':'disabled'}`,'inf');
+    } else if(badge.type==='consoleBadge'){
+      // Open console and also select the node
+      S.sel={type:'router',id:badge.id};
+      updateRList(); updateSList(); updateSelPanel(); draw();
+      openConsole(badge.id);
+      return;
+    } else {
+      toggleRouterExamine(badge.id);
+      S.sel={type:'router',id:badge.id};
+    }
+    updateRList(); updateSList(); updateSelPanel(); draw();
+    return;
+  }
+
+  const hit=hitTest(x,y);
+  if(hit){
+    // NAT router is fixed — allow click-to-select but not drag
+    if(hit.type==='natRouter'){
+      selectNode('natRouter', null);
+      return;
+    }
+    S.drag=hit;S.dragMoved=false;
+    const pos=getNodePos(hit);S.dragOX=x-pos.x;S.dragOY=y-pos.y;
+  }else{S.sel=null;updateRList();updateSList();updateSelPanel();draw();}
+});
+
+cv().addEventListener('mousemove',e=>{
+  const{x,y}=mpos(e),tip=document.getElementById('tip');
+  if(S.drag){setNodePos(S.drag,x-S.dragOX,y-S.dragOY);S.dragMoved=true;draw();return;}
+
+  // Badge hover takes priority
+  const badge=badgeHitTest(x,y);
+  if(badge){
+    cv().style.cursor='pointer';
+    tip.style.display='block';
+    tip.style.left=(e.clientX+12)+'px';tip.style.top=(e.clientY-28)+'px';
+    if(badge.type==='natBadge'){
+      tip.textContent=S.natExamineMode?'Click to disable NAT Examine Mode':'Click to enable NAT Examine Mode';
+    } else if(badge.type==='dhcpBadge'){
+      tip.textContent=S.dhcpExamineMode?'Click to disable DHCP Examine Mode':'Click to enable DHCP Examine Mode';
+    } else if(badge.type==='consoleBadge'){
+      const r=routerById(badge.id);
+      tip.textContent=`Open ${r?r.name:'Router'} console`;
+    } else {
+      const r=routerById(badge.id);
+      const on=S.routerExamineSet.has(badge.id);
+      tip.textContent=`${r?r.name:'Router'}: ${on?'Disable':'Enable'} Examine Forwarding`;
+    }
+    return;
+  }
+
+  const hit=hitTest(x,y);
+  if(hit){
+    cv().style.cursor='pointer';tip.style.display='block';
+    tip.style.left=(e.clientX+12)+'px';tip.style.top=(e.clientY-28)+'px';
+    if(hit.type==='natTransit'){const r=routerById(hit.id);const nt=S.natTransits.find(t=>t.routerId===hit.id);tip.textContent=`NAT ↔ ${r?r.name:'?'}  ${nt?nt.cidr:''}`;}
+    else if(hit.type==='natRouter'){tip.textContent='NAT Router — '+(document.getElementById('nat-ip').value||'203.0.113.1');}
+    else if(hit.type==='dhcpServer'){const r=routerById(S.dhcpServer.routerId);tip.textContent=`DHCP Server — on ${r?r.name:'?'} — ${S.dhcpServer.leases.length} leases`;}
+    else if(hit.type==='extHost'){tip.textContent=(document.getElementById('ext-name').value||'External Server')+' — '+(document.getElementById('ext-ip').value||'8.8.8.8');}
+    else if(hit.type==='host'){const h=hostById(hit.id);const hs=subnetById(h.subnetId);tip.textContent=`${h.name}  ${h.ip}${hs?' ('+hs.name+')':''}`;}
+    else if(hit.type==='router'){const r=routerById(hit.id);tip.textContent=r.name+' — Router';}
+    else if(hit.type==='transit'){const t=transitById(hit.id);tip.textContent='Transit /30: '+t.cidr;}
+    else{const s=subnetById(hit.id);tip.textContent=`${s.name}  ${s.cidr||''}  hosts: ${s.usable?s.usable.toLocaleString():'—'}`;}
+  }else{cv().style.cursor='default';tip.style.display='none';}
+});
+
+cv().addEventListener('mouseup',e=>{
+  if(S.drag&&!S.dragMoved&&S.drag.type!=='natRouter')selectNode(S.drag.type,S.drag.id||null);
+  S.drag=null;
+});
+cv().addEventListener('mouseleave',()=>{S.drag=null;document.getElementById('tip').style.display='none';});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+resizeCV();
+window.addEventListener('resize',resizeCV);
+log('Subnet Topology Builder ready','ok');
+
+// Seed example
+(function(){
+  S.baseIP='10.0.0.0';S.basePrefix=16;
+  document.getElementById('bip').value='10.0.0.0';
+  document.getElementById('bpx').value=16;
+  document.getElementById('bpl').textContent='/16';
+
+  // Two routers
+  const r1={id:nid++,name:'R1',x:380,y:300};
+  const r2={id:nid++,name:'R2',x:620,y:300};
+  S.routers.push(r1,r2);
+
+  // Transit between them
+  S.transits.push({id:nid++,r1id:r1.id,r2id:r2.id,x:500,y:300});
+
+  // Subnets on R1
+  S.subnets.push({id:nid++,name:'Web Tier',  prefix:24,color:COLORS[0],routerId:r1.id,x:220,y:220});
+  S.subnets.push({id:nid++,name:'App Tier',  prefix:24,color:COLORS[1],routerId:r1.id,x:220,y:380});
+
+  // Subnets on R2
+  S.subnets.push({id:nid++,name:'DB Tier',   prefix:26,color:COLORS[3],routerId:r2.id,x:780,y:220});
+  S.subnets.push({id:nid++,name:'Management',prefix:28,color:COLORS[4],routerId:r2.id,x:780,y:380});
+
+  alloc();
+
+  // Seed some hosts
+  function seedHost(name, subnetId){
+    const ip=nextHostIP(subnetId);
+    if(!ip)return;
+    const s=subnetById(subnetId);
+    const peers=hostsInSubnet(subnetId);
+    const angle=(peers.length/Math.max(peers.length+1,6))*Math.PI*2-Math.PI/2;
+    S.hosts.push({id:nid++,name,subnetId,ip,
+      x:s.x+Math.cos(angle)*(SR+28), y:s.y+Math.sin(angle)*(SR+28)});
+  }
+  // IDs 5,6 = Web Tier, App Tier (on R1); 7,8 = DB Tier, Management (on R2)
+  const webId=S.subnets[0].id, appId=S.subnets[1].id;
+  const dbId=S.subnets[2].id, mgmtId=S.subnets[3].id;
+  seedHost('Web-1', webId); seedHost('Web-2', webId);
+  seedHost('App-1', appId);
+  seedHost('DB-1', dbId);
+  seedHost('Mgmt-1', mgmtId);
+
+  // Seed DHCP server on R1
+  S.dhcpServer={id:nid++, routerId:r1.id, x:r1.x-70, y:r1.y-60, leases:[]};
+
+  updateAll();
+  // Sync select to seeded router after updateAll populates the options
+  const dsel=document.getElementById('dhcp-router-sel');
+  if(dsel) dsel.value=r1.id;
+  updateDhcpPanel();
+  log('Loaded example: two routers, transit /30, 4 subnets, 5 hosts','ok');
+  log('DHCP server placed on R1 — add new hosts to see DORA animation','inf');
+})();
+
+
+
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow='hidden';
+  if(id==='modal-subnet') buildCP();
+  if(id==='modal-host') updateHostSubnetSelect();
+  if(id==='modal-subnet') updateRouterSelect();
+  const inp=document.querySelector('#'+id+' input[type=text]');
+  if(inp) setTimeout(()=>inp.focus(),50);
+}
+function closeModal(id){
+  const el=document.getElementById(id); if(!el) return;
+  el.classList.remove('open');
+  document.body.style.overflow='';
+  const err=el.querySelector('.modal-err');
+  if(err){err.style.display='none';err.textContent='';}
+}
+function handleBackdrop(e,id){
+  if(e.target===e.currentTarget) closeModal(id);
+}
+// ── Router Console ────────────────────────────────────────────────────────────
+let consoleRouter=null;
+let consoleCmdHistory=[], consoleCmdIdx=-1;
+
+function openConsole(routerId){
+  consoleRouter=routerById(routerId);
+  if(!consoleRouter)return;
+  document.getElementById('console-title').textContent=`${consoleRouter.name} — IOS Console`;
+  document.getElementById('console-prompt-label').textContent=`${consoleRouter.name}#`;
+  document.body.style.overflow='hidden';
+  document.getElementById('console-backdrop').classList.add('open');
+  const body=document.getElementById('console-body');
+  body.innerHTML='';
+  consolePrint(`<span class="co-dim">Cisco IOS Software Simulator — ${consoleRouter.name}</span>`);
+  consolePrint(`<span class="co-dim">Connected to ${consoleRouter.name}. Type <span class="co-key">help</span> for available commands.</span>`);
+  consolePrint('');
+  setTimeout(()=>document.getElementById('console-input').focus(),50);
+}
+
+function closeConsole(){
+  document.getElementById('console-backdrop').classList.remove('open');
+  document.body.style.overflow='';
+  consoleRouter=null;
+}
+
+function handleConsoleBackdrop(e){
+  if(e.target===e.currentTarget) closeConsole();
+}
+
+function consolePrint(html){
+  const body=document.getElementById('console-body');
+  const line=document.createElement('div');
+  line.innerHTML=html;
+  body.appendChild(line);
+  body.scrollTop=body.scrollHeight;
+}
+
+function consoleEcho(cmd){
+  consolePrint(`<span class="co-prompt">${consoleRouter.name}#</span> <span class="co-cmd">${escHtml(cmd)}</span>`);
+}
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function padR(s,n){s=String(s);return s+' '.repeat(Math.max(0,n-s.length));}
+function padL(s,n){s=String(s);return ' '.repeat(Math.max(0,n-s.length))+s;}
+
+function handleConsoleKey(e){
+  if(e.key==='Enter'){
+    const inp=document.getElementById('console-input');
+    const cmd=inp.value.trim();
+    inp.value='';
+    if(!cmd)return;
+    consoleCmdHistory.unshift(cmd);
+    if(consoleCmdHistory.length>50)consoleCmdHistory.pop();
+    consoleCmdIdx=-1;
+    consoleEcho(cmd);
+    runConsoleCmd(cmd.toLowerCase().trim());
+  } else if(e.key==='ArrowUp'){
+    e.preventDefault();
+    const inp=document.getElementById('console-input');
+    consoleCmdIdx=Math.min(consoleCmdIdx+1,consoleCmdHistory.length-1);
+    if(consoleCmdIdx>=0)inp.value=consoleCmdHistory[consoleCmdIdx];
+  } else if(e.key==='ArrowDown'){
+    e.preventDefault();
+    const inp=document.getElementById('console-input');
+    consoleCmdIdx=Math.max(consoleCmdIdx-1,-1);
+    inp.value=consoleCmdIdx>=0?consoleCmdHistory[consoleCmdIdx]:'';
+  }
+}
+
+function runConsoleCmd(cmd){
+  const r=consoleRouter;
+  if(!r){consolePrint('<span class="co-err">No router selected.</span>');return;}
+
+  // Normalise — strip extra spaces
+  const parts=cmd.split(/\s+/).filter(Boolean);
+  const full=parts.join(' ');
+
+  if(full==='help'||full==='?'){
+    consolePrint(`<span class="co-head">Available Commands</span>`);
+    consolePrint(`<span class="co-key">  show ip route</span>             <span class="co-dim">Display the routing / forwarding table</span>`);
+    consolePrint(`<span class="co-key">  show ip interface brief</span>   <span class="co-dim">Summary of router interfaces and IPs</span>`);
+    consolePrint(`<span class="co-key">  show arp</span>                   <span class="co-dim">ARP table (hosts reachable via this router)</span>`);
+    consolePrint(`<span class="co-key">  show ip dhcp binding</span>       <span class="co-dim">DHCP lease table (if DHCP server on this router)</span>`);
+    consolePrint(`<span class="co-key">  show running-config</span>        <span class="co-dim">Interface and helper-address config</span>`);
+    consolePrint(`<span class="co-key">  ping &lt;ip&gt;</span>                 <span class="co-dim">Test reachability to an IP address</span>`);
+    consolePrint(`<span class="co-key">  traceroute &lt;ip&gt;</span>           <span class="co-dim">Hop-by-hop path to an IP address</span>`);
+    consolePrint(`<span class="co-key">  clear</span>                      <span class="co-dim">Clear the terminal</span>`);
+    consolePrint('');
+    return;
+  }
+
+  if(full==='clear'){
+    document.getElementById('console-body').innerHTML='';
+    return;
+  }
+
+  if(full==='show ip route'||full==='show route'){
+    cmdShowIpRoute(r); return;
+  }
+
+  if(full==='show ip interface brief'||full==='show ip int brief'||full==='show int'||full==='show interfaces'){
+    cmdShowInterfaces(r); return;
+  }
+
+  if(full==='show arp'||full==='show ip arp'){
+    cmdShowArp(r); return;
+  }
+
+  if(full==='show ip dhcp binding'||full==='show dhcp'||full==='show dhcp binding'){
+    cmdShowDhcp(r); return;
+  }
+
+  if(full==='show running-config'||full==='show run'){
+    cmdShowRunConfig(r); return;
+  }
+
+  if(parts[0]==='ping'&&parts[1]){
+    cmdPing(r,parts[1]); return;
+  }
+
+  if((parts[0]==='traceroute'||parts[0]==='trace')&&parts[1]){
+    cmdTraceroute(r,parts[1]); return;
+  }
+
+  consolePrint(`<span class="co-err">% Unknown command: ${escHtml(cmd)}</span>`);
+  consolePrint(`<span class="co-dim">Type <span class="co-key">help</span> to see available commands.</span>`);
+  consolePrint('');
+}
+
+function cmdShowIpRoute(r){
+  const rows=buildRouterFwdRows(r);
+  consolePrint(`<span class="co-dim">Codes: C - connected, S - static, S* - candidate default</span>`);
+  consolePrint('');
+  if(!rows.length){consolePrint('<span class="co-dim">     (no routes)</span>');consolePrint('');return;}
+  rows.forEach(row=>{
+    const isDefault=row.prefix==='0.0.0.0/0';
+    const code=row.type==='C'?'<span class="co-c">C</span>':'<span class="co-s">'+(isDefault?'S*':'S')+'</span>';
+    const via=row.nextHop==='—'
+      ? `is directly connected, <span class="co-val">${row.iface}</span>`
+      : `[1/0] via <span class="co-val">${row.nextHop}</span>`;
+    consolePrint(`  ${code}   <span class="co-key">${padR(row.prefix,20)}</span> ${via}`);
+    if(row.note) consolePrint(`<span class="co-dim">         &lt;${escHtml(row.note)}&gt;</span>`);
+  });
+  consolePrint('');
+}
+
+function cmdShowInterfaces(r){
+  const mySubnets=S.subnets.filter(s=>s.routerId===r.id);
+  const myTransits=S.transits.filter(t=>t.r1id===r.id||t.r2id===r.id);
+  const myNatTransit=S.natTransits.find(t=>t.routerId===r.id);
+
+  consolePrint(`<span class="co-head">${padR('Interface',16)} ${padR('IP-Address',18)} OK? Status</span>`);
+
+  let ifIdx=0;
+  mySubnets.forEach(s=>{
+    const iface=`GigabitEthernet0/${ifIdx++}`;
+    consolePrint(`  <span class="co-key">${padR(iface,16)}</span> <span class="co-val">${padR(s.firstHost||'unassigned',18)}</span> YES up   <span class="co-dim">// ${s.name}</span>`);
+  });
+  myTransits.forEach(t=>{
+    const myIP=t.r1id===r.id?t.r1ip:t.r2ip;
+    const peer=routerById(t.r1id===r.id?t.r2id:t.r1id);
+    const iface=`GigabitEthernet0/${ifIdx++}`;
+    consolePrint(`  <span class="co-key">${padR(iface,16)}</span> <span class="co-val">${padR(myIP||'unassigned',18)}</span> YES up   <span class="co-dim">// transit to ${peer?peer.name:'?'}</span>`);
+  });
+  if(myNatTransit){
+    const iface=`GigabitEthernet0/${ifIdx++}`;
+    consolePrint(`  <span class="co-key">${padR(iface,16)}</span> <span class="co-val">${padR(myNatTransit.routerIP||'unassigned',18)}</span> YES up   <span class="co-dim">// NAT uplink</span>`);
+  }
+  consolePrint('');
+}
+
+function cmdShowArp(r){
+  const mySubnets=S.subnets.filter(s=>s.routerId===r.id);
+  consolePrint(`<span class="co-head">${padR('Protocol',10)} ${padR('Address',18)} ${padR('Age',5)} ${padR('Hardware Addr',18)} Interface</span>`);
+
+  // Gateway entries (router's own interfaces)
+  let ifIdx=0;
+  mySubnets.forEach(s=>{
+    const iface=`Gi0/${ifIdx++}`;
+    consolePrint(`  <span class="co-dim">${padR('Internet',10)} ${padR(s.firstHost||'—',18)} ${padR('-',5)} ${padR(macFromId(r.id*100+ifIdx),18)} ${iface}</span>`);
+  });
+
+  // Host entries
+  S.hosts.filter(h=>{
+    const s=subnetById(h.subnetId);
+    return s&&s.routerId===r.id;
+  }).forEach((h,i)=>{
+    const s=subnetById(h.subnetId);
+    let subIfIdx=mySubnets.findIndex(ms=>ms.id===s.id);
+    const iface=`Gi0/${subIfIdx}`;
+    consolePrint(`  <span class="co-key">Internet   </span> <span class="co-val">${padR(h.ip,18)}</span> <span class="co-dim">${padR('0',5)} ${padR(macFromId(h.id),18)} ${iface}</span>`);
+  });
+  consolePrint('');
+}
+
+function macFromId(id){
+  const h=(id*2654435761)>>>0;
+  const hex=h.toString(16).padStart(8,'0');
+  return `0050.${hex.slice(0,4)}.${hex.slice(4,8)}`;
+}
+
+function cmdShowDhcp(r){
+  const ds=S.dhcpServer;
+  if(!ds||ds.routerId!==r.id){
+    consolePrint(`<span class="co-warn">% DHCP server is not configured on ${r.name}.</span>`);
+    consolePrint('');return;
+  }
+  if(!ds.leases.length){
+    consolePrint('<span class="co-dim">     No bindings in the DHCP database.</span>');
+    consolePrint('');return;
+  }
+  consolePrint(`<span class="co-head">${padR('IP Address',18)} ${padR('Client-ID / Hardware Addr',28)} ${padR('Lease expiry',16)} Type</span>`);
+  ds.leases.forEach(l=>{
+    consolePrint(`  <span class="co-val">${padR(l.ip,18)}</span> <span class="co-dim">${padR(macFromId(S.hosts.find(h=>h.ip===l.ip)?.id||0),28)}</span> <span class="co-dim">${padR('Infinite',16)}</span> Automatic`);
+    consolePrint(`<span class="co-dim">               Host: ${l.host}  Subnet: ${l.subnet}</span>`);
+  });
+  consolePrint('');
+}
+
+function cmdShowRunConfig(r){
+  const mySubnets=S.subnets.filter(s=>s.routerId===r.id);
+  const myTransits=S.transits.filter(t=>t.r1id===r.id||t.r2id===r.id);
+  const myNatTransit=S.natTransits.find(t=>t.routerId===r.id);
+  const ds=S.dhcpServer;
+  const natIP=document.getElementById('nat-ip').value||'203.0.113.1';
+
+  consolePrint(`<span class="co-dim">Building configuration...</span>`);
+  consolePrint('');
+  consolePrint(`<span class="co-key">hostname</span> ${r.name}`);
+  consolePrint('');
+
+  // DHCP pool config if server on this router
+  if(ds&&ds.routerId===r.id){
+    S.subnets.forEach(s=>{
+      consolePrint(`<span class="co-key">ip dhcp pool</span> ${s.name.replace(/\s+/g,'-')}`);
+      consolePrint(`  <span class="co-key"> network</span> <span class="co-val">${s.cidr?.split('/')[0]} ${n2ip(mkMask(s.prefix))}</span>`);
+      consolePrint(`  <span class="co-key"> default-router</span> <span class="co-val">${s.firstHost}</span>`);
+      consolePrint(`  <span class="co-key"> excluded-address</span> <span class="co-val">${s.firstHost}</span>`);
+      consolePrint('!');
+    });
+    consolePrint('');
+  }
+
+  let ifIdx=0;
+  mySubnets.forEach(s=>{
+    const iface=`GigabitEthernet0/${ifIdx}`;
+    const mask=n2ip(mkMask(s.prefix));
+    consolePrint(`<span class="co-key">interface</span> ${iface}`);
+    consolePrint(` <span class="co-key">ip address</span> <span class="co-val">${s.firstHost} ${mask}</span>`);
+    // helper-address if DHCP server is on a different router
+    if(ds&&ds.routerId!==r.id){
+      const dhcpR=routerById(ds.routerId);
+      // find DHCP server's IP reachable from this router
+      const dhcpSubnet=S.subnets.find(sub=>sub.routerId===ds.routerId);
+      if(dhcpSubnet) consolePrint(` <span class="co-key">ip helper-address</span> <span class="co-val">${dhcpSubnet.firstHost}</span>`);
+    }
+    consolePrint(` <span class="co-dim">no shutdown</span>`);
+    consolePrint('!');
+    ifIdx++;
+  });
+
+  myTransits.forEach(t=>{
+    const myIP=t.r1id===r.id?t.r1ip:t.r2ip;
+    const mask=n2ip(mkMask(30));
+    const iface=`GigabitEthernet0/${ifIdx++}`;
+    const peer=routerById(t.r1id===r.id?t.r2id:t.r1id);
+    consolePrint(`<span class="co-key">interface</span> ${iface}`);
+    consolePrint(` <span class="co-key">description</span> <span class="co-dim">Transit to ${peer?peer.name:'?'}</span>`);
+    consolePrint(` <span class="co-key">ip address</span> <span class="co-val">${myIP} ${mask}</span>`);
+    consolePrint(` <span class="co-dim">no shutdown</span>`);
+    consolePrint('!');
+  });
+
+  if(myNatTransit){
+    const iface=`GigabitEthernet0/${ifIdx++}`;
+    consolePrint(`<span class="co-key">interface</span> ${iface}`);
+    consolePrint(` <span class="co-key">description</span> <span class="co-dim">Uplink to NAT Router</span>`);
+    consolePrint(` <span class="co-key">ip address</span> <span class="co-val">${myNatTransit.routerIP} ${n2ip(mkMask(30))}</span>`);
+    consolePrint(` <span class="co-dim">no shutdown</span>`);
+    consolePrint('!');
+
+    // Default route
+    consolePrint(`<span class="co-key">ip route</span> <span class="co-val">0.0.0.0 0.0.0.0 ${myNatTransit.natIP}</span>`);
+  }
+
+  // Static routes to remote subnets
+  myTransits.forEach(t=>{
+    const peerId=t.r1id===r.id?t.r2id:t.r1id;
+    const peerNextHop=t.r1id===r.id?t.r2ip:t.r1ip;
+    S.subnets.filter(s=>s.routerId===peerId).forEach(s=>{
+      if(!s.cidr)return;
+      const [net]=s.cidr.split('/');
+      consolePrint(`<span class="co-key">ip route</span> <span class="co-val">${net} ${n2ip(mkMask(s.prefix))} ${peerNextHop}</span>`);
+    });
+  });
+
+  consolePrint('');
+  consolePrint(`<span class="co-dim">end</span>`);
+  consolePrint('');
+}
+
+function cmdPing(r, destIPRaw){
+  const parsed=parseIP(destIPRaw);
+  if(!parsed){consolePrint(`<span class="co-err">% Invalid IP address: ${escHtml(destIPRaw)}</span>`);consolePrint('');return;}
+  const destIP=parsed.join('.');
+
+  // Check reachability using LPM
+  const rows=buildRouterFwdRows(r);
+  const match=lpmMatch(rows,destIP);
+
+  consolePrint(`<span class="co-dim">Type escape sequence to abort.</span>`);
+  consolePrint(`<span class="co-dim">Sending 5, 100-byte ICMP Echos to ${destIP}, timeout is 2 seconds:</span>`);
+
+  if(!match){
+    consolePrint(`<span class="co-err">UUUUU</span>`);
+    consolePrint(`<span class="co-err">% Network is not in routing table — no route to host</span>`);
+    consolePrint('');return;
+  }
+
+  // Check if target is actually a known host or interface
+  const allIPs=new Set();
+  S.hosts.forEach(h=>allIPs.add(h.ip));
+  S.subnets.forEach(s=>{if(s.firstHost)allIPs.add(s.firstHost);});
+  S.transits.forEach(t=>{if(t.r1ip)allIPs.add(t.r1ip);if(t.r2ip)allIPs.add(t.r2ip);});
+  S.natTransits.forEach(t=>{if(t.natIP)allIPs.add(t.natIP);if(t.routerIP)allIPs.add(t.routerIP);});
+
+  const reachable=allIPs.has(destIP)||match.type==='C'||match.nextHop!=='—';
+  if(reachable){
+    consolePrint(`<span class="co-ok">!!!!!</span>`);
+    consolePrint(`<span class="co-ok">Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms</span>`);
+  } else {
+    consolePrint(`<span class="co-err">.....</span>`);
+    consolePrint(`<span class="co-err">Success rate is 0 percent (0/5)</span>`);
+  }
+  consolePrint('');
+}
+
+function cmdTraceroute(r, destIPRaw){
+  const parsed=parseIP(destIPRaw);
+  if(!parsed){consolePrint(`<span class="co-err">% Invalid IP address: ${escHtml(destIPRaw)}</span>`);consolePrint('');return;}
+  const destIP=parsed.join('.');
+  const destNum=ip2n(parsed);
+
+  consolePrint(`<span class="co-dim">Type escape sequence to abort.</span>`);
+  consolePrint(`<span class="co-dim">Tracing the route to ${destIP}</span>`);
+
+  // Warn if destination doesn't match any known subnet
+  const knownSubnet=S.subnets.find(s=>{
+    if(!s.cidr)return false;
+    const net=s.cidr.split('/')[0];
+    const p=parseIP(net); if(!p)return false;
+    const mask=mkMask(s.prefix);
+    return (destNum&mask)>>>0===(ip2n(p)&mask)>>>0;
+  });
+  const extIP=document.getElementById('ext-ip').value||'8.8.8.8';
+  const natIPVal=document.getElementById('nat-ip').value||'203.0.113.1';
+  if(!knownSubnet&&destIP!==extIP&&destIP!==natIPVal){
+    consolePrint(`<span class="co-warn">% Note: ${destIP} is not in any configured subnet — will use default route</span>`);
+  }
+  consolePrint('');
+
+  // Build a lookup: transit/interface IP → router that owns it
+  const ipToRouter=new Map();
+  S.routers.forEach(rr=>{
+    S.transits.forEach(t=>{
+      if(t.r1id===rr.id&&t.r1ip) ipToRouter.set(t.r1ip,rr);
+      if(t.r2id===rr.id&&t.r2ip) ipToRouter.set(t.r2ip,rr);
+    });
+    S.natTransits.forEach(t=>{
+      if(t.routerId===rr.id&&t.routerIP) ipToRouter.set(t.routerIP,rr);
+    });
+    S.subnets.filter(s=>s.routerId===rr.id).forEach(s=>{
+      if(s.firstHost) ipToRouter.set(s.firstHost,rr);
+    });
+  });
+
+  let currentRouter=r;
+  const visited=new Set();
+  let hop=1;
+  const maxHops=10;
+
+  while(hop<=maxHops){
+    if(visited.has(currentRouter.id)){
+      consolePrint(`  <span class="co-err">${padL(String(hop),2)}  * * *  % Routing loop detected</span>`);
+      break;
+    }
+    visited.add(currentRouter.id);
+
+    const rows=buildRouterFwdRows(currentRouter);
+    const match=lpmMatch(rows,destIP);
+
+    if(!match){
+      consolePrint(`  <span class="co-err">${padL(String(hop),2)}  * * *  % No route to host</span>`);
+      break;
+    }
+
+    if(match.type==='C'){
+      // Dest subnet is directly connected — packet is delivered locally
+      const host=S.hosts.find(h=>h.ip===destIP);
+      consolePrint(`  <span class="co-key">${padL(String(hop),2)}</span>  <span class="co-val">${destIP}</span>  <span class="co-dim">1 msec</span>  <span class="co-ok">${host?'['+escHtml(host.name)+']':'[destination reached]'}</span>`);
+      break;
+    }
+
+    // Static route — follow next hop
+    const nextHopIP=match.nextHop;
+    const nextRouter=ipToRouter.get(nextHopIP);
+
+    if(!nextRouter){
+      // Must be NAT router or beyond
+      const natIP=document.getElementById('nat-ip').value||'203.0.113.1';
+      const extIP=document.getElementById('ext-ip').value||'8.8.8.8';
+      consolePrint(`  <span class="co-key">${padL(String(hop),2)}</span>  <span class="co-val">${nextHopIP}</span>  <span class="co-dim">1 msec  [NAT Router]</span>`);
+      hop++;
+      if(destIP===natIP){break;}
+      // Destination is on the internet
+      consolePrint(`  <span class="co-key">${padL(String(hop),2)}</span>  <span class="co-val">${destIP}</span>  <span class="co-dim">~15 msec  [internet]</span>`);
+      break;
+    }
+
+    consolePrint(`  <span class="co-key">${padL(String(hop),2)}</span>  <span class="co-val">${nextHopIP}</span>  <span class="co-dim">1 msec  [${escHtml(nextRouter.name)}]</span>`);
+    currentRouter=nextRouter;
+    hop++;
+  }
+
+  consolePrint('');
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&document.getElementById('console-backdrop').classList.contains('open')){
+    closeConsole(); return;
+  }
+
+  if(e.key==='Escape'){
+    ['modal-subnet','modal-host'].forEach(closeModal);
+    closeLogOverlay();
+    document.getElementById('router-examine-overlay').classList.remove('open');
+    document.body.style.overflow='';
+  }
+});
+</script>
+
+
+
+<!-- Subnet modal -->
+<div class="modal-backdrop" id="modal-subnet" onclick="handleBackdrop(event,'modal-subnet')">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-hd-l">
+        <div class="modal-badge green"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="2"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/></svg></div>
+        <span class="modal-title">Add Subnet</span>
+      </div>
+      <button class="modal-x" onclick="closeModal('modal-subnet')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-err al err" id="merr-subnet"></div>
+      <div class="f"><label>Name</label><input type="text" id="nn" placeholder="e.g. Web Tier" maxlength="20"></div>
+      <div class="f"><label>Prefix &nbsp;<strong id="npl">/24</strong></label><input type="range" id="npx" min="1" max="30" value="24" step="1" oninput="document.getElementById('npl').textContent='/'+this.value"></div>
+      <div class="f"><label>Attach to router</label><select id="nrouter"><option value="">— select router —</option></select></div>
+      <div class="f"><label>Color</label><div class="cpick" id="cpick"></div></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('modal-subnet')">Cancel</button>
+      <button class="btn pri" onclick="addSubnet()">Add subnet</button>
+    </div>
+  </div>
+</div>
+
+<!-- Host modal -->
+<div class="modal-backdrop" id="modal-host" onclick="handleBackdrop(event,'modal-host')">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-hd-l">
+        <div class="modal-badge amber"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg></div>
+        <span class="modal-title">Add Host</span>
+      </div>
+      <button class="modal-x" onclick="closeModal('modal-host')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-err al err" id="merr-host"></div>
+      <div class="f"><label>Name</label><input type="text" id="hn" placeholder="e.g. Web Server 1" maxlength="24"></div>
+      <div class="f"><label>Subnet</label><select id="hsubnet"><option value="">— select subnet —</option></select></div>
+      <div class="f"><label>IP address <span style="color:var(--text3);font-size:10px">(leave blank to auto-assign)</span></label>
+        <input type="text" id="hip" placeholder="auto-assign"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('modal-host')">Cancel</button>
+      <button class="btn pri" onclick="addHost()">Add host</button>
+    </div>
+  </div>
+</div>
+
+<!-- Event Log Overlay -->
+<div class="log-overlay-backdrop" id="log-overlay" onclick="handleLogOverlayBackdrop(event)">
+  <div class="log-overlay">
+    <div class="log-overlay-hd">
+      <div class="log-overlay-hd-l">
+        <div class="log-overlay-badge">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="12" height="10" rx="1.5"/>
+            <line x1="5" y1="7" x2="11" y2="7"/><line x1="5" y1="10" x2="8" y2="10"/>
+          </svg>
+        </div>
+        <span class="log-overlay-title">Event Log</span>
+      </div>
+      <button class="modal-x" onclick="closeLogOverlay()">✕</button>
+    </div>
+    <div class="log-overlay-body">
+      <div class="log-big" id="elog-big"></div>
+    </div>
+    <div class="log-overlay-foot">
+      <span class="log-count" id="log-count"></span>
+      <div style="display:flex;gap:8px">
+        <button class="btn sm" onclick="clearLog()">Clear</button>
+        <button class="btn sm" onclick="closeLogOverlay()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function renderLogEntries(){
+  return S.logEntries.map(e=>`<div class="le"><span class="ln">${String(e.n).padStart(4,'0')}</span><span class="l${e.type}">${e.msg}</span></div>`).join('');
+}
+function syncLogOverlay(){
+  const overlay=document.getElementById('log-overlay');
+  if(!overlay.classList.contains('open')) return;
+  const big=document.getElementById('elog-big');
+  big.innerHTML=renderLogEntries();
+  big.scrollTop=big.scrollHeight;
+  document.getElementById('log-count').textContent=`${S.logEntries.length} event${S.logEntries.length!==1?'s':''}`;
+}
+function openLogOverlay(){
+  const overlay=document.getElementById('log-overlay');
+  overlay.classList.add('open');
+  document.body.style.overflow='hidden';
+  syncLogOverlay();
+}
+function closeLogOverlay(){
+  document.getElementById('log-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+function handleLogOverlayBackdrop(e){
+  if(e.target===e.currentTarget) closeLogOverlay();
+}
+</script>
+<!-- Router Examine Overlay -->
+<div class="nex-backdrop" id="router-examine-overlay">
+  <div class="nex-panel" style="--nex-accent:var(--router-s);--nex-accent-l:var(--router-f);--nex-accent-t:var(--router-t)">
+    <div class="nex-hd" style="background:var(--router-f);border-bottom-color:var(--router-s)">
+      <div class="nex-hd-l">
+        <div class="nex-badge" style="background:var(--router-s)">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="3" width="14" height="10" rx="1.5"/>
+            <line x1="1" y1="7" x2="15" y2="7"/>
+            <line x1="5" y1="7" x2="5" y2="13"/>
+            <line x1="10" y1="7" x2="10" y2="13"/>
+          </svg>
+        </div>
+        <div class="nex-hd-text">
+          <div class="nex-hd-sup" style="color:var(--router-t)">Router Examine Mode — Packet paused</div>
+          <div class="nex-hd-title" style="color:var(--router-t)" id="rex-title">Forwarding Decision</div>
+        </div>
+      </div>
+    </div>
+    <div class="nex-body" id="rex-body"></div>
+    <div class="nex-ft">
+      <span class="nex-ft-note">Packet is held at this router — press Forward to continue routing</span>
+      <button class="btn sec" id="rex-forward">Forward &nbsp;&#9654;</button>
+    </div>
+  </div>
+</div>
+
+<!-- Router Console Terminal -->
+<div class="console-backdrop" id="console-backdrop" onclick="handleConsoleBackdrop(event)">
+  <div class="console-panel">
+    <div class="console-hd">
+      <div class="console-hd-l">
+        <div class="console-dots">
+          <div class="console-dot" style="background:#ff5f57;cursor:pointer" onclick="closeConsole()"></div>
+          <div class="console-dot" style="background:#febc2e"></div>
+          <div class="console-dot" style="background:#28c840"></div>
+        </div>
+        <div>
+          <div class="console-title" id="console-title">Router Console</div>
+          <div class="console-subtitle">Type <span style="color:#58a6ff">help</span> for available commands</div>
+        </div>
+      </div>
+      <button onclick="closeConsole()" style="background:none;border:none;color:#7d8590;cursor:pointer;font-size:16px;padding:0;line-height:1">✕</button>
+    </div>
+    <div class="console-body" id="console-body"></div>
+    <div class="console-input-row">
+      <span class="console-prompt" id="console-prompt-label">R#</span>
+      <input class="console-input" id="console-input" type="text"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+        placeholder="enter command..."
+        onkeydown="handleConsoleKey(event)">
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+<div class="nex-backdrop" id="nat-examine-overlay">
+  <div class="nex-panel">
+    <div class="nex-hd">
+      <div class="nex-hd-l">
+        <div class="nex-badge">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="6" cy="6" r="4"/><line x1="9.5" y1="9.5" x2="14" y2="14"/>
+            <line x1="6" y1="4" x2="6" y2="8"/><line x1="4" y1="6" x2="8" y2="6"/>
+          </svg>
+        </div>
+        <div class="nex-hd-text">
+          <div class="nex-hd-sup" id="nex-hd-sup">NAT Examine Mode — Packet paused</div>
+          <div class="nex-hd-title" id="nex-title">NAT Translation</div>
+        </div>
+      </div>
+    </div>
+    <div class="nex-body" id="nex-body"></div>
+    <div class="nex-ft">
+      <span class="nex-ft-note">Packet is paused at the NAT router — press Continue to resume animation</span>
+      <button class="btn pri" id="nex-continue">Continue &nbsp;&#9654;</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BST Insert Order</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+
+:root {
+  --bg: #f5f5f0;
+  --surface: #ffffff;
+  --border: #e0dfd8;
+  --text: #1a1a1a;
+  --muted: #888;
+  --accent: #d97706;
+  --green: #16a34a;
+  --red: #dc2626;
+  --blue: #2563eb;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  font-family: 'DM Mono', monospace;
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 36px;
+}
+
+h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #111;
+  margin-bottom: 3px;
+  text-align: center;
+}
+.subtitle {
+  font-size: 0.68rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  max-width: 1000px;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-header {
+  padding: 9px 12px 7px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 5px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  align-items: center;
+}
+
+.chip-label {
+  font-size: 0.62rem;
+  color: var(--muted);
+  margin-right: 2px;
+  letter-spacing: 0.04em;
+}
+
+.chip {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s;
+}
+.chip.done   { border-color: var(--green); color: var(--green); background: rgba(22,163,74,0.08); }
+.chip.active { border-color: var(--accent); color: var(--accent); background: rgba(217,119,6,0.1); transform: scale(1.18); box-shadow: 0 0 6px rgba(217,119,6,0.25); }
+
+canvas { display: block; width: 100%; }
+
+.panel-footer {
+  padding: 6px 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+}
+
+.height-label {
+  font-size: 0.64rem;
+  color: var(--muted);
+}
+
+.balance-badge {
+  font-size: 0.62rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid;
+}
+.balanced { color: var(--green); border-color: rgba(22,163,74,0.4); background: rgba(22,163,74,0.07); }
+.moderate { color: var(--blue);  border-color: rgba(37,99,235,0.4); background: rgba(37,99,235,0.06); }
+.skewed   { color: var(--red);   border-color: rgba(220,38,38,0.4); background: rgba(220,38,38,0.06); }
+
+/* Controls */
+.controls {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.status {
+  font-size: 0.73rem;
+  color: var(--muted);
+  min-width: 220px;
+  text-align: center;
+}
+.status .hi { color: var(--accent); font-weight: 500; }
+
+button {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.73rem;
+  padding: 7px 15px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+button:hover { border-color: var(--accent); color: var(--accent); }
+button:disabled { opacity: 0.35; cursor: default; }
+button.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 500; }
+button.primary:hover { background: #b45309; border-color: #b45309; }
+
+.speed-wrap { display: flex; align-items: center; gap: 6px; font-size: 0.68rem; color: var(--muted); }
+input[type=range] {
+  -webkit-appearance: none; width: 70px; height: 3px;
+  border-radius: 2px; background: var(--border); outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 13px; height: 13px;
+  border-radius: 50%; background: var(--accent); cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<h1>BST Insert Order</h1>
+<p class="subtitle">Same 7 values · different order · very different trees</p>
+
+<div class="panels" id="panelContainer"></div>
+
+<div class="controls">
+  <div class="status" id="status">Press <span class="hi">Next</span> to begin.</div>
+  <div class="speed-wrap">Speed <input type="range" id="spd" min="1" max="5" value="3"></div>
+  <button id="btnReset">Reset</button>
+  <button id="btnNext" class="primary">▶ Next</button>
+  <button id="btnAuto">Auto Play</button>
+</div>
+
+<script>
+/* ── SCENARIOS ── */
+const SCENARIOS = [
+  { label: '(a) Balanced',         order: ['D','B','F','A','C','E','G'], kind: 'balanced', badge: '✓ Balanced'   },
+  { label: '(b) Moderately skewed',order: ['B','A','D','C','G','F','E'], kind: 'moderate', badge: '~ Moderate'   },
+  { label: '(c) Fully skewed',     order: ['A','B','C','D','E','F','G'], kind: 'skewed',   badge: '✗ Degenerate' },
+];
+
+/* ── BST ── */
+class TNode {
+  constructor(v){ this.v=v; this.left=this.right=null; this.x=this.y=0; }
+}
+
+function bstInsert(root, v) {
+  const n = new TNode(v);
+  if (!root) return n;
+  let c = root;
+  while (true) {
+    if (v < c.v) { if (!c.left)  { c.left=n;  return root; } c=c.left;  }
+    else         { if (!c.right) { c.right=n; return root; } c=c.right; }
+  }
+}
+
+function findNode(root, v) {
+  if (!root) return null;
+  if (root.v===v) return root;
+  return findNode(root.left,v) || findNode(root.right,v);
+}
+
+function treeHeight(root) {
+  if (!root) return 0;
+  return 1 + Math.max(treeHeight(root.left), treeHeight(root.right));
+}
+
+/* ── LAYOUT ── in-order x, depth y ── */
+function layout(root, W, H, padX, padTop, maxLH) {
+  if (!root) return;
+  const io=[];
+  (function col(n){ if(!n)return; col(n.left); io.push(n); col(n.right); })(root);
+  const dep=new Map();
+  (function sd(n,d){ if(!n)return; dep.set(n,d); sd(n.left,d+1); sd(n.right,d+1); })(root,0);
+  const maxD = Math.max(...dep.values());
+  const lh = maxD>0 ? Math.min((H-padTop-24)/maxD, maxLH) : (H-padTop-24);
+  const nn = io.length;
+  io.forEach((nd,i)=>{
+    nd.x = padX + (i/Math.max(nn-1,1))*(W-2*padX);
+    nd.y = padTop + dep.get(nd)*lh;
+  });
+}
+
+/* ── PANEL STATE ── */
+const R = 15;
+const CANVAS_H = 260;
+
+const state = SCENARIOS.map(sc => ({
+  sc, root: null, placed: new Set(), newNode: null, insertIdx: 0,
+  canvas: null, ctx: null
+}));
+
+/* ── BUILD DOM ── */
+const container = document.getElementById('panelContainer');
+
+state.forEach((p, pi) => {
+  const sc = p.sc;
+
+  const panel = document.createElement('div');
+  panel.className = 'panel';
+
+  // Header
+  const hdr = document.createElement('div');
+  hdr.className = 'panel-header';
+
+  const title = document.createElement('div');
+  title.className = 'panel-title';
+  title.textContent = sc.label;
+
+  const chips = document.createElement('div');
+  chips.className = 'chips';
+  chips.id = `chips-${pi}`;
+
+  hdr.appendChild(title);
+  hdr.appendChild(chips);
+  panel.appendChild(hdr);
+
+  // Canvas
+  const cv = document.createElement('canvas');
+  cv.id = `cv-${pi}`;
+  cv.height = CANVAS_H;
+  panel.appendChild(cv);
+
+  // Footer
+  const footer = document.createElement('div');
+  footer.className = 'panel-footer';
+
+  const hlbl = document.createElement('span');
+  hlbl.className = 'height-label';
+  hlbl.id = `hlbl-${pi}`;
+
+  const badge = document.createElement('span');
+  badge.className = `balance-badge ${sc.kind}`;
+  badge.textContent = sc.badge;
+
+  footer.appendChild(hlbl);
+  footer.appendChild(badge);
+  panel.appendChild(footer);
+
+  container.appendChild(panel);
+
+  p.canvas = cv;
+  p.ctx = cv.getContext('2d');
+});
+
+function initCanvases() {
+  state.forEach((p, pi) => {
+    p.canvas.width = p.canvas.offsetWidth || 280;
+    renderChips(pi);
+    draw(pi);
+  });
+}
+
+function renderChips(pi) {
+  const p = state[pi];
+  const el = document.getElementById(`chips-${pi}`);
+  el.innerHTML = '<span class="chip-label">Order:</span>';
+  p.sc.order.forEach((v, i) => {
+    const c = document.createElement('div');
+    c.className = 'chip' + (i < p.insertIdx ? ' done' : i === p.insertIdx ? ' active' : '');
+    c.textContent = v;
+    el.appendChild(c);
+  });
+}
+
+function draw(pi) {
+  const p = state[pi];
+  const cv = p.canvas;
+  const ctx = p.ctx;
+  const W = cv.width, H = CANVAS_H;
+
+  ctx.clearRect(0, 0, W, H);
+  if (!p.root) return;
+
+  layout(p.root, W, H, R+4, R+10, 52);
+  drawEdges(ctx, p.root, p.newNode);
+  drawAllNodes(ctx, p.root, p.newNode, p.placed);
+
+  const h = treeHeight(p.root);
+  document.getElementById(`hlbl-${pi}`).textContent = `Height: ${h}`;
+}
+
+function drawEdges(ctx, node, newNode) {
+  if (!node) return;
+  for (const side of ['left','right']) {
+    const ch = node[side]; if (!ch) continue;
+    const isNew = ch === newNode;
+    ctx.beginPath();
+    ctx.moveTo(node.x, node.y);
+    ctx.lineTo(ch.x, ch.y);
+    ctx.strokeStyle = isNew ? 'rgba(217,119,6,0.55)' : 'rgba(200,200,190,0.85)';
+    ctx.lineWidth = isNew ? 2 : 1.2;
+    ctx.stroke();
+    drawEdges(ctx, ch, newNode);
+  }
+}
+
+function drawAllNodes(ctx, node, newNode, placed) {
+  if (!node) return;
+  drawAllNodes(ctx, node.left, newNode, placed);
+  drawAllNodes(ctx, node.right, newNode, placed);
+
+  const isNew    = node === newNode;
+  const isPlaced = placed.has(node);
+
+  let fill, stroke, text, glow;
+  if (isNew) {
+    fill='rgba(217,119,6,0.13)'; stroke='#d97706'; text='#92400e'; glow='rgba(217,119,6,0.3)';
+  } else if (isPlaced) {
+    fill='rgba(22,163,74,0.09)'; stroke='#16a34a'; text='#14532d'; glow=null;
+  } else {
+    fill='#fff'; stroke='#c8c8c0'; text='#333'; glow=null;
+  }
+
+  if (glow) { ctx.shadowColor=glow; ctx.shadowBlur=10; }
+  ctx.beginPath();
+  ctx.arc(node.x, node.y, R, 0, Math.PI*2);
+  ctx.fillStyle=fill; ctx.fill();
+  ctx.strokeStyle=stroke; ctx.lineWidth=isNew?2:1.2; ctx.stroke();
+  ctx.shadowBlur=0;
+
+  ctx.font=`500 11px "DM Mono",monospace`;
+  ctx.fillStyle=text; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(node.v, node.x, node.y);
+}
+
+/* ── STEP ENGINE ── */
+let autoTmr=null;
+
+function spd(){ return 900-(parseInt(document.getElementById('spd').value)-1)*180; }
+
+function allDone(){ return state.every(p=>p.insertIdx>=p.sc.order.length); }
+
+function advance() {
+  if (allDone()) return;
+
+  const inserted = [];
+
+  state.forEach((p, pi) => {
+    if (p.insertIdx >= p.sc.order.length) return;
+
+    // Settle previous new node to placed
+    if (p.newNode) { p.placed.add(p.newNode); p.newNode = null; }
+
+    const val = p.sc.order[p.insertIdx];
+    p.root = bstInsert(p.root, val);
+    p.newNode = findNode(p.root, val);
+    p.insertIdx++;
+
+    inserted.push(val);
+    p.canvas.width = p.canvas.offsetWidth || 280;
+    draw(pi);
+    renderChips(pi);
+  });
+
+  if (inserted.length) {
+    setStatus(`Inserting: <span class="hi">${inserted.join('  ')}</span>`);
+  }
+
+  if (allDone()) {
+    stopAuto();
+    document.getElementById('btnNext').disabled = true;
+    document.getElementById('btnAuto').disabled = true;
+    setTimeout(() => {
+      state.forEach((p, pi) => {
+        if (p.newNode) { p.placed.add(p.newNode); p.newNode=null; }
+        draw(pi); renderChips(pi);
+      });
+      setStatus('Done — same values, very different shapes!');
+    }, spd()*0.7);
+  }
+}
+
+function setStatus(html){ document.getElementById('status').innerHTML=html; }
+
+function stopAuto(){
+  clearInterval(autoTmr); autoTmr=null;
+  document.getElementById('btnAuto').textContent='Auto Play';
+}
+
+document.getElementById('btnNext').addEventListener('click',()=>{ stopAuto(); advance(); });
+
+document.getElementById('btnAuto').addEventListener('click',()=>{
+  if (autoTmr){ stopAuto(); return; }
+  document.getElementById('btnAuto').textContent='⏸ Pause';
+  autoTmr=setInterval(()=>{ if(allDone()){stopAuto();return;} advance(); }, spd());
+});
+
+document.getElementById('btnReset').addEventListener('click',()=>{
+  stopAuto();
+  state.forEach((p,pi)=>{
+    p.root=null; p.placed=new Set(); p.newNode=null; p.insertIdx=0;
+    p.canvas.width=p.canvas.offsetWidth||280;
+    draw(pi); renderChips(pi);
+    document.getElementById(`hlbl-${pi}`).textContent='';
+  });
+  document.getElementById('btnNext').disabled=false;
+  document.getElementById('btnAuto').disabled=false;
+  setStatus('Press <span class="hi">Next</span> to begin.');
+});
+
+window.addEventListener('resize',()=>{
+  state.forEach((p,pi)=>{ p.canvas.width=p.canvas.offsetWidth||280; draw(pi); });
+});
+
+setTimeout(initCanvases, 60);
+</script>
+</body>
+</html>

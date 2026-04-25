@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CIDR Subnet Teaching Tool</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230C447C'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='monospace' font-size='14' font-weight='bold' fill='white'%3E/n%3C/text%3E%3C/svg%3E">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f4f0;
+    --bg3: #eeedea;
+    --text: #1a1a18;
+    --text2: #6b6a65;
+    --text3: #9e9d98;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --blue-fill: #E6F1FB;
+    --blue-border: #85B7EB;
+    --blue-text: #0C447C;
+    --blue-mid: #B5D4F4;
+    --teal-fill: #E1F5EE;
+    --teal-border: #5DCAA5;
+    --teal-text: #085041;
+    --teal-mid: #9FE1CB;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg2: #242422;
+      --bg3: #2c2c2a;
+      --text: #e8e7e2;
+      --text2: #9e9d98;
+      --text3: #6b6a65;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.2);
+      --blue-fill: #0c2a42;
+      --blue-border: #185FA5;
+      --blue-text: #B5D4F4;
+      --blue-mid: #0C447C;
+      --teal-fill: #042c1e;
+      --teal-border: #0F6E56;
+      --teal-text: #9FE1CB;
+      --teal-mid: #085041;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, "Helvetica Neue", sans-serif; padding: 0; font-size: 14px; line-height: 1.5; }
+  h1 { font-size: 18px; font-weight: 500; margin-bottom: 1.5rem; color: var(--text); }
+
+  .ctrl { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .ctrl label { font-size: 13px; color: var(--text2); }
+  .ctrl input[type=text] { width: 150px; font-family: monospace; font-size: 13px; padding: 6px 10px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); outline: none; }
+  .ctrl input[type=text]:focus { border-color: var(--blue-border); box-shadow: 0 0 0 2px rgba(56,138,221,0.15); }
+  .ctrl input[type=range] { width: 160px; accent-color: var(--blue-mid); }
+  .prefix-val { font-size: 15px; font-weight: 500; color: var(--text); min-width: 28px; font-family: monospace; }
+
+  .section-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; font-family: monospace; letter-spacing: 0.05em; text-transform: uppercase; }
+  .bit-labels { display: flex; gap: 2px; margin-bottom: 2px; }
+  .bit-lbl { width: 18px; font-size: 9px; color: var(--text3); text-align: center; flex-shrink: 0; font-family: monospace; }
+  .bit-row { display: flex; gap: 2px; flex-wrap: nowrap; margin-bottom: 6px; overflow-x: auto; }
+  .bit { display: flex; align-items: center; justify-content: center; width: 18px; height: 22px; font-size: 12px; border-radius: 3px; flex-shrink: 0; transition: background 0.2s, color 0.2s; border: 0.5px solid transparent; font-family: monospace; }
+  .bit.net { background: var(--blue-fill); color: var(--blue-text); border-color: var(--blue-border); }
+  .bit.host { background: var(--teal-fill); color: var(--teal-text); border-color: var(--teal-border); }
+  .octet-sep { width: 6px !important; flex-shrink: 0; background: none !important; border: none !important; }
+
+  .bar-section { margin: 1.25rem 0; }
+  .bar-lbl { font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+  .bar { height: 28px; border-radius: 6px; overflow: hidden; display: flex; border: 0.5px solid var(--border); }
+  .bar-net { background: var(--blue-mid); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: var(--blue-text); transition: width 0.3s; overflow: hidden; white-space: nowrap; min-width: 0; }
+  .bar-host { background: var(--teal-mid); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: var(--teal-text); transition: width 0.3s; flex: 1; overflow: hidden; white-space: nowrap; min-width: 0; }
+  .legend { display: flex; gap: 16px; margin-top: 6px; }
+  .leg { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+  .leg-box { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 1.25rem 0; }
+  .stat { background: var(--bg2); border-radius: var(--radius); padding: 10px 14px; }
+  .stat .lbl { font-size: 11px; color: var(--text3); margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
+  .stat .val { font-size: 13px; font-weight: 500; color: var(--text); font-family: monospace; }
+
+  .calc-btn { background: none; border: none; cursor: pointer; padding: 0; color: var(--text3); display: inline-flex; align-items: center; transition: color 0.15s; line-height: 1; }
+  .calc-btn:hover { color: var(--blue-text); }
+
+  .error { font-size: 13px; color: #A32D2D; margin: 8px 0; }
+
+  .overlay { background: var(--bg2); border: 0.5px solid var(--border2); border-radius: var(--radius-lg); padding: 1.25rem; margin: 0.5rem 0 0.75rem; display: none; }
+  .overlay.open { display: block; }
+  .overlay-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .overlay-title { font-size: 14px; font-weight: 500; color: var(--text); }
+  .close-btn { background: none; border: none; cursor: pointer; font-size: 16px; color: var(--text3); padding: 0; line-height: 1; }
+  .close-btn:hover { color: var(--text); }
+  .calc-step { display: flex; flex-direction: column; gap: 6px; }
+  .step-row { display: flex; align-items: baseline; gap: 8px; font-size: 13px; }
+  .step-num { font-size: 11px; color: var(--text3); min-width: 16px; }
+  .step-desc { color: var(--text2); }
+  .step-formula { font-family: monospace; font-size: 13px; font-weight: 500; color: var(--text); background: var(--bg); border: 0.5px solid var(--border); border-radius: 6px; padding: 8px 12px; margin: 4px 0; white-space: pre; }
+  .step-note { font-size: 12px; color: var(--text3); font-style: italic; margin-top: 4px; }
+
+  .highlight-octet { background: #FAC775; color: #412402; border-color: #EF9F27; }
+  .dec-row { display: flex; gap: 2px; margin-top: 2px; margin-bottom: 4px; }
+  .dec-octet { font-family: monospace; font-size: 11px; color: var(--text2); text-align: center; flex-shrink: 0; width: calc(18px * 8 + 2px * 7); }
+  .dec-sep { width: 6px; flex-shrink: 0; }
+
+  .site-header { display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 48px; border-bottom: 0.5px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 10; margin-bottom: 0; }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .header-icon { width: 28px; height: 28px; background: var(--blue-text); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .header-icon svg { display: block; }
+  .header-title { font-size: 14px; font-weight: 500; color: var(--text); letter-spacing: -0.01em; }
+  .header-right { font-size: 11px; color: var(--text3); text-align: right; line-height: 1.4; display: flex; align-items: center; gap: 4px; }
+  .header-right a { color: var(--text3); text-decoration: none; }
+  .header-right a:hover { color: var(--text2); }
+  .content { padding: 1.5rem; max-width: 760px; margin: 0 auto; }
+
+  /* Comparison section */
+  .comp-section { margin-top:1.25rem; padding-top:1.25rem; border-top:0.5px solid var(--border); }
+  .comp-bit { display:flex; align-items:center; justify-content:center; width:18px; height:22px; font-size:12px; border-radius:3px; flex-shrink:0; font-family:monospace; border:0.5px solid transparent; }
+  .comp-bit.match   { background:#E1F5EE; color:#085041; border-color:#5DCAA5; }
+  .comp-bit.nomatch { background:#FCEBEB; color:#A32D2D; border-color:#F09595; }
+  .comp-bit.outside { background:var(--bg2); color:var(--text3); border-color:var(--border); }
+  .comp-bit.octet-sep { background:none !important; border:none !important; width:6px !important; }
+  .comp-result { display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:8px; margin-top:10px; font-size:13px; font-weight:500; }
+  .comp-result.same { background:#E1F5EE; color:#085041; border:0.5px solid #5DCAA5; }
+  .comp-result.diff { background:#FCEBEB; color:#A32D2D; border:0.5px solid #F09595; }
+  .comp-formula { font-family:monospace; font-size:12px; color:var(--text); background:var(--bg2); border:0.5px solid var(--border); border-radius:6px; padding:8px 12px; margin:6px 0; white-space:pre; line-height:1.7; }
+  .comp-step-row { display:flex; align-items:baseline; gap:8px; font-size:13px; margin-bottom:2px; }
+  .comp-step-num { font-size:11px; color:var(--text3); min-width:16px; }
+  .comp-step-desc { color:var(--text2); }
+
+  /* AND bit rows in comparison */
+  .and-block { margin:8px 0; overflow-x:auto; }
+  .and-row { display:flex; gap:2px; margin-bottom:2px; align-items:center; }
+  .and-label { font-family:monospace; font-size:11px; color:var(--text2); width:52px; flex-shrink:0; text-align:right; padding-right:6px; }
+  .and-bit { display:flex; align-items:center; justify-content:center; width:18px; height:20px; font-size:11px; border-radius:3px; flex-shrink:0; font-family:monospace; border:0.5px solid transparent; }
+  .and-bit.ip   { background:var(--blue-fill,#E6F1FB); color:var(--blue-text,#0C447C); border-color:var(--blue-border,#85B7EB); }
+  .and-bit.mask { background:var(--bg2); color:var(--text2); border-color:var(--border); }
+  .and-bit.res-ok  { background:#E1F5EE; color:#085041; border-color:#5DCAA5; }
+  .and-bit.res-bad { background:#FCEBEB; color:#A32D2D; border-color:#F09595; }
+  .and-bit.sep  { background:none !important; border:none !important; width:6px !important; }
+  .and-dec-row { display:flex; gap:2px; margin-bottom:6px; }
+  .and-dec-lbl { width:52px; flex-shrink:0; }
+  .and-sep-line { border:none; border-top:1px solid var(--border2); margin:2px 0 2px 58px; }
+
+  .tabs { display:flex; gap:0; margin:1.25rem 0 0; border-bottom:0.5px solid var(--border2); }
+  .tab { padding:6px 16px; font-size:12px; font-weight:500; color:var(--text3); cursor:pointer; border:none; background:none; border-bottom:2px solid transparent; margin-bottom:-0.5px; transition:color .15s,border-color .15s; font-family:inherit; }
+  .tab:hover { color:var(--text2); }
+  .tab.active { color:var(--blue-text,#0C447C); border-bottom-color:var(--blue-text,#0C447C); }
+  .tab-panel { display:none; padding-top:1rem; }
+  .tab-panel.active { display:block; }
+
+  /* Subdivide tab */
+  .sub-block { height:52px; display:flex; align-items:center; justify-content:center; flex-direction:column; cursor:pointer; border-right:1px solid rgba(255,255,255,0.3); transition:filter .15s; flex-shrink:0; padding:0 4px; min-width:60px; }
+  .sub-block:last-child { border-right:none; }
+  .sub-block:hover { filter:brightness(0.92); }
+  .sub-block .sub-cidr { font-family:monospace; font-size:10px; font-weight:600; white-space:nowrap; }
+  .sub-block .sub-hosts { font-size:9px; opacity:0.8; white-space:nowrap; }
+  .sub-container { display:flex; border-radius:8px; overflow:hidden; border:0.5px solid var(--border2); }
+  .alert { padding:7px 10px; border-radius:var(--radius,8px); font-size:12px; }
+  .alert.warn { background:var(--amber-light,#FAEEDA); color:var(--amber,#854F0B); border:0.5px solid var(--amber-mid,#EF9F27); }
+
+  /* ── Guided Tour ───────────────────────────────────────────────────────── */
+  #tour-panel {
+    display:none; position:fixed; right:0; top:0; bottom:0; width:340px;
+    background:var(--bg); border-left:0.5px solid var(--border2);
+    box-shadow:-4px 0 24px rgba(0,0,0,0.12); z-index:900;
+    display:none; flex-direction:column; overflow:hidden;
+  }
+  #tour-panel.open { display:flex; }
+  .tour-hd { display:flex; align-items:center; justify-content:space-between;
+    padding:12px 16px; background:var(--blue-text,#0C447C); color:white; flex-shrink:0; }
+  .tour-hd-title { font-size:13px; font-weight:600; }
+  .tour-hd-right { display:flex; align-items:center; gap:8px; }
+  .tour-progress-wrap { height:3px; background:rgba(255,255,255,0.25); flex-shrink:0; }
+  .tour-progress-bar { height:100%; background:white; transition:width .3s; }
+  .tour-step-lbl { font-size:10px; color:rgba(255,255,255,0.7); }
+  .tour-body { flex:1; overflow-y:auto; padding:18px 16px; display:flex; flex-direction:column; gap:12px; }
+  .tour-step-title { font-size:16px; font-weight:700; color:var(--text); line-height:1.3; }
+  .tour-section { display:flex; flex-direction:column; gap:4px; }
+  .tour-section-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text3); }
+  .tour-text { font-size:13px; color:var(--text2); line-height:1.6; }
+  .tour-text strong { color:var(--text); }
+  .tour-trythis { background:var(--teal-fill,#E1F5EE); border:0.5px solid var(--teal-border,#5DCAA5);
+    border-radius:var(--radius); padding:10px 12px; }
+  .tour-trythis-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
+    color:var(--teal-text,#085041); margin-bottom:4px; }
+  .tour-trythis p { font-size:12px; color:var(--teal-text,#085041); line-height:1.5; margin:0; }
+  .tour-takeaway { background:var(--blue-fill,#E6F1FB); border-left:3px solid var(--blue-text,#0C447C);
+    border-radius:0 var(--radius) var(--radius) 0; padding:8px 12px; font-size:12px;
+    color:var(--blue-text,#0C447C); line-height:1.5; }
+  .tour-takeaway strong { font-weight:700; }
+  .tour-ft { display:flex; align-items:center; justify-content:space-between; padding:12px 16px;
+    border-top:0.5px solid var(--border); flex-shrink:0; gap:8px; }
+  .tour-btn { font-family:inherit; font-size:12px; font-weight:600; padding:0 14px; height:32px;
+    border-radius:var(--radius); border:none; cursor:pointer; transition:opacity .15s; }
+  .tour-btn:hover { opacity:.85; }
+  .tour-btn.pri { background:var(--blue-text,#0C447C); color:white; }
+  .tour-btn.sec { background:var(--bg3); color:var(--text2); }
+  .tour-btn.exit { background:none; color:var(--text3); font-size:11px; padding:0; }
+  .tour-dots { display:flex; gap:4px; flex-wrap:wrap; justify-content:center; flex:1; }
+  .tour-dot { width:6px; height:6px; border-radius:50%; background:var(--border2); cursor:pointer;
+    transition:background .2s,transform .2s; flex-shrink:0; }
+  .tour-dot.active { background:var(--blue-text,#0C447C); transform:scale(1.3); }
+  /* Highlight ring on tool elements */
+  .tour-highlight { outline:3px solid #0C447C !important; outline-offset:3px;
+    border-radius:4px; animation:tourPulse 1.5s ease-in-out infinite; }
+  @keyframes tourPulse {
+    0%,100% { outline-color:#0C447C; } 50% { outline-color:#85B7EB; }
+  }
+  /* Tour launch button in header */
+  #tour-launch { font-family:inherit; font-size:11px; font-weight:600; padding:0 12px; height:28px;
+    border-radius:var(--radius); border:1.5px solid var(--border2); background:var(--bg);
+    color:var(--text2); cursor:pointer; display:inline-flex; align-items:center; gap:5px;
+    transition:border-color .15s,color .15s; }
+  #tour-launch:hover { border-color:var(--blue-text,#0C447C); color:var(--blue-text,#0C447C); }
+  /* Shift content when panel open */
+  body.tour-open .content { margin-right:340px; transition:margin-right .2s; }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-left">
+    <div class="header-icon">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="4" width="14" height="2" rx="1" fill="white"/>
+        <rect x="1" y="7.5" width="14" height="2" rx="1" fill="white" opacity="0.6"/>
+        <rect x="1" y="11" width="14" height="2" rx="1" fill="white" opacity="0.3"/>
+        <rect x="5" y="2" width="2" height="12" rx="1" fill="white" opacity="0.5"/>
+      </svg>
+    </div>
+    <span class="header-title">CIDR Subnet Teaching Tool</span>
+  </div>
+  <div class="header-right">
+    Developed by Professor Chris Rosa &mdash; CS339 Networks, Sacred Heart University
+    <a href="/cdn-cgi/l/email-protection#681a071b090b5f5d585e5e281b090b1a0d0c000d091a1c460d0c1d" title="Email" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:5px;border:1.5px solid var(--border2);color:var(--text2);text-decoration:none;margin-left:8px;">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="14" height="10" rx="2"/><path d="M1 5l7 5 7-5"/></svg>
+    </a>
+    <a href="https://linkedin.com/in/chris-rosa-3192326" target="_blank" title="LinkedIn" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:5px;background:#0A66C2;color:white;text-decoration:none;margin-left:4px;">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="white"><path d="M2.5 1A1.5 1.5 0 1 0 2.5 4 1.5 1.5 0 0 0 2.5 1zM1 5.5h3V15H1zM6 5.5h2.9v1.3h.04C9.36 5.9 10.5 5.3 12 5.3c3.1 0 3.7 2 3.7 4.7V15h-3v-4.4c0-1.1 0-2.4-1.5-2.4s-1.7 1.2-1.7 2.4V15H6z"/></svg>
+    </a>
+    <button id="tour-launch" onclick="startTour()">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><circle cx="8" cy="11" r=".5" fill="currentColor"/></svg>
+      Guided Tour
+    </button>
+  </div>
+</header>
+<div class="content">
+<div class="ctrl">
+  <label>IP address</label>
+  <input type="text" id="ip-input" value="192.168.1.0" placeholder="e.g. 192.168.1.0" oninput="update()">
+  <label>Prefix &nbsp;/</label>
+  <input type="range" id="prefix" min="0" max="32" value="24" step="1" oninput="update()">
+  <span class="prefix-val" id="prefix-val">24</span>
+</div>
+
+<div id="error" class="error" style="display:none"></div>
+
+<div class="section-label">IP address — bits</div>
+<div class="bit-labels" id="bit-lbls"></div>
+<div class="bit-row" id="bits"></div>
+<div class="dec-row" id="ip-dec"></div>
+
+<div class="section-label" style="margin-top:10px">Subnet mask</div>
+<div class="bit-row" id="mask-bits"></div>
+<div class="dec-row" id="mask-dec"></div>
+
+<div class="bar-section">
+  <div class="bar-lbl">Address space split</div>
+  <div class="bar">
+    <div class="bar-net" id="bar-net"></div>
+    <div class="bar-host" id="bar-host"></div>
+  </div>
+  <div class="legend">
+    <div class="leg"><div class="leg-box" style="background:var(--blue-mid);border:0.5px solid var(--blue-border)"></div>Network bits</div>
+    <div class="leg"><div class="leg-box" style="background:var(--teal-mid);border:0.5px solid var(--teal-border)"></div>Host bits</div>
+  </div>
+</div>
+
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('details')">Details</button>
+  <button class="tab" onclick="switchTab('compare')">Compare</button>
+  <button class="tab" onclick="switchTab('subdivide')">Aggregation</button>
+</div>
+
+<div class="tab-panel active" id="tab-details">
+  <div class="stats" id="stats"></div>
+  <div class="overlay" id="ov-block">
+    <div class="overlay-head">
+      <span class="overlay-title">How block size is calculated</span>
+      <button class="close-btn" onclick="closeOverlay('ov-block')">✕</button>
+    </div>
+    <div class="calc-step" id="block-steps"></div>
+  </div>
+  <div class="overlay" id="ov-bcast">
+    <div class="overlay-head">
+      <span class="overlay-title">How broadcast address is calculated</span>
+      <button class="close-btn" onclick="closeOverlay('ov-bcast')">✕</button>
+    </div>
+    <div class="calc-step" id="bcast-steps"></div>
+  </div>
+  <div class="overlay" id="ov-hosts">
+    <div class="overlay-head">
+      <span class="overlay-title">Why usable hosts = block size − 2</span>
+      <button class="close-btn" onclick="closeOverlay('ov-hosts')">✕</button>
+    </div>
+    <div class="calc-step" id="hosts-steps"></div>
+  </div>
+  <div class="overlay" id="ov-last">
+    <div class="overlay-head">
+      <span class="overlay-title">How the last usable host is calculated</span>
+      <button class="close-btn" onclick="closeOverlay('ov-last')">✕</button>
+    </div>
+    <div class="calc-step" id="last-steps"></div>
+  </div>
+  <div class="overlay" id="ov-netaddr">
+    <div class="overlay-head">
+      <span class="overlay-title">Network address — what it is and how it's calculated</span>
+      <button class="close-btn" onclick="closeOverlay('ov-netaddr')">✕</button>
+    </div>
+    <div class="calc-step" id="ov-netaddr-steps"></div>
+  </div>
+  <div class="overlay" id="ov-first">
+    <div class="overlay-head">
+      <span class="overlay-title">First usable host — what it is and why it matters</span>
+      <button class="close-btn" onclick="closeOverlay('ov-first')">✕</button>
+    </div>
+    <div class="calc-step" id="ov-first-steps"></div>
+  </div>
+  <div class="overlay" id="ov-mask">
+    <div class="overlay-head">
+      <span class="overlay-title">Subnet mask — what it is and how it works</span>
+      <button class="close-btn" onclick="closeOverlay('ov-mask')">✕</button>
+    </div>
+    <div class="calc-step" id="ov-mask-steps"></div>
+  </div>
+  <div class="overlay" id="ov-bits">
+    <div class="overlay-head">
+      <span class="overlay-title">Network / host bits — what they control</span>
+      <button class="close-btn" onclick="closeOverlay('ov-bits')">✕</button>
+    </div>
+    <div class="calc-step" id="ov-bits-steps"></div>
+  </div>
+</div>
+
+<div class="tab-panel" id="tab-compare">
+  <div class="ctrl" style="margin-bottom:8px">
+    <label style="font-size:13px;color:var(--text2);">Compare IP</label>
+    <input type="text" id="cmp-ip" style="width:150px;font-family:monospace" placeholder="e.g. 10.0.1.50" oninput="updateComparison()">
+    <button onclick="document.getElementById('cmp-ip').value='';updateComparison()" style="font-size:12px;background:none;border:none;cursor:pointer;color:var(--text3)">✕</button>
+  </div>
+  <div id="cmp-bits" style="display:none">
+    <div id="cmp-result" style="margin-bottom:10px"></div>
+    <div id="cmp-math"></div>
+  </div>
+</div>
+
+<div class="tab-panel" id="tab-subdivide">
+  <div class="f" style="margin-bottom:10px">
+    <label>Aggregated blocks &nbsp;<strong id="sub-prefix-lbl">/24</strong></label>
+    <input type="range" id="sub-prefix" min="1" max="32" value="28" step="1" oninput="updateSubdivide()">
+  </div>
+  <div id="sub-msg" class="alert warn" style="display:none;margin-bottom:10px"></div>
+  <div id="sub-summary" style="font-size:12px;color:var(--text2);margin-bottom:10px"></div>
+  <div id="sub-diagram" style="overflow-x:auto"></div>
+  <div id="sub-overlay" style="display:none;margin-top:10px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg,12px);overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg3);border-bottom:0.5px solid var(--border)">
+      <div id="sub-overlay-title" style="font-size:13px;font-weight:500;color:var(--text)"></div>
+      <button onclick="document.getElementById('sub-overlay').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px">✕</button>
+    </div>
+    <div id="sub-overlay-body" style="padding:10px 12px;font-size:12px;color:var(--text2);display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+</div>
+
+<script>
+function calcIcon(overlayId) {
+  return `<button class="calc-btn" onclick="toggleOverlay('${overlayId}')" title="Show explanation">
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#378ADD" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="6.5" cy="6.5" r="4.5"/>
+      <line x1="10" y1="10" x2="14" y2="14"/>
+    </svg>
+  </button>`;
+}
+
+function toggleOverlay(id) {
+  const el = document.getElementById(id);
+  const isOpen = el.classList.contains('open');
+  ['ov-block','ov-bcast','ov-hosts','ov-last','ov-netaddr','ov-first','ov-mask','ov-bits'].forEach(oid => { const e=document.getElementById(oid); if(e) e.classList.remove('open'); });
+  el.classList.toggle('open', !isOpen);
+  if (!isOpen) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+
+function bitRowHTML(num, prefix, hlFn) {
+  // hlFn(i) returns CSS class for bit i — 'net','host','highlight-octet', etc.
+  const bits = toBits(num);
+  const octs = [num>>>24,(num>>>16)&255,(num>>>8)&255,num&255];
+  const BW = 15, GAP = 1.5, SEP = 4;
+  const octW = BW*8 + GAP*7;
+  let bRow = '<div style="display:flex;gap:' + GAP + 'px;flex-wrap:nowrap;overflow-x:auto;margin-bottom:2px">';
+  for (let i = 0; i < 32; i++) {
+    if (i===8||i===16||i===24) bRow += '<div style="width:' + SEP + 'px;flex-shrink:0"></div>';
+    const cls = hlFn ? hlFn(i) : (i < prefix ? 'net' : 'host');
+    bRow += '<div class="bit ' + cls + '" style="width:' + BW + 'px;height:19px;font-size:10px">' + bits[i] + '</div>';
+  }
+  bRow += '</div>';
+  let dRow = '<div style="display:flex;gap:' + GAP + 'px;margin-bottom:6px">';
+  octs.forEach((v,i)=>{
+    if(i>0) dRow += '<div style="width:' + SEP + 'px;flex-shrink:0"></div>';
+    dRow += '<div style="width:' + octW + 'px;font-family:monospace;font-size:9px;color:var(--text2);text-align:center;flex-shrink:0">' + v + '</div>';
+  });
+  dRow += '</div>';
+  return bRow + dRow;
+}
+
+function renderDecRow(containerId, octets) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  octets.forEach((val, i) => {
+    if (i > 0) { const s = document.createElement('div'); s.className='dec-sep'; el.appendChild(s); }
+    const d = document.createElement('div'); d.className='dec-octet'; d.textContent=val; el.appendChild(d);
+  });
+}
+
+function parseIP(str) {
+  const p = str.trim().split('.').map(Number);
+  if (p.length !== 4) return null;
+  if (p.some(o => isNaN(o) || o < 0 || o > 255)) return null;
+  return p;
+}
+function ipToNum(o) { return ((o[0]<<24)|(o[1]<<16)|(o[2]<<8)|o[3]) >>> 0; }
+function numToIP(n) { return [n>>>24,(n>>>16)&255,(n>>>8)&255,n&255].join('.'); }
+function toBits(n, len=32) { return Array.from({length:len}, (_,i) => (n>>>(len-1-i))&1); }
+
+// Which octet index (0-3) does the prefix fall in, and how many host bits are in that octet
+function splitOctetInfo(prefix) {
+  const octetIndex = Math.floor(prefix / 8);    // 0=first,1=second,2=third,3=fourth
+  const bitsUsedInOctet = prefix % 8;           // network bits within the split octet
+  const hostBitsInOctet = 8 - bitsUsedInOctet;  // host bits within the split octet
+  const octetNames = ['first','second','third','fourth'];
+  return { octetIndex, bitsUsedInOctet, hostBitsInOctet, octetName: octetNames[octetIndex] };
+}
+
+function renderBitRow(container, bits, prefix, highlightOctet) {
+  container.innerHTML = '';
+  for (let i = 0; i < 32; i++) {
+    if (i === 8 || i === 16 || i === 24) {
+      const sep = document.createElement('div');
+      sep.className = 'bit octet-sep';
+      container.appendChild(sep);
+    }
+    const b = document.createElement('div');
+    const octet = Math.floor(i / 8);
+    b.className = 'bit ' + (i < prefix ? 'net' : 'host');
+    if (highlightOctet !== undefined && octet === highlightOctet) {
+      b.classList.add('highlight-octet');
+    }
+    b.textContent = bits[i];
+    container.appendChild(b);
+  }
+}
+
+function update() {
+  const prefix = parseInt(document.getElementById('prefix').value);
+  document.getElementById('prefix-val').textContent = prefix;
+  const ipStr = document.getElementById('ip-input').value;
+  const octets = parseIP(ipStr);
+  const errEl = document.getElementById('error');
+
+  if (!octets) {
+    errEl.textContent = 'Invalid IP address.'; errEl.style.display = '';
+    ['bits','mask-bits','stats'].forEach(id => document.getElementById(id).innerHTML = '');
+    return;
+  }
+  errEl.style.display = 'none';
+
+  const ipNum   = ipToNum(octets);
+  const maskNum = prefix === 0 ? 0 : (0xFFFFFFFF << (32 - prefix)) >>> 0;
+  const netNum  = (ipNum & maskNum) >>> 0;
+  const invMask = (~maskNum) >>> 0;
+  const bcastNum = (netNum | invMask) >>> 0;
+  const hostBits = 32 - prefix;
+  const blockSize = Math.pow(2, hostBits);
+  const usable = prefix >= 31 ? blockSize : Math.max(0, blockSize - 2);
+  const firstHost = prefix < 32 ? netNum + 1 : netNum;
+  const lastHost  = prefix < 31 ? bcastNum - 1 : bcastNum;
+
+  const { octetIndex, bitsUsedInOctet, hostBitsInOctet, octetName } = splitOctetInfo(prefix);
+  const splitOctetVal = (netNum >>> (8 * (3 - octetIndex))) & 0xFF;
+  const isOctetAligned = (prefix % 8 === 0);
+
+  // Bit labels
+  const lblsEl = document.getElementById('bit-lbls');
+  lblsEl.innerHTML = '';
+  for (let i = 0; i < 32; i++) {
+    if (i === 8 || i === 16 || i === 24) { const s = document.createElement('div'); s.className='bit-lbl octet-sep'; lblsEl.appendChild(s); }
+    const d = document.createElement('div'); d.className='bit-lbl'; d.textContent=i+1; lblsEl.appendChild(d);
+  }
+
+  // Only highlight the split octet if the prefix isn't on an exact octet boundary
+  const hlOctet = isOctetAligned ? undefined : octetIndex;
+  renderBitRow(document.getElementById('bits'), toBits(ipNum), prefix, hlOctet);
+  renderBitRow(document.getElementById('mask-bits'), toBits(maskNum), prefix, hlOctet);
+  renderDecRow('ip-dec', octets);
+  renderDecRow('mask-dec', [maskNum>>>24,(maskNum>>>16)&255,(maskNum>>>8)&255,maskNum&255]);
+
+  const netPct = (prefix / 32 * 100).toFixed(1);
+  document.getElementById('bar-net').style.width = netPct + '%';
+  document.getElementById('bar-net').textContent = prefix > 5 ? `/${prefix}` : '';
+  document.getElementById('bar-host').textContent = (100 - netPct) > 12 ? `${hostBits} host bits` : '';
+
+  const stats = [
+    { lbl: 'Network address',      val: numToIP(netNum),                             ov: 'ov-netaddr' },
+    { lbl: 'Broadcast address',    val: prefix < 31 ? numToIP(bcastNum) : '—',       ov: 'ov-bcast' },
+    { lbl: 'First usable host',    val: prefix < 32 ? numToIP(firstHost) : numToIP(netNum), ov: 'ov-first' },
+    { lbl: 'Last usable host',     val: numToIP(lastHost), ov: 'ov-last' },
+    { lbl: 'Block size',           val: isOctetAligned ? blockSize.toLocaleString() : Math.pow(2, hostBitsInOctet).toLocaleString(), ov: 'ov-block' },
+    { lbl: 'Usable hosts',         val: usable.toLocaleString(),                     ov: 'ov-hosts' },
+    { lbl: 'Subnet mask',          val: numToIP(maskNum),                            ov: 'ov-mask' },
+    { lbl: 'Network / host bits',  val: `${prefix} / ${hostBits}`,                  ov: 'ov-bits' },
+  ];
+
+  document.getElementById('stats').innerHTML = stats.map(s =>
+    `<div class="stat">
+      <div class="lbl">${s.lbl}${s.ov ? calcIcon(s.ov) : ''}</div>
+      <div class="val">${s.val}</div>
+    </div>`
+  ).join('');
+
+  // --- Block size overlay (split-octet model) ---
+  const octetNames4 = ['first (leftmost)','second','third','fourth (rightmost)'];
+  let blockHtml = '';
+  if (isOctetAligned) {
+    blockHtml = `
+      <div class="step-row"><span class="step-num">★</span><span class="step-desc">What is block size and why does it matter?</span></div>
+      <div class="step-note">Block size is the <strong>total number of IP addresses</strong> in a subnet — including reserved ones. It determines how far apart subnet boundaries fall and directly controls how many devices a subnet can support. A larger block size means more addresses; a longer prefix means fewer.</div>
+      <div class="step-row"><span class="step-num">1</span><span class="step-desc">The prefix /${prefix} falls exactly on an octet boundary — no octet is split</span></div>
+      <div class="step-formula">block size = 2^${hostBits} = ${blockSize.toLocaleString()}</div>
+      <div class="step-note">When the prefix is a multiple of 8 the block size spans whole octets. /${prefix} gives you ${blockSize.toLocaleString()} addresses per subnet.</div>`;
+  } else {
+    const octetBits = Array.from({length:8}, (_,i) => {
+      const globalBit = octetIndex * 8 + i;
+      return globalBit < prefix ? 'N' : 'H';
+    });
+    blockHtml = `
+      <div class="step-row"><span class="step-num">★</span><span class="step-desc">What is block size and why does it matter?</span></div>
+      <div class="step-note">Block size is the total number of IP addresses in a subnet (including the network and broadcast). It determines how far apart subnet boundaries fall and sets the capacity of the subnet by defining how many usable host addresses are available. A larger block size means more total addresses; a longer prefix means fewer.</div>
+      <div class="step-row"><span class="step-num">1</span><span class="step-desc">Find the octet where the prefix line cuts — the <strong>${octetNames4[octetIndex]} octet</strong> (highlighted above)</span></div>
+      <div class="step-formula">Prefix /${prefix} → split falls in octet ${octetIndex + 1}
+Bits in that octet:  [ ${octetBits.join(' ')} ]
+                       ${Array.from({length:8},(_,i)=> i < bitsUsedInOctet ? 'N' : 'H').map((_,i)=> i < bitsUsedInOctet ? '↑' : '↑').join(' ')}
+N = network   H = host</div>
+      <div class="step-row"><span class="step-num">2</span><span class="step-desc">Count only the <strong>host bits in that octet</strong></span></div>
+      <div class="step-formula">8 − ${bitsUsedInOctet} network bits = ${hostBitsInOctet} host bit${hostBitsInOctet !== 1 ? 's' : ''} in the split octet</div>
+      <div class="step-row"><span class="step-num">3</span><span class="step-desc">Raise 2 to that power — this gives the block size <em>in that octet</em></span></div>
+      <div class="step-formula">2^${hostBitsInOctet} = ${Math.pow(2, hostBitsInOctet)}</div>
+      <div class="step-row"><span class="step-num">4</span><span class="step-desc">Subnets start at multiples of that block size in octet ${octetIndex + 1}</span></div>
+      <div class="step-formula">${Array.from({length: Math.min(Math.ceil(256/Math.pow(2,hostBitsInOctet)), 8)}, (_,i) => i * Math.pow(2,hostBitsInOctet)).join(', ')}${Math.ceil(256/Math.pow(2,hostBitsInOctet)) > 8 ? ', …' : ''}</div>
+      <div class="step-note">Block size in split octet = ${Math.pow(2, hostBitsInOctet)}. Total addresses per subnet = 2^${hostBits} = ${blockSize.toLocaleString()} (all octets combined).</div>`;
+  }
+  // Append the block size → usable hosts relationship to both cases
+  const reservedNote = prefix < 31
+    ? `<div class="step-row"><span class="step-num" style="background:#A32D2D;color:white">−</span><span class="step-desc">Two addresses are always <strong>reserved</strong> and cannot be assigned to devices:</span></div>
+       <div class="step-formula" style="border-left:3px solid #F09595">${numToIP(netNum)}  ← network address (identifies the subnet)
+${prefix < 31 ? numToIP(bcastNum) : '—'}  ← broadcast address (sends to all hosts)</div>
+       <div class="step-row"><span class="step-num">→</span><span class="step-desc">Usable hosts = block size − 2</span></div>
+       <div class="step-formula">${blockSize.toLocaleString()} − 2 = <strong>${usable.toLocaleString()} usable hosts</strong></div>
+       ${bitRowHTML(netNum, prefix, i => i < prefix ? 'net' : 'host')}
+       <div style="font-size:10px;color:var(--text3);margin:2px 0">↑ network (all host bits 0) — reserved</div>
+       ${bitRowHTML(bcastNum, prefix, i => i < prefix ? 'net' : 'highlight-octet')}
+       <div style="font-size:10px;color:var(--text3);margin:2px 0">↑ broadcast (all host bits 1) — reserved</div>
+       <div class="step-note">Every address in between — from ${numToIP(firstHost)} to ${numToIP(lastHost)} — is assignable to a device. That's ${usable.toLocaleString()} addresses.</div>`
+    : `<div class="step-note">A /${prefix} has no reserved network/broadcast — both addresses are usable (point-to-point link).</div>`;
+
+  blockHtml += reservedNote;
+  document.getElementById('block-steps').innerHTML = blockHtml;
+
+  // --- Broadcast overlay ---
+  const invMaskIP = numToIP(invMask);
+  document.getElementById('bcast-steps').innerHTML = prefix < 31 ? (() => {
+    const inv = (~maskNum) >>> 0;
+    return `
+    <div class="step-row"><span class="step-num">★</span><span class="step-desc">What is the broadcast address and why does it matter?</span></div>
+    <div class="step-note">The broadcast address is the <strong>last address</strong> in a subnet. A packet sent to this address is delivered to <em>every host</em> in the subnet simultaneously. It is reserved — no device can be assigned this IP. Routers do not forward broadcast packets between subnets, which keeps broadcast traffic contained.</div>
+    <div class="step-row"><span class="step-num">1</span><span class="step-desc">Start with the network address</span></div>
+    ${bitRowHTML(netNum, prefix, i => i < prefix ? 'net' : 'host')}
+    <div class="step-row"><span class="step-num">2</span><span class="step-desc">Invert the subnet mask — flip every bit to get the wildcard mask</span></div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:2px">mask</div>
+    ${bitRowHTML(maskNum, prefix, i => i < prefix ? 'net' : 'host')}
+    <div style="font-size:10px;color:var(--text3);margin-bottom:2px">wildcard (inverted)</div>
+    ${bitRowHTML(inv, prefix, i => i < prefix ? 'host' : 'net')}
+    <div class="step-row"><span class="step-num">3</span><span class="step-desc">OR the network address with the wildcard — all host bits become 1</span></div>
+    ${bitRowHTML(bcastNum, prefix, i => i < prefix ? 'net' : 'highlight-octet')}
+    <div class="step-note">All host bits set to 1 = the last address in the block. Packets sent here reach every host in the subnet.</div>`;
+  })() :
+    `<div class="step-note">Not applicable — /${prefix} subnets have no broadcast address.</div>`;
+
+  // --- Last usable host overlay ---
+  document.getElementById('last-steps').innerHTML = prefix < 31 ? (() => {
+    const inv = (~maskNum) >>> 0;
+    return `
+    <div class="step-row"><span class="step-num">★</span><span class="step-desc">What is the last usable host and why does it matter?</span></div>
+    <div class="step-note">The last usable host is the <strong>highest IP address you can assign to a device</strong> in this subnet. It sits one before the broadcast address. Knowing this range — from first host to last host — tells you exactly which IPs are available for devices like servers, PCs, or printers.</div>
+    <div class="step-row"><span class="step-num">1</span><span class="step-desc">Start with the broadcast address (network OR wildcard)</span></div>
+    ${bitRowHTML(bcastNum, prefix, i => i < prefix ? 'net' : 'highlight-octet')}
+    <div class="step-row"><span class="step-num">2</span><span class="step-desc">Subtract 1 — the broadcast is reserved, so the last assignable host is one before it</span></div>
+    ${bitRowHTML(lastHost, prefix, i => i < prefix ? 'net' : 'host')}
+    <div class="step-note">${numToIP(bcastNum)} − 1 = ${numToIP(lastHost)}. This is the highest IP address you can assign to a device in this subnet.</div>`;
+  })() :
+    `<div class="step-note">/${prefix} is a point-to-point link — ${numToIP(lastHost)} is the second (and last) usable address.</div>`;
+
+  // --- Usable hosts overlay ---
+  document.getElementById('hosts-steps').innerHTML = `
+    <div class="step-row"><span class="step-num">★</span><span class="step-desc">What are usable hosts and why does it matter?</span></div>
+    <div class="step-note">Usable hosts is the <strong>number of IP addresses you can actually assign to devices</strong> — computers, printers, phones, routers. It's always less than the block size because two addresses are permanently reserved: the network address and the broadcast address. This is the number that matters when planning how many devices a subnet can support.</div>
+    <div class="step-row"><span class="step-num">1</span><span class="step-desc">Block size gives all addresses in the subnet</span></div>
+    <div class="step-formula">2^${hostBits} = ${blockSize.toLocaleString()} addresses</div>
+    <div class="step-row"><span class="step-num">2</span><span class="step-desc">The first address identifies the network — not assignable to a host</span></div>
+    <div class="step-formula">${numToIP(netNum)}  ← network address</div>
+    ${prefix < 31 ? `<div class="step-row"><span class="step-num">3</span><span class="step-desc">The last address is the broadcast — not assignable to a host</span></div>
+    <div class="step-formula">${numToIP(bcastNum)}  ← broadcast address</div>
+    <div class="step-row"><span class="step-num">4</span><span class="step-desc">Subtract both reserved addresses</span></div>
+    <div class="step-formula">${blockSize.toLocaleString()} − 2 = ${usable.toLocaleString()} usable hosts</div>
+    <div class="step-note">These are the addresses you can assign to devices.</div>` :
+    `<div class="step-note">/${prefix} is a point-to-point link — both addresses are usable, no broadcast reserved.</div>`}`;
+  // --- Network address overlay ---
+  document.getElementById('ov-netaddr-steps').innerHTML = `
+    <div class="step-row"><span class="step-num">1</span><span class="step-desc">What is the network address?</span></div>
+    <div class="step-note">The network address is the <strong>first address</strong> in the subnet. It identifies the subnet itself — cannot be assigned to any device.</div>
+    <div class="step-row"><span class="step-num">2</span><span class="step-desc">How is it calculated? AND the IP with the subnet mask — all host bits become 0:</span></div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:2px">IP address</div>
+    ${bitRowHTML(ipNum, prefix, i => i < prefix ? 'net' : 'host')}
+    <div style="font-size:10px;color:var(--text3);margin-bottom:2px">AND mask</div>
+    ${bitRowHTML(maskNum, prefix, i => i < prefix ? 'net' : 'host')}
+    <div style="font-size:10px;color:var(--text3);margin-bottom:2px">= network address (host bits zeroed)</div>
+    ${bitRowHTML(netNum, prefix, i => i < prefix ? 'net' : 'host')}
+    <div class="step-note">Example: 192.168.1.57 on a /24 → host bits (.57) zeroed → network 192.168.1.0</div>
+    <div class="step-row"><span class="step-num">3</span><span class="step-desc">What does it impact?</span></div>
+    <div class="step-note">Routers use the network address to build routing table entries. Every host in this subnet shares the same network address as their subnet identifier.</div>`;
+
+  // --- First usable host overlay ---
+  document.getElementById('ov-first-steps').innerHTML = prefix < 32 ? `
+    <div class="step-row"><span class="step-num">1</span><span class="step-desc">What is the first usable host?</span></div>
+    <div class="step-formula">${numToIP(firstHost)}</div>
+    <div class="step-note">The <strong>first assignable IP</strong> in the subnet. Typically assigned to the router interface (default gateway) for the subnet.</div>
+    <div class="step-row"><span class="step-num">2</span><span class="step-desc">How is it calculated?</span></div>
+    <div class="step-formula">network address + 1
+${numToIP(netNum)} + 1 = ${numToIP(firstHost)}</div>
+    <div class="step-row"><span class="step-num">3</span><span class="step-desc">What does it impact?</span></div>
+    <div class="step-note">Hosts in this subnet use ${numToIP(firstHost)} as their <strong>default gateway</strong>. When a host sends traffic to another subnet, it forwards the packet to this address first. Example: a PC at ${numToIP((netNum+2)>>>0)} would have gateway ${numToIP(firstHost)}.</div>` :
+    `<div class="step-note">A /${prefix} is a host route — it refers to exactly one address, so there is no separate "first host".</div>`;
+
+  // --- Subnet mask overlay ---
+  document.getElementById('ov-mask-steps').innerHTML = `
+    <div class="step-row"><span class="step-num">1</span><span class="step-desc">What is the subnet mask?</span></div>
+    <div class="step-note">The subnet mask tells devices which part of an IP address is the <strong>network</strong> and which part is the <strong>host</strong>. Network bits are 1, host bits are 0.</div>
+    <div class="step-row"><span class="step-num">2</span><span class="step-desc">How is it derived from the prefix /${prefix}? Set the first ${prefix} bits to 1, the rest to 0:</div>
+    ${bitRowHTML(maskNum, prefix, i => i < prefix ? 'net' : 'host')}
+    <div class="step-row"><span class="step-num">3</span><span class="step-desc">What does it impact?</span></div>
+    <div class="step-note">Every device ANDs the mask with both IPs to decide if a destination is local or needs routing. If results match → same subnet. Example: ${numToIP(netNum)} AND ${numToIP(maskNum)} = ${numToIP(netNum)}. A host at ${numToIP((netNum+5)>>>0)} gets the same result — same subnet, no router needed.</div>`;
+
+  // --- Network / host bits overlay ---
+  document.getElementById('ov-bits-steps').innerHTML = `
+    <div class="step-row"><span class="step-num">1</span><span class="step-desc">What are network bits and host bits?</span></div>
+    <div class="step-note">Every IPv4 address is 32 bits. The prefix /${prefix} divides them: the first <strong>${prefix} bits</strong> identify the network, the last <strong>${hostBits} bits</strong> identify the host within that network.</div>
+    <div class="step-formula">|← ${prefix} network bits →|← ${hostBits} host bits →|
+ Total = 32 bits</div>
+    <div class="step-row"><span class="step-num">2</span><span class="step-desc">What impact do they have?</span></div>
+    <div class="step-note"><strong>More network bits (longer prefix)</strong> = smaller subnet, fewer hosts, more subnets possible from a block.<br><strong>Fewer network bits (shorter prefix)</strong> = larger subnet, more hosts, fewer subnets.</div>
+    <div class="step-row"><span class="step-num">3</span><span class="step-desc">Example comparison</span></div>
+    <div class="step-formula">/24 → 8 host bits  → 254 usable hosts
+/26 → 6 host bits  →  62 usable hosts
+/28 → 4 host bits  →  14 usable hosts
+/30 → 2 host bits  →   2 usable hosts (point-to-point)</div>
+    <div class="step-note">The /${prefix} prefix gives you ${hostBits} host bit${hostBits!==1?'s':''} → 2^${hostBits} = ${blockSize.toLocaleString()} addresses (${usable.toLocaleString()} usable).</div>`;
+
+    if(document.getElementById('cmp-ip') && document.getElementById('cmp-ip').value.trim()) updateComparison();
+  if(document.getElementById('tab-subdivide') && document.getElementById('tab-subdivide').classList.contains('active')) updateSubdivide();
+}
+
+
+function andBlock(cmpNum, maskNum, cmpNet, ipNet, prefix) {
+  const cmpBits    = toBits(cmpNum);
+  const maskBits   = toBits(maskNum);
+  const cmpNetBits = toBits(cmpNet);
+  const ipNetBits  = toBits(ipNet);
+  const BW = 18; // bit cell width px
+  const GAP = 2; // gap px
+  const SEP = 6; // octet separator width px
+  const LABEL = 58; // label column width px
+
+  function bitCells(bits, clsFn, blankOutside) {
+    let h = '';
+    for (let i = 0; i < 32; i++) {
+      if (i === 8 || i === 16 || i === 24) h += `<div style="width:${SEP}px;flex-shrink:0"></div>`;
+      if (blankOutside && i >= prefix) {
+        h += `<div style="width:${BW}px;flex-shrink:0"></div>`;
+      } else {
+        h += `<div class="and-bit ${clsFn(i)}">${bits[i]}</div>`;
+      }
+    }
+    return h;
+  }
+
+  // Bit number labels row (1–32)
+  let numRow = `<div style="display:flex;gap:${GAP}px;margin-bottom:2px;padding-left:${LABEL}px">`;
+  for (let i = 0; i < 32; i++) {
+    if (i === 8 || i === 16 || i === 24) numRow += `<div style="width:${SEP}px;flex-shrink:0"></div>`;
+    numRow += `<div style="width:${BW}px;font-size:8px;color:var(--text3);text-align:center;flex-shrink:0;font-family:monospace">${i+1}</div>`;
+  }
+  numRow += '</div>';
+
+  const row = (label, cells) =>
+    `<div class="and-row"><span class="and-label">${label}</span>${cells}</div>`;
+
+  const ipRow   = row('compare', bitCells(cmpBits, () => 'ip', true));
+  const maskRow = row('<strong>mask</strong>',          bitCells(maskBits, () => 'mask', true));
+  const sep     = '<hr class="and-sep-line">';
+  const resRow  = row('<strong>= network</strong>',     bitCells(cmpNetBits, i => i < prefix ? (cmpNetBits[i] === ipNetBits[i] ? 'res-ok' : 'res-bad') : 'mask', false));
+
+  // Decimal rows — label col + octet cols, aligned exactly under the bit cells
+  const octW = BW * 8 + GAP * 7;
+
+  function makeDecRow(num, label) {
+    const octs = [num>>>24, (num>>>16)&255, (num>>>8)&255, num&255];
+    let h = `<div style="display:flex;gap:${GAP}px;align-items:center;margin-top:1px">`;
+    h += `<span style="width:${LABEL}px;flex-shrink:0;font-size:10px;color:var(--text3);text-align:right;padding-right:6px">${label}</span>`;
+    octs.forEach((v, i) => {
+      if (i > 0) h += `<div style="width:${SEP}px;flex-shrink:0"></div>`;
+      h += `<div style="width:${octW}px;font-family:monospace;font-size:10px;color:var(--text2);text-align:center;flex-shrink:0">${v}</div>`;
+    });
+    return h + '</div>';
+  }
+
+  return numRow + ipRow + makeDecRow(cmpNum, '') + maskRow + makeDecRow(maskNum, '') + sep + resRow + makeDecRow(cmpNet, '');
+}
+
+function updateComparison() {
+  const cmpStr = document.getElementById('cmp-ip').value.trim();
+  const wrap = document.getElementById('cmp-bits');
+  if (!cmpStr) { wrap.style.display = 'none'; return; }
+
+  const cmpOctets = parseIP(cmpStr);
+  if (!cmpOctets) { wrap.style.display = 'none'; return; }
+
+  const prefix = parseInt(document.getElementById('prefix').value);
+  const octets = parseIP(document.getElementById('ip-input').value);
+  if (!octets) { wrap.style.display = 'none'; return; }
+
+  wrap.style.display = 'block';
+
+  const ipNum   = ipToNum(octets);
+  const cmpNum  = ipToNum(cmpOctets);
+  const maskNum = prefix === 0 ? 0 : (0xFFFFFFFF << (32 - prefix)) >>> 0;
+  const ipNet   = (ipNum  & maskNum) >>> 0;
+  const cmpNet  = (cmpNum & maskNum) >>> 0;
+  const same    = ipNet === cmpNet;
+
+  // Build explanation
+  let explanation = '';
+  if (same) {
+    explanation = `Both <strong>${numToIP(ipNum)}</strong> and <strong>${numToIP(cmpNum)}</strong> AND with the /${prefix} mask to produce <strong>${numToIP(ipNet)}</strong> — identical network portions, so they share the same subnet and can communicate directly without a router.`;
+  } else {
+    // Find first differing bit position in the network portion
+    const ipNetBits  = toBits(ipNet);
+    const cmpNetBits = toBits(cmpNet);
+    let firstDiff = -1;
+    for (let i = 0; i < prefix; i++) {
+      if (ipNetBits[i] !== cmpNetBits[i]) { firstDiff = i; break; }
+    }
+    const diffOctet = firstDiff >= 0 ? Math.floor(firstDiff / 8) + 1 : '?';
+    const ipOcts   = [ipNet>>>24,(ipNet>>>16)&255,(ipNet>>>8)&255,ipNet&255];
+    const cmpOcts  = [cmpNet>>>24,(cmpNet>>>16)&255,(cmpNet>>>8)&255,cmpNet&255];
+    explanation = `<strong>${numToIP(ipNum)}</strong> ANDs to <strong>${numToIP(ipNet)}</strong>, but <strong>${numToIP(cmpNum)}</strong> ANDs to <strong>${numToIP(cmpNet)}</strong>. The network portions differ starting at bit ${firstDiff+1} (octet ${diffOctet}: ${ipOcts[diffOctet-1]} vs ${cmpOcts[diffOctet-1]}). A router is required to forward packets between these two hosts.`;
+  }
+
+  document.getElementById('cmp-result').innerHTML = same
+    ? `<div class="comp-result same" style="flex-direction:column;align-items:flex-start;gap:4px"><div>✓ Same subnet</div><div style="font-weight:400;font-size:12px">${explanation}</div></div>`
+    : `<div class="comp-result diff" style="flex-direction:column;align-items:flex-start;gap:4px"><div>✗ Different subnet</div><div style="font-weight:400;font-size:12px">${explanation}</div></div>`;
+
+  document.getElementById('cmp-math').innerHTML =
+    '<div class="and-block">' + andBlock(cmpNum, maskNum, cmpNet, ipNet, prefix) + '</div>';
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelector('.tab[onclick*="' + name + '"]').classList.add('active');
+  if(name === 'subdivide') updateSubdivide();
+}
+
+const SUB_COLORS = [
+  '#9FE1CB','#B5D4F4','#FAC775','#F5C4B3','#CECBF6','#C0DD97',
+  '#9FE1CB','#B5D4F4','#FAC775','#F5C4B3','#CECBF6','#C0DD97',
+  '#9FE1CB','#B5D4F4','#FAC775','#F5C4B3',
+];
+const SUB_TEXT = [
+  '#085041','#0C447C','#633806','#712B13','#3C3489','#27500A',
+  '#085041','#0C447C','#633806','#712B13','#3C3489','#27500A',
+  '#085041','#0C447C','#633806','#712B13',
+];
+
+function updateSubdivide() {
+  const subEl   = document.getElementById('sub-prefix');
+  const lblEl   = document.getElementById('sub-prefix-lbl');
+  const msgEl   = document.getElementById('sub-msg');
+  const sumEl   = document.getElementById('sub-summary');
+  const diagEl  = document.getElementById('sub-diagram');
+  const ovEl    = document.getElementById('sub-overlay');
+
+  const prefix    = parseInt(document.getElementById('prefix').value);
+  let   subPrefix = parseInt(subEl.value);
+
+  // Constrain slider: subdivision prefix must be > base prefix and <= 30
+  subEl.min = prefix + 1;
+  subEl.max = 30;
+  if (subPrefix <= prefix) {
+    subPrefix = prefix + 1;
+    subEl.value = subPrefix;
+  }
+  if (subPrefix > 30) { subPrefix = 30; subEl.value = 30; }
+  lblEl.textContent = '/' + subPrefix;
+
+  // Validation message — informational only, don't block render
+  if (subPrefix === prefix + 1) {
+    msgEl.textContent = `/${subPrefix} is the smallest subdivision of /${prefix} — borrowing just 1 bit creates 2 equal subnets.`;
+    msgEl.style.display = 'block';
+  } else {
+    msgEl.style.display = 'none';
+  }
+  ovEl.style.display = 'none';
+
+  const base      = parseIP(document.getElementById('ip-input').value);
+  if (!base) return;
+
+  const baseNum   = (ipToNum(base) & mkMask(prefix)) >>> 0;
+  const subCount  = Math.pow(2, subPrefix - prefix);
+  const subSize   = Math.pow(2, 32 - subPrefix);
+  const usable    = subPrefix < 31 ? subSize - 2 : subSize;
+  const extraBits = subPrefix - prefix;
+
+  sumEl.innerHTML = `This /${prefix} is the aggregate of <strong>${subCount}</strong> /${subPrefix} block${subCount!==1?'s':''} &nbsp;·&nbsp; each block has <strong>${usable.toLocaleString()}</strong> usable host${usable!==1?'s':''} &nbsp;·&nbsp; <em style="color:var(--text3)">${extraBits} bit${extraBits!==1?'s':''} summarized into the /${prefix} prefix</em>`;
+
+  // Cap display at 32 blocks, show overflow note
+  const displayCount = Math.min(subCount, 32);
+  const overflow = subCount > 32;
+
+  const COLS = 8;
+  let html = '';
+  for (let i = 0; i < displayCount; i++) {
+    if (i % COLS === 0) html += '<div class="sub-container" style="margin-bottom:4px">';
+    const netNum = (baseNum + i * subSize) >>> 0;
+    const cidr   = numToIP(netNum) + '/' + subPrefix;
+    const color  = SUB_COLORS[i % SUB_COLORS.length];
+    const text   = SUB_TEXT[i % SUB_TEXT.length];
+    html += `<div class="sub-block" style="background:${color};color:${text};flex:1"
+      onclick="showSubOverlay(${i}, '${cidr}', ${netNum}, ${subPrefix}, ${prefix}, ${subSize})"
+      title="Click for details">
+      <div class="sub-cidr">${cidr}</div>
+      <div class="sub-hosts">${usable.toLocaleString()} hosts</div>
+    </div>`;
+    if (i % COLS === COLS - 1 || i === displayCount - 1) html += '</div>';
+  }
+  if (overflow) html += `<div style="font-size:11px;color:var(--text3);margin-top:5px">Showing first 32 of ${subCount.toLocaleString()} subnets</div>`;
+  diagEl.innerHTML = html;
+}
+
+function showSubOverlay(idx, cidr, netNum, subPrefix, basePrefix, subSize) {
+  const ovEl    = document.getElementById('sub-overlay');
+  const titleEl = document.getElementById('sub-overlay-title');
+  const bodyEl  = document.getElementById('sub-overlay-body');
+
+  const maskNum  = mkMask(subPrefix);
+  const inv      = (~maskNum) >>> 0;
+  const bcast    = (netNum | inv) >>> 0;
+  const first    = (netNum + 1) >>> 0;
+  const last     = subPrefix < 31 ? (bcast - 1) >>> 0 : bcast;
+  const usable   = subPrefix < 31 ? subSize - 2 : subSize;
+  const extraBits = subPrefix - basePrefix;
+  const subCount = Math.pow(2, extraBits);
+
+  titleEl.textContent = cidr + ' — Part of /' + basePrefix + ' aggregate';
+
+  const netBits  = toBits(netNum);
+  const maskBits = toBits(maskNum);
+
+  // Build a compact bit row showing network (base) | borrowed | host
+  let bitRow = '<div style="display:flex;gap:1px;flex-wrap:nowrap;overflow-x:auto;margin:6px 0">';
+  for (let i = 0; i < 32; i++) {
+    if (i === 8 || i === 16 || i === 24) bitRow += '<div style="width:4px"></div>';
+    let bg, fg;
+    if (i < basePrefix)       { bg='#B5D4F4'; fg='#0C447C'; }       // base network bits
+    else if (i < subPrefix)   { bg='#EF9F27'; fg='#412402'; }       // borrowed bits (amber)
+    else                       { bg='#E1F5EE'; fg='#085041'; }       // host bits
+    bitRow += `<div style="width:14px;height:18px;border-radius:2px;background:${bg};color:${fg};font-size:9px;font-family:monospace;display:flex;align-items:center;justify-content:center;flex-shrink:0">${netBits[i]}</div>`;
+  }
+  bitRow += '</div>';
+
+  // Legend
+  const legend = `<div style="display:flex;gap:12px;font-size:10px;color:var(--text2);margin-bottom:6px">
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#B5D4F4;vertical-align:middle;margin-right:3px"></span>Base network bits (/${basePrefix})</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#EF9F27;vertical-align:middle;margin-right:3px"></span>Borrowed bits (+${extraBits})</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#E1F5EE;vertical-align:middle;margin-right:3px"></span>Host bits</span>
+  </div>`;
+
+  bodyEl.innerHTML = `
+    ${legend}
+    ${bitRow}
+    <div style="font-size:11px;color:var(--text2);line-height:1.6">
+      <strong>Why it aggregates:</strong> The /${basePrefix} block summarizes 2<sup>${extraBits}</sup> = <strong>${subCount}</strong> contiguous /${subPrefix} blocks into a single route advertisement. This is block #${idx+1} of ${subCount} — all share the same /${basePrefix} network prefix.
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px">
+      <div style="background:var(--bg3);border-radius:6px;padding:6px 9px"><div style="font-size:10px;color:var(--text3);margin-bottom:1px">Network</div><div style="font-size:11px;font-weight:500;font-family:monospace">${numToIP(netNum)}</div></div>
+      <div style="background:var(--bg3);border-radius:6px;padding:6px 9px"><div style="font-size:10px;color:var(--text3);margin-bottom:1px">Broadcast</div><div style="font-size:11px;font-weight:500;font-family:monospace">${numToIP(bcast)}</div></div>
+      <div style="background:var(--bg3);border-radius:6px;padding:6px 9px"><div style="font-size:10px;color:var(--text3);margin-bottom:1px">First host</div><div style="font-size:11px;font-weight:500;font-family:monospace">${numToIP(first)}</div></div>
+      <div style="background:var(--bg3);border-radius:6px;padding:6px 9px"><div style="font-size:10px;color:var(--text3);margin-bottom:1px">Last host</div><div style="font-size:11px;font-weight:500;font-family:monospace">${numToIP(last)}</div></div>
+      <div style="background:var(--bg3);border-radius:6px;padding:6px 9px;grid-column:span 2"><div style="font-size:10px;color:var(--text3);margin-bottom:1px">Usable hosts</div><div style="font-size:11px;font-weight:500;font-family:monospace">${usable.toLocaleString()}</div></div>
+    </div>`;
+
+  ovEl.style.display = 'block';
+  ovEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function mkMask(p){ return p===0?0:(0xFFFFFFFF<<(32-p))>>>0; }
+
+// ── Guided Tour ───────────────────────────────────────────────────────────────
+const TOUR_STEPS = [
+  {
+    title: '1. Why CIDR Exists',
+    what: 'Before CIDR (1993), the internet used <strong>classful addressing</strong> — every network was Class A (16M hosts), Class B (65K hosts), or Class C (254 hosts). There was nothing in between.',
+    why: 'A company needing 300 hosts was forced to take a <strong>Class B</strong> — wasting 65,234 addresses. With only ~2 billion IPv4 addresses total, this caused an address exhaustion crisis by the early 1990s.',
+    how: '<strong>CIDR (Classless Inter-Domain Routing)</strong> replaced fixed classes with a flexible prefix length — the /24, /22, /16 you see above. Now you can right-size any network. Need 300 hosts? Use a /23 (510 usable). Need 30? Use a /27 (30 usable).',
+    tryIt: 'Move the prefix slider all the way left (/0) and right (/32). Watch how the block size and usable hosts change — this range is what CIDR unlocks.',
+    highlight: 'prefix',
+    takeaway: 'CIDR lets you allocate exactly the address space you need — no more, no less.',
+  },
+  {
+    title: '2. RFC 1918 — Private Address Space',
+    what: '<strong>RFC 1918</strong> defines three blocks of IP addresses reserved for private networks — they are never routed on the public internet:',
+    how: '<code style="display:block;background:var(--bg3);padding:8px 10px;border-radius:6px;font-size:11px;line-height:1.8;margin:6px 0">10.0.0.0/8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; → 16,777,216 addresses<br>172.16.0.0/12&nbsp;&nbsp;&nbsp; →&nbsp; 1,048,576 addresses<br>192.168.0.0/16&nbsp;&nbsp; →&nbsp;&nbsp;&nbsp;&nbsp;65,536 addresses</code>These ranges can be reused in any private network worldwide. Your home router uses 192.168.x.x. Enterprise networks typically use 10.x.x.x for its vast size.',
+    why: 'Without private space, every device would need a globally unique IP. RFC 1918 + NAT allows billions of devices to share a small pool of public IPs.',
+    tryIt: 'Try entering 10.0.0.0 with prefix /8, then 172.16.0.0 /12, then 192.168.0.0 /16. See how the block sizes compare.',
+    highlight: 'ip-input',
+    takeaway: 'Always use RFC 1918 ranges for internal networks. They are free, reusable, and never accidentally routable on the internet.',
+  },
+  {
+    title: '3. Anatomy of an IP Address',
+    what: 'Every IPv4 address is <strong>32 bits</strong> — written as four decimal numbers (octets) separated by dots. Each octet is 8 bits, ranging from 0–255.',
+    how: 'Look at the bit display above. The address 192.168.1.0 in binary is:<br><code style="font-size:11px">11000000.10101000.00000001.00000000</code><br>Each group of 8 bits is one octet. The decimal value of an octet is the sum of its set bits: bit 7 = 128, bit 6 = 64 ... bit 0 = 1.',
+    why: 'Understanding the binary representation is essential — CIDR, subnetting, and masking all operate at the bit level. Decimal notation is just a human-readable shorthand.',
+    tryIt: 'Type these IPs into the IP address field and observe the bit display: 255.255.255.255 (all 1s), then 0.0.0.0 (all 0s), then 128.0.0.1 (first and last bits set). Notice how the decimal value of each octet maps to its 8-bit pattern.',
+    highlight: 'bits',
+    takeaway: 'An IP address is 32 bits. Dotted decimal (192.168.1.0) is just a convenient way to read binary numbers.',
+  },
+  {
+    title: '4. The Prefix — Dividing Network from Host',
+    what: 'The <strong>prefix length</strong> (the /24 after the IP) splits the 32 bits into two parts: the <strong>network portion</strong> (blue bits) and the <strong>host portion</strong> (teal bits).',
+    how: 'A /24 means the first 24 bits identify the network, the last 8 bits identify the host within that network. All devices sharing the same network bits are on the same subnet.',
+    why: 'The split determines two things: <strong>how many subnets</strong> are possible (more network bits = more subnets) and <strong>how many hosts</strong> each subnet can hold (more host bits = more hosts per subnet).',
+    tryIt: 'Slowly drag the prefix slider from /16 to /28. Watch the blue/teal boundary move across the bit display. Notice how the block size halves with every step right.',
+    highlight: 'prefix',
+    takeaway: 'Every bit you move to the network side doubles the number of subnets and halves the hosts per subnet.',
+  },
+  {
+    title: '5. The Subnet Mask',
+    what: 'The <strong>subnet mask</strong> expresses the same information as the prefix length, but in 32-bit dotted-decimal form. Network bits are <strong>1</strong>, host bits are <strong>0</strong>.',
+    how: 'A /24 mask is 11111111.11111111.11111111.00000000 = 255.255.255.0. A /26 mask is 255.255.255.192. Click the 🔍 on "Subnet mask" to see the binary derivation.',
+    why: 'Routers and hosts use the mask to perform an <strong>AND operation</strong>: IP AND mask = network address. This is how a device determines if a destination is local (same subnet) or needs routing.',
+    tryIt: 'In the Details tab, click the magnifying glass icon (🔍) next to "Subnet mask" to open the calc overlay. Change the prefix to /26 and watch the mask change to 255.255.255.192. Try /20 — part of the third octet becomes network bits.',
+    highlight: 'mask-bits',
+    takeaway: 'Subnet mask = prefix in dotted decimal. /24 = 255.255.255.0. Both say the same thing.',
+  },
+  {
+    title: '6. Reserved Addresses',
+    what: 'Every subnet has <strong>two reserved addresses</strong> that cannot be assigned to any device: the <strong>network address</strong> (first) and the <strong>broadcast address</strong> (last).',
+    how: 'Network address: all host bits = 0 (e.g. 192.168.1.<strong>0</strong>)<br>Broadcast address: all host bits = 1 (e.g. 192.168.1.<strong>255</strong>)<br>These bookend the subnet — every assignable address sits between them.',
+    why: 'Accidentally assigning the network or broadcast address to a host is a classic misconfiguration. The network address is used in routing tables; the broadcast address triggers all hosts to receive a packet. Neither can have a unique device.',
+    tryIt: 'In the Details tab, click the magnifying glass icon (🔍) next to "Network address" and "Broadcast address". See the bit patterns — one has all host bits 0, the other has all host bits 1.',
+    highlight: null,
+    takeaway: 'For most subnets, usable hosts = block size − 2 (network and broadcast reserved). Exceptions: /31 = 2 usable (RFC 3021, no broadcast), /32 = 1 host route.',
+  },
+  {
+    title: '7. Block Size and Usable Hosts',
+    what: '<strong>Block size</strong> = total addresses in the subnet = 2^(host bits). <strong>Usable hosts</strong> = block size − 2 (subtracting network and broadcast).',
+    how: 'A /24 has 8 host bits → 2⁸ = 256 addresses → 254 usable.<br>A /26 has 6 host bits → 2⁶ = 64 addresses → 62 usable.<br>A /30 has 2 host bits → 2² = 4 addresses → 2 usable.',
+    why: 'Block size also determines <strong>subnet boundaries</strong> — subnets must start at multiples of the block size. A /26 (block=64) starts at .0, .64, .128, .192. You cannot have a /26 starting at .50.',
+    tryIt: 'In the Details tab, click the magnifying glass icon (🔍) next to "Block size". Try prefix /28 — block size 16, boundaries every 16 addresses: .0, .16, .32... Try /25 — block 128, boundaries .0 and .128.',
+    highlight: null,
+    takeaway: 'Block size = 2^(host bits). Usable = block − 2. Subnets start at multiples of block size.',
+  },
+  {
+    title: '8. Planning a Subnet',
+    what: 'When designing a network, you start from a requirement: <em>"I need to support N hosts in this subnet."</em> The question is: what prefix do I need?',
+    how: 'Rule: find the smallest block size ≥ N + 2 (for reserved addresses) where block size is a power of 2.<br><br>Need 50 hosts → need 52 addresses → next power of 2 ≥ 52 is 64 → block 64 = /26<br>Need 100 hosts → need 102 → next is 128 → /25<br>Need 200 hosts → need 202 → next is 256 → /24',
+    why: 'Over-allocating wastes scarce address space. Under-allocating means you run out of IPs. Right-sizing is the core skill of network design.',
+    tryIt: 'Try entering these target host counts and finding the right prefix: 14 hosts, 28 hosts, 62 hosts. Use the Usable hosts card to verify your answer.',
+    highlight: 'prefix',
+    takeaway: 'Need N hosts → find smallest 2^x ≥ N+2 → prefix = 32 − x.',
+  },
+  {
+    title: '9. VLSM — Variable Length Subnet Masking',
+    what: '<strong>VLSM</strong> means using different prefix lengths within the same address block — carving subnets of different sizes from one larger network.',
+    how: 'Example: you have 10.0.0.0/24 and need:<br>• Sales: 50 hosts → /26 (62 usable) → 10.0.0.0/26<br>• IT: 10 hosts → /28 (14 usable) → 10.0.0.64/28<br>• Servers: 25 hosts → /27 (30 usable) → 10.0.0.80/27<br>• Router link: 2 hosts → /30 (2 usable) → 10.0.0.112/30',
+    why: 'Before VLSM, every subnet in a network had to use the same prefix length — massive waste. VLSM lets you allocate exactly what each segment needs from a shared block.',
+    tryIt: 'Open the Aggregation tab and set the base network to 10.0.0.0/24 with subdivision /26. You will see four equal /26s — in VLSM you could mix sizes instead.',
+    highlight: null,
+    takeaway: 'VLSM = different subnet sizes from one block. Allocate tightly: big subnets first, then smaller ones from remaining space.',
+  },
+  {
+    title: '10. Special Cases: /30, /31, /32',
+    what: 'Three prefix lengths have specific standard uses that every network engineer should know instinctively.',
+    how: '<strong>/30</strong> (block 4, 2 usable) — point-to-point router links. Exactly 2 usable addresses, one per router interface. The most common link type between routers.<br><br><strong>/31</strong> (block 2, 2 usable per RFC 3021) — also used for point-to-point links. No broadcast/network reserved — both addresses assignable. Saves one address over /30.<br><br><strong>/32</strong> (block 1) — a host route. Refers to exactly one IP. Used for loopback interfaces, policy routing, and advertising a single host.',
+    why: 'You will see /30 everywhere in network diagrams — every router-to-router connection. /32 appears in routing tables for null routes and loopbacks. Knowing these by reflex marks a fluent network engineer.',
+    tryIt: 'Set the prefix to /30 — see 4 addresses, 2 usable. Then /31 — 2 addresses, both usable (RFC 3021 exception). Then /32 — 1 address, 1 host.',
+    highlight: 'prefix',
+    takeaway: '/30 = router link (2 usable). /31 = RFC 3021 link. /32 = one host. Know these by heart.',
+  },
+  {
+    title: '11. Aggregation and Route Summarization',
+    what: '<strong>Aggregation</strong> (supernetting) means advertising multiple contiguous subnets as a single larger block. A router announces one /22 instead of four /24s.',
+    how: 'Four /24s: 10.0.0.0/24, 10.0.1.0/24, 10.0.2.0/24, 10.0.3.0/24<br>Aggregate: 10.0.0.0/22 (all four share the same first 22 bits)<br>The /22 covers all four — any router needing to reach them follows one route entry.',
+    why: 'Fewer routing table entries = faster lookups, less memory, simpler management. ISPs aggregate customer routes aggressively. Without aggregation, the global routing table would be unmanageable.',
+    tryIt: 'Click the Aggregation tab below the stat cards. Set the base network to 10.0.0.0 /22 and drag the aggregated blocks slider to /24 — you will see four equal blocks. Click any block to open its detail overlay.',
+    highlight: null,
+    takeaway: 'Contiguous subnets with a common prefix can be summarized into one route. This is how the internet stays manageable.',
+  },
+  {
+    title: '12. Common Mistakes',
+    what: 'Even experienced engineers make these errors. Knowing them prevents painful debugging.',
+    how: '<strong>1. Assigning the network address to a host</strong> — e.g. giving 10.0.1.0 to a server. Traffic destined for that IP gets treated as a network address, not forwarded.<br><br><strong>2. Assigning the broadcast address</strong> — e.g. 10.0.1.255. A packet to this address goes to every host. Chaos ensues.<br><br><strong>3. Subnet too small</strong> — planning for 30 hosts but using /27 (30 usable). Forgetting the gateway takes the first address leaves only 29 for devices.<br><br><strong>4. Overlapping subnets</strong> — assigning 10.0.1.0/24 and 10.0.0.0/16 to the same router — the /24 is inside the /16, causing routing loops.<br><br><strong>5. Wrong gateway</strong> — a host configured with a gateway not in its subnet. The host cannot reach the router to forward traffic.',
+    why: 'These mistakes cause connectivity failures that are hard to diagnose. Understanding why each is wrong makes you a better network engineer.',
+    tryIt: 'With prefix /27 (30 usable): the gateway gets the first host (.1), leaving 29 for devices. If you need 30 devices, you must move to /26. Verify with the Usable hosts card.',
+    highlight: null,
+    takeaway: 'Reserve the first host for the gateway. Always plan for N+1 (gateway) when sizing. Avoid overlapping blocks.',
+  },
+];
+
+let tourStep = 0;
+
+function startTour() {
+  tourStep = 0;
+  document.getElementById('tour-panel').classList.add('open');
+  document.body.classList.add('tour-open');
+  renderTourStep();
+}
+
+function closeTour() {
+  document.getElementById('tour-panel').classList.remove('open');
+  document.body.classList.remove('tour-open');
+  clearTourHighlight();
+}
+
+function tourNav(dir) {
+  tourStep = Math.max(0, Math.min(TOUR_STEPS.length - 1, tourStep + dir));
+  renderTourStep();
+}
+
+function clearTourHighlight() {
+  document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+}
+
+function renderTourStep() {
+  const s = TOUR_STEPS[tourStep];
+  const total = TOUR_STEPS.length;
+
+  // Progress
+  document.getElementById('tour-prog').style.width = ((tourStep + 1) / total * 100) + '%';
+  document.getElementById('tour-step-lbl').textContent = `Step ${tourStep + 1} of ${total}`;
+
+  // Dots
+  const dotsEl = document.getElementById('tour-dots');
+  dotsEl.innerHTML = TOUR_STEPS.map((_, i) =>
+    `<div class="tour-dot ${i === tourStep ? 'active' : ''}" onclick="tourStep=${i};renderTourStep()" title="Step ${i+1}"></div>`
+  ).join('');
+
+  // Back/Next buttons
+  document.getElementById('tour-back').disabled = tourStep === 0;
+  document.getElementById('tour-back').style.opacity = tourStep === 0 ? '0.3' : '1';
+  document.getElementById('tour-next').textContent = tourStep === total - 1 ? 'Finish ✓' : 'Next →';
+  if (tourStep === total - 1) {
+    document.getElementById('tour-next').onclick = closeTour;
+  } else {
+    document.getElementById('tour-next').onclick = () => tourNav(1);
+  }
+
+  // Body
+  document.getElementById('tour-body').innerHTML = `
+    <div class="tour-step-title">${s.title}</div>
+    ${s.what ? `<div class="tour-section"><div class="tour-section-lbl">What &amp; Why</div><div class="tour-text">${s.what}</div></div>` : ''}
+    ${s.why ? `<div class="tour-section"><div class="tour-text">${s.why}</div></div>` : ''}
+    ${s.how ? `<div class="tour-section"><div class="tour-section-lbl">How it works</div><div class="tour-text">${s.how}</div></div>` : ''}
+    ${s.tryIt ? `<div class="tour-trythis"><div class="tour-trythis-lbl">✦ Try it</div><p>${s.tryIt}</p></div>` : ''}
+    ${s.takeaway ? `<div class="tour-takeaway"><strong>Key takeaway:</strong> ${s.takeaway}</div>` : ''}
+  `;
+
+  // Highlight
+  clearTourHighlight();
+  if (s.highlight) {
+    const el = document.getElementById(s.highlight);
+    if (el) el.classList.add('tour-highlight');
+  }
+
+  // Scroll to top of body
+  document.getElementById('tour-body').scrollTop = 0;
+}
+
+update();
+</script>
+</div>
+
+<div id="tour-panel">
+  <div class="tour-hd">
+    <span class="tour-hd-title">📡 CIDR Guided Tour</span>
+    <div class="tour-hd-right">
+      <span class="tour-step-lbl" id="tour-step-lbl">Step 1 of 12</span>
+      <button class="tour-btn exit" onclick="closeTour()">✕ Exit</button>
+    </div>
+  </div>
+  <div class="tour-progress-wrap"><div class="tour-progress-bar" id="tour-prog"></div></div>
+  <div class="tour-body" id="tour-body"></div>
+  <div class="tour-ft">
+    <button class="tour-btn sec" id="tour-back" onclick="tourNav(-1)">← Back</button>
+    <div class="tour-dots" id="tour-dots"></div>
+    <button class="tour-btn pri" id="tour-next" onclick="tourNav(1)">Next →</button>
+  </div>
+</div>
+</body>
+</html>

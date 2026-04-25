@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BST Violations</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600&family=Syne:wght@700;800&display=swap');
+:root{
+  --bg:#f4f2ed;--surface:#fff;--border:#222;
+  --text:#1a1a22;--muted:#888490;
+  --red:#c0392b;--redf:#fdecea;
+  --orange:#d4780a;--orangef:#fff3e0;
+  --accent:#1a5ca8;--accentf:#e8f0fb;
+  --green:#2a7a4b;--greenf:#e8f4ee;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);font-family:'DM Mono',monospace;
+  display:flex;flex-direction:column;align-items:center;
+  min-height:100vh;padding:28px 16px;gap:12px;}
+h1{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800;
+  letter-spacing:.04em;color:var(--text);text-align:center;}
+h1 em{color:var(--red);font-style:normal;}
+
+.card{background:var(--surface);border:1.5px solid var(--border);
+  box-shadow:5px 5px 0 var(--border);
+  padding:20px 28px 18px;display:flex;flex-direction:column;
+  align-items:center;gap:14px;width:100%;max-width:720px;}
+
+/* step box */
+.step-box{width:100%;background:var(--bg);border:1px solid #ddd;
+  padding:9px 14px;min-height:54px;display:flex;align-items:center;gap:10px;}
+.step-badge{color:#fff;font-size:.53rem;font-weight:600;
+  padding:3px 9px;border-radius:2px;letter-spacing:.07em;flex-shrink:0;white-space:nowrap;
+  transition:background .3s;}
+.step-msg{font-size:.65rem;color:var(--text);line-height:1.6;}
+
+/* tree */
+#tsvg{width:100%;max-width:580px;}
+
+.nd circle{
+  fill:#e8e6e0;stroke:#555;stroke-width:1.8;
+  transition:fill .35s,stroke .35s,stroke-width .35s;}
+.nd text{
+  font-family:'DM Mono',monospace;font-size:13px;font-weight:700;
+  fill:var(--text);dominant-baseline:central;text-anchor:middle;
+  transition:fill .35s;}
+
+/* node state classes */
+.nd.dim       circle{fill:#f6f6f6;stroke:#ddd;stroke-width:1.5;}
+.nd.dim       text  {fill:#ccc;}
+.nd.hi-red    circle{fill:var(--redf);   stroke:var(--red);   stroke-width:3;}
+.nd.hi-red    text  {fill:var(--red);}
+.nd.hi-orange circle{fill:var(--orangef);stroke:var(--orange);stroke-width:3;}
+.nd.hi-orange text  {fill:var(--orange);}
+.nd.hi-green  circle{fill:var(--greenf); stroke:var(--green); stroke-width:2.5;}
+.nd.hi-green  text  {fill:var(--green);}
+.nd.hi-fix    circle{fill:#e8f4ee;stroke:#2a7a4b;stroke-width:2.5;}
+.nd.hi-fix    text  {fill:#2a7a4b;}
+
+/* edges */
+.ed{stroke:#aaa;stroke-width:1.4;fill:none;
+  marker-end:url(#a);transition:stroke .35s,stroke-width .35s;}
+.ed.dim      {stroke:#eee;stroke-width:1.2;}
+.ed.hi-red   {stroke:var(--red);   stroke-width:2.2;}
+.ed.hi-orange{stroke:var(--orange);stroke-width:2.2;}
+.ed.hi-fix   {stroke:#2a7a4b;stroke-width:2.2;}
+
+
+
+/* bst rule reminder */
+.bst-rule{width:100%;background:var(--bg);border:1px solid #ddd;
+  padding:7px 12px;font-size:.59rem;color:var(--muted);line-height:1.7;}
+.bst-rule strong{color:var(--text);}
+
+/* controls */
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;}
+button{font-family:'DM Mono',monospace;font-size:.6rem;font-weight:600;
+  letter-spacing:.07em;padding:7px 14px;border:1.5px solid var(--border);
+  background:var(--surface);color:var(--text);cursor:pointer;text-transform:uppercase;}
+button:hover:not(:disabled){background:var(--bg);}
+button:disabled{opacity:.35;cursor:default;}
+button.primary{background:var(--red);color:#fff;border-color:var(--red);}
+.progress{font-size:.57rem;color:var(--muted);}
+</style>
+</head>
+<body>
+<h1>BST Violations — <em>What Goes Wrong</em></h1>
+<div class="card">
+
+  <div class="bst-rule">
+    <strong>BST rule:</strong> For every node N —
+    all values in its <strong>left</strong> subtree must be &lt; N, and
+    all values in its <strong>right</strong> subtree must be &gt; N.
+    Also: each node has <strong>at most 2 children</strong>.
+  </div>
+
+  <div class="step-box">
+    <span class="step-badge" id="badge" style="background:var(--muted)">INTRO</span>
+    <span class="step-msg"   id="msg">This tree looks like a BST — but it has three distinct violations. Press <strong>Next</strong> to find them.</span>
+  </div>
+
+  <svg id="tsvg" viewBox="0 0 560 420" overflow="visible">
+      <defs>
+        <marker id="a" markerWidth="6" markerHeight="7" refX="5" refY="3.5" orient="auto">
+          <polygon points="0 0,6 3.5,0 7" fill="#aaa" id="amarker"/>
+        </marker>
+      </defs>
+
+      <!-- edges -->
+      <path class="ed" id="e8_5"   d="M262.0 55.9 L158.8 118.6"/>
+      <path class="ed" id="e8_11"  d="M298.0 55.9 L401.2 118.6"/>
+      <path class="ed" id="e5_2"   d="M126.1 145.7 L79.6 198.5"/>
+      <path class="ed" id="e5_7"   d="M143.6 150.7 L151.2 193.3"/>
+      <path class="ed" id="e5_6"   d="M153.9 145.7 L200.4 198.5"/>
+      <path class="ed" id="e11_10" d="M408.6 147.6 L377.0 196.5"/>
+      <path class="ed" id="e11_18" d="M430.6 148.1 L458.8 196.0"/>
+      <path class="ed" id="e2_4"   d="M68.6 235.7 L76.2 278.3"/>
+      <path class="ed" id="e10_15" d="M367.5 235.9 L372.4 278.2"/>
+      <path class="ed" id="e18_20" d="M472.5 235.9 L477.4 278.2"/>
+      <path class="ed" id="e20_21" d="M482.5 320.9 L487.4 363.2"/>
+
+      <!-- nodes -->
+      <g class="nd" id="n8"  transform="translate(280,45)"> <circle r="20"/><text>8</text></g>
+      <g class="nd" id="n5"  transform="translate(140,130)"><circle r="20"/><text>5</text></g>
+      <g class="nd" id="n11" transform="translate(420,130)"><circle r="20"/><text>11</text></g>
+      <g class="nd" id="n2"  transform="translate(65,215)"> <circle r="20"/><text>2</text></g>
+      <g class="nd" id="n7"  transform="translate(155,215)"><circle r="20"/><text>7</text></g>
+      <g class="nd" id="n6"  transform="translate(215,215)"><circle r="20"/><text>6</text></g>
+      <g class="nd" id="n10" transform="translate(365,215)"><circle r="20"/><text>10</text></g>
+      <g class="nd" id="n18" transform="translate(470,215)"><circle r="20"/><text>18</text></g>
+      <g class="nd" id="n4"  transform="translate(80,300)"> <circle r="20"/><text>4</text></g>
+      <g class="nd" id="n15" transform="translate(375,300)"><circle r="20"/><text>15</text></g>
+      <g class="nd" id="n20" transform="translate(480,300)"><circle r="20"/><text>20</text></g>
+      <g class="nd" id="n21" transform="translate(490,385)"><circle r="20"/><text>21</text></g>
+      <!-- fix edges (hidden initially) -->
+      <path class="ed" id="e6_7_fix"   d="M223.0 234.4 L241.6 279.7" style="opacity:0;transition:opacity .4s;"/>
+      <path class="ed" id="e18_15_fix" d="M459.1 235.1 L437.6 278.9" style="opacity:0;transition:opacity .4s;"/>
+    </svg>
+
+
+  <div class="controls">
+    <button id="btnPrev" disabled onclick="go(-1)">◀ Prev</button>
+    <button class="primary" id="btnNext" onclick="go(1)">Next ▶</button>
+    <button onclick="reset()">↺ Reset</button>
+    <span class="progress" id="prog"></span>
+  </div>
+
+</div>
+
+<script>
+// ── Fix helpers ──────────────────────────────────────────────────────────
+function animMove(nodeId, x2, y2, dur, onDone){
+  const el = document.getElementById(nodeId);
+  const tr = el.getAttribute('transform');
+  const m = tr.match(/translate\(([^,]+),([^)]+)\)/);
+  const x1 = parseFloat(m[1]), y1 = parseFloat(m[2]);
+  const start = performance.now();
+  (function step(now){
+    const t = Math.min((now-start)/dur, 1);
+    const e = t<.5 ? 2*t*t : -1+(4-2*t)*t;
+    el.setAttribute('transform', 'translate('+(x1+(x2-x1)*e)+','+(y1+(y2-y1)*e)+')');
+    if(t<1) requestAnimationFrame(step);
+    else if(onDone) onDone();
+  })(start);
+}
+function showFixEdge(id, show){
+  document.getElementById(id).style.opacity = show ? '1' : '0';
+}
+
+const ALL_NODES = ['n8','n5','n11','n2','n7','n6','n10','n18','n4','n15','n20','n21'];
+const ALL_EDGES = ['e8_5','e8_11','e5_2','e5_7','e5_6','e11_10','e11_18','e2_4','e10_15','e18_20','e20_21'];
+
+function setN(id, cls){
+  const e = document.getElementById(id);
+  e.setAttribute('class', 'nd' + (cls ? ' '+cls : ''));
+}
+function setE(id, cls){
+  const e = document.getElementById(id);
+  e.setAttribute('class', 'ed' + (cls ? ' '+cls : ''));
+}
+
+function dimAll(){
+  ALL_NODES.forEach(id=>setN(id,'dim'));
+  ALL_EDGES.forEach(id=>setE(id,'dim'));
+}
+function clearAll(){
+  ALL_NODES.forEach(id=>setN(id,''));
+  ALL_EDGES.forEach(id=>setE(id,''));
+}
+
+const STEPS = [
+  // 0 — intro
+  { badge:'INTRO', bc:'#888490',
+    msg:'This tree has three BST violations. Press <strong>Next</strong> to find each one.',
+    enter:()=>{ clearAll(); },
+    leave:()=>{}
+  },
+
+  // 1 — violation 1: node 5 has 3 children
+  { badge:'VIOLATION 1', bc:'#c0392b',
+    msg:'<strong style="color:#c0392b">Node 5 has three children</strong> — left child 2, and two right-side children 7 and 6. A binary tree allows at most <strong>two children</strong> per node. This breaks the binary property entirely.',
+    enter:()=>{
+      dimAll();
+      setN('n5','hi-red');
+      setN('n2',''); setN('n7','hi-red'); setN('n6','hi-red');
+      setE('e5_2',''); setE('e5_7','hi-red'); setE('e5_6','hi-red');
+      setN('n8','');
+    },
+    leave:()=>{ clearAll(); }
+  },
+
+  // 1-fix: remove e5_7 (7 moves to child of 6)
+  { badge:'FIX', bc:'#2a7a4b',
+    msg:'<strong style="color:#2a7a4b">Fix:</strong> Remove the direct edge from 5 to 7. Node 7 &gt; 6, so 7 becomes the <strong>right child of 6</strong>. This fixes both the 3-children violation and the ordering issue.',
+    enter:()=>{
+      clearAll();
+      // node 7 starts red with its bad edge still visible
+      setN('n7','hi-red');
+      setE('e5_7','hi-red');
+      setTimeout(()=>{
+        // hide the bad edge just before node moves
+        document.getElementById('e5_7').style.display = 'none';
+        animMove('n7', 250, 300, 700, ()=>{
+        setN('n7','hi-fix');
+        setN('n5','hi-fix'); setN('n6','hi-fix');
+        setE('e5_6','hi-fix');
+        showFixEdge('e6_7_fix', true);
+        document.getElementById('e6_7_fix').className = 'ed hi-fix';
+      });}, 600);
+    },
+    leave:()=>{
+      document.getElementById('n7').setAttribute('transform','translate(155,215)');
+      document.getElementById('e5_7').style.display = '';
+      showFixEdge('e6_7_fix', false);
+      document.getElementById('e6_7_fix').className = 'ed';
+      clearAll();
+    }
+  },
+
+  // 2 — violation 2: 15 in wrong subtree
+  { badge:'VIOLATION 2', bc:'#d4780a',
+    msg:'Node <strong style="color:#d4780a">15 is right child of 10</strong>, but 10 is the left child of 11. So everything under 10 must be &lt; 11. But 15 &gt; 11 — <strong>violation</strong>. Node 15 is in the wrong subtree.',
+    enter:()=>{
+      dimAll();
+      setN('n8','hi-orange'); setN('n11','hi-orange');
+      setN('n10','hi-orange'); setN('n15','hi-red');
+      setE('e8_11','hi-orange'); setE('e11_10','hi-orange'); setE('e10_15','hi-red');
+    },
+    leave:()=>{ clearAll(); }
+  },
+
+  // 2-fix: 15 moves to left child of 18
+  { badge:'FIX', bc:'#2a7a4b',
+    msg:'<strong style="color:#2a7a4b">Fix:</strong> Since 11 &lt; 15 &lt; 18, node 15 belongs as the <strong>left child of 18</strong>. Remove it from under 10 and move it to the right subtree where it satisfies the BST property.',
+    enter:()=>{
+      clearAll();
+      // node 15 starts red with its bad edge still visible
+      setN('n15','hi-red');
+      setE('e10_15','hi-red');
+      setTimeout(()=>{
+        // hide the bad edge just before node moves
+        document.getElementById('e10_15').style.display = 'none';
+        animMove('n15', 430, 300, 700, ()=>{
+        setN('n15','hi-fix');
+        setN('n18','hi-fix'); setN('n11','hi-fix');
+        setE('e11_18','hi-fix');
+        showFixEdge('e18_15_fix', true);
+        document.getElementById('e18_15_fix').className = 'ed hi-fix';
+      });}, 600);
+    },
+    leave:()=>{
+      document.getElementById('n15').setAttribute('transform','translate(375,300)');
+      document.getElementById('e10_15').style.display = '';
+      showFixEdge('e18_15_fix', false);
+      document.getElementById('e18_15_fix').className = 'ed';
+      clearAll();
+    }
+  },
+
+  // summary
+  { badge:'FIXED', bc:'#2a7a4b',
+    msg:'Both fixes applied: <span style="color:#2a7a4b"><strong>(1+2)</strong> Node 7 is now right child of 6</span> · <span style="color:#2a7a4b"><strong>(3)</strong> Node 15 is now left child of 18</span>. The BST property holds throughout.',
+    enter:()=>{
+      clearAll();
+      // show fixed tree state
+      document.getElementById('n7').setAttribute('transform','translate(250,300)');
+      document.getElementById('n15').setAttribute('transform','translate(430,300)');
+      setE('e5_7','dim');
+      showFixEdge('e6_7_fix', true);
+      showFixEdge('e18_15_fix', true);
+      document.getElementById('e6_7_fix').className = 'ed hi-fix';
+      document.getElementById('e18_15_fix').className = 'ed hi-fix';
+      setE('e10_15','dim');
+      setN('n6','hi-fix'); setN('n7','hi-fix');
+      setN('n15','hi-fix'); setN('n18','hi-fix');
+    },
+    leave:()=>{
+      document.getElementById('n7').setAttribute('transform','translate(155,215)');
+      document.getElementById('n15').setAttribute('transform','translate(375,300)');
+      showFixEdge('e6_7_fix', false);
+      showFixEdge('e18_15_fix', false);
+      document.getElementById('e6_7_fix').className = 'ed';
+      document.getElementById('e18_15_fix').className = 'ed';
+      clearAll();
+    }
+  },
+];
+
+let cur = 0;
+
+function render(){
+  const s = STEPS[cur];
+  const b = document.getElementById('badge');
+  b.textContent = s.badge; b.style.background = s.bc;
+  document.getElementById('msg').innerHTML = s.msg;
+  document.getElementById('prog').textContent = `${cur} / ${STEPS.length-1}`;
+  document.getElementById('btnPrev').disabled = cur===0;
+  document.getElementById('btnNext').disabled = cur===STEPS.length-1;
+}
+
+function go(dir){
+  if(dir>0 && cur<STEPS.length-1){
+    cur++; STEPS[cur].enter(); render();
+  } else if(dir<0 && cur>0){
+    STEPS[cur].leave(); cur--; render();
+  }
+}
+
+function reset(){
+  STEPS[cur].leave();
+  cur=0; clearAll(); render();
+}
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Network Routing Visualizer</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23185FA5'/%3E%3Ccircle cx='16' cy='8' r='4' fill='white' opacity='0.95'/%3E%3Ccircle cx='6' cy='24' r='4' fill='white' opacity='0.95'/%3E%3Ccircle cx='26' cy='24' r='4' fill='white' opacity='0.95'/%3E%3Cline x1='16' y1='12' x2='6' y2='20' stroke='white' stroke-width='1.8' opacity='0.85'/%3E%3Cline x1='16' y1='12' x2='26' y2='20' stroke='white' stroke-width='1.8' opacity='0.85'/%3E%3Cline x1='6' y1='24' x2='26' y2='24' stroke='white' stroke-width='1.8' opacity='0.85'/%3E%3C/svg%3E">
+</head>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f8f7f4;--bg2:#ffffff;--bg3:#eeedea;
+  --text:#1a1a18;--text2:#6b6a65;--text3:#9e9d98;
+  --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.18);
+  --green:#0F6E56;--green-l:#E1F5EE;--green-m:#5DCAA5;--green-t:#085041;
+  --blue:#185FA5;--blue-l:#E6F1FB;--blue-m:#85B7EB;--blue-t:#0C447C;
+  --amber:#854F0B;--amber-l:#FAEEDA;--amber-m:#EF9F27;
+  --red:#A32D2D;--red-l:#FCEBEB;
+  --r:8px;--hh:46px;
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,"Helvetica Neue",sans-serif;font-size:12px;line-height:1.5;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ── Header ── */
+#titlebar{height:var(--hh);display:flex;align-items:center;justify-content:space-between;padding:0 1rem;border-bottom:0.5px solid var(--border2);background:var(--bg2);flex-shrink:0;}
+#titlebar-left{display:flex;align-items:center;gap:10px;}
+.hi{width:28px;height:28px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;}
+#titlebar-title{font-size:14px;font-weight:500;color:var(--text);}
+#titlebar-right{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px;}
+.hla{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:5px;text-decoration:none;color:var(--text3);}
+.hla.brd{border:1.5px solid var(--border2);}
+.hla.fil{background:#0A66C2;color:white;}
+
+/* ── Toolbar ── */
+.tb{height:40px;background:var(--bg2);border-bottom:0.5px solid var(--border2);display:flex;align-items:center;gap:6px;padding:0 1rem;flex-shrink:0;flex-wrap:nowrap;overflow-x:auto;}
+.tsep{width:0.5px;height:20px;background:var(--border2);margin:0 2px;flex-shrink:0;}
+#mode-label{font-size:10px;font-weight:600;color:var(--amber);white-space:nowrap;}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:4px 10px;border-radius:var(--r);border:0.5px solid var(--border2);background:var(--bg2);color:var(--text);font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap;transition:background .15s;height:26px;}
+.btn:hover:not(:disabled){background:var(--bg3);}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
+.btn-blue{background:var(--blue);color:#fff;border-color:var(--blue);}
+.btn-blue:hover:not(:disabled){background:var(--blue-t);}
+.btn-teal{background:var(--green);color:#fff;border-color:var(--green);}
+.btn-teal:hover:not(:disabled){background:var(--green-t);}
+.btn-red{background:var(--red);color:#fff;border-color:var(--red);}
+.btn-gray{background:var(--bg3);color:var(--text2);border-color:var(--border2);}
+.btn-outline{background:var(--bg2);color:var(--blue);border:0.5px solid var(--blue-m);font-size:11px;padding:0 9px;height:26px;border-radius:var(--r);cursor:pointer;font-family:inherit;white-space:nowrap;display:inline-flex;align-items:center;}
+.btn-outline.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.btn-outline:hover:not(.active){background:var(--blue-l);}
+.vsep{width:0.5px;height:18px;background:var(--border2);flex-shrink:0;}
+.field-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
+select{font-family:inherit;font-size:11px;height:26px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--bg);color:var(--text);padding:0 6px;cursor:pointer;outline:none;}
+select:focus{border-color:var(--green-m);box-shadow:0 0 0 2px rgba(93,202,165,0.15);}
+
+/* ── Main layout ── */
+#main{display:grid;grid-template-columns:1fr 280px;gap:0;flex:1;overflow:hidden;min-height:0;}
+#canvas-col{display:flex;flex-direction:column;overflow:hidden;border-right:0.5px solid var(--border);min-height:0;}
+#side-col{display:flex;flex-direction:column;overflow-y:auto;background:var(--bg2);}
+
+/* ── Canvas card ── */
+#net-cv{display:block;width:100%;flex:1;}
+#state-bar{font-size:10px;font-weight:500;padding:4px 12px;background:var(--bg3);border-top:0.5px solid var(--border);color:var(--text2);min-height:22px;flex-shrink:0;}
+
+/* ── Side sections ── */
+.ss{border-bottom:0.5px solid var(--border);}
+.ss:last-child{border-bottom:none;}
+.st{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:6px 12px;background:var(--bg3);border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.ss-body{padding:8px 12px;}
+
+/* ── Algo table ── */
+#algo-table{width:100%;border-collapse:collapse;font-family:monospace;font-size:11px;}
+#algo-table th{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;padding:3px 8px;background:var(--bg3);border-bottom:0.5px solid var(--border2);text-align:center;}
+#algo-table td{padding:3px 8px;border-bottom:0.5px solid var(--border);text-align:center;color:var(--text);}
+#algo-table tr.visited td{background:var(--green-l);font-weight:700;color:var(--green-t);}
+
+/* ── FT mini tables ── */
+.ft-node{margin-bottom:8px;}
+.ft-mini{width:100%;border-collapse:collapse;font-family:monospace;font-size:10px;}
+.ft-mini th{font-size:8px;color:var(--text3);padding:2px 6px;background:var(--bg3);text-align:left;border-bottom:0.5px solid var(--border);}
+.ft-mini td{padding:2px 6px;border-bottom:0.5px solid var(--bg3);color:var(--text);}
+.ft-mini tr.hl td{background:var(--blue-l);font-weight:700;color:var(--blue-t);}
+
+/* ── Log ── */
+#log-body{height:80px;overflow-y:auto;background:var(--bg2);font-family:monospace;font-size:10px;}
+.log-row{padding:2px 10px;border-bottom:0.5px solid var(--bg3);}
+
+/* ── KV grid ── */
+.kv-grid{display:grid;grid-template-columns:auto 1fr;padding:6px 12px 8px;background:var(--bg2);}
+.kv-key{font-size:10px;color:var(--text3);white-space:nowrap;padding:2px 0;}
+.rfc{color:var(--text);font-weight:600;font-size:11px;}
+.kv-val{font-size:11px;font-weight:600;font-family:monospace;color:var(--text);text-align:right;padding:2px 0;}
+.kv-div{grid-column:1/-1;height:0.5px;background:var(--border);margin:1px 0;}
+.hi-b{color:var(--blue);}.hi-g{color:var(--green);}.hi-a{color:var(--amber);}
+
+/* ── Tooltips ── */
+.tt{position:relative;display:inline-flex;align-items:center;}
+.tt[data-tip]:hover::after{content:attr(data-tip);position:fixed;background:var(--text);color:#fff;font-size:10px;padding:5px 8px;border-radius:5px;z-index:99999;pointer-events:none;max-width:240px;white-space:normal;box-shadow:0 2px 8px rgba(0,0,0,.25);margin-top:28px;opacity:0;animation:tt-show 0s 600ms forwards;font-family:inherit;}
+.tt[data-tip]:hover::before{content:'';position:absolute;top:calc(100% + 1px);left:50%;transform:translateX(-50%);border:5px solid transparent;border-bottom-color:var(--text);z-index:99999;opacity:0;animation:tt-show 0s 600ms forwards;}
+@keyframes tt-show{to{opacity:1;}}
+
+/* ── Overlays ── */
+#pkt-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:99998;align-items:center;justify-content:center;}
+#algo-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:99996;align-items:center;justify-content:center;}
+.ao-card{background:var(--bg2);border-radius:12px;max-width:500px;width:93%;box-shadow:0 8px 32px rgba(0,0,0,.22);font-family:inherit;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;}
+.ao-hdr{background:var(--blue-l);border-bottom:2px solid var(--blue-m);border-left:4px solid var(--blue);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.ao-hdr-dv{background:var(--green-l);border-bottom:2px solid var(--green-m);border-left:4px solid var(--green);}
+.ao-body{overflow-y:auto;padding:14px 16px;flex:1;}
+.ao-phase{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;}
+.ao-lsdb{margin-bottom:10px;}
+.ao-lsdb-hdr{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.ao-lsdb table{width:100%;border-collapse:collapse;font-family:monospace;font-size:10px;}
+.ao-lsdb th{font-size:8px;color:var(--text3);padding:2px 6px;background:var(--bg3);text-align:left;border-bottom:0.5px solid var(--border2);}
+.ao-lsdb td{padding:2px 6px;border-bottom:0.5px solid var(--bg3);}
+.ao-lsdb tr.ao-new td{background:var(--green-l);font-weight:700;color:var(--green-t);}
+.ao-math{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--r);padding:8px 12px;margin-bottom:10px;font-family:monospace;font-size:11px;}
+.ao-math-hdr{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.ao-eq{display:flex;align-items:baseline;gap:4px;padding:3px 0;border-bottom:0.5px solid var(--border);flex-wrap:wrap;}
+.ao-eq:last-child{border-bottom:none;}
+.ao-eq .dest{color:var(--blue-t);font-weight:700;min-width:70px;}
+.ao-eq .win{color:var(--green-t);font-weight:700;}
+.ao-eq .lose{color:var(--text3);}
+.ao-eq .badge{font-size:8px;padding:1px 5px;border-radius:3px;font-weight:700;margin-left:3px;}
+.ao-eq .badge-upd{background:var(--green-l);color:var(--green-t);}
+.ao-eq .badge-nc{background:var(--bg3);color:var(--text3);}
+.ao-eq .badge-inf{background:var(--amber-l);color:var(--amber);}
+.ao-transition{background:var(--blue-l);border-radius:var(--r);padding:8px 12px;margin-bottom:10px;font-size:11px;color:var(--blue-t);font-weight:600;text-align:center;}
+.ao-footer{padding:10px 16px;border-top:0.5px solid var(--border);display:flex;gap:8px;background:var(--bg3);flex-shrink:0;}
+.ao-btn-next{flex:1;height:30px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;}
+.ao-btn-skip{height:30px;padding:0 14px;background:var(--bg2);color:var(--text2);border:0.5px solid var(--border2);border-radius:var(--r);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;}
+
+/* ── FT expand overlay ── */
+#ft-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99997;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto;}
+</style>
+
+<div id="titlebar">
+  <div id="titlebar-left">
+    <div class="hi">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="5" cy="5" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><circle cx="12" cy="12" r="2"/>
+        <line x1="7" y1="5" x2="10" y2="10"/><line x1="17" y1="5" x2="14" y2="10"/><line x1="7" y1="19" x2="10" y2="14"/><line x1="17" y1="19" x2="14" y2="14"/>
+      </svg>
+    </div>
+    <div id="titlebar-title">Network Routing Visualizer</div>
+  </div>
+  <div id="titlebar-right">
+    <span>CS339 Networks · Sacred Heart University</span>
+    <a href="mailto:rosac@sacredheart.edu" class="hla brd" title="Email">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+    </a>
+    <a href="https://linkedin.com/in/chris-rosa-3192326" target="_blank" class="hla fil" title="LinkedIn">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.354V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+    </a>
+  </div>
+</div>
+
+<div class="tb">
+    <span class="tt" data-tip="Dijkstra Link-State: routers flood LSAs to build a full topology map, then run Dijkstra locally."><button class="btn-outline active" id="btn-algo-ls">Dijkstra (LS)</button></span>
+    <span class="tt" data-tip="Bellman-Ford Distance Vector: routers exchange distance vectors with direct neighbors each round."><button class="btn-outline" id="btn-algo-dv">Bellman-Ford (DV)</button></span>
+    <div class="tsep"></div>
+    <span class="tt" data-tip="Animate the LSA flood and algorithm from the selected router's perspective. Click 🔍 on a router first."><button class="btn btn-teal" id="btn-start-algo">&#9654; Start</button></span>
+    <div class="tsep"></div>
+    <span class="tt" data-tip="Scissors: click a link to cut it. Click again to restore."><button class="btn-outline" id="btn-scissors" style="font-size:13px;padding:0 8px;">✂</button></span>
+    <div class="tsep"></div>
+    <span class="field-label">Dest</span>
+    <select id="sel-dest">
+      <option value="Rb">Receiver-B</option>
+      <option value="Rc">Receiver-C</option>
+      <option value="Rd" selected>Receiver-D</option>
+    </select>
+    <span class="field-label" style="margin-left:4px;">Pkt</span>
+    <button class="btn-outline active" id="pkt-auto">Auto</button>
+    <button class="btn-outline" id="pkt-step">Step</button>
+    <button class="btn btn-blue" id="btn-send-pkt">&#9654; Send Packet</button>
+    <div class="tsep"></div>
+    <button class="btn btn-red" id="btn-reset-all">&#8635; Reset</button>
+    <div style="flex:1;"></div>
+    <span id="mode-label"></span>
+  </div>
+
+  <div id="main">
+    <div id="canvas-col">
+      <canvas id="net-cv" style="flex:1;min-height:0;display:block;width:100%;"></canvas>
+      <div id="state-bar">Tables ready. Click 🔍 on a router to examine, or ▶ Start to animate.</div>
+      <div class="ss" style="flex-shrink:0;">
+        <div class="st">
+          <span>Event Log</span>
+          <button class="btn btn-gray" id="btn-clear-log" style="font-size:10px;padding:0 6px;height:20px;">Clear</button>
+        </div>
+        <div id="log-body"></div>
+      </div>
+    </div>
+    <div id="side-col">
+      <div class="ss">
+        <div class="st"><span id="algo-panel-title">Algorithm State</span></div>
+        <div style="overflow:auto;"><table id="algo-table"><thead id="algo-thead"></thead><tbody id="algo-tbody"></tbody></table></div>
+        <div style="font-size:9px;padding:3px 10px 5px;background:var(--bg3);border-top:0.5px solid var(--border);color:var(--text3);font-style:italic;" id="algo-note">Run an algorithm to see state</div>
+      </div>
+      <div class="ss">
+        <div class="st">
+          <span>Forwarding Tables</span>
+          <span id="btn-ft-expand" style="cursor:pointer;font-size:14px;color:var(--blue);line-height:1;" title="View all tables">⤢</span>
+        </div>
+        <div id="ft-wrap" style="padding:8px 12px;"><div style="font-size:10px;color:var(--text3);font-style:italic;">Tables populate after convergence</div></div>
+      </div>
+      <div class="ss">
+        <div class="st"><span>Selected Node</span><span id="node-name" style="font-size:11px;font-weight:700;color:var(--blue);margin-left:6px;"></span></div>
+        <div class="kv-grid">
+          <div class="kv-key"><span class="rfc">Role</span></div><div class="kv-val" id="ni-role">—</div>
+          <div class="kv-div"></div>
+          <div class="kv-key"><span class="rfc">Neighbors</span></div><div class="kv-val" id="ni-nb">—</div>
+        </div>
+        <div id="ni-ft-wrap" style="display:none;border-top:0.5px solid var(--border);padding:6px 8px 8px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LSA / DV Examine overlay -->
+<div id="algo-overlay">
+  <div class="ao-card">
+    <div class="ao-hdr" id="ao-hdr">
+      <div>
+        <div style="font-size:13px;font-weight:700;" id="ao-title"></div>
+        <div style="font-size:10px;color:#5F5E5A;margin-top:1px;" id="ao-subtitle"></div>
+      </div>
+      <div style="font-size:10px;font-weight:700;background:#fff;border-radius:5px;padding:2px 8px;color:#185FA5;" id="ao-step-badge"></div>
+    </div>
+    <div class="ao-body" id="ao-body"></div>
+    <div class="ao-footer">
+      <button class="ao-btn-skip" id="ao-skip">Skip ⏭</button>
+      <button class="ao-btn-next" id="ao-next">Next ▶</button>
+    </div>
+  </div>
+</div>
+
+<div id="pkt-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:99998;align-items:center;justify-content:center;">
+  <div style="background:var(--bg2);border-radius:12px;padding:20px 24px;max-width:420px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.22);font-family:inherit;">
+    <div style="font-size:13px;font-weight:700;color:#0C447C;margin-bottom:2px;" id="ov-title"></div>
+    <div style="font-size:10px;color:#888780;margin-bottom:14px;" id="ov-sub"></div>
+    <div style="font-size:10px;font-weight:700;color:#5F5E5A;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Forwarding Table Lookup</div>
+    <table style="width:100%;border-collapse:collapse;font-family:monospace;font-size:11px;margin-bottom:12px;">
+      <thead><tr>
+        <th style="text-align:left;padding:3px 6px;background:#f0efea;font-size:9px;color:#888780;">DEST</th>
+        <th style="text-align:left;padding:3px 6px;background:#f0efea;font-size:9px;color:#888780;">VIA</th>
+        <th style="text-align:left;padding:3px 6px;background:#f0efea;font-size:9px;color:#888780;">COST</th>
+      </tr></thead>
+      <tbody id="ov-ft-body"></tbody>
+    </table>
+    <div style="background:#D4EDDA;border-radius:8px;padding:10px 12px;margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:700;color:#0F6E56;margin-bottom:2px;" id="ov-decision"></div>
+      <div style="font-size:10px;color:#085041;line-height:1.5;" id="ov-explain"></div>
+    </div>
+    <div id="ov-changed" style="display:none;background:#FFF3CD;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:10px;color:#854F0B;"></div>
+    <div style="display:flex;gap:8px;">
+      <button id="ov-randomize" style="flex:2;height:32px;background:#BA7517;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">&#9881; Randomize Costs &amp; Rebuild</button>
+      <button id="ov-run-auto" style="flex:1;height:32px;background:#1D9E75;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">&#9654;&#9654; Run Auto</button>
+      <button id="ov-next" style="flex:1;height:32px;background:#185FA5;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Next Hop &#9654;</button>
+    </div>
+  </div>
+</div>
+
+<!-- Full-screen forwarding table overlay -->
+<div id="ft-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:99997;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto;">
+  <div style="background:var(--bg2);border-radius:12px;width:90%;max-width:680px;box-shadow:0 8px 32px rgba(0,0,0,.22);font-family:inherit;margin-bottom:40px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:0.5px solid var(--border2);background:var(--bg3);border-radius:12px 12px 0 0;">
+      <div style="font-size:14px;font-weight:600;color:var(--text);">All Forwarding Tables</div>
+      <button id="ft-overlay-close" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text3);line-height:1;">✕</button>
+    </div>
+    <div id="ft-overlay-body" style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:16px;"></div>
+  </div>
+</div>
+
+<script>
+// ── Topology ──────────────────────────────────────────────────────────────────
+var NODES = {
+  S:  {label:'S',  role:'Sender',   x:0.15, y:0.07},
+  A:  {label:'A',  role:'Router',   x:0.40, y:0.22},
+  B:  {label:'B',  role:'Router',   x:0.18, y:0.48},
+  C:  {label:'C',  role:'Router',   x:0.65, y:0.48},
+  D:  {label:'D',  role:'Router',   x:0.42, y:0.72},
+  Rb: {label:'Rb', role:'Receiver', x:0.05, y:0.78},
+  Rc: {label:'Rc', role:'Receiver', x:0.85, y:0.78},
+  Rd: {label:'Rd', role:'Receiver', x:0.55, y:0.92},
+};
+var ROUTERS   = ['A','B','C','D'];
+var ENDPOINTS = ['S','Rb','Rc','Rd'];
+var RECV_RTR  = {Rb:'B', Rc:'C', Rd:'D'};
+var RTR_RECV  = {B:'Rb', C:'Rc', D:'Rd'};
+
+var LINKS = [
+  {a:'S',  b:'A',  cost:0, alive:true, fixed:true},
+  {a:'A',  b:'B',  cost:2, alive:true, fixed:false},
+  {a:'A',  b:'C',  cost:5, alive:true, fixed:false},
+  {a:'B',  b:'C',  cost:1, alive:true, fixed:false},
+  {a:'B',  b:'D',  cost:3, alive:true, fixed:false},
+  {a:'C',  b:'D',  cost:2, alive:true, fixed:false},
+  {a:'B',  b:'Rb', cost:0, alive:true, fixed:true},
+  {a:'C',  b:'Rc', cost:0, alive:true, fixed:true},
+  {a:'D',  b:'Rd', cost:0, alive:true, fixed:true},
+];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+var algo='ls';
+var scissorsActive=false;
+var autoTimer=null;
+var examineNode=null;     // router currently being examined via 🔍
+var hoveredMag=null;      // router id whose 🔍 is hovered
+var algoStarted=false;
+var dist={}, prev={}, visited={}, dvTables={}, dvRound=0, dvChanged=false;
+var ftables={}, algoConverged=false;
+var selectedNode=null, hoveredLink=null, hoverBtn=null;
+var logTime=0;
+var pktStepMode=false, pktPhase=null, pktPath=[], pktHopIdx=0;
+var pktDest='Rd', pktActive=false;
+var animPkt=null, pendingCb=null, pktOverlayCb=null;
+var mode='ls'; // kept for drawLinks compat
+var pulsingNodes={};  // {routerId: endTime}
+var pulsingPath=[];   // [{a,b,startTime,endTime}] for path pulse segments
+
+// ── Canvas ────────────────────────────────────────────────────────────────────
+var cv=document.getElementById('net-cv'), ctx=cv.getContext('2d');
+var NODE_R=24, EP_R=16;
+function resizeCv(){cv.width=cv.offsetWidth;cv.height=cv.offsetHeight;}
+window.addEventListener('resize',resizeCv);
+
+function npos(id){ return {x:NODES[id].x*cv.width, y:NODES[id].y*cv.height}; }
+function d2(x1,y1,x2,y2){return (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2);}
+
+function nodeHitR(id){
+  if(id==='S') return 20;
+  if(RECV_RTR[id]) return 18;
+  return NODE_R;
+}
+
+// ── Draw loop ─────────────────────────────────────────────────────────────────
+function loop(){
+  requestAnimationFrame(loop);
+  var W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,H);
+  // Gridlines
+  var gridSize=40;
+  ctx.strokeStyle='rgba(0,0,0,0.055)';ctx.lineWidth=1;
+  for(var gx=gridSize;gx<W;gx+=gridSize){
+    ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();
+  }
+  for(var gy=gridSize;gy<H;gy+=gridSize){
+    ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();
+  }
+  drawLinks();drawNodes();drawPkt();
+}
+
+function linkOnFwdPath(lk){
+  if(!pktActive||pktPhase!=='fwd') return false;
+  for(var i=0;i<pktPath.length-1;i++)
+    if((pktPath[i]===lk.a&&pktPath[i+1]===lk.b)||(pktPath[i]===lk.b&&pktPath[i+1]===lk.a)) return true;
+  return false;
+}
+function linkOnAckPath(lk){
+  if(!pktActive||pktPhase!=='ack') return false;
+  for(var i=0;i<pktPath.length-1;i++)
+    if((pktPath[i]===lk.a&&pktPath[i+1]===lk.b)||(pktPath[i]===lk.b&&pktPath[i+1]===lk.a)) return true;
+  return false;
+}
+function linkOnSPT(lk){
+  if(!algoConverged) return false;
+  var keys=Object.keys(prev);
+  for(var i=0;i<keys.length;i++){
+    var n=keys[i];
+    if(prev[n]&&((prev[n]===lk.a&&n===lk.b)||(prev[n]===lk.b&&n===lk.a))) return true;
+  }
+  return false;
+}
+
+function drawLinks(){
+  LINKS.forEach(function(lk,li){
+    var pa=npos(lk.a),pb=npos(lk.b);
+    var mx=(pa.x+pb.x)/2,my=(pa.y+pb.y)/2;
+    var fwd=linkOnFwdPath(lk), ack=linkOnAckPath(lk);
+    var isHov=hoveredLink===li;
+
+    ctx.save();
+    if(!lk.alive){ctx.strokeStyle='#F09595';ctx.lineWidth=2;ctx.setLineDash([5,4]);}
+    else if(ack){ctx.strokeStyle='#1D9E75';ctx.lineWidth=3;}
+    else if(fwd){ctx.strokeStyle='#185FA5';ctx.lineWidth=3;}
+
+    else if(isHov&&mode==='build'){ctx.strokeStyle='#185FA5';ctx.lineWidth=2;}
+    else{ctx.strokeStyle='#c0beb6';ctx.lineWidth=1.5;}
+    ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke();
+    ctx.setLineDash([]);ctx.restore();
+
+    if(!lk.fixed){
+      var col=!lk.alive?'#A32D2D':ack?'#0F6E56':fwd?'#0C447C':'#5F5E5A';
+      ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(mx,my,12,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle=!lk.alive?'#F09595':ack?'#1D9E75':fwd?'#85B7EB':'#e8e7e2';
+      ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(mx,my,12,0,Math.PI*2);ctx.stroke();
+      ctx.fillStyle=col;ctx.font='700 10px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(lk.alive?lk.cost:'✕',mx,my);ctx.textBaseline='alphabetic';
+
+      if(!scissorsActive&&lk.alive){
+        var dx=-(pb.y-pa.y),dy=pb.x-pa.x,len=Math.sqrt(dx*dx+dy*dy);
+        dx/=len;dy/=len;
+        var bp={x:mx+dx*20,y:my+dy*20},bm={x:mx-dx*20,y:my-dy*20};
+        [bp,bm].forEach(function(b,bi){
+          var isHB=hoverBtn&&hoverBtn.link===li&&((bi===0&&hoverBtn.which==='+')||(bi===1&&hoverBtn.which==='-'));
+          ctx.fillStyle=isHB?'#185FA5':'#E6F1FB';
+          ctx.strokeStyle='#85B7EB';ctx.lineWidth=1;
+          ctx.beginPath();ctx.arc(b.x,b.y,8,0,Math.PI*2);ctx.fill();ctx.stroke();
+          ctx.fillStyle=isHB?'#fff':'#185FA5';ctx.font='700 11px system-ui';
+          ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.fillText(bi===0?'+':'−',b.x,b.y);ctx.textBaseline='alphabetic';
+        });
+        lk._bp=bp;lk._bm=bm;
+      }
+      lk._mx=mx;lk._my=my;
+    } else {
+      ctx.strokeStyle='#c0beb6';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+      ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  });
+  // Draw path pulse segments
+  var now2=Date.now();
+  pulsingPath.forEach(function(seg){
+    if(now2<seg.start||now2>seg.end) return;
+    var t=(now2-seg.start)/(seg.end-seg.start);
+    var e=t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+    var pa=npos(seg.a),pb=npos(seg.b);
+    var x=pa.x+(pb.x-pa.x)*e, y=pa.y+(pb.y-pa.y)*e;
+    var alpha=t<0.5?t*2:2*(1-t);
+    ctx.save();
+    ctx.globalAlpha=alpha*0.85;
+    ctx.fillStyle='#1D9E75';
+    ctx.strokeStyle='#fff';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.restore();
+  });
+}
+
+function drawNodes(){
+  Object.keys(NODES).forEach(function(id){
+    var p=npos(id);
+    var isSel=selectedNode===id, isVis=visited[id];
+    var isCur=pktActive&&pktPath[pktHopIdx]===id;
+    var isExamine=examineNode===id&&!pktActive;
+    var isRouter=ROUTERS.indexOf(id)>=0;
+    var isSender=id==='S';
+    var isReceiver=RECV_RTR[id]!==undefined;
+
+    var iconCol=isCur?'#854F0B':isExamine?'#6B21A8':isSel?'#0C447C':isVis?'#0F6E56':isRouter?'#185FA5':'#5F5E5A';
+    var bgCol=isCur?'#FFF3CD':isExamine?'#F3E8FF':isSel?'#DBEAFE':isVis?'#D4EDDA':isRouter?'#fff':'#f5f4f0';
+    var bdCol=isCur?'#BA7517':isExamine?'#9333EA':isSel?'#185FA5':isVis?'#1D9E75':isRouter?'#85B7EB':'#b0b8c1';
+    var lw=isCur||isSel||isExamine?2.5:isVis?2:1.5;
+
+    if(isRouter){
+      // Router: cylinder-like shape — circle with inner ring and arrows
+      var r=NODE_R;
+      ctx.fillStyle=bgCol; ctx.strokeStyle=bdCol; ctx.lineWidth=lw;
+      ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      // Pulse ring when FT just updated
+      var pEnd=pulsingNodes[id];
+      if(pEnd&&Date.now()<pEnd){
+        var prog=1-(pEnd-Date.now())/900; // 0→1 over 900ms
+        var pr=r+4+prog*12;
+        ctx.save();
+        ctx.globalAlpha=(1-prog)*0.7;
+        ctx.strokeStyle='#1D9E75';ctx.lineWidth=2.5;
+        ctx.beginPath();ctx.arc(p.x,p.y,pr,0,Math.PI*2);ctx.stroke();
+        ctx.restore();
+      }
+      // Inner ring
+      ctx.strokeStyle=iconCol; ctx.lineWidth=1; ctx.globalAlpha=0.25;
+      ctx.beginPath(); ctx.arc(p.x,p.y,r*0.6,0,Math.PI*2); ctx.stroke();
+      ctx.globalAlpha=1;
+      // Four arrows pointing outward
+      var arrowDirs=[[-1,0],[1,0],[0,-1],[0,1]];
+      arrowDirs.forEach(function(d){
+        var ax=p.x+d[0]*r*0.82, ay=p.y+d[1]*r*0.82;
+        var bx=p.x+d[0]*r*0.42, by=p.y+d[1]*r*0.42;
+        ctx.strokeStyle=iconCol; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(ax,ay); ctx.stroke();
+        // Arrowhead
+        var ang=Math.atan2(d[1],d[0]);
+        ctx.fillStyle=iconCol;
+        ctx.beginPath();
+        ctx.moveTo(ax,ay);
+        ctx.lineTo(ax-6*Math.cos(ang-0.4),ay-6*Math.sin(ang-0.4));
+        ctx.lineTo(ax-6*Math.cos(ang+0.4),ay-6*Math.sin(ang+0.4));
+        ctx.closePath(); ctx.fill();
+      });
+      // Label below
+      ctx.fillStyle='#888780'; ctx.font='700 9px system-ui'; ctx.textAlign='center';
+      ctx.fillText(id, p.x, p.y+r+11);
+      // 🔍 Magnifying glass — top-right corner of node
+      var mgx=p.x+r*0.72, mgy=p.y-r*0.72;
+      var isHovMag=hoveredMag===id, isExMag=examineNode===id;
+      ctx.fillStyle=isExMag?'#9333EA':isHovMag?'#185FA5':'#E6F1FB';
+      ctx.strokeStyle=isExMag?'#9333EA':isHovMag?'#185FA5':'#85B7EB';
+      ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.arc(mgx,mgy,9,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle=isExMag||isHovMag?'#fff':'#185FA5'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.arc(mgx-1,mgy-1,3.5,0,Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(mgx+2,mgy+2); ctx.lineTo(mgx+5,mgy+5); ctx.stroke();
+      NODES[id]._mgx=mgx; NODES[id]._mgy=mgy;
+
+    } else if(isSender){
+      // Laptop icon
+      var w=28, h=18, r2=3;
+      var lx=p.x-w/2, ly=p.y-h/2;
+      // Screen
+      ctx.fillStyle=bgCol; ctx.strokeStyle=bdCol; ctx.lineWidth=lw;
+      roundRect(lx,ly,w,h-5,r2); ctx.fill(); ctx.stroke();
+      // Screen inner
+      ctx.fillStyle=iconCol; ctx.globalAlpha=0.15;
+      roundRect(lx+2,ly+2,w-4,h-9,1); ctx.fill();
+      ctx.globalAlpha=1;
+      // Base/keyboard
+      ctx.fillStyle=bgCol; ctx.strokeStyle=bdCol; ctx.lineWidth=lw;
+      ctx.beginPath();
+      ctx.moveTo(p.x-w/2-3,ly+h-4); ctx.lineTo(p.x+w/2+3,ly+h-4);
+      ctx.lineTo(p.x+w/2,ly+h+2); ctx.lineTo(p.x-w/2,ly+h+2);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      // Label
+      ctx.fillStyle='#888780'; ctx.font='700 9px system-ui'; ctx.textAlign='center';
+      ctx.fillText('Sender', p.x, ly+h+14);
+
+    } else if(isReceiver){
+      // Server icon — stacked rectangles
+      var sw=22, sh=6, sg=3;
+      var sx=p.x-sw/2, sy=p.y-sh-sg/2;
+      for(var ri=0;ri<2;ri++){
+        var ry2=sy+ri*(sh+sg);
+        ctx.fillStyle=bgCol; ctx.strokeStyle=bdCol; ctx.lineWidth=lw;
+        roundRect(sx,ry2,sw,sh,2); ctx.fill(); ctx.stroke();
+        // Status dot
+        ctx.fillStyle=isVis?'#1D9E75':isCur?'#BA7517':'#85B7EB';
+        ctx.beginPath(); ctx.arc(sx+sw-5,ry2+sh/2,2,0,Math.PI*2); ctx.fill();
+        // Lines
+        ctx.strokeStyle=iconCol; ctx.lineWidth=1; ctx.globalAlpha=0.3;
+        ctx.beginPath(); ctx.moveTo(sx+4,ry2+sh/2); ctx.lineTo(sx+sw-10,ry2+sh/2); ctx.stroke();
+        ctx.globalAlpha=1;
+      }
+      // Label
+      ctx.fillStyle='#888780'; ctx.font='700 9px system-ui'; ctx.textAlign='center';
+      ctx.fillText(id, p.x, sy+2*sh+sg+12);
+    }
+  });
+}
+
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+function drawPkt(){
+  if(!animPkt) return;
+  var now=Date.now();
+  if(now>=animPkt.end){animPkt=null;if(pendingCb){var f=pendingCb;pendingCb=null;setTimeout(f,pktStepMode?150:80);}return;}
+  var t=(now-animPkt.start)/(animPkt.end-animPkt.start);
+  var e=t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+  var x=animPkt.x0+(animPkt.x1-animPkt.x0)*e,y=animPkt.y0+(animPkt.y1-animPkt.y0)*e;
+  var isLSA=animPkt.isLSA;
+  ctx.fillStyle=isLSA?'#FFF3CD':animPkt.isAck?'#E1F5EE':'#DBEAFE';
+  ctx.strokeStyle=isLSA?'#BA7517':animPkt.isAck?'#1D9E75':'#185FA5';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(x,y,13,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle=isLSA?'#854F0B':animPkt.isAck?'#085041':'#042C53';ctx.font='700 8px system-ui';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(animPkt.label,x,y);ctx.textBaseline='alphabetic';
+}
+
+// ── Dijkstra ──────────────────────────────────────────────────────────────────
+function initDijkstra(){
+  dist={};prev={};visited={};algoConverged=false;
+  ROUTERS.forEach(function(n){dist[n]=n==='A'?0:Infinity;prev[n]=null;visited[n]=false;});
+  renderAlgoTable();
+  addLog('Dijkstra from A — all dist=∞ except A=0','ls');
+}
+function stepDijkstra(){
+  var u=null,mn=Infinity;
+  ROUTERS.forEach(function(n){if(!visited[n]&&dist[n]<mn){mn=dist[n];u=n;}});
+  if(!u||mn===Infinity){finalizeDijkstra();return;}
+  visited[u]=true;
+  addLog('Visit '+u+' (dist='+dist[u]+')','ls');
+  getNbRouters(u).forEach(function(nb){
+    if(visited[nb.n]) return;
+    var nd=dist[u]+nb.c;
+    if(nd<dist[nb.n]){dist[nb.n]=nd;prev[nb.n]=u;addLog('  '+nb.n+': d='+nd+' via '+u,'ls');}
+  });
+  renderAlgoTable();
+  document.getElementById('state-bar').textContent='Visited '+u+' (cost '+dist[u]+')';
+  if(ROUTERS.every(function(n){return visited[n]||dist[n]===Infinity;})) finalizeDijkstra();
+}
+function finalizeDijkstra(){
+  algoConverged=true;buildAllFT();pulseRouters();renderFT();
+  document.getElementById('btn-send-pkt').disabled=false;
+  document.getElementById('state-bar').textContent='Dijkstra converged — forwarding tables ready!';
+  addLog('Dijkstra complete. Send a packet!','ls');
+}
+
+// ── Bellman-Ford DV ───────────────────────────────────────────────────────────
+function initDV(){
+  dvTables={};dvRound=0;dvChanged=true;dist={};prev={};visited={};algoConverged=false;
+  ROUTERS.forEach(function(n){
+    dvTables[n]={};
+    ROUTERS.forEach(function(d){dvTables[n][d]={c:d===n?0:Infinity,via:null};});
+    getNbRouters(n).forEach(function(nb){dvTables[n][nb.n]={c:nb.c,via:nb.n};});
+  });
+  ROUTERS.forEach(function(n){dist[n]=dvTables['A'][n].c;prev[n]=dvTables['A'][n].via;});
+  renderAlgoTable();addLog('DV initialized — routers know only direct neighbor costs','dv');
+}
+function stepDV(){
+  if(!dvChanged){finalizeDV();return;}
+  dvRound++;dvChanged=false;
+  addLog('DV Round '+dvRound,'dv');
+  var nT={};
+  ROUTERS.forEach(function(n){nT[n]={};ROUTERS.forEach(function(d){nT[n][d]={c:dvTables[n][d].c,via:dvTables[n][d].via};});});
+  ROUTERS.forEach(function(n){
+    getNbRouters(n).forEach(function(nb){
+      ROUTERS.forEach(function(dest){
+        var nc=nb.c+dvTables[nb.n][dest].c;
+        if(nc<nT[n][dest].c){nT[n][dest]={c:nc,via:nb.n};dvChanged=true;
+          if(n==='A') addLog('  A→'+dest+': '+nc+' via '+nb.n,'dv');}
+      });
+    });
+  });
+  dvTables=nT;
+  ROUTERS.forEach(function(n){dist[n]=dvTables['A'][n].c;prev[n]=dvTables['A'][n].via;});
+  renderAlgoTable();
+  document.getElementById('state-bar').textContent='Round '+dvRound+(dvChanged?' — changes detected':' — converged!');
+  if(!dvChanged) finalizeDV();
+}
+function finalizeDV(){
+  algoConverged=true;buildAllFT();pulseRouters();renderFT();
+  document.getElementById('btn-send-pkt').disabled=false;
+  document.getElementById('state-bar').textContent='DV converged after '+dvRound+' rounds. Send a packet!';
+  addLog('DV converged after '+dvRound+' rounds','dv');
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function getNbRouters(node){
+  var res=[];
+  LINKS.forEach(function(lk){
+    if(!lk.alive||lk.fixed) return;
+    if(lk.a===node&&ROUTERS.indexOf(lk.b)>=0) res.push({n:lk.b,c:lk.cost});
+    if(lk.b===node&&ROUTERS.indexOf(lk.a)>=0) res.push({n:lk.a,c:lk.cost});
+  });
+  return res;
+}
+function pulseRouters(){
+  var now=Date.now();
+  ROUTERS.forEach(function(r){pulsingNodes[r]=now+900;});
+  // Pulse the path S → A → ... → selected dest
+  pulsingPath=[];
+  if(!algoConverged) return;
+  var dest=document.getElementById('sel-dest')?document.getElementById('sel-dest').value:'Rd';
+  var rtrPath=tracePathFT('A',dest);
+  var fullPath=['S'].concat(rtrPath);
+  var delay=300; // start after node pulse begins
+  var segDur=400;
+  for(var i=0;i<fullPath.length-1;i++){
+    pulsingPath.push({a:fullPath[i],b:fullPath[i+1],start:now+delay+i*220,end:now+delay+i*220+segDur});
+  }
+}
+function buildAllFT(){
+  ftables={};
+  ROUTERS.forEach(function(src){
+    var d={},p={},v={};
+    ROUTERS.forEach(function(n){d[n]=n===src?0:Infinity;p[n]=null;v[n]=false;});
+    for(var i=0;i<ROUTERS.length;i++){
+      var u=null,mn=Infinity;
+      ROUTERS.forEach(function(n){if(!v[n]&&d[n]<mn){mn=d[n];u=n;}});
+      if(!u||mn===Infinity) break;
+      v[u]=true;
+      getNbRouters(u).forEach(function(nb){var nd=d[u]+nb.c;if(nd<d[nb.n]){d[nb.n]=nd;p[nb.n]=u;}});
+    }
+    ftables[src]={};
+    ROUTERS.forEach(function(dest){
+      if(dest===src) return;
+      var cur=dest,path=[];
+      while(cur&&cur!==src){path.unshift(cur);cur=p[cur];}
+      if(cur===src&&path.length>0) ftables[src][dest]={via:path[0],cost:d[dest]};
+    });
+    // Receiver destinations
+    Object.keys(RTR_RECV).forEach(function(rtr){
+      var recvId=RTR_RECV[rtr];
+      if(rtr===src) ftables[src][recvId]={via:recvId,cost:0};
+      else if(ftables[src][rtr]) ftables[src][recvId]={via:ftables[src][rtr].via,cost:ftables[src][rtr].cost};
+    });
+    // S as dest (for ACK return)
+    if(src==='A') ftables[src]['S']={via:'S',cost:0};
+    else if(ftables[src]['A']) ftables[src]['S']={via:ftables[src]['A'].via,cost:ftables[src]['A'].cost};
+  });
+}
+function tracePathFT(fromRouter, destId){
+  var path=[fromRouter],cur=fromRouter,max=8;
+  while(cur!==destId&&max-->0){
+    var ft=ftables[cur]; if(!ft||!ft[destId]) break;
+    var next=ft[destId].via;
+    if(!next||path.indexOf(next)>=0) break;
+    path.push(next);cur=next;
+  }
+  if(path[path.length-1]!==destId) path.push(destId);
+  return path;
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderAlgoTable(){
+  if(!algoStarted){
+    document.getElementById('algo-panel-title').textContent=(algo==='ls'?'Dijkstra (LS)':'Bellman-Ford DV')+' — converged (silent)';
+    return;
+  }
+  if(mode==='ls'){
+    var src2=examineNode||'A';
+    document.getElementById('algo-panel-title').textContent='Dijkstra (src='+src2+')';
+    document.getElementById('algo-thead').innerHTML='<tr><th>Node</th><th>Dist</th><th>Via</th><th>Done</th></tr>';
+    var tb=document.getElementById('algo-tbody');tb.innerHTML='';
+    ROUTERS.forEach(function(n){
+      var tr=document.createElement('tr');if(visited[n]) tr.className='visited';
+      tr.innerHTML='<td><b>'+n+'</b></td><td>'+(dist[n]===Infinity?'∞':dist[n])+'</td><td>'+(prev[n]||'—')+'</td><td>'+(visited[n]?'✓':'')+'</td>';
+      tb.appendChild(tr);
+    });
+  } else if(mode==='dv'){
+    document.getElementById('algo-panel-title').textContent='DV — Router '+(examineNode||'A')+' (round '+dvRound+')';
+    document.getElementById('algo-thead').innerHTML='<tr><th>Dest</th><th>Cost</th><th>Via</th></tr>';
+    var tb2=document.getElementById('algo-tbody');tb2.innerHTML='';
+    ROUTERS.forEach(function(n){
+      var e=dvTables['A']?dvTables['A'][n]:{c:Infinity,via:null};
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td><b>'+n+'</b></td><td>'+(e.c===Infinity?'∞':e.c)+'</td><td>'+(e.via||'—')+'</td>';
+      tb2.appendChild(tr);
+    });
+  }
+}
+function renderFT(){
+  var wrap=document.getElementById('ft-wrap');
+  wrap.innerHTML='<div style="font-size:10px;color:#888780;font-style:italic;text-align:center;padding:4px 0;">Tables ready — click ⤢ to view</div>';
+}
+function renderSelectedNodeFT(node){
+  var niFT=document.getElementById('ni-ft-wrap');
+  var ft=ftables[node];
+  if(!ft||ROUTERS.indexOf(node)<0){niFT.style.display='none';return;}
+  niFT.style.display='';
+  niFT.innerHTML='<div style="font-size:9px;font-weight:700;color:#888780;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Forwarding Table</div>';
+  var tbl=document.createElement('table');tbl.className='ft-mini';
+  tbl.innerHTML='<thead><tr><th>Dest</th><th>Via</th><th>Cost</th></tr></thead>';
+  var tb=document.createElement('tbody');
+  Object.keys(ft).sort().forEach(function(dest){
+    if(ENDPOINTS.indexOf(dest)>=0) return;
+    var e=ft[dest],tr=document.createElement('tr');
+    tr.innerHTML='<td>'+dest+'</td><td>'+e.via+'</td><td>'+e.cost+'</td>';
+    tb.appendChild(tr);
+  });
+  tbl.appendChild(tb);niFT.appendChild(tbl);
+}
+function hlFT(router, dest){
+  // FT rows no longer rendered in side panel — step overlay handles lookup display
+}
+
+// ── Packet flow ───────────────────────────────────────────────────────────────
+function startPacket(){
+  pktDest=document.getElementById('sel-dest').value;
+  var rtrPath=tracePathFT('A',pktDest);
+  pktPath=['S'].concat(rtrPath);
+  pktHopIdx=0;pktPhase='fwd';pktActive=true;
+  addLog('=== PKT: S → '+pktDest+' ===','pkt');
+  addLog('Fwd: '+pktPath.join('→'),'pkt');
+  advanceHop();
+}
+function advanceHop(){
+  if(pktHopIdx>=pktPath.length-1){
+    if(pktPhase==='fwd'){
+      addLog('PKT arrived at '+pktDest,'pkt');
+      var ackStart=RECV_RTR[pktDest];
+      var ackPath=tracePathFT(ackStart,'S');
+      pktPath=[pktDest].concat(ackPath);
+      pktHopIdx=0;pktPhase='ack';
+      addLog('=== ACK: '+pktDest+' → S ===','pkt');
+      addLog('Ack: '+pktPath.join('→'),'pkt');
+      advanceHop();
+    } else {
+      addLog('ACK arrived at S — exchange complete','pkt');
+      document.getElementById('state-bar').textContent='Exchange complete! '+(pktPath.join('→').split(',')[0])+'  Both paths highlighted.';
+      pktActive=false;animPkt=null;
+      document.querySelectorAll('.ft-mini tr').forEach(function(tr){tr.classList.remove('hl');});
+    }
+    return;
+  }
+  var from=pktPath[pktHopIdx], to=pktPath[pktHopIdx+1], isAck=pktPhase==='ack';
+  if(pktStepMode&&ROUTERS.indexOf(from)>=0){
+    showOverlay(from,to,isAck,function(){hop(from,to,isAck,function(){pktHopIdx++;advanceHop();});});
+  } else {
+    hop(from,to,isAck,function(){pktHopIdx++;advanceHop();});
+  }
+}
+function selectNodeForPkt(routerNode, lookupDest){
+  if(ROUTERS.indexOf(routerNode)<0) return;
+  selectedNode=routerNode;
+  document.getElementById('node-name').textContent=routerNode;
+  document.getElementById('ni-role').textContent=NODES[routerNode].role;
+  document.getElementById('ni-nb').textContent=getNbRouters(routerNode).map(function(x){return x.n+'('+x.c+')';}).join(', ')||'—';
+  var niFT=document.getElementById('ni-ft-wrap');
+  var ft=ftables[routerNode];
+  if(ft){
+    niFT.style.display='';
+    niFT.innerHTML='<div style="font-size:9px;font-weight:700;color:#888780;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Forwarding Table — lookup: <span style="color:#185FA5;">'+lookupDest+'</span></div>';
+    var tbl=document.createElement('table');tbl.className='ft-mini';
+    tbl.innerHTML='<thead><tr><th>Dest</th><th>Via</th><th>Cost</th></tr></thead>';
+    var tb=document.createElement('tbody');
+    Object.keys(ft).sort().forEach(function(dest){
+      if(ENDPOINTS.indexOf(dest)>=0) return;
+      var e=ft[dest],tr=document.createElement('tr');
+      var isMatch=dest===lookupDest;
+      if(isMatch) tr.classList.add('hl');
+      tr.innerHTML='<td>'+(isMatch?'→ ':'')+dest+'</td><td>'+e.via+'</td><td>'+e.cost+'</td>';
+      tb.appendChild(tr);
+    });
+    tbl.appendChild(tb);niFT.appendChild(tbl);
+  } else {
+    niFT.style.display='none';
+  }
+}
+
+function hop(from,to,isAck,cb){
+  var pa=npos(from),pb=npos(to),dur=pktStepMode?650:480;
+  pendingCb=cb;
+  animPkt={x0:pa.x,y0:pa.y,x1:pb.x,y1:pb.y,start:Date.now(),end:Date.now()+dur,
+    isAck:isAck,label:isAck?'ACK':'PKT'};
+  addLog((isAck?'ACK':'PKT')+': '+from+' → '+to,'pkt');
+  document.getElementById('state-bar').textContent=(isAck?'ACK':'Packet')+': '+from+' → '+to;
+  if(ROUTERS.indexOf(from)>=0){
+    var lookupDest=isAck?'S':pktDest;
+    hlFT(from,lookupDest);
+    selectNodeForPkt(from,lookupDest);
+  }
+}
+function showOverlay(routerNode,nextHop,isAck,cb){
+  var ft=ftables[routerNode], lookupDest=isAck?'S':pktDest;
+  document.getElementById('ov-title').textContent=(isAck?'ACK':'Packet')+' at Router '+routerNode;
+  document.getElementById('ov-sub').textContent='Lookup destination: '+(isAck?'S (Sender)':pktDest)+' in forwarding table';
+  var tbody=document.getElementById('ov-ft-body');tbody.innerHTML='';
+  if(ft){
+    Object.keys(ft).sort().forEach(function(dest){
+      if(ENDPOINTS.indexOf(dest)>=0) return;
+      var e=ft[dest],isMatch=dest===lookupDest;
+      var tr=document.createElement('tr');
+      tr.style.cssText=isMatch?'background:#D4EDDA;font-weight:700;':'';
+      tr.innerHTML='<td style="padding:3px 6px;border-bottom:1px solid #f0efea;font-family:monospace;">'+dest+(isMatch?' ← match':'')+'</td>'+
+        '<td style="padding:3px 6px;border-bottom:1px solid #f0efea;font-family:monospace;">'+e.via+'</td>'+
+        '<td style="padding:3px 6px;border-bottom:1px solid #f0efea;font-family:monospace;">'+e.cost+'</td>';
+      tbody.appendChild(tr);
+    });
+  }
+  var e=ft&&ft[lookupDest];
+  document.getElementById('ov-decision').textContent=e?'Forward to: '+nextHop+' (next hop: '+e.via+', total cost: '+e.cost+')':'No route — drop';
+  document.getElementById('ov-explain').textContent=e?
+    'Longest prefix match for "'+lookupDest+'" selects next hop '+e.via+'. '+
+    'Router '+routerNode+' forwards the '+(isAck?'ACK':'packet')+' along the shortest computed path.':
+    'No forwarding entry found — packet dropped.';
+
+  // Disable Randomize if next hop is the destination (no meaningful rerouting possible)
+  var nextIsEndpoint = ENDPOINTS.indexOf(nextHop)>=0;
+  var randBtn = document.getElementById('ov-randomize');
+  randBtn.disabled = nextIsEndpoint;
+  randBtn.style.opacity = nextIsEndpoint ? '0.35' : '1';
+  randBtn.title = nextIsEndpoint ? 'No rerouting possible — next hop is the destination' : '';
+
+  document.getElementById('ov-changed').style.display='none';
+  document.getElementById('pkt-overlay').style.display='flex';
+  pktOverlayCb=function(){document.getElementById('pkt-overlay').style.display='none';cb();};
+}
+document.getElementById('ov-next').addEventListener('click',function(){
+  if(pktOverlayCb){var f=pktOverlayCb;pktOverlayCb=null;f();}
+});
+
+// ── Algorithm & Mode control ──────────────────────────────────────────────────
+function setAlgo(a){
+  algo=a; mode=a;
+  ['ls','dv'].forEach(function(x){document.getElementById('btn-algo-'+x).classList.toggle('active',x===a);});
+  onTopologyChange();
+}
+
+function onTopologyChange(){
+  if(autoTimer){clearInterval(autoTimer);autoTimer=null;}
+  var prevExamineNode=examineNode; // remember who was being examined
+  dist={};prev={};visited={};dvTables={};dvRound=0;dvChanged=true;
+  algoConverged=false; algoStarted=false; examineNode=null;
+  pktActive=false; animPkt=null; pendingCb=null; pktOverlayCb=null;
+  document.getElementById('algo-thead').innerHTML='';
+  document.getElementById('algo-tbody').innerHTML='';
+  document.getElementById('btn-send-pkt').disabled=true;
+  document.getElementById('pkt-overlay').style.display='none';
+  hideAOOverlay();
+  // Always run silently — tables always current
+  if(algo==='ls') runDijkstraFull(); else runDVFull();
+  addLog((algo==='ls'?'LS':'DV')+' silent recalc — tables updated','build');
+  document.getElementById('mode-label').textContent=algo==='ls'?'Dijkstra (LS) — Link State':'Bellman-Ford (DV) — Distance Vector';
+  // Refresh selected node FT panel if a router is selected
+  if(selectedNode&&ROUTERS.indexOf(selectedNode)>=0) renderSelectedNodeFT(selectedNode);
+  // If a router was being examined, re-run the LSA/DV overlay automatically
+  if(prevExamineNode&&ROUTERS.indexOf(prevExamineNode)>=0){
+    examineNode=prevExamineNode;
+    document.getElementById('state-bar').textContent='Topology changed — re-running '+(algo==='ls'?'LSA flood':'DV exchange')+' for Router '+prevExamineNode+'...';
+    setTimeout(function(){startExamineOverlay(prevExamineNode);},400);
+  } else {
+    document.getElementById('state-bar').textContent='Tables ready. Click 🔍 on a router to examine, or ▶ Start to animate.';
+  }
+}
+
+// ── Dijkstra ──────────────────────────────────────────────────────────────────
+function initDijkstra(){
+  var src=examineNode||'A';
+  dist={};prev={};visited={};algoConverged=false;algoStarted=true;
+  ROUTERS.forEach(function(n){dist[n]=n===src?0:Infinity;prev[n]=null;visited[n]=false;});
+  renderAlgoTable();
+  document.getElementById('algo-panel-title').textContent='Dijkstra (src='+src+')';
+  addLog('Dijkstra from '+src+' — dist=0 at '+src+', ∞ elsewhere','ls');
+}
+function stepDijkstra(){
+  var u=null,mn=Infinity;
+  ROUTERS.forEach(function(n){if(!visited[n]&&dist[n]<mn){mn=dist[n];u=n;}});
+  if(!u||mn===Infinity){finalizeDijkstra();return;}
+  visited[u]=true;
+  addLog('Visit '+u+' (dist='+dist[u]+')','ls');
+  getNbRouters(u).forEach(function(nb){
+    if(visited[nb.n]) return;
+    var nd=dist[u]+nb.c;
+    if(nd<dist[nb.n]){dist[nb.n]=nd;prev[nb.n]=u;addLog('  '+nb.n+': d='+nd+' via '+u,'ls');}
+  });
+  renderAlgoTable();
+  document.getElementById('state-bar').textContent='Visited '+u+' (cost '+dist[u]+')';
+  if(ROUTERS.every(function(n){return visited[n]||dist[n]===Infinity;})) finalizeDijkstra();
+}
+function finalizeDijkstra(){
+  algoConverged=true;buildAllFT();pulseRouters();renderFT();
+  document.getElementById('btn-send-pkt').disabled=false;
+  document.getElementById('state-bar').textContent='Dijkstra converged — forwarding tables ready. Send a packet!';
+  addLog('Dijkstra complete. Send a packet!','ls');
+}
+
+// ── Bellman-Ford DV ───────────────────────────────────────────────────────────
+function initDV(){
+  dvTables={};dvRound=0;dvChanged=true;dist={};prev={};visited={};algoConverged=false;algoStarted=true;
+  ROUTERS.forEach(function(n){
+    dvTables[n]={};
+    ROUTERS.forEach(function(d){dvTables[n][d]={c:d===n?0:Infinity,via:null};});
+    getNbRouters(n).forEach(function(nb){dvTables[n][nb.n]={c:nb.c,via:nb.n};});
+  });
+  ROUTERS.forEach(function(n){dist[n]=dvTables['A'][n].c;prev[n]=dvTables['A'][n].via;});
+  renderAlgoTable();addLog('DV initialized — routers know only direct neighbor costs','dv');
+}
+function stepDV(){
+  if(!dvChanged){finalizeDV();return;}
+  dvRound++;dvChanged=false;
+  addLog('DV Round '+dvRound,'dv');
+  var nT={};
+  ROUTERS.forEach(function(n){nT[n]={};ROUTERS.forEach(function(d){nT[n][d]={c:dvTables[n][d].c,via:dvTables[n][d].via};});});
+  ROUTERS.forEach(function(n){
+    getNbRouters(n).forEach(function(nb){
+      ROUTERS.forEach(function(dest){
+        var nc=nb.c+dvTables[nb.n][dest].c;
+        if(nc<nT[n][dest].c){nT[n][dest]={c:nc,via:nb.n};dvChanged=true;
+          if(n==='A') addLog('  A→'+dest+': '+nc+' via '+nb.n,'dv');}
+      });
+    });
+  });
+  dvTables=nT;
+  ROUTERS.forEach(function(n){dist[n]=dvTables['A'][n].c;prev[n]=dvTables['A'][n].via;});
+  renderAlgoTable();
+  document.getElementById('state-bar').textContent='Round '+dvRound+(dvChanged?' — changes detected':' — converged!');
+  if(!dvChanged) finalizeDV();
+}
+function finalizeDV(){
+  algoConverged=true;buildAllFT();pulseRouters();renderFT();
+  document.getElementById('btn-send-pkt').disabled=false;
+  document.getElementById('state-bar').textContent='DV converged after '+dvRound+' rounds. Send a packet!';
+  addLog('DV converged after '+dvRound+' rounds','dv');
+}
+
+// ── Silent full runs ──────────────────────────────────────────────────────────
+function runDijkstraFull(){
+  ROUTERS.forEach(function(n){dist[n]=n==='A'?0:Infinity;prev[n]=null;visited[n]=false;});
+  for(var iter=0;iter<ROUTERS.length;iter++){
+    var u=null,mn=Infinity;
+    ROUTERS.forEach(function(n){if(!visited[n]&&dist[n]<mn){mn=dist[n];u=n;}});
+    if(!u||mn===Infinity) break;
+    visited[u]=true;
+    getNbRouters(u).forEach(function(nb){
+      if(visited[nb.n]) return;
+      var nd=dist[u]+nb.c;
+      if(nd<dist[nb.n]){dist[nb.n]=nd;prev[nb.n]=u;}
+    });
+  }
+  algoConverged=true;
+  buildAllFT();pulseRouters();renderFT();
+  document.getElementById('algo-panel-title').textContent='Dijkstra (LS) — converged';
+  renderAlgoTable();
+  document.getElementById('btn-send-pkt').disabled=false;
+}
+function runDVFull(){
+  ROUTERS.forEach(function(n){
+    dvTables[n]={};
+    ROUTERS.forEach(function(d){dvTables[n][d]={c:d===n?0:Infinity,via:null};});
+    getNbRouters(n).forEach(function(nb){dvTables[n][nb.n]={c:nb.c,via:nb.n};});
+  });
+  var changed=true,rounds=0;
+  while(changed&&rounds<20){
+    changed=false;rounds++;
+    var nT={};
+    ROUTERS.forEach(function(n){nT[n]={};ROUTERS.forEach(function(d){nT[n][d]={c:dvTables[n][d].c,via:dvTables[n][d].via};});});
+    ROUTERS.forEach(function(n){
+      getNbRouters(n).forEach(function(nb){
+        ROUTERS.forEach(function(dest){
+          var nc=nb.c+dvTables[nb.n][dest].c;
+          if(nc<nT[n][dest].c){nT[n][dest]={c:nc,via:nb.n};changed=true;}
+        });
+      });
+    });
+    dvTables=nT;
+  }
+  ROUTERS.forEach(function(n){dist[n]=dvTables['A'][n].c;prev[n]=dvTables['A'][n].via;});
+  algoConverged=true;
+  buildAllFT();pulseRouters();renderFT();
+  document.getElementById('algo-panel-title').textContent='Bellman-Ford (DV) — converged';
+  renderAlgoTable();
+  document.getElementById('btn-send-pkt').disabled=false;
+}
+
+// ── Examine overlay: LSA flood + DV exchange ──────────────────────────────────
+function floodPath(src,dest){
+  if(src===dest) return [src];
+  var q=[src],par={};par[src]=null;
+  while(q.length){
+    var u=q.shift();
+    getNbRouters(u).forEach(function(nb){
+      if(par[nb.n]===undefined){
+        par[nb.n]=u;
+        if(nb.n===dest){var p=[nb.n];while(par[p[0]]!==null)p.unshift(par[p[0]]);return p;}
+        q.push(nb.n);
+      }
+    });
+  }
+  // Fallback: BFS didn't capture early exit — reconstruct from par
+  if(par[dest]!==undefined){
+    var p2=[dest];while(par[p2[0]]!==null)p2.unshift(par[p2[0]]);return p2;
+  }
+  return [src,dest];
+}
+
+// Animate DV packets from each neighbor to node, sequentially
+function animDVPaths(paths, idx, cb){
+  if(idx>=paths.length){setTimeout(cb,120);return;}
+  var from=paths[idx][0], to=paths[idx][1];
+  var pa=npos(from), pb=npos(to);
+  pendingCb=function(){animDVPaths(paths,idx+1,cb);};
+  animPkt={x0:pa.x,y0:pa.y,x1:pb.x,y1:pb.y,start:Date.now(),end:Date.now()+500,isAck:false,label:'DV',isLSA:true};
+}
+
+// Animate a series of LSA hops sequentially, then call cb
+function animateLSAFlood(allPaths, cb){
+  var pathIdx=0;
+  function nextPath(){
+    if(pathIdx>=allPaths.length){setTimeout(cb,200);return;}
+    var path=allPaths[pathIdx++];
+    animateSinglePath(path,nextPath);
+  }
+  function animateSinglePath(path,done){
+    var hopIdx=0;
+    function nextHop(){
+      if(hopIdx>=path.length-1){setTimeout(done,120);return;}
+      var from=path[hopIdx],to=path[hopIdx+1];hopIdx++;
+      var pa=npos(from),pb=npos(to);
+      pendingCb=nextHop;
+      animPkt={x0:pa.x,y0:pa.y,x1:pb.x,y1:pb.y,start:Date.now(),end:Date.now()+480,isAck:false,label:'LSA',isLSA:true};
+    }
+    nextHop();
+  }
+  nextPath();
+}
+
+function buildLSDB(node){
+  var lsdb={};
+  ROUTERS.forEach(function(r){lsdb[r]=getNbRouters(r);});
+  return lsdb;
+}
+
+function showLSOverlay(node, lsdb, cb){
+  var hdr=document.getElementById('ao-hdr');
+  var title=document.getElementById('ao-title');
+  var sub=document.getElementById('ao-subtitle');
+  var badge=document.getElementById('ao-step-badge');
+  var body=document.getElementById('ao-body');
+  var nextBtn=document.getElementById('ao-next');
+  hdr.className='ao-hdr';
+  title.style.color='#0C447C';
+  title.textContent='Router '+node+' — LSDB Complete';
+  sub.textContent='All LSAs received — full topology known';
+  badge.textContent='LS · Ready to run Dijkstra';
+  nextBtn.textContent='▶ Start Dijkstra';
+  nextBtn.style.background='#1D9E75';
+  var h='<div class="ao-transition">✓ All '+Object.keys(lsdb).length+' LSAs received at Router '+node+' — complete topology map built</div>';
+  h+='<div class="ao-lsdb"><div class="ao-lsdb-hdr">Link State Database at Router '+node+'</div>';
+  h+='<table><thead><tr><th>Router</th><th>Direct Neighbors (cost)</th></tr></thead><tbody>';
+  Object.keys(lsdb).sort().forEach(function(r){
+    h+='<tr'+(r===node?' style="background:#DBEAFE;font-weight:700;"':'')+'><td><b>'+r+'</b>'+(r===node?' ← me':'')+'</td>';
+    h+='<td>'+lsdb[r].map(function(x){return x.n+'('+x.c+')';}).join(', ')+'</td></tr>';
+  });
+  h+='</tbody></table></div>';
+  h+='<div style="font-size:10px;color:#5F5E5A;line-height:1.6;margin-top:6px;">Every router has this <b>same database</b>. Dijkstra now runs <b>locally</b> — no further messages needed.</div>';
+  body.innerHTML=h;
+  document.getElementById('algo-overlay').style.display='flex';
+  document.getElementById('ao-skip').onclick=function(){hideAOOverlay();animPkt=null;pendingCb=null;};
+  nextBtn.onclick=function(){hideAOOverlay();cb();};
+}
+
+function startLSExamine(node){
+  // Build all flood paths: every other router's LSA travels to node
+  var others=ROUTERS.filter(function(r){return r!==node;});
+  var allPaths=[];
+  others.forEach(function(src){allPaths.push(floodPath(src,node));});
+  addLog('LSA flood → Router '+node,'ls');
+  document.getElementById('state-bar').textContent='LSA flood: packets traveling to Router '+node+'...';
+  // Animate all LSAs flying in, then show overlay
+  animateLSAFlood(allPaths,function(){
+    var lsdb=buildLSDB(node);
+    showLSOverlay(node,lsdb,function(){
+      initDijkstra();
+      // Auto-step Dijkstra
+      autoTimer=setInterval(function(){
+        if(algoConverged){clearInterval(autoTimer);autoTimer=null;return;}
+        stepDijkstra();
+      },700);
+    });
+  });
+}
+
+function buildDVSteps(node){
+  var steps=[];
+  var myTable={};
+  ROUTERS.forEach(function(d){myTable[d]={c:d===node?0:Infinity,via:null};});
+  getNbRouters(node).forEach(function(nb){myTable[nb.n]={c:nb.c,via:nb.n};});
+  steps.push({type:'dv-init',node:node,table:JSON.parse(JSON.stringify(myTable))});
+  var allTables={};
+  ROUTERS.forEach(function(n){
+    allTables[n]={};
+    ROUTERS.forEach(function(d){allTables[n][d]={c:d===n?0:Infinity,via:null};});
+    getNbRouters(n).forEach(function(nb){allTables[n][nb.n]={c:nb.c,via:nb.n};});
+  });
+  for(var round=1;round<=10;round++){
+    var nT={};
+    ROUTERS.forEach(function(n){nT[n]={};ROUTERS.forEach(function(d){nT[n][d]={c:allTables[n][d].c,via:allTables[n][d].via};});});
+    var anyChanged=false;
+    ROUTERS.forEach(function(n){
+      getNbRouters(n).forEach(function(nb){
+        ROUTERS.forEach(function(dest){
+          var nc=nb.c+allTables[nb.n][dest].c;
+          if(nc<nT[n][dest].c){nT[n][dest]={c:nc,via:nb.n};anyChanged=true;}
+        });
+      });
+    });
+    allTables=nT;
+    var nbs=getNbRouters(node);
+    var prevTable=JSON.parse(JSON.stringify(myTable));
+    var updates=[];
+    nbs.forEach(function(nb){
+      var nbVec=allTables[nb.n];
+      var eqs=[];
+      ROUTERS.filter(function(d){return d!==node;}).forEach(function(dest){
+        var nbCost=nbVec[dest]?nbVec[dest].c:Infinity;
+        var viaCost=(nbCost===Infinity)?Infinity:nb.c+nbCost;
+        var current=myTable[dest].c;
+        var better=viaCost<current;
+        eqs.push({dest:dest,nbCost:nbCost,linkCost:nb.c,viaCost:viaCost,current:current,better:better,isInf:viaCost===Infinity});
+        if(better) myTable[dest]={c:viaCost,via:nb.n};
+      });
+      updates.push({nb:nb.n,linkCost:nb.c,eqs:eqs});
+    });
+    var changed=ROUTERS.some(function(d){return myTable[d].c!==prevTable[d].c;});
+    steps.push({type:'dv-round',round:round,node:node,updates:updates,changed:changed});
+    if(!anyChanged) break;
+  }
+  steps.push({type:'dv-ready',node:node});
+  return steps;
+}
+
+var dvSteps=[], dvStepIdx=0, dvStepCb=null;
+
+function startDVExamine(node){
+  dvSteps=buildDVSteps(node);
+  dvStepIdx=0;
+  dvStepCb=function(){
+    initDV();
+    autoTimer=setInterval(function(){
+      if(algoConverged){clearInterval(autoTimer);autoTimer=null;return;}
+      stepDV();
+    },700);
+  };
+  showDVStep();
+}
+
+function showDVStep(){
+  if(dvStepIdx>=dvSteps.length){hideAOOverlay();if(dvStepCb){var f=dvStepCb;dvStepCb=null;f();}return;}
+  var step=dvSteps[dvStepIdx];
+  var hdr=document.getElementById('ao-hdr');
+  var title=document.getElementById('ao-title');
+  var sub=document.getElementById('ao-subtitle');
+  var badge=document.getElementById('ao-step-badge');
+  var body=document.getElementById('ao-body');
+  var nextBtn=document.getElementById('ao-next');
+  badge.textContent='Step '+(dvStepIdx+1)+' / '+dvSteps.length;
+
+  if(step.type==='dv-init'){
+    hdr.className='ao-hdr ao-hdr-dv';
+    title.style.color='#0A5C3E';
+    title.textContent='Router '+step.node+' — Initialize Distance Vector';
+    sub.textContent='Round 0: only directly connected neighbors known';
+    nextBtn.style.background='#1D9E75'; nextBtn.textContent='Next ▶';
+    var h='<div class="ao-phase">Initial Distance Vector at Router '+step.node+'</div>';
+    h+='<div class="ao-math"><div class="ao-math-hdr">d('+step.node+', destination)</div>';
+    ROUTERS.forEach(function(d){
+      var e=step.table[d];
+      h+='<div class="ao-eq"><span class="dest">d('+step.node+','+d+')</span>';
+      if(d===step.node) h+='<span class="win">= 0</span><span class="badge badge-upd">self</span>';
+      else if(e.c===Infinity) h+='<span class="lose">= ∞</span><span class="badge badge-inf">unknown</span>';
+      else h+='<span class="win">= '+e.c+'</span><span class="badge badge-upd">direct link</span>';
+      h+='</div>';
+    });
+    h+='</div><div style="font-size:10px;color:#5F5E5A;line-height:1.6;">Router '+step.node+' will <b>only ever talk to direct neighbors</b>. All other distances must be learned through neighbor vectors.</div>';
+    body.innerHTML=h;
+
+  } else if(step.type==='dv-round'){
+    // First animate DV messages flying from each neighbor, then show overlay
+    var nbs=step.updates.map(function(u){return u.nb;});
+    hdr.className='ao-hdr ao-hdr-dv';
+    title.style.color='#0A5C3E';
+    title.textContent='Router '+step.node+' — Round '+step.round;
+    sub.textContent='Receive distance vectors from: '+nbs.join(', ');
+    nextBtn.style.background='#1D9E75';
+    nextBtn.textContent=step.changed?'Next ▶':'▶ Converged — Finish';
+    var h2='';
+    step.updates.forEach(function(upd){
+      h2+='<div class="ao-phase">Vector from '+upd.nb+' (link cost to '+upd.nb+': '+upd.linkCost+')</div>';
+      h2+='<div class="ao-math"><div class="ao-math-hdr">d('+step.node+',dest) = min(current, '+upd.linkCost+' + d('+upd.nb+',dest))</div>';
+      upd.eqs.forEach(function(eq){
+        var cur=eq.current===Infinity?'∞':eq.current;
+        var via=eq.isInf?'∞':eq.viaCost;
+        var nbC=eq.nbCost===Infinity?'∞':eq.nbCost;
+        h2+='<div class="ao-eq"><span class="dest">d('+step.node+','+eq.dest+')</span><span> = min(</span>';
+        if(eq.better){
+          h2+='<span class="lose">'+cur+'</span>, <span class="win">'+upd.linkCost+'+'+nbC+'='+via+'</span>) = <span class="win">'+via+'</span> via '+upd.nb;
+          h2+='<span class="badge badge-upd">↓ updated</span>';
+        } else if(eq.isInf){
+          h2+='<span class="'+(eq.current===Infinity?'lose':'win')+'">'+cur+'</span>, <span class="lose">'+upd.linkCost+'+∞</span>) = <span class="'+(eq.current===Infinity?'lose':'win')+'">'+cur+'</span>';
+          h2+='<span class="badge badge-inf">∞+k=∞</span>';
+        } else {
+          h2+='<span class="win">'+cur+'</span>, <span class="lose">'+upd.linkCost+'+'+nbC+'='+via+'</span>) = <span class="win">'+cur+'</span>';
+          h2+='<span class="badge badge-nc">— no change</span>';
+        }
+        h2+='</div>';
+      });
+      h2+='</div>';
+    });
+    if(!step.changed) h2+='<div class="ao-transition" style="background:#E6F9F3;color:#0A5C3E;">✓ No changes this round — DV converged at Router '+step.node+'</div>';
+    body.innerHTML=h2;
+
+  } else if(step.type==='dv-ready'){
+    hdr.className='ao-hdr ao-hdr-dv';
+    title.style.color='#0A5C3E';
+    title.textContent='Router '+step.node+' — DV Converged';
+    sub.textContent='Forwarding table ready';
+    nextBtn.style.background='#0F6E56'; nextBtn.textContent='▶ Finish';
+    body.innerHTML='<div class="ao-transition" style="background:#E6F9F3;color:#0A5C3E;">✓ Distance vectors stable. Forwarding tables built.</div><div style="font-size:10px;color:#5F5E5A;line-height:1.6;margin-top:8px;">Router '+step.node+' <b>never learned the full topology</b>. It only knows best cost + next hop, learned entirely through neighbor exchanges.</div>';
+  }
+
+  // For DV rounds: animate neighbor messages first, then show overlay
+  if(step.type==='dv-round'){
+    document.getElementById('algo-overlay').style.display='none';
+    var nbPaths=step.updates.map(function(u){return [u.nb, step.node];});
+    animDVPaths(nbPaths, 0, function(){
+      document.getElementById('algo-overlay').style.display='flex';
+    });
+  } else {
+    document.getElementById('algo-overlay').style.display='flex';
+  }
+
+  document.getElementById('ao-skip').onclick=function(){
+    hideAOOverlay();animPkt=null;pendingCb=null;dvStepCb=null;
+  };
+  nextBtn.onclick=function(){dvStepIdx++;showDVStep();};
+}
+
+function hideAOOverlay(){
+  document.getElementById('algo-overlay').style.display='none';
+}
+
+function startExamineOverlay(node){
+  examineNode=node;
+  if(algo==='ls') startLSExamine(node);
+  else startDVExamine(node);
+}
+
+
+// ── Mouse ─────────────────────────────────────────────────────────────────────
+cv.addEventListener('mousemove',function(e){
+  var r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
+  hoveredLink=null;hoverBtn=null;hoveredMag=null;
+  // Check magnify icon hover
+  ROUTERS.forEach(function(id){
+    if(NODES[id]._mgx!==undefined&&d2(mx,my,NODES[id]._mgx,NODES[id]._mgy)<81) hoveredMag=id;
+  });
+  if(!scissorsActive){
+    LINKS.forEach(function(lk,li){
+      if(lk.fixed) return;
+      if(lk._bp&&d2(mx,my,lk._bp.x,lk._bp.y)<64){hoverBtn={link:li,which:'+'};hoveredLink=li;}
+      else if(lk._bm&&d2(mx,my,lk._bm.x,lk._bm.y)<64){hoverBtn={link:li,which:'-'};hoveredLink=li;}
+      else if(lk._mx&&d2(mx,my,lk._mx,lk._my)<144) hoveredLink=li;
+    });
+  } else {
+    LINKS.forEach(function(lk,li){
+      if(lk.fixed) return;
+      if(lk._mx&&d2(mx,my,lk._mx,lk._my)<200) hoveredLink=li;
+    });
+  }
+  var ov=null;
+  Object.keys(NODES).forEach(function(id){var p=npos(id),r2=nodeHitR(id);if(d2(mx,my,p.x,p.y)<r2*r2) ov=id;});
+  cv.style.cursor=scissorsActive?'crosshair':(hoveredMag||ov||hoverBtn)?'pointer':'default';
+});
+
+cv.addEventListener('click',function(e){
+  var r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
+  // Magnify icon click — takes priority
+  var magId=null;
+  ROUTERS.forEach(function(id){
+    if(NODES[id]._mgx!==undefined&&d2(mx,my,NODES[id]._mgx,NODES[id]._mgy)<81) magId=id;
+  });
+  if(magId){
+    if(examineNode===magId){
+      // Toggle off
+      examineNode=null;
+      animPkt=null;pendingCb=null;
+      hideAOOverlay();
+      document.getElementById('state-bar').textContent='Tables ready. Click 🔍 on a router to examine, or ▶ Start to animate.';
+      return;
+    }
+    examineNode=magId; selectedNode=magId;
+    document.getElementById('node-name').textContent=magId;
+    document.getElementById('ni-role').textContent=NODES[magId].role;
+    document.getElementById('ni-nb').textContent=getNbRouters(magId).map(function(x){return x.n+'('+x.c+')';}).join(', ')||'—';
+    document.getElementById('state-bar').textContent='Router '+magId+' selected — press ▶ Start to animate '+(algo==='ls'?'LSA flood':'DV exchange')+' from '+magId+'\'s perspective';
+    return;
+  }
+  // Node click (always works)
+  var clicked=null;
+  Object.keys(NODES).forEach(function(id){var p=npos(id),r2=nodeHitR(id);if(d2(mx,my,p.x,p.y)<r2*r2) clicked=id;});
+  if(clicked){
+    selectedNode=clicked;
+    document.getElementById('node-name').textContent=clicked;
+    document.getElementById('ni-role').textContent=NODES[clicked].role;
+    document.getElementById('ni-nb').textContent=getNbRouters(clicked).map(function(x){return x.n+'('+x.c+')';}).join(', ')||'—';
+    renderSelectedNodeFT(clicked);
+    return;
+  }
+  if(scissorsActive){
+    // Cut/restore link under cursor
+    LINKS.forEach(function(lk){
+      if(lk.fixed) return;
+      if(lk._mx&&d2(mx,my,lk._mx,lk._my)<200){
+        lk.alive=!lk.alive;
+        addLog((lk.alive?'Restored':'Cut ✂')+': '+lk.a+'—'+lk.b,'build');
+        onTopologyChange();
+      }
+    });
+    return;
+  }
+  // Cost +/- buttons (always active)
+  if(hoverBtn){
+    var lk=LINKS[hoverBtn.link];
+    lk.cost=hoverBtn.which==='+'?Math.min(lk.cost+1,9):Math.max(lk.cost-1,1);
+    addLog('Cost '+lk.a+'—'+lk.b+' → '+lk.cost,'build');
+    onTopologyChange();
+    return;
+  }
+  // Cost badge click toggles link (when not scissors)
+  LINKS.forEach(function(lk){
+    if(lk.fixed) return;
+    if(lk._mx&&d2(mx,my,lk._mx,lk._my)<144){
+      lk.alive=!lk.alive;
+      addLog((lk.alive?'Restored':'Failed')+': '+lk.a+'—'+lk.b,'build');
+      onTopologyChange();
+    }
+  });
+});
+
+// ── Log ───────────────────────────────────────────────────────────────────────
+function addLog(msg,type){
+  logTime++;
+  var body=document.getElementById('log-body'),row=document.createElement('div');row.className='log-row';
+  var col=type==='ls'?'#185FA5':type==='dv'?'#1D9E75':type==='pkt'?'#BA7517':'#888780';
+  row.innerHTML='<span style="color:#888780;font-family:monospace;">'+String(logTime).padStart(4,'0')+'</span> <span style="color:'+col+';">'+msg+'</span>';
+  body.insertBefore(row,body.firstChild);
+  if(body.children.length>80) body.removeChild(body.lastChild);
+}
+
+// ── Events ────────────────────────────────────────────────────────────────────
+document.getElementById('btn-algo-ls').addEventListener('click',function(){setAlgo('ls');});
+document.getElementById('btn-algo-dv').addEventListener('click',function(){setAlgo('dv');});
+
+document.getElementById('btn-scissors').addEventListener('click',function(){
+  scissorsActive=!scissorsActive;
+  this.classList.toggle('active',scissorsActive);
+  document.getElementById('state-bar').textContent=scissorsActive?'✂ Scissors active — click any link to cut/restore':'Tables ready. Click 🔍 on a router to examine, or ▶ Start to animate.';
+});
+document.getElementById('btn-start-algo').addEventListener('click',function(){
+  var target=(examineNode&&ROUTERS.indexOf(examineNode)>=0)?examineNode:'A';
+  examineNode=target;
+  startExamineOverlay(target);
+});
+document.getElementById('pkt-auto').addEventListener('click',function(){
+  pktStepMode=false;this.classList.add('active');document.getElementById('pkt-step').classList.remove('active');
+});
+document.getElementById('pkt-step').addEventListener('click',function(){
+  pktStepMode=true;this.classList.add('active');document.getElementById('pkt-auto').classList.remove('active');
+});
+document.getElementById('btn-send-pkt').addEventListener('click',function(){
+  if(!algoConverged) onTopologyChange();
+  if(!algoConverged) return;
+  pktActive=false;animPkt=null;pendingCb=null;pktOverlayCb=null;pktPhase=null;
+  document.querySelectorAll('.ft-mini tr').forEach(function(tr){tr.classList.remove('hl');});
+  document.getElementById('pkt-overlay').style.display='none';
+  startPacket();
+});
+document.getElementById('btn-reset-all').addEventListener('click',function(){
+  if(autoTimer){clearInterval(autoTimer);autoTimer=null;}
+  LINKS[1].cost=2;LINKS[2].cost=5;LINKS[3].cost=1;LINKS[4].cost=3;LINKS[5].cost=2;
+  LINKS.forEach(function(lk){lk.alive=true;});
+  pktActive=false;animPkt=null;pendingCb=null;pktOverlayCb=null;
+  document.getElementById('log-body').innerHTML='';logTime=0;
+  document.getElementById('pkt-overlay').style.display='none';
+  scissorsActive=false;document.getElementById('btn-scissors').classList.remove('active');
+  onTopologyChange();
+});
+document.getElementById('btn-ft-expand').addEventListener('click',function(){
+  var body=document.getElementById('ft-overlay-body');
+  body.innerHTML='';
+  ROUTERS.forEach(function(r){
+    var ft=ftables[r];if(!ft) return;
+    var div=document.createElement('div');
+    var hdr=document.createElement('div');
+    hdr.style.cssText='font-size:11px;font-weight:700;color:#0C447C;margin-bottom:6px;display:flex;align-items:center;gap:6px;';
+    var dot=document.createElement('span');
+    dot.style.cssText='width:10px;height:10px;border-radius:50%;background:#185FA5;display:inline-block;flex-shrink:0;';
+    hdr.appendChild(dot);hdr.appendChild(document.createTextNode('Router '+r));
+    div.appendChild(hdr);
+    var tbl=document.createElement('table');tbl.className='ft-mini';
+    tbl.style.marginBottom='0';
+    tbl.innerHTML='<thead><tr><th>Dest</th><th>Via</th><th>Cost</th></tr></thead>';
+    var tb=document.createElement('tbody');
+    Object.keys(ft).sort().forEach(function(dest){
+      if(ENDPOINTS.indexOf(dest)>=0) return;
+      var e=ft[dest],tr=document.createElement('tr');
+      tr.innerHTML='<td>'+dest+'</td><td>'+e.via+'</td><td>'+e.cost+'</td>';
+      tb.appendChild(tr);
+    });
+    tbl.appendChild(tb);div.appendChild(tbl);body.appendChild(div);
+  });
+  if(!body.children.length){
+    body.innerHTML='<div style="font-size:11px;color:#888780;font-style:italic;grid-column:1/-1;">Tables populate after algorithm converges.</div>';
+  }
+  document.getElementById('ft-overlay').style.display='flex';
+});
+document.getElementById('ft-overlay-close').addEventListener('click',function(){
+  document.getElementById('ft-overlay').style.display='none';
+});
+document.getElementById('ft-overlay').addEventListener('click',function(e){
+  if(e.target===this) this.style.display='none';
+});
+document.getElementById('btn-clear-log').addEventListener('click',function(){
+  document.getElementById('log-body').innerHTML='';logTime=0;
+});
+
+// Randomize & Rebuild
+document.getElementById('ov-randomize').addEventListener('click',function(){
+  var candidates=LINKS.filter(function(lk){return !lk.fixed&&lk.alive;});
+  if(!candidates.length) return;
+  var lk=candidates[Math.floor(Math.random()*candidates.length)];
+  var oldCost=lk.cost, newCost=oldCost;
+  while(newCost===oldCost) newCost=Math.floor(Math.random()*8)+1;
+  lk.cost=newCost;
+  // Get router name from overlay title
+  var titleText=document.getElementById('ov-title').textContent;
+  var routerNode=titleText.replace(/(Packet|ACK) at Router /,'');
+  var lookupDest=document.getElementById('ov-sub').textContent.indexOf('Sender')>=0?'S':pktDest;
+  var oldEntry=ftables[routerNode]&&ftables[routerNode][lookupDest];
+  var oldStr=oldEntry?'Was: →'+oldEntry.via+' (cost '+oldEntry.cost+')':'Was: no route';
+  // Rebuild
+  runDijkstraFull();
+  addLog('⚡ '+lk.a+'—'+lk.b+' cost '+oldCost+'→'+newCost+' — tables rebuilt','build');
+  var newEntry=ftables[routerNode]&&ftables[routerNode][lookupDest];
+  var newStr=newEntry?'Now: →'+newEntry.via+' (cost '+newEntry.cost+')':'Now: no route';
+  var changed=document.getElementById('ov-changed');
+  changed.style.display='';
+  changed.textContent='⚡ Link '+lk.a+'—'+lk.b+': cost '+oldCost+'→'+newCost+'.  '+oldStr+'  '+newStr;
+  // Re-render FT in overlay
+  var ft=ftables[routerNode];
+  var tbody=document.getElementById('ov-ft-body');tbody.innerHTML='';
+  if(ft){ Object.keys(ft).sort().forEach(function(dest){
+      if(ENDPOINTS.indexOf(dest)>=0) return;
+    var e=ft[dest],isMatch=dest===lookupDest;
+    var tr=document.createElement('tr');
+    tr.style.cssText=isMatch?'background:#D4EDDA;font-weight:700;':'';
+    tr.innerHTML='<td style="padding:3px 6px;border-bottom:1px solid #f0efea;font-family:monospace;">'+dest+(isMatch?' ← match':'')+'</td>'+
+      '<td style="padding:3px 6px;border-bottom:1px solid #f0efea;font-family:monospace;">'+e.via+'</td>'+
+      '<td style="padding:3px 6px;border-bottom:1px solid #f0efea;font-family:monospace;">'+e.cost+'</td>';
+    tbody.appendChild(tr);
+  });}
+  var e2=ft&&ft[lookupDest];
+  document.getElementById('ov-decision').textContent=e2?'Forward to: '+e2.via+' (total cost '+e2.cost+')':'No route — drop';
+  document.getElementById('ov-explain').textContent=e2?
+    'Table rebuilt. Router '+routerNode+' now forwards to '+e2.via+'.':
+    'No route after rebuild — packet would be dropped.';
+});
+document.getElementById('ov-run-auto').addEventListener('click',function(){
+  document.getElementById('ov-changed').style.display='none';
+  document.getElementById('pkt-overlay').style.display='none';
+  pktStepMode=false;
+  document.getElementById('pkt-step').classList.remove('active');
+  document.getElementById('pkt-auto').classList.add('active');
+  if(pktOverlayCb){var f=pktOverlayCb;pktOverlayCb=null;f();}
+});
+document.getElementById('ov-next').addEventListener('click',function(){
+  document.getElementById('ov-changed').style.display='none';
+  if(pktOverlayCb){var f=pktOverlayCb;pktOverlayCb=null;f();}
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+window.addEventListener('load',function(){resizeCv();loop();onTopologyChange();});
+setTimeout(function(){resizeCv();},50);
+</script>

@@ -1,0 +1,430 @@
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans, sans-serif); background: #ffffff; padding: 12px; }
+.controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.controls label { font-size: 13px; color: #5F5E5A; }
+.count-label { font-size: 13px; font-weight: 500; color: #2C2C2A; min-width: 28px; }
+.btn { padding: 6px 14px; border-radius: 8px; font-size: 13px; border: 0.5px solid #D3D1C7; cursor: pointer; background: #F1EFE8; color: #2C2C2A; }
+.btn:hover { background: #E8E5DC; }
+.btn.primary { background: #185FA5; color: #fff; border-color: #185FA5; }
+.btn.primary:hover { background: #0C447C; }
+.btn.danger { background: #A32D2D; color: #fff; border-color: #A32D2D; }
+.btn.danger:hover { background: #791F1F; }
+.btn:disabled { opacity: 0.35; cursor: default; }
+.type-toggle { display: flex; border: 0.5px solid #D3D1C7; border-radius: 8px; overflow: hidden; }
+.type-btn { padding: 6px 14px; font-size: 13px; cursor: pointer; background: #F1EFE8; color: #5F5E5A; border: none; }
+.type-btn.active { background: #185FA5; color: #fff; }
+.speed-row { display: flex; align-items: center; gap: 6px; }
+.speed-row label { font-size: 12px; color: #888780; }
+.status-box { display: flex; align-items: center; gap: 10px; min-height: 32px; margin-bottom: 10px; padding: 6px 12px; border-radius: 8px; border: 1px solid #D3D1C7; background: #F1EFE8; }
+.status-badge { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+.status-text { font-size: 12px; color: #5F5E5A; font-family: monospace; flex: 1; }
+.step-counter { font-size: 11px; color: #888780; font-family: monospace; white-space: nowrap; }
+#tree-svg { width: 100%; display: block; background: #ffffff; }
+.nav-row { display: flex; align-items: center; gap: 8px; }
+</style>
+
+<div class="controls">
+  <div class="type-toggle">
+    <button class="type-btn active" id="btn-max" onclick="setType('max')">Max heap</button>
+    <button class="type-btn" id="btn-min" onclick="setType('min')">Min heap</button>
+  </div>
+  <label>Nodes:</label>
+  <input type="range" min="3" max="15" value="7" step="1" id="count-slider" style="width:72px" oninput="document.getElementById('count-out').textContent=this.value">
+  <span class="count-label" id="count-out">7</span>
+  <button class="btn primary" onclick="startBuild()">Build</button>
+  <button class="btn danger" id="extract-btn" onclick="startExtract()" disabled>Extract</button>
+  <div class="nav-row">
+    <button class="btn" id="prev-btn" onclick="stepPrev()" disabled>&#8592; Prev</button>
+    <button class="btn" id="next-btn" onclick="stepOnce()" disabled>Next &#8594;</button>
+  </div>
+  <button class="btn" id="auto-btn" onclick="toggleAuto()" disabled>Auto</button>
+  <div class="speed-row">
+    <label>Speed</label>
+    <input type="range" min="300" max="1600" value="800" step="100" id="speed" style="width:72px">
+  </div>
+</div>
+
+<div class="status-box" id="status-box">
+  <span class="status-badge" id="status-badge" style="background:#E6F1FB;color:#0C447C;">Ready</span>
+  <span class="status-text" id="status-text">Press Build to generate a random heap.</span>
+  <span class="step-counter" id="step-counter"></span>
+</div>
+
+<svg id="tree-svg" viewBox="0 0 640 300"></svg>
+
+<script>
+const NR=20;
+const COL={
+  normal:   {fill:'#F1EFE8',stroke:'#B4B2A9',text:'#2C2C2A'},
+  new:      {fill:'#FAEEDA',stroke:'#EF9F27',text:'#633806'},
+  violation:{fill:'#FCEBEB',stroke:'#E24B4A',text:'#791F1F'},
+  reheaping:{fill:'#FBEAF0',stroke:'#D4537E',text:'#72243E'},
+  settled:  {fill:'#E1F5EE',stroke:'#1D9E75',text:'#085041'},
+  root:     {fill:'#E6F1FB',stroke:'#378ADD',text:'#0C447C'},
+  extracted:{fill:'#FCEBEB',stroke:'#E24B4A',text:'#791F1F'},
+  promoted: {fill:'#FAEEDA',stroke:'#EF9F27',text:'#633806'},
+  ghost:    {fill:'#F1EFE8',stroke:'#D3D1C7',text:'#B4B2A9'},
+};
+
+let steps=[],stepIdx=0,autoTimer=null,heapType='max',animating=false;
+
+function setType(t){
+  heapType=t;
+  document.getElementById('btn-max').classList.toggle('active',t==='max');
+  document.getElementById('btn-min').classList.toggle('active',t==='min');
+}
+function better(a,b){return heapType==='max'?a>b:a<b;}
+
+/* ── BUILD STEPS ── */
+function genBuildSteps(values){
+  const h=[],s=[];
+  for(let i=0;i<values.length;i++){
+    h.push(values[i]);
+    s.push({phase:'insert',heap:[...h],newIdx:i,nodeNum:i+1,total:values.length,mode:'build'});
+    let idx=i; const swapSeq=[]; const hC=[...h];
+    while(idx>0){
+      const p=Math.floor((idx-1)/2);
+      if(better(hC[idx],hC[p])){swapSeq.push([idx,p]);[hC[idx],hC[p]]=[hC[p],hC[idx]];idx=p;}
+      else break;
+    }
+    if(swapSeq.length>0){
+      s.push({phase:'violation',heap:[...h],violating:swapSeq[0][0],parent:swapSeq[0][1],nodeNum:i+1,total:values.length,mode:'build'});
+      const w=[...h];
+      for(let k=0;k<swapSeq.length;k++){
+        const[ci,pi]=swapSeq[k];
+        s.push({phase:'reheap_up',heap:[...w],swapped:[ci,pi],step:k+1,swapTotal:swapSeq.length,nodeNum:i+1,total:values.length,mode:'build'});
+        [w[ci],w[pi]]=[w[pi],w[ci]];
+        if(k<swapSeq.length-1) s.push({phase:'violation',heap:[...w],violating:swapSeq[k+1][0],parent:swapSeq[k+1][1],nodeNum:i+1,total:values.length,mode:'build'});
+      }
+      s.push({phase:'done',heap:[...w],finalIdx:idx,nodeNum:i+1,total:values.length,mode:'build'});
+      for(let x=0;x<w.length;x++) h[x]=w[x];
+    } else {
+      s.push({phase:'done_noswap',heap:[...h],finalIdx:i,nodeNum:i+1,total:values.length,mode:'build'});
+    }
+  }
+  s.push({phase:'complete',heap:[...h],total:values.length,mode:'build'});
+  return s;
+}
+
+/* ── EXTRACT STEPS ── */
+function genExtractSteps(h){
+  if(h.length===0) return [];
+  const s=[];
+  const extractedVal=h[0];
+  const lastVal=h[h.length-1];
+
+  // 1. Highlight root to be removed
+  s.push({phase:'extract_root',heap:[...h],rootVal:extractedVal,lastVal,mode:'extract'});
+
+  // 2. Animate promotion: show last node travelling to root (heap still has original size, last node marked as moving)
+  s.push({phase:'promote_anim',heap:[...h],rootVal:extractedVal,lastVal,promotingFrom:h.length-1,mode:'extract'});
+
+  // 3. After promotion: heap with last node at root, last slot removed
+  const w=[...h];
+  w[0]=lastVal;
+  w.pop();
+  s.push({phase:'promote_done',heap:[...w],promotedVal:lastVal,extractedVal,mode:'extract'});
+
+  if(w.length===0){s.push({phase:'extract_done',heap:[],extractedVal,mode:'extract'});return s;}
+
+  // Reheap down
+  let idx=0; const swapSeq=[]; const wC=[...w];
+  while(true){
+    const l=2*idx+1,r=2*idx+2; let best=idx;
+    if(l<wC.length&&better(wC[l],wC[best])) best=l;
+    if(r<wC.length&&better(wC[r],wC[best])) best=r;
+    if(best===idx) break;
+    swapSeq.push([idx,best]);
+    [wC[idx],wC[best]]=[wC[best],wC[idx]];
+    idx=best;
+  }
+
+  if(swapSeq.length>0){
+    const working=[...w];
+    for(let k=0;k<swapSeq.length;k++){
+      const[pi,ci]=swapSeq[k];
+      s.push({phase:'viol_down',heap:[...working],violating:pi,bestChild:ci,mode:'extract'});
+      s.push({phase:'reheap_down',heap:[...working],swapped:[pi,ci],step:k+1,swapTotal:swapSeq.length,mode:'extract'});
+      [working[pi],working[ci]]=[working[ci],working[pi]];
+    }
+    s.push({phase:'extract_done',heap:[...working],extractedVal,mode:'extract'});
+  } else {
+    s.push({phase:'no_reheap_down',heap:[...w],extractedVal,mode:'extract'});
+    s.push({phase:'extract_done',heap:[...w],extractedVal,mode:'extract'});
+  }
+  return s;
+}
+
+/* ── LAYOUT ── */
+function nodePos(n){
+  const pos=[];
+  function pl(i,d,lo,hi){if(i>=n)return;pos[i]={x:(lo+hi)/2,y:30+d*76};pl(2*i+1,d+1,lo,(lo+hi)/2);pl(2*i+2,d+1,(lo+hi)/2,hi);}
+  pl(0,0,20,620);return pos;
+}
+
+function bezier(ax,ay,cx,cy,bx,by,t){
+  return{x:(1-t)*(1-t)*ax+2*(1-t)*t*cx+t*t*bx,y:(1-t)*(1-t)*ay+2*(1-t)*t*cy+t*t*by};
+}
+function easeInOut(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+
+function nodeG(x,y,val,c){
+  return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${NR}" fill="${c.fill}" stroke="${c.stroke}" stroke-width="1.5"/>
+<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="500" fill="${c.text}" font-family="sans-serif">${val}</text>`;
+}
+
+function drawStatic(s, swapProgress, promoteProgress){
+  const svg=document.getElementById('tree-svg');
+
+  // For promote_anim, heap still has original length (we show ghost at last pos + moving node)
+  const displayHeap = s.heap;
+  const n=displayHeap.length;
+  const pos=nodePos(n);
+  const maxD=n>0?Math.floor(Math.log2(n)):0;
+  const svgH=Math.max(140,30+maxD*76+60);
+  svg.setAttribute('viewBox',`0 0 640 ${svgH}`);
+
+  const isSwapUp   = s.phase==='reheap_up'   && swapProgress!==undefined;
+  const isSwapDown = s.phase==='reheap_down'  && swapProgress!==undefined;
+  const isSwap = isSwapUp||isSwapDown;
+  const [swA,swB] = isSwap?s.swapped:[-1,-1];
+  let bigIdx=-1,smallIdx=-1;
+  if(isSwap){bigIdx=s.heap[swA]>s.heap[swB]?swA:swB;smallIdx=bigIdx===swA?swB:swA;}
+
+  const isPromote = s.phase==='promote_anim' && promoteProgress!==undefined;
+
+  let html=`<defs>
+    <marker id="am" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#D4537E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="av" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#E24B4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#EF9F27" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>`;
+
+  // tree edges
+  for(let i=1;i<n;i++){
+    const p=Math.floor((i-1)/2);
+    if(!pos[p]||!pos[i])continue;
+    const dx=pos[i].x-pos[p].x,dy=pos[i].y-pos[p].y,dist=Math.sqrt(dx*dx+dy*dy);
+    const x1=pos[p].x+(dx/dist)*NR,y1=pos[p].y+(dy/dist)*NR;
+    const x2=pos[i].x-(dx/dist)*NR,y2=pos[i].y-(dy/dist)*NR;
+    let lc='#B4B2A9',op=1;
+    if(isSwap&&(i===swA||i===swB)){lc='#D4537E';op=0.2;}
+    else if(s.phase==='violation'&&(i===s.violating||i===s.parent)){lc='#E24B4A';}
+    else if(s.phase==='viol_down'&&(i===s.violating||i===s.bestChild)){lc='#E24B4A';}
+    else if(s.phase==='extract_root'&&i===0){op=0.3;}
+    else if(isPromote&&(i===s.promotingFrom)){op=0.2;}
+    html+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${lc}" stroke-width="1.5" opacity="${op}"/>`;
+  }
+
+  // promotion arc guide
+  if(isPromote&&pos[0]&&pos[s.promotingFrom]){
+    const ax=pos[s.promotingFrom].x,ay=pos[s.promotingFrom].y;
+    const bx=pos[0].x,by=pos[0].y;
+    html+=`<path d="M${ax.toFixed(1)},${ay.toFixed(1)} Q${((ax+bx)/2+80).toFixed(1)},${((ay+by)/2-40).toFixed(1)} ${bx.toFixed(1)},${by.toFixed(1)}" fill="none" stroke="#EF9F27" stroke-width="1.5" stroke-dasharray="6 3" opacity="0.5" marker-end="url(#ao)"/>`;
+  }
+
+  // violation arrows
+  if(s.phase==='violation'&&pos[s.violating]&&pos[s.parent]){
+    const vp=pos[s.violating],pp=pos[s.parent];
+    const dx=pp.x-vp.x,dy=pp.y-vp.y,dist=Math.sqrt(dx*dx+dy*dy);
+    html+=`<line x1="${(vp.x+(dx/dist)*NR).toFixed(1)}" y1="${(vp.y+(dy/dist)*NR).toFixed(1)}" x2="${(pp.x-(dx/dist)*NR).toFixed(1)}" y2="${(pp.y-(dy/dist)*NR).toFixed(1)}" stroke="#E24B4A" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#av)"/>`;
+  }
+  if(s.phase==='viol_down'&&pos[s.violating]&&pos[s.bestChild]){
+    const pp=pos[s.violating],cp=pos[s.bestChild];
+    const dx=cp.x-pp.x,dy=cp.y-pp.y,dist=Math.sqrt(dx*dx+dy*dy);
+    html+=`<line x1="${(pp.x+(dx/dist)*NR).toFixed(1)}" y1="${(pp.y+(dy/dist)*NR).toFixed(1)}" x2="${(cp.x-(dx/dist)*NR).toFixed(1)}" y2="${(cp.y-(dy/dist)*NR).toFixed(1)}" stroke="#E24B4A" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#av)"/>`;
+  }
+
+  // swap arc guides
+  if(isSwap&&pos[swA]&&pos[swB]){
+    const ax=pos[swA].x,ay=pos[swA].y,bx=pos[swB].x,by=pos[swB].y;
+    const mx=(ax+bx)/2,my=(ay+by)/2,dx=bx-ax,dy=by-ay,len=Math.sqrt(dx*dx+dy*dy),off=36;
+    const c1x=mx+(-dy/len)*off,c1y=my+(dx/len)*off;
+    const c2x=mx+(dy/len)*off,c2y=my+(-dx/len)*off;
+    html+=`<path d="M${ax.toFixed(1)},${ay.toFixed(1)} Q${c1x.toFixed(1)},${c1y.toFixed(1)} ${bx.toFixed(1)},${by.toFixed(1)}" fill="none" stroke="#D4537E" stroke-width="1.5" stroke-dasharray="5 3" opacity="0.45" marker-end="url(#am)"/>`;
+    html+=`<path d="M${bx.toFixed(1)},${by.toFixed(1)} Q${c2x.toFixed(1)},${c2y.toFixed(1)} ${ax.toFixed(1)},${ay.toFixed(1)}" fill="none" stroke="#D4537E" stroke-width="1.5" stroke-dasharray="5 3" opacity="0.45" marker-end="url(#am)"/>`;
+  }
+
+  // static nodes
+  for(let i=0;i<n;i++){
+    if(!pos[i])continue;
+    if(isSwap&&(i===swA||i===swB))continue;
+    if(isPromote&&i===s.promotingFrom)continue; // drawn as moving
+    let c=i===0?COL.root:COL.normal;
+    if(s.phase==='complete'){c=i===0?COL.root:COL.settled;}
+    else if(s.phase==='extract_root'){c=i===0?COL.extracted:COL.normal;}
+    else if(isPromote){
+      if(i===0) c=COL.ghost; // root slot empty, shown as ghost
+      else c=COL.normal;
+    }
+    else if(s.phase==='promote_done'){c=i===0?COL.promoted:COL.normal;}
+    else if(s.phase==='violation'&&(i===s.violating||i===s.parent)){c=COL.violation;}
+    else if(s.phase==='viol_down'&&(i===s.violating||i===s.bestChild)){c=COL.violation;}
+    else if((s.phase==='done'||s.phase==='done_noswap')&&i===s.finalIdx){c=COL.settled;}
+    else if(s.phase==='no_reheap_down'&&i===0){c=COL.settled;}
+    else if(s.phase==='extract_done'&&i===0&&n>0){c=COL.root;}
+    else if(s.phase==='insert'&&i===s.newIdx){c=COL.new;}
+    html+=nodeG(pos[i].x,pos[i].y,displayHeap[i],c);
+  }
+
+  // animated swap nodes
+  if(isSwap&&pos[swA]&&pos[swB]){
+    const t=swapProgress;
+    const ax=pos[swA].x,ay=pos[swA].y,bx=pos[swB].x,by=pos[swB].y;
+    const mx=(ax+bx)/2,my=(ay+by)/2,dx=bx-ax,dy=by-ay,len=Math.sqrt(dx*dx+dy*dy),off=36;
+    const c1x=mx+(-dy/len)*off,c1y=my+(dx/len)*off;
+    const c2x=mx+(dy/len)*off,c2y=my+(-dx/len)*off;
+    const pA=bezier(ax,ay,c1x,c1y,bx,by,t);
+    const pB=bezier(bx,by,c2x,c2y,ax,ay,t);
+    const posSmall=bigIdx===swA?pB:pA;
+    const posBig  =bigIdx===swA?pA:pB;
+    html+=nodeG(posSmall.x,posSmall.y,s.heap[smallIdx],COL.reheaping);
+    html+=nodeG(posBig.x,posBig.y,s.heap[bigIdx],COL.reheaping);
+  }
+
+  // animated promotion node (travels arc from last pos to root)
+  if(isPromote&&pos[0]&&pos[s.promotingFrom]){
+    const t=promoteProgress;
+    const ax=pos[s.promotingFrom].x,ay=pos[s.promotingFrom].y;
+    const bx=pos[0].x,by=pos[0].y;
+    const cx=(ax+bx)/2+80,cy=(ay+by)/2-40;
+    const p=bezier(ax,ay,cx,cy,bx,by,t);
+    html+=nodeG(p.x,p.y,s.lastVal,COL.promoted);
+  }
+
+  svg.innerHTML=html;
+}
+
+function setStatus(s){
+  const badge=document.getElementById('status-badge');
+  const text=document.getElementById('status-text');
+  const counter=document.getElementById('step-counter');
+  const box=document.getElementById('status-box');
+  const cmp=heapType==='max'?'>':'<';
+  if(s.nodeNum) counter.textContent=`node ${s.nodeNum} of ${s.total}`;
+  else counter.textContent='';
+  const set=(bg,tc,label,bc,msg)=>{badge.style.cssText=`background:${bg};color:${tc}`;badge.textContent=label;box.style.borderColor=bc;text.textContent=msg;};
+  if(s.phase==='insert') set('#FAEEDA','#633806','Insert','#EF9F27',`${s.heap[s.newIdx]} added at next available position`);
+  else if(s.phase==='violation') set('#FCEBEB','#791F1F','Reheap needed','#E24B4A',`${s.heap[s.violating]} ${cmp} parent ${s.heap[s.parent]} — heap property violated`);
+  else if(s.phase==='reheap_up') set('#FBEAF0','#72243E','Reheap up','#D4537E',`Swap ${s.heap[s.swapped[0]]} ↔ ${s.heap[s.swapped[1]]}  (swap ${s.step} of ${s.swapTotal})`);
+  else if(s.phase==='done') set('#E1F5EE','#085041','Settled','#1D9E75',`Heap property restored`);
+  else if(s.phase==='done_noswap') set('#E1F5EE','#085041','No reheap needed','#1D9E75',`${s.heap[s.finalIdx]} is already in correct position`);
+  else if(s.phase==='complete'){set('#E1F5EE','#085041','Heap built','#1D9E75',`${heapType==='max'?'Max':'Min'} heap complete — root = ${s.heap[0]}`);document.getElementById('extract-btn').disabled=false;}
+  else if(s.phase==='extract_root') set('#FCEBEB','#791F1F','Extracting root','#E24B4A',`Remove root (${s.rootVal}) — it is the ${heapType==='max'?'maximum':'minimum'}`);
+  else if(s.phase==='promote_anim') set('#FAEEDA','#633806','Promoting last','#EF9F27',`Move last node (${s.lastVal}) to root position`);
+  else if(s.phase==='promote_done') set('#FAEEDA','#633806','Promote last','#EF9F27',`${s.promotedVal} is now at root — heap property may be violated`);
+  else if(s.phase==='viol_down') set('#FCEBEB','#791F1F','Reheap needed','#E24B4A',`Root ${s.heap[s.violating]} ${heapType==='max'?'<':'>'} child ${s.heap[s.bestChild]} — heap property violated`);
+  else if(s.phase==='reheap_down') set('#FBEAF0','#72243E','Reheap down','#D4537E',`Swap ${s.heap[s.swapped[0]]} ↔ ${s.heap[s.swapped[1]]}  (swap ${s.step} of ${s.swapTotal})`);
+  else if(s.phase==='no_reheap_down') set('#E1F5EE','#085041','No reheap needed','#1D9E75',`${s.heap[0]} is already in correct position`);
+  else if(s.phase==='extract_done'){
+    const msg=s.heap.length>0?`${s.extractedVal} removed — heap restored, root = ${s.heap[0]}`:`${s.extractedVal} removed — heap is now empty`;
+    set('#E1F5EE','#085041','Extract done','#1D9E75',msg);
+    if(s.heap.length>0) document.getElementById('extract-btn').disabled=false;
+  }
+}
+
+function animate(s, onDone){
+  animating=true;
+  setBtn(false);
+  const dur=Math.min(700,parseInt(document.getElementById('speed').value)*0.8);
+  const start=performance.now();
+  const isPromote=s.phase==='promote_anim';
+  function frame(now){
+    const raw=Math.min((now-start)/dur,1);
+    const t=easeInOut(raw);
+    if(isPromote) drawStatic(s,undefined,t);
+    else drawStatic(s,t,undefined);
+    if(raw<1) requestAnimationFrame(frame);
+    else{
+      animating=false;
+      if(isPromote) drawStatic(s,undefined,1);
+      else drawStatic(s,1,undefined);
+      setBtn(true);
+      onDone();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+function easeInOut(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+
+function setBtn(enabled){
+  const at=stepIdx>=steps.length-1;
+  document.getElementById('next-btn').disabled=!enabled||at;
+  document.getElementById('prev-btn').disabled=!enabled||stepIdx===0;
+}
+
+function showStep(idx){
+  const s=steps[idx];
+  setStatus(s);
+  if(s.phase==='reheap_up'||s.phase==='reheap_down'){
+    drawStatic(s,0,undefined);
+    animate(s,()=>{drawStatic(s,1,undefined);});
+  } else if(s.phase==='promote_anim'){
+    drawStatic(s,undefined,0);
+    animate(s,()=>{drawStatic(s,undefined,1);});
+  } else {
+    drawStatic(s,undefined,undefined);
+  }
+  document.getElementById('prev-btn').disabled=idx===0;
+  document.getElementById('next-btn').disabled=idx>=steps.length-1;
+}
+
+function startBuild(){
+  if(autoTimer){clearInterval(autoTimer);autoTimer=null;}
+  document.getElementById('extract-btn').disabled=true;
+  const n=parseInt(document.getElementById('count-slider').value);
+  const vals=Array.from({length:n},()=>Math.floor(Math.random()*90)+10);
+  steps=genBuildSteps(vals);
+  stepIdx=0;
+  document.getElementById('next-btn').disabled=false;
+  document.getElementById('prev-btn').disabled=true;
+  document.getElementById('auto-btn').disabled=false;
+  document.getElementById('auto-btn').textContent='Auto';
+  showStep(0);
+}
+
+function startExtract(){
+  if(autoTimer){clearInterval(autoTimer);autoTimer=null;}
+  const lastStep=steps[steps.length-1];
+  if(!lastStep||lastStep.heap.length===0) return;
+  document.getElementById('extract-btn').disabled=true;
+  steps=genExtractSteps([...lastStep.heap]);
+  stepIdx=0;
+  document.getElementById('next-btn').disabled=false;
+  document.getElementById('prev-btn').disabled=true;
+  document.getElementById('auto-btn').disabled=false;
+  document.getElementById('auto-btn').textContent='Auto';
+  showStep(0);
+}
+
+function stepOnce(){
+  if(animating||stepIdx>=steps.length-1)return;
+  stepIdx++;
+  showStep(stepIdx);
+}
+
+function stepPrev(){
+  if(animating||stepIdx<=0)return;
+  stepIdx--;
+  showStep(stepIdx);
+}
+
+function toggleAuto(){
+  if(autoTimer){clearInterval(autoTimer);autoTimer=null;document.getElementById('auto-btn').textContent='Auto';return;}
+  if(stepIdx>=steps.length-1) stepIdx=0;
+  document.getElementById('auto-btn').textContent='Pause';
+  autoTimer=setInterval(()=>{
+    if(animating)return;
+    stepOnce();
+    if(stepIdx>=steps.length-1){clearInterval(autoTimer);autoTimer=null;document.getElementById('auto-btn').textContent='Auto';}
+  },parseInt(document.getElementById('speed').value));
+}
+
+startBuild();
+</script>

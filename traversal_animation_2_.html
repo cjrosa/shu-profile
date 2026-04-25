@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tree Traversal</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+
+:root {
+  --bg: #f5f5f0;
+  --surface: #ffffff;
+  --border: #e0dfd8;
+  --text: #1a1a1a;
+  --muted: #888;
+  --accent: #d97706;
+  --blue: #2563eb;
+  --green: #16a34a;
+  --red: #dc2626;
+  --purple: #7c3aed;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  font-family: 'DM Mono', monospace;
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 40px;
+}
+
+h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #111;
+  margin-bottom: 3px;
+  text-align: center;
+}
+.subtitle {
+  font-size: 0.68rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 860px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  flex: 1;
+  padding: 10px 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.73rem;
+  cursor: pointer;
+  border: none;
+  background: var(--bg);
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  text-align: center;
+}
+.tab:hover { color: var(--text); background: var(--surface); }
+.tab.active { background: var(--surface); color: var(--text); border-bottom-color: var(--blue); font-weight: 500; }
+
+/* Canvas */
+.canvas-wrap { background: var(--bg); border-bottom: 1px solid var(--border); }
+canvas { display: block; width: 100%; }
+
+/* Visit log */
+.visit-log {
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-height: 46px;
+}
+.log-label { font-size: 0.68rem; color: var(--muted); white-space: nowrap; }
+.log-chip {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  transition: all 0.25s;
+}
+.log-chip.active { border-color: var(--accent); color: var(--accent); background: rgba(217,119,6,0.09); transform: scale(1.1); }
+.log-chip.done   { border-color: var(--green);  color: var(--green);  background: rgba(22,163,74,0.08); }
+
+/* Controls */
+.controls {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 18px; flex-wrap: wrap;
+}
+.status { flex: 1; min-width: 160px; font-size: 0.73rem; color: var(--muted); }
+.status .hi { color: var(--accent); font-weight: 500; }
+
+button {
+  font-family: 'DM Mono', monospace; font-size: 0.72rem;
+  padding: 7px 14px; border-radius: 7px;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); cursor: pointer; transition: all 0.15s;
+}
+button:hover { border-color: var(--accent); color: var(--accent); }
+button:disabled { opacity: 0.35; cursor: default; }
+button.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 500; }
+button.primary:hover { background: #b45309; border-color: #b45309; }
+
+.speed-wrap { display: flex; align-items: center; gap: 6px; font-size: 0.68rem; color: var(--muted); }
+input[type=range] {
+  -webkit-appearance: none; width: 68px; height: 3px;
+  border-radius: 2px; background: var(--border); outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 13px; height: 13px;
+  border-radius: 50%; background: var(--accent); cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<h1>Tree Traversal</h1>
+<p class="subtitle">In-order · Pre-order · Post-order</p>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab active" id="tab-inorder"    onclick="switchTab('inorder')">In-order<br><span style="font-size:0.6rem;opacity:0.7">left → node → right</span></button>
+    <button class="tab"        id="tab-preorder"   onclick="switchTab('preorder')">Pre-order<br><span style="font-size:0.6rem;opacity:0.7">node → left → right</span></button>
+    <button class="tab"        id="tab-postorder"  onclick="switchTab('postorder')">Post-order<br><span style="font-size:0.6rem;opacity:0.7">left → right → node</span></button>
+  </div>
+
+  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
+
+  <div class="visit-log" id="visitLog">
+    <span class="log-label">Visited:</span>
+  </div>
+
+  <div class="controls">
+    <div class="status" id="status">Press <span class="hi">Next</span> to begin.</div>
+    <div class="speed-wrap">Speed <input type="range" id="spd" min="1" max="5" value="3"></div>
+    <button id="btnReset">Reset</button>
+    <button id="btnNext" class="primary">▶ Next</button>
+    <button id="btnAuto">Auto Play</button>
+  </div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────
+   TREE STRUCTURE
+   P(root) → left:F, right:S
+   F → left:B, right:H
+   H → right:G  (only right child)
+   S → left:R, right:Y
+   Y → left:T, right:Z
+   T → right:W  (only right child)
+───────────────────────────────────────────── */
+const NODES = {
+  P: { left:'F', right:'S' },
+  F: { left:'B', right:'H' },
+  B: { left:null, right:null },
+  H: { left:null, right:'G' },
+  G: { left:null, right:null },
+  S: { left:'R', right:'Y' },
+  R: { left:null, right:null },
+  Y: { left:'T', right:'Z' },
+  T: { left:null, right:'W' },
+  W: { left:null, right:null },
+  Z: { left:null, right:null },
+};
+
+/* ─────────────────────────────────────────────
+   TRAVERSAL ORDER COMPUTATION
+───────────────────────────────────────────── */
+function inorder(n, out=[]) {
+  if (!n) return out;
+  inorder(NODES[n].left, out);
+  out.push(n);
+  inorder(NODES[n].right, out);
+  return out;
+}
+function preorder(n, out=[]) {
+  if (!n) return out;
+  out.push(n);
+  preorder(NODES[n].left, out);
+  preorder(NODES[n].right, out);
+  return out;
+}
+function postorder(n, out=[]) {
+  if (!n) return out;
+  postorder(NODES[n].left, out);
+  postorder(NODES[n].right, out);
+  out.push(n);
+  return out;
+}
+
+const ORDERS = {
+  inorder:   inorder('P'),   // B F G H P R S T W Y Z
+  preorder:  preorder('P'),  // P F B H G S R Y T W Z
+  postorder: postorder('P'), // B G H F R W T Z Y S P
+};
+
+/* ─────────────────────────────────────────────
+   LAYOUT  — hand-tuned x,y positions
+   matching the image structure
+───────────────────────────────────────────── */
+const CANVAS_H = 380;
+const R = 20;
+
+// positions set in resizeLayout based on canvas width
+let pos = {};
+
+function resizeLayout(W) {
+  const cx = W / 2;
+  pos = {
+    P: { x: cx,          y: 40  },
+    F: { x: cx - 160,    y: 110 },
+    S: { x: cx + 120,    y: 110 },
+    B: { x: cx - 230,    y: 195 },
+    H: { x: cx - 100,    y: 195 },
+    R: { x: cx + 50,     y: 195 },
+    Y: { x: cx + 195,    y: 195 },
+    G: { x: cx - 80,     y: 275 },
+    T: { x: cx + 160,    y: 275 },
+    Z: { x: cx + 240,    y: 275 },
+    W: { x: cx + 190,    y: 345 },
+  };
+}
+
+/* ─────────────────────────────────────────────
+   DRAW
+───────────────────────────────────────────── */
+const cv  = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+
+// nodeState: map label → 'idle'|'current'|'visited'|'dimmed'
+let nodeState = {};
+
+function initStates() {
+  Object.keys(NODES).forEach(k => nodeState[k] = 'idle');
+}
+
+function resizeCanvas() {
+  cv.width  = cv.parentElement.offsetWidth || 600;
+  cv.height = CANVAS_H;
+  resizeLayout(cv.width);
+}
+
+function draw() {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  // Edges first
+  Object.entries(NODES).forEach(([k, nd]) => {
+    ['left','right'].forEach(side => {
+      const ch = nd[side]; if (!ch) return;
+      const p1 = pos[k], p2 = pos[ch];
+      const dx = p2.x-p1.x, dy = p2.y-p1.y;
+      const len = Math.sqrt(dx*dx+dy*dy);
+      const ex = p1.x + (dx/len)*R, ey = p1.y + (dy/len)*R;
+      const tx = p2.x - (dx/len)*R, ty = p2.y - (dy/len)*R;
+
+      const fromSt = nodeState[k]  || 'idle';
+      const toSt   = nodeState[ch] || 'idle';
+      const hot = (fromSt==='visited'||fromSt==='current') && (toSt==='visited'||toSt==='current');
+
+      // Arrow head
+      ctx.save();
+      ctx.translate(tx, ty);
+      ctx.rotate(Math.atan2(dy, dx));
+      ctx.beginPath();
+      ctx.moveTo(0,0); ctx.lineTo(-8,-4); ctx.lineTo(-8,4); ctx.closePath();
+      ctx.fillStyle = hot ? 'rgba(37,99,235,0.5)' : 'rgba(180,178,170,0.7)';
+      ctx.fill();
+      ctx.restore();
+
+      ctx.beginPath(); ctx.moveTo(ex,ey); ctx.lineTo(tx,ty);
+      ctx.strokeStyle = hot ? 'rgba(37,99,235,0.4)' : 'rgba(200,198,190,0.7)';
+      ctx.lineWidth = hot ? 2 : 1.2;
+      ctx.stroke();
+    });
+  });
+
+  // Nodes
+  Object.keys(NODES).forEach(k => {
+    const {x, y} = pos[k];
+    const st = nodeState[k] || 'idle';
+
+    let fill, stroke, text, glow, lw;
+    switch (st) {
+      case 'current':
+        fill='rgba(217,119,6,0.12)'; stroke='#d97706'; text='#92400e'; glow='rgba(217,119,6,0.35)'; lw=2.5; break;
+      case 'visited':
+        fill='rgba(22,163,74,0.10)'; stroke='#16a34a'; text='#14532d'; glow=null; lw=1.5; break;
+      case 'dimmed':
+        fill='rgba(200,200,190,0.2)'; stroke='#ddd'; text='#ccc'; glow=null; lw=1; break;
+      default:
+        fill='#fff'; stroke='#c8c8c0'; text='#333'; glow=null; lw=1.2;
+    }
+
+    if (glow) { ctx.shadowColor=glow; ctx.shadowBlur=12; }
+    ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI*2);
+    ctx.fillStyle=fill; ctx.fill();
+    ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.stroke();
+    ctx.shadowBlur=0;
+
+    ctx.font='500 13px "DM Mono",monospace';
+    ctx.fillStyle=text; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(k, x, y);
+  });
+}
+
+/* ─────────────────────────────────────────────
+   STEP ENGINE
+───────────────────────────────────────────── */
+let activeTab = 'inorder';
+let order     = [];
+let stepIdx   = 0;
+let visited   = [];
+let autoTmr   = null;
+
+function spd() { return 900 - (parseInt(document.getElementById('spd').value)-1)*180; }
+
+function switchTab(tab) {
+  stopAuto();
+  activeTab = tab;
+  ['inorder','preorder','postorder'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('active', t===tab);
+  });
+  resetState();
+}
+
+function resetState() {
+  stopAuto();
+  order   = [...ORDERS[activeTab]];
+  stepIdx = 0;
+  visited = [];
+  initStates();
+  document.getElementById('btnNext').disabled = false;
+  document.getElementById('btnAuto').disabled = false;
+  renderLog();
+  setStatus(`Press <span class="hi">Next</span> to begin.`);
+  draw();
+}
+
+function advance() {
+  if (stepIdx >= order.length) return;
+
+  const node = order[stepIdx];
+
+  // Previous current → visited
+  if (stepIdx > 0) {
+    const prev = order[stepIdx-1];
+    nodeState[prev] = 'visited';
+  }
+
+  nodeState[node] = 'current';
+  visited.push(node);
+  stepIdx++;
+
+  setStatus(`Visiting <span class="hi">${node}</span> — step ${stepIdx} of ${order.length}`);
+  renderLog();
+  draw();
+
+  if (stepIdx === order.length) {
+    // Finalize
+    setTimeout(() => {
+      nodeState[node] = 'visited';
+      draw();
+      setStatus(`Done! ${order.length} nodes visited: ${order.join(' → ')}`);
+      document.getElementById('btnNext').disabled = true;
+      document.getElementById('btnAuto').disabled = true;
+      stopAuto();
+    }, spd()*0.6);
+  }
+}
+
+function renderLog() {
+  const el = document.getElementById('visitLog');
+  el.innerHTML = '<span class="log-label">Visited:</span>';
+  order.forEach((n, i) => {
+    const chip = document.createElement('span');
+    chip.className = 'log-chip';
+    chip.textContent = n;
+    if (i < stepIdx-1) chip.classList.add('done');
+    else if (i === stepIdx-1) chip.classList.add('active');
+    el.appendChild(chip);
+  });
+}
+
+function setStatus(html) { document.getElementById('status').innerHTML = html; }
+
+function stopAuto() {
+  clearInterval(autoTmr); autoTmr = null;
+  document.getElementById('btnAuto').textContent = 'Auto Play';
+}
+
+document.getElementById('btnNext').addEventListener('click', () => { stopAuto(); advance(); });
+
+document.getElementById('btnAuto').addEventListener('click', () => {
+  if (autoTmr) { stopAuto(); return; }
+  document.getElementById('btnAuto').textContent = '⏸ Pause';
+  autoTmr = setInterval(() => {
+    if (stepIdx >= order.length) { stopAuto(); return; }
+    advance();
+  }, spd());
+});
+
+document.getElementById('btnReset').addEventListener('click', resetState);
+
+window.addEventListener('resize', () => { resizeCanvas(); draw(); });
+
+/* ── INIT ── */
+setTimeout(() => {
+  resizeCanvas();
+  resetState();
+}, 60);
+</script>
+</body>
+</html>

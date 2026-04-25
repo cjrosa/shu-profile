@@ -1,0 +1,505 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+#wrap{background:#fff;padding:16px;font-family:var(--font-sans,sans-serif)}
+.btn{padding:6px 14px;border:0.5px solid #888;border-radius:6px;background:#fff;font-size:13px;cursor:pointer;color:#222}
+.btn:hover{background:#f5f5f5}
+.btn:disabled{opacity:.35;cursor:default}
+#formula-box{background:#fff;border:0.5px solid #ccc;border-radius:8px;padding:9px 14px;margin-top:10px;font-size:13px;color:#222;min-height:38px;font-family:var(--font-mono,monospace)}
+#nv-input{width:58px;padding:4px 8px;border:1.5px solid #854F0B;border-radius:6px;font-size:17px;font-weight:700;text-align:center;color:#412402;background:#fff;outline:none}
+.mode-btn{padding:6px 16px;border:0.5px solid #ccc;border-radius:6px;font-size:13px;cursor:pointer;background:#fff;color:#666}
+.mode-btn.sel-up{background:#FAEEDA;border-color:#854F0B;color:#412402;font-weight:500}
+.mode-btn.sel-down{background:#E6F1FB;border-color:#185FA5;color:#042C53;font-weight:500}
+.flying{position:absolute;pointer-events:none;font-size:13px;font-weight:700;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;transition:transform .44s cubic-bezier(.4,0,.2,1);z-index:99}
+.fa{background:#FAEEDA;border:2px solid #854F0B;color:#412402}
+.fb{background:#E6F1FB;border:2px solid #185FA5;color:#042C53}
+.fg{background:#E1F5EE;border:2px solid #0F6E56;color:#085041}
+#al{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
+#sw{position:relative}
+</style>
+
+<div id="wrap">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+  <button class="mode-btn sel-up" id="mbup" onclick="setMode('up')">Reheap-up</button>
+  <button class="mode-btn" id="mbdn" onclick="setMode('down')">Reheap-down</button>
+  <div style="width:1px;height:18px;background:#ddd;margin:0 2px"></div>
+  <span style="font-size:13px;font-weight:500;color:#222">Nodes:</span>
+  <input type="range" min="4" max="15" value="7" id="nslider" style="width:100px" oninput="init()">
+  <span id="ncnt" style="font-size:12px;color:#666;min-width:52px">7 nodes</span>
+  <div id="nvwrap" style="display:flex;align-items:center;gap:6px;border:0.5px solid #854F0B;border-radius:8px;padding:5px 10px;background:#fff">
+    <span style="font-size:10px;font-weight:500;color:#854F0B;letter-spacing:.03em" id="nvlabel">NEXT VALUE</span>
+    <input id="nv-input" type="number" min="1" max="99" value="45" onchange="onNvChange()">
+  </div>
+</div>
+<div id="sw"><svg id="vis" width="100%" viewBox="0 0 660 360"></svg><div id="al"></div></div>
+<div id="formula-box">—</div>
+<div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap">
+  <button class="btn" id="btn-reset" onclick="init()">&#8635; Reset</button>
+  <button class="btn" id="btn-prev" disabled onclick="goPrev()">&#8592; Prev</button>
+  <button class="btn" id="btn-next" onclick="goNext()">Next &#8594;</button>
+  <span id="step-label" style="font-size:13px;color:#444;flex:1;min-width:160px">Press Next to begin.</span>
+</div>
+</div>
+
+<script>
+const NS='http://www.w3.org/2000/svg';
+const svg=document.getElementById('vis');
+const al=document.getElementById('al');
+function se(tag,a){const e=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(a))e.setAttribute(k,v);return e;}
+
+const C={
+  def_fill:'#F1EFE8',def_stroke:'#888780',
+  act_fill:'#FAEEDA',act_stroke:'#854F0B',act_text:'#412402',
+  par_fill:'#E6F1FB',par_stroke:'#185FA5',par_text:'#042C53',
+  rc_fill:'#E1F5EE',rc_stroke:'#0F6E56',rc_text:'#085041',
+  done_fill:'#E1F5EE',done_stroke:'#0F6E56',
+  arr:'#B4B2A9',
+};
+
+let mode='up', N=7, heap=[], insertVal=45, steps=[], stepIdx=-1, visited=new Set();
+
+function randHeap(n){
+  const pool=new Set();
+  while(pool.size<n){const v=Math.floor(Math.random()*89)+10;pool.add(v);}
+  const h=[...pool];
+  for(let i=Math.floor((h.length-2)/2);i>=0;i--){
+    let k=i;
+    while(true){
+      const l=2*k+1,r=2*k+2;let lg=k;
+      if(l<h.length&&h[l]>h[lg])lg=l;
+      if(r<h.length&&h[r]>h[lg])lg=r;
+      if(lg!==k){[h[k],h[lg]]=[h[lg],h[k]];k=lg;}else break;
+    }
+  }
+  return h;
+}
+
+function randVal(exc){let v;do{v=Math.floor(Math.random()*89)+10;}while(exc.includes(v));return v;}
+
+// ── reheap-up steps ──────────────────────────────────────────────────────────
+function stepsUp(base,ins){
+  const h=[...base,ins],s=[],ni=base.length;
+  s.push({heap:[...h],active:ni,parent:-1,lchild:-1,rchild:-1,action:'insert',
+    label:`Insert ${ins} at index ${ni} (end of array)`,
+    formula:`New element placed at index ${ni}`});
+  let idx=ni;
+  while(idx>0){
+    const p=Math.floor((idx-1)/2);
+    s.push({heap:[...h],active:idx,parent:p,lchild:-1,rchild:-1,action:'compare',
+      label:`Compare index ${idx} (value ${h[idx]}) with parent at index ${p} (value ${h[p]})`,
+      formula:`parent(${idx}) = floor((${idx}−1) / 2) = floor(${idx-1}/2) = ${p}`});
+    if(h[idx]>h[p]){
+      [h[idx],h[p]]=[h[p],h[idx]];
+      s.push({heap:[...h],active:p,parent:idx,lchild:-1,rchild:-1,action:'swap',
+        label:`${h[p]} > ${h[idx]} → swap indices ${p} and ${idx}`,
+        formula:`After swap: index ${p} = ${h[p]},  index ${idx} = ${h[idx]}`});
+      idx=p;
+    } else {
+      s.push({heap:[...h],active:idx,parent:p,lchild:-1,rchild:-1,action:'stop',
+        label:`${h[idx]} ≤ ${h[p]} → heap-order holds. Done.`,
+        formula:`No swap needed. Reheap-up complete.`});
+      return s;
+    }
+  }
+  s.push({heap:[...h],active:0,parent:-1,lchild:-1,rchild:-1,action:'root',
+    label:`Reached root (index 0). Reheap-up complete.`,
+    formula:`index 0 has no parent — stop.`});
+  return s;
+}
+
+// ── reheap-down steps ────────────────────────────────────────────────────────
+function stepsDown(h_in){
+  const h=[...h_in],n=h.length,s=[];
+  const extracted=h[0];
+  const last=h[n-1];
+
+  // Step 0: fly root to batter's box — show heap with root EMPTY (null), last still in place
+  // We represent "empty root" as heap with null at index 0, last still at end
+  const hWithEmpty=[null,...h.slice(1)];
+  s.push({heap:hWithEmpty,active:-1,parent:-1,lchild:-1,rchild:-1,
+    action:'extract_fly',extractedVal:extracted,
+    label:`Extract root (${extracted}) → batter's box. Root slot now empty.`,
+    formula:`Extracted max: ${extracted}. Root (index 0) is now vacant.`});
+
+  // Step 1: move last element to root, shrink array
+  const hAfter=[last,...h.slice(1,n-1)];
+  s.push({heap:[...hAfter],active:0,parent:-1,lchild:-1,rchild:-1,
+    action:'move_last',extractedVal:extracted,
+    label:`Move last element (${last}) from index ${n-1} to root (index 0). Array shrinks by 1.`,
+    formula:`last element ${last} → index 0. Array size: ${n} → ${n-1}.`});
+
+  // Now sift down
+  const hf=hAfter;
+  let idx=0;
+  const sz=hf.length;
+  while(true){
+    const l=2*idx+1,r=2*idx+2;
+    let lg=idx;
+    const hasL=l<sz,hasR=r<sz;
+    s.push({heap:[...hf],active:idx,parent:-1,lchild:hasL?l:-1,rchild:hasR?r:-1,
+      action:'compare',extractedVal:extracted,
+      label:`Index ${idx} (${hf[idx]}): check children — left=${hasL?`index ${l} (${hf[l]})`:'none'}, right=${hasR?`index ${r} (${hf[r]})`:'none'}`,
+      formula:`left(${idx}) = 2×${idx}+1 = ${l}${hasL?'  ✓':'  (none)'}    right(${idx}) = 2×${idx}+2 = ${r}${hasR?'  ✓':'  (none)'}`});
+    if(hasL&&hf[l]>hf[lg])lg=l;
+    if(hasR&&hf[r]>hf[lg])lg=r;
+    if(lg!==idx){
+      const bigger=hf[lg];
+      [hf[idx],hf[lg]]=[hf[lg],hf[idx]];
+      s.push({heap:[...hf],active:lg,parent:idx,lchild:-1,rchild:-1,
+        action:'swap',extractedVal:extracted,
+        label:`${bigger} > ${hf[idx]} → swap with larger child at index ${lg}`,
+        formula:`After swap: index ${lg} = ${hf[lg]},  index ${idx} = ${hf[idx]}`});
+      idx=lg;
+    } else {
+      s.push({heap:[...hf],active:idx,parent:-1,lchild:hasL?l:-1,rchild:hasR?r:-1,
+        action:'stop',extractedVal:extracted,
+        label:`${hf[idx]} ≥ both children — heap-order holds. Reheap-down complete.`,
+        formula:`No swap needed. Reheap-down complete.`});
+      return s;
+    }
+  }
+}
+
+function treePos(n){
+  const W=660,depth=Math.floor(Math.log2(n||1));
+  const pad=depth>=3?28:44,pos=[];
+  for(let i=0;i<n;i++){
+    const d=Math.floor(Math.log2(i+1));
+    const p=i+1-Math.pow(2,d),c=Math.pow(2,d);
+    pos.push({x:pad+(W-pad*2)*(p+.5)/c,y:36+d*64});
+  }
+  return pos;
+}
+
+function rebuildVisited(upto){
+  const v=new Set();
+  for(let i=0;i<=upto&&i<steps.length;i++){if(steps[i].active>=0)v.add(steps[i].active);}
+  return v;
+}
+
+// determine node visual state
+function nodeStyle(i,active,parent,lc,rc,action,vis){
+  const done=action==='stop'||action==='root';
+  if(i===active){
+    if(done)return{fill:C.done_fill,stroke:C.done_stroke,tw:'#085041',sw:2};
+    return{fill:C.act_fill,stroke:C.act_stroke,tw:C.act_text,sw:2};
+  }
+  if(action==='compare'){
+    if(i===lc||i===rc)return{fill:C.rc_fill,stroke:C.rc_stroke,tw:C.rc_text,sw:2};
+  }
+  if(vis.has(i))return{fill:C.act_fill,stroke:C.act_stroke,tw:C.act_text,sw:1};
+  return{fill:C.def_fill,stroke:C.def_stroke,tw:'#2C2C2A',sw:1};
+}
+
+const BB={x:530,y:6,w:118,h:50};
+
+function render(state,showUpEmpty){
+  while(svg.firstChild)svg.removeChild(svg.firstChild);
+  const{heap:h,active,parent,lchild,rchild,action}=state;
+  const lc=lchild??-1,rc=rchild??-1;
+
+  // for up-mode waiting: show base heap + empty slot
+  // for down extract_fly: show heap with null at index 0
+  const rawN=h.length;
+  const displayN=showUpEmpty?rawN+1:rawN;
+  const posN=displayN;
+  const pos=treePos(posN);
+
+  const depth=Math.floor(Math.log2(posN||1));
+  const nodeR=depth>=3?14:18;
+  const treeH=36+depth*64+nodeR+10;
+  const arrayY=treeH+18;
+  const totalH=arrayY+76;
+  const VW=660;
+  svg.setAttribute('viewBox',`0 0 ${VW} ${totalH}`);
+
+  const showParentLine=action==='compare'&&mode==='up';
+  const showChildLines=action==='compare';
+
+  const defs=se('defs',{});
+  const mk=se('marker',{id:'marr',viewBox:'0 0 10 10',refX:'8',refY:'5',markerWidth:'5',markerHeight:'5',orient:'auto-start-reverse'});
+  mk.appendChild(se('path',{d:'M2 1L8 5L2 9',fill:'none',stroke:'context-stroke','stroke-width':'1.5','stroke-linecap':'round','stroke-linejoin':'round'}));
+  defs.appendChild(mk);svg.appendChild(defs);
+
+  // ── batter's box ──
+  const bbWaiting=action==='waiting';
+  const bbHasVal=mode==='up'?bbWaiting:(state.extractedVal!=null&&action!=='waiting');
+  const bbVal=mode==='up'?insertVal:state.extractedVal;
+  const upMode=mode==='up';
+  const bbBorder=upMode?(bbWaiting?'#854F0B':'#ccc'):(bbHasVal?'#185FA5':'#ccc');
+  const bbLabelCol=upMode?(bbWaiting?'#854F0B':'#aaa'):(bbHasVal?'#185FA5':'#aaa');
+  const bbValCol=upMode?(bbWaiting?'#412402':'#ccc'):(bbHasVal?'#042C53':'#ccc');
+  const bbLabelTxt=upMode?'next value':'extracted max';
+
+  svg.appendChild(se('rect',{x:BB.x,y:BB.y,width:BB.w,height:BB.h,rx:'8',fill:'#fff',stroke:bbBorder,'stroke-width':'1'}));
+  const bbl=se('text',{x:BB.x+BB.w/2,y:BB.y+14,'text-anchor':'middle','font-size':'10','font-weight':'500',fill:bbLabelCol,'font-family':'var(--font-sans,sans-serif)'});
+  bbl.textContent=bbLabelTxt;svg.appendChild(bbl);
+  const bbv=se('text',{x:BB.x+BB.w/2,y:BB.y+38,'text-anchor':'middle','font-size':'22','font-weight':'700',fill:bbValCol,'font-family':'var(--font-sans,sans-serif)'});
+  bbv.textContent=bbHasVal&&bbVal!=null?bbVal:'—';svg.appendChild(bbv);
+
+  // ── build display array ──
+  // showUpEmpty: h has N-1 real nodes, we show N slots (last is empty)
+  // extract_fly: h[0] is null (empty root), rest are real
+  const displayHeap=showUpEmpty?[...h,null]:h;
+
+  // ── tree edges ──
+  for(let i=1;i<posN;i++){
+    const li=Math.floor((i-1)/2);
+    const isEmpty=displayHeap[i]===null||displayHeap[i]===undefined;
+    const isEmptyParent=displayHeap[li]===null||displayHeap[li]===undefined;
+    if(isEmpty||isEmptyParent){
+      svg.appendChild(se('line',{x1:pos[li].x,y1:pos[li].y+nodeR+1,x2:pos[i].x,y2:pos[i].y-nodeR-1,stroke:'#ddd','stroke-width':'1','stroke-dasharray':'4 3','marker-end':'url(#marr)'}));
+      continue;
+    }
+    const isActPair=showParentLine&&((i===active&&li===parent)||(i===parent&&li===active));
+    const isChildEdge=showChildLines&&(i===lc||i===rc)&&li===active;
+    const stroke=isActPair?C.par_stroke:isChildEdge?C.rc_stroke:C.arr;
+    svg.appendChild(se('line',{x1:pos[li].x,y1:pos[li].y+nodeR+1,x2:pos[i].x,y2:pos[i].y-nodeR-1,stroke,'stroke-width':isActPair||isChildEdge?1.5:1,'marker-end':'url(#marr)'}));
+  }
+
+  // ── tree nodes ──
+  const vis2=new Set([...visited].filter(x=>x!==active));
+  for(let i=0;i<posN;i++){
+    const val=displayHeap[i];
+    const isEmpty=val===null||val===undefined;
+    let st;
+    if(isEmpty){st={fill:'#fff',stroke:'#ddd',tw:'#ccc',sw:1};}
+    else{st=nodeStyle(i,active,parent,lc,rc,action,vis2);}
+    const g=se('g',{});
+    g.appendChild(se('circle',{cx:pos[i].x,cy:pos[i].y,r:nodeR,fill:st.fill,stroke:st.stroke,'stroke-width':st.sw,'stroke-dasharray':isEmpty?'4 3':'none'}));
+    const tv=se('text',{x:pos[i].x,y:pos[i].y,'text-anchor':'middle','dominant-baseline':'central','font-size':nodeR>=16?'13':'11','font-weight':'500',fill:isEmpty?'#ccc':st.tw,'font-family':'var(--font-sans,sans-serif)'});
+    tv.textContent=isEmpty?'':val;
+    const ti=se('text',{x:pos[i].x,y:pos[i].y+nodeR+9,'text-anchor':'middle','font-size':'9',fill:'#bbb','font-family':'var(--font-mono,monospace)'});
+    ti.textContent=i;
+    g.appendChild(tv);g.appendChild(ti);svg.appendChild(g);
+  }
+
+  // ── array cells ──
+  const cellW=Math.min(52,Math.floor(570/posN));
+  const startX=(VW-cellW*posN)/2;
+  const vis3=new Set([...visited].filter(x=>x!==active));
+  for(let i=0;i<posN;i++){
+    const val=displayHeap[i];
+    const isEmpty=val===null||val===undefined;
+    let st;
+    if(isEmpty){st={fill:'#fafafa',stroke:'#e0e0e0'};}
+    else{st=nodeStyle(i,active,parent,lc,rc,action,vis3);}
+    const rx=startX+i*cellW;
+    svg.appendChild(se('rect',{x:rx+1,y:arrayY,width:cellW-2,height:30,rx:'3',fill:st.fill,stroke:st.stroke,'stroke-width':'1','stroke-dasharray':isEmpty?'4 3':'none'}));
+    const tv=se('text',{x:rx+cellW/2,y:arrayY+11,'text-anchor':'middle','dominant-baseline':'central','font-size':cellW>36?'12':'10','font-weight':'500',fill:isEmpty?'#ccc':'#222','font-family':'var(--font-sans,sans-serif)'});
+    tv.textContent=isEmpty?'':val;svg.appendChild(tv);
+    const ti=se('text',{x:rx+cellW/2,y:arrayY+25,'text-anchor':'middle','font-size':'8',fill:'#bbb','font-family':'var(--font-mono,monospace)'});
+    ti.textContent=i;svg.appendChild(ti);
+  }
+
+  // ── array labels / connectors ──
+  if(active>=0&&action!=='extract_fly'){
+    const ax=startX+active*cellW+cellW/2;
+    const cl=se('text',{x:ax,y:arrayY-5,'text-anchor':'middle','font-size':'9','font-weight':'500',fill:C.act_stroke,'font-family':'var(--font-sans,sans-serif)'});
+    cl.textContent='current';svg.appendChild(cl);
+  }
+  if(action==='compare'){
+    if(parent>=0&&mode==='up'){
+      const px=startX+parent*cellW+cellW/2;
+      const pl=se('text',{x:px,y:arrayY-5,'text-anchor':'middle','font-size':'9','font-weight':'500',fill:C.par_stroke,'font-family':'var(--font-sans,sans-serif)'});
+      pl.textContent='parent';svg.appendChild(pl);
+    }
+    if(lc>=0){const lx=startX+lc*cellW+cellW/2;const ll=se('text',{x:lx,y:arrayY-5,'text-anchor':'middle','font-size':'9','font-weight':'500',fill:C.rc_stroke,'font-family':'var(--font-sans,sans-serif)'});ll.textContent='L child';svg.appendChild(ll);}
+    if(rc>=0){const rx2=startX+rc*cellW+cellW/2;const rl=se('text',{x:rx2,y:arrayY-5,'text-anchor':'middle','font-size':'9','font-weight':'500',fill:C.rc_stroke,'font-family':'var(--font-sans,sans-serif)'});rl.textContent='R child';svg.appendChild(rl);}
+    if(active>=0){
+      const spanY=arrayY+30+10;
+      const partners=[...(parent>=0&&mode==='up'?[parent]:[]),...(lc>=0?[lc]:[]),...(rc>=0?[rc]:[])];
+      const allX=[active,...partners].map(ii=>startX+ii*cellW+cellW/2);
+      const minX=Math.min(...allX),maxX=Math.max(...allX);
+      if(minX<maxX)svg.appendChild(se('line',{x1:minX,y1:spanY,x2:maxX,y2:spanY,stroke:'#ccc','stroke-width':'0.5','stroke-dasharray':'3 2'}));
+      const tick=(ii,col)=>{const x=startX+ii*cellW+cellW/2;svg.appendChild(se('line',{x1:x,y1:arrayY+30,x2:x,y2:spanY,stroke:col,'stroke-width':'1','marker-end':'url(#marr)'}));};
+      tick(active,C.act_stroke);
+      if(parent>=0&&mode==='up')tick(parent,C.par_stroke);
+      if(lc>=0)tick(lc,C.rc_stroke);
+      if(rc>=0)tick(rc,C.rc_stroke);
+    }
+  }
+
+  svg._VW=VW;svg._totalH=totalH;svg._arrayY=arrayY;svg._pos=pos;svg._posN=posN;svg._cellW=cellW;svg._startX=startX;svg._nodeR=nodeR;
+}
+
+// ── animation helpers ────────────────────────────────────────────────────────
+function clearAnim(){al.innerHTML='';}
+function swRect(){return document.getElementById('sw').getBoundingClientRect();}
+function sc(svgX,svgY){
+  const VW=svg._VW||660,tH=svg._totalH||360;
+  const svgR=svg.getBoundingClientRect(),wr=swRect();
+  return{x:svgX*(svgR.width/VW)+(svgR.left-wr.left),y:svgY*(svgR.height/tH)+(svgR.top-wr.top)};
+}
+function cellCtr(idx){const cW=svg._cellW||50,sX=svg._startX||40,aY=svg._arrayY||260;return sc(sX+idx*cW+cW/2,aY+15);}
+function nodeCtr(idx){const pos=svg._pos;if(!pos||!pos[idx])return{x:0,y:0};return sc(pos[idx].x,pos[idx].y);}
+function bbCtr(){return sc(BB.x+BB.w/2,BB.y+BB.h/2+8);}
+
+function fly(val,fromX,fromY,toX,toY,cls,cb){
+  const b=document.createElement('div');
+  b.className='flying '+cls;b.textContent=val;
+  b.style.left=(fromX-16)+'px';b.style.top=(fromY-16)+'px';
+  al.appendChild(b);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{b.style.transform=`translate(${toX-fromX}px,${toY-fromY}px)`;}));
+  setTimeout(()=>{b.remove();if(cb)cb();},460);
+}
+
+// ── step navigation ──────────────────────────────────────────────────────────
+function goNext(){
+  if(stepIdx>=steps.length-1)return;
+  const ns=steps[stepIdx+1];
+  const action=ns.action;
+
+  // UP: insert — fly from batter's box to tree node + array cell
+  if(action==='insert'){
+    clearAnim();
+    const from=bbCtr();
+    const idx=ns.heap.length-1;
+    // positions based on CURRENT render (which shows empty slot at idx)
+    const toN=nodeCtr(idx);
+    const toC=cellCtr(idx);
+    let done=0;
+    const fin=()=>{done++;if(done===2){clearAnim();stepIdx++;visited=rebuildVisited(stepIdx);updateUI();}};
+    fly(insertVal,from.x,from.y,toN.x,toN.y,'fa',fin);
+    fly(insertVal,from.x,from.y,toC.x,toC.y,'fa',fin);
+    return;
+  }
+
+  // DOWN: extract_fly — fly root node + root cell to batter's box
+  if(action==='extract_fly'){
+    clearAnim();
+    const rootVal=heap[0];
+    const rN=nodeCtr(0);
+    const rC=cellCtr(0);
+    const bb=bbCtr();
+    let done=0;
+    const fin=()=>{done++;if(done===2){clearAnim();stepIdx++;visited=rebuildVisited(stepIdx);updateUI();}};
+    fly(rootVal,rN.x,rN.y,bb.x,bb.y,'fb',fin);
+    fly(rootVal,rC.x,rC.y,bb.x,bb.y,'fb',fin);
+    return;
+  }
+
+  // DOWN: move_last — fly last element to root (node + cell)
+  if(action==='move_last'){
+    clearAnim();
+    const ps=steps[stepIdx]; // extract_fly step: heap has null at [0], last still at end
+    const lastIdx=ps.heap.length-1; // last index in the empty-root heap = original n-1
+    const lastVal=ns.heap[0]; // the value that moves to root
+    const fromN=nodeCtr(lastIdx);
+    const fromC=cellCtr(lastIdx);
+    const toN=nodeCtr(0);
+    const toC=cellCtr(0);
+    let done=0;
+    const fin=()=>{done++;if(done===2){clearAnim();stepIdx++;visited=rebuildVisited(stepIdx);updateUI();}};
+    fly(lastVal,fromN.x,fromN.y,toN.x,toN.y,'fa',fin);
+    fly(lastVal,fromC.x,fromC.y,toC.x,toC.y,'fa',fin);
+    return;
+  }
+
+  // swap (both modes) — cross-fly array cells
+  if(action==='swap'){
+    clearAnim();
+    const ps=steps[stepIdx];
+    const aIdx=ps.active;
+    const pIdx=ps.parent>=0?ps.parent:(ps.lchild>=0?ps.lchild:ps.rchild);
+    const aVal=ps.heap[aIdx],pVal=ps.heap[pIdx];
+    const af=cellCtr(aIdx),pf=cellCtr(pIdx);
+    const lift=26;
+    let done=0;
+    const fin=()=>{done++;if(done===2){clearAnim();stepIdx++;visited=rebuildVisited(stepIdx);updateUI();}};
+    const clsA=mode==='down'?'fb':'fa';
+    const clsB=mode==='down'?'fa':'fb';
+    fly(aVal,af.x,af.y,pf.x,pf.y-lift,clsA,()=>fly(aVal,pf.x,pf.y-lift,pf.x,pf.y,clsA,fin));
+    fly(pVal,pf.x,pf.y,af.x,af.y-lift,clsB,()=>fly(pVal,af.x,af.y-lift,af.x,af.y,clsB,fin));
+    return;
+  }
+
+  stepIdx++;
+  visited=rebuildVisited(stepIdx);
+  updateUI();
+}
+
+function goPrev(){
+  clearAnim();
+  if(stepIdx>0)stepIdx--;else stepIdx=-1;
+  visited=rebuildVisited(stepIdx);
+  updateUI();
+}
+
+function renderWaiting(){
+  if(mode==='up'){
+    // show base heap (N-1 nodes) + empty slot — pass the base heap, render adds the slot
+    render({heap:[...heap],active:heap.length,parent:-1,lchild:-1,rchild:-1,action:'waiting'},true);
+  } else {
+    render({heap:[...heap],active:-1,parent:-1,lchild:-1,rchild:-1,action:'waiting'},false);
+  }
+}
+
+function setUI(label,formula,prevDis,nextDis){
+  document.getElementById('step-label').textContent=label;
+  document.getElementById('formula-box').textContent=formula;
+  document.getElementById('btn-prev').disabled=prevDis;
+  document.getElementById('btn-next').disabled=nextDis;
+}
+
+function updateUI(){
+  if(stepIdx<0){
+    renderWaiting();
+    const msg=mode==='up'?'Press Next to insert the new node.':'Press Next to extract the root.';
+    setUI(msg,'—',true,false);
+    return;
+  }
+  const s=steps[stepIdx];
+  // for extract_fly we pass showUpEmpty=false but heap has null at [0]
+  render(s,false);
+  setUI(s.label,s.formula,false,stepIdx>=steps.length-1);
+}
+
+function init(){
+  clearAnim();
+  N=parseInt(document.getElementById('nslider').value);
+  document.getElementById('ncnt').textContent=N+' nodes';
+
+  if(mode==='up'){
+    heap=randHeap(N-1);
+    const stored=parseInt(document.getElementById('nv-input').value);
+    insertVal=(stored>=10&&stored<=99&&!heap.includes(stored))?stored:randVal(heap);
+    document.getElementById('nv-input').value=insertVal;
+    steps=stepsUp(heap,insertVal);
+    document.getElementById('nvwrap').style.borderColor='#854F0B';
+    document.getElementById('nvlabel').textContent='NEXT VALUE';
+    document.getElementById('nvlabel').style.color='#854F0B';
+    document.getElementById('nvlabel').style.fontSize='10px';
+    document.getElementById('nv-input').style.display='';
+    document.getElementById('nvwrap').style.pointerEvents='';
+  } else {
+    heap=randHeap(N);
+    steps=stepsDown(heap);
+    document.getElementById('nvwrap').style.borderColor='#185FA5';
+    document.getElementById('nvlabel').textContent='EXTRACTED MAX';
+    document.getElementById('nvlabel').style.color='#185FA5';
+    document.getElementById('nvlabel').style.fontSize='9px';
+    document.getElementById('nv-input').style.display='none';
+    document.getElementById('nvwrap').style.pointerEvents='none';
+  }
+  stepIdx=-1;
+  visited=new Set();
+  updateUI();
+}
+
+function setMode(m){
+  mode=m;
+  document.getElementById('mbup').className='mode-btn'+(m==='up'?' sel-up':'');
+  document.getElementById('mbdn').className='mode-btn'+(m==='down'?' sel-down':'');
+  init();
+}
+
+function onNvChange(){
+  clearAnim();
+  const v=parseInt(document.getElementById('nv-input').value);
+  if(v>=10&&v<=99&&!heap.includes(v)){
+    insertVal=v;steps=stepsUp(heap,insertVal);stepIdx=-1;visited=new Set();updateUI();
+  }
+}
+
+init();
+</script>
