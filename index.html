@@ -140,14 +140,14 @@ body {
 }
 .hero-prof-link {
   width: 30px; height: 30px; border-radius: 7px;
-  border: 0.5px solid rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.45);
   display: flex; align-items: center; justify-content: center;
-  color: rgba(255,255,255,0.6); text-decoration: none; cursor: pointer;
-  background: transparent;
+  color: rgba(255,255,255,0.9); text-decoration: none; cursor: pointer;
+  background: rgba(255,255,255,0.15);
   transition: background .15s, color .15s;
 }
-.hero-prof-link:hover { background: rgba(255,255,255,0.12); color: white; }
-.hero-prof-link.li { background: #0A66C2; border-color: #0A66C2; color: white; }
+.hero-prof-link:hover { background: rgba(255,255,255,0.28); color: white; }
+.hero-prof-link.li { background: rgba(10,102,194,0.55); border-color: rgba(10,102,194,0.7); color: white; }
 
 /* ── Main ── */
 .main {
@@ -363,7 +363,14 @@ body {
 @media (max-width: 640px) {
   .hero { padding: 40px 20px; }
   .hero-inner { grid-template-columns: 1fr; }
-  .hero-right-col { display: none; }
+  .hero-right-col { display: flex; justify-content: flex-start; margin-top: 20px; }
+  .hero-prof {
+    flex-direction: row; text-align: left; padding: 12px 16px;
+    gap: 12px; min-width: 0; width: auto; align-items: center;
+  }
+  .hero-prof-photo { width: 44px; height: 44px; flex-shrink: 0; }
+  .hero-prof-name { font-size: 12px; }
+  .hero-prof-role { font-size: 10px; }
   .main { padding: 32px 20px 48px; }
   .course-grid { grid-template-columns: 1fr; }
   .about-inner { flex-direction: column; align-items: center; }
@@ -383,7 +390,8 @@ body {
       <p class="hero-subtitle">Hands-on visualizers and simulations for undergraduate Computer Science — built to make abstract concepts accessible.</p>
       <div class="hero-divider"></div>
       <div class="hero-stats">
-        <div class="hero-stat"><span class="hero-stat-num">3</span><span class="hero-stat-label">Courses</span></div>
+        <div class="hero-stat"><span class="hero-stat-num">3</span><span class="hero-stat-label">Active</span></div>
+        <div class="hero-stat"><span class="hero-stat-num">1</span><span class="hero-stat-label">Upcoming</span></div>
         <div class="hero-stat"><span class="hero-stat-num">23</span><span class="hero-stat-label">Tools</span></div>
       </div>
     </div>
@@ -491,6 +499,41 @@ body {
         <span class="course-cta" style="color:#1A5CA8;">Open course <svg class="course-cta-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
       </div>
     </a>
+
+  </div>
+
+  <div class="section-label" style="margin-top: 8px;">Upcoming</div>
+
+  <div class="course-grid" style="margin-bottom: 0;">
+
+    <!-- AI100 -->
+    <div class="course-card" style="border: 1.5px dashed #C8D0DA; box-shadow: none; background: #FAFBFC; cursor: default; pointer-events: none;">
+      <div class="course-card-top" style="border-bottom-color: #ECEEF1;">
+        <div class="course-num-badge" style="background: linear-gradient(135deg, #4A4A4A 0%, #2A2A2A 100%);">
+          <span class="cnum" style="font-size:11px;font-weight:800;letter-spacing:.03em;">AI100</span>
+          <span class="clbl">New</span>
+        </div>
+        <div class="course-info">
+          <div class="course-title" style="color:#3D4752;">Introduction to <em>Artificial Intelligence</em></div>
+          <div class="course-subtitle">AI Foundations &nbsp;·&nbsp; 100-Level</div>
+        </div>
+        <div style="display:inline-flex;align-items:center;gap:5px;background:#FFF8E6;border:1px solid #F5D87A;border-radius:20px;padding:4px 10px;font-family:-apple-system,sans-serif;font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#92610A;white-space:nowrap;flex-shrink:0;">
+          Fall 2026
+        </div>
+      </div>
+      <p class="course-desc" style="color:#8A95A3;">History, terminology, and foundational concepts of AI explored through the lens of real-world applications. Students examine ethical tensions, data privacy, societal impact, and gain introductory exposure to machine learning — with hands-on time in the AI Lab. No prior CS experience required.</p>
+      <div class="course-tools-strip">
+        <span class="tool-chip" style="background:#F0F0F0;color:#6B7685;">AI History · Ethics</span>
+        <span class="tool-chip" style="background:#F0F0F0;color:#6B7685;">Machine Learning Intro</span>
+        <span class="tool-chip" style="background:#F0F0F0;color:#6B7685;">AI Lab · Hands-on</span>
+      </div>
+      <div class="course-meta">
+        <span class="course-pill">3 Credits</span>
+        <span class="course-pill">No Prereqs</span>
+        <span class="course-pill">Non-Technical Majors</span>
+        <span style="margin-left:auto;font-family:-apple-system,sans-serif;font-size:11px;font-weight:600;color:#9AA3AD;">Coming Fall 2026</span>
+      </div>
+    </div>
 
   </div>
 
