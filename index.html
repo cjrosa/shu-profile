@@ -608,11 +608,79 @@ body {
   .advisor-panel { width: 100vw; border-radius: 16px 16px 0 0; }
 }
 
+
+/* ── Sticky Banner ── */
+.sticky-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 190;
+  background: var(--red);
+  display: flex; align-items: center; gap: 14px;
+  padding: 0 20px; height: 50px;
+  transform: translateY(-110%);
+  transition: transform .28s cubic-bezier(.22,.68,0,1.15);
+  box-shadow: 0 2px 14px rgba(0,0,0,0.22);
+}
+.sticky-banner.visible { transform: translateY(0); }
+.sticky-title {
+  font-family: -apple-system, sans-serif;
+  font-size: 13px; font-weight: 700; color: white;
+  flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sticky-prof {
+  display: flex; align-items: center; gap: 9px; flex-shrink: 0;
+}
+.sticky-prof-photo {
+  width: 30px; height: 30px; border-radius: 50%;
+  object-fit: cover; object-position: center 12%;
+  border: 1.5px solid rgba(255,255,255,0.35);
+}
+.sticky-prof-name {
+  font-family: -apple-system, sans-serif;
+  font-size: 11px; font-weight: 700; color: white; line-height: 1.2;
+}
+.sticky-prof-role {
+  font-family: -apple-system, sans-serif;
+  font-size: 10px; color: rgba(255,255,255,0.55); line-height: 1.2;
+}
+.sticky-btns { display: flex; gap: 6px; flex-shrink: 0; }
+.sticky-btn {
+  height: 28px; padding: 0 11px; border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.15);
+  color: white; font-family: -apple-system, sans-serif;
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 5px;
+  transition: background .15s; white-space: nowrap;
+}
+.sticky-btn:hover { background: rgba(255,255,255,0.28); }
+@media (max-width: 520px) {
+  .sticky-prof-name, .sticky-prof-role { display: none; }
+}
 </style>
 </head>
 <body>
 
 <!-- Hero -->
+<div class="sticky-banner" id="stickyBanner">
+  <div class="sticky-title">CS Teaching Tools &middot; Sacred Heart University</div>
+  <div class="sticky-prof">
+    <img class="sticky-prof-photo" id="stickyPhoto" src="" alt="Prof. Rosa">
+    <div>
+      <div class="sticky-prof-name">Prof. Rosa</div>
+      <div class="sticky-prof-role">Adjunct Professor, CS</div>
+    </div>
+  </div>
+  <div class="sticky-btns">
+    <button class="sticky-btn" onclick="openDrawer()">
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5" r="2.5"/><path d="M3 14c0-3 2-5 5-5s5 2 5 5"/></svg>
+      About
+    </button>
+    <button class="sticky-btn" onclick="openAdvisor()">
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h2v3l3-3h7a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/></svg>
+      Advisor
+    </button>
+  </div>
+</div>
+
 <section class="hero">
   <div class="hero-bg-photo"></div>
   <div class="hero-inner">
@@ -880,6 +948,24 @@ function closeAdvisor() {
   document.body.style.overflow = '';
 }
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeAdvisor(); });
+// Sticky banner
+(function() {
+  var banner = document.getElementById('stickyBanner');
+  var hero   = document.querySelector('.hero');
+  var sp     = document.getElementById('stickyPhoto');
+  var hp     = document.querySelector('.hero-prof-photo');
+  if (hp && sp) sp.src = hp.src;
+  function onScroll() {
+    if (!hero || !banner) return;
+    var bannerVisible = hero.getBoundingClientRect().bottom < 0;
+    bannerVisible ? banner.classList.add('visible') : banner.classList.remove('visible');
+    // Shift drawer down so it isn't hidden behind the sticky banner
+    var drawer = document.getElementById('instructor-drawer');
+    if (drawer) drawer.style.top = bannerVisible ? '50px' : '0';
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
 
 async function advisorSend() {
   const input = document.getElementById('advisorInput');
