@@ -1,0 +1,1836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Router Interactive Visualizer</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23185FA5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='1' y='6' width='22' height='12' rx='2'/><line x1='5' y1='10' x2='5' y2='14'/><line x1='9' y1='10' x2='9' y2='14'/><circle cx='17' cy='12' r='2'/><line x1='19' y1='12' x2='21' y2='12'/></svg>">
+</head>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:system-ui,-apple-system,sans-serif;font-size:12px;color:#1a1a1a;background:#f5f4f0;}
+#root{width:100%;padding:8px;display:flex;flex-direction:column;gap:8px;}
+
+/* Title bar */
+#titlebar{display:flex;align-items:center;justify-content:space-between;padding:2px 4px 4px;}
+#titlebar-left{display:flex;align-items:center;gap:7px;}
+#titlebar-title{font-size:13px;font-weight:700;color:#1a1a1a;letter-spacing:.02em;}
+#titlebar-right{display:flex;align-items:center;gap:8px;font-size:10px;color:#888780;}
+
+/* Main layout */
+#main{display:grid;grid-template-columns:1fr 280px;gap:8px;}
+#canvas-col{display:flex;flex-direction:column;gap:8px;}
+#side-col{display:flex;flex-direction:column;gap:8px;}
+
+/* Cards */
+.card{border-radius:10px;overflow:hidden;border:2px solid #85B7EB;background:#fff;}
+.card-hdr{background:#E6F1FB;border-bottom:1px solid #85B7EB;border-left:4px solid #185FA5;padding:7px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.card-title{font-size:12px;font-weight:700;color:#0C447C;white-space:nowrap;}
+.sec-hdr{font-size:9px;font-weight:700;color:#888780;letter-spacing:.1em;text-transform:uppercase;padding:4px 12px 3px;background:#f0efea;border-top:1px solid #e8e7e2;}
+.sec-hdr-row{display:flex;justify-content:space-between;align-items:center;padding:4px 12px 3px;background:#f0efea;border-top:1px solid #e8e7e2;}
+.sec-hdr-row .lh{font-size:9px;font-weight:700;color:#888780;letter-spacing:.1em;text-transform:uppercase;}
+
+/* Buttons */
+.btn{font-family:system-ui,sans-serif;font-size:11px;font-weight:600;padding:0 11px;height:24px;border-radius:5px;border:none;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;}
+.btn:disabled{opacity:.3;cursor:not-allowed;}
+.btn:hover:not(:disabled){opacity:.82;}
+.btn-blue{background:#185FA5;color:#fff;}
+.btn-teal{background:#1D9E75;color:#fff;}
+.btn-red{background:#A32D2D;color:#fff;}
+.btn-amber{background:#BA7517;color:#fff;}
+.btn-gray{background:#5F5E5A;color:#fff;}
+.btn-outline{background:#fff;color:#185FA5;border:1px solid #85B7EB;font-size:10px;padding:0 9px;}
+.btn-outline.active{background:#185FA5;color:#fff;border-color:#185FA5;}
+.btn-outline-amber{background:#fff;color:#BA7517;border:1px solid #EF9F27;font-size:10px;padding:0 9px;}
+.btn-outline-amber.active{background:#BA7517;color:#fff;border-color:#BA7517;}
+.vsep{width:1px;height:18px;background:rgba(24,95,165,.25);flex-shrink:0;}
+
+/* Canvas */
+#router-cv{display:block;width:100%;cursor:default;}
+#router-wrap{background:#fff;position:relative;}
+
+/* KV grid */
+.kv-grid{display:grid;grid-template-columns:auto 1fr;padding:5px 12px 7px;background:#fff;}
+.kv-key{font-size:10px;color:#888780;white-space:nowrap;font-family:monospace;padding:2px 0;display:flex;align-items:baseline;gap:5px;}
+.rfc{color:#1a1a1a;font-weight:700;font-size:11px;}
+.sub{color:#aaa9a2;font-size:9px;}
+.kv-val{font-size:11px;font-weight:700;font-family:monospace;color:#1a1a1a;text-align:right;padding:2px 0;}
+.kv-div{grid-column:1/-1;height:1px;background:#f0efea;margin:1px 0;}
+.hi-b{color:#185FA5;}.hi-g{color:#1D9E75;}.hi-a{color:#BA7517;}.hi-r{color:#A32D2D;}
+
+/* Forwarding table */
+#ftable{width:100%;border-collapse:collapse;font-family:monospace;font-size:10px;}
+#ftable th{font-size:9px;font-weight:700;color:#888780;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;background:#f0efea;border-bottom:1px solid #e8e7e2;text-align:left;}
+#ftable td{padding:3px 8px;border-bottom:1px solid #f5f4f0;color:#1a1a1a;}
+#ftable tr.checking td{background:#DBEAFE;font-weight:700;outline:2px solid #185FA5;outline-offset:-1px;}
+#ftable tr.checked td{background:#f8f8f6;color:#aaa9a2;}
+#ftable tr.match td{background:#FFF3CD;font-weight:700;}
+#ftable tr.winner td{background:#D4EDDA;font-weight:700;color:#0F6E56;}
+#ftable tr:hover td{background:#f0efea;}
+.prefix-len{color:#888780;font-size:9px;}
+
+/* Queue lanes */
+.queue-wrap{padding:6px 12px 8px;background:#fff;display:flex;flex-direction:column;gap:4px;}
+.queue-row{display:flex;align-items:center;gap:6px;margin-top:6px;}
+.queue-label{font-size:9px;font-weight:700;color:#888780;width:20px;text-align:right;flex-shrink:0;}
+.queue-lane{flex:1;min-height:22px;background:#f5f4f0;border-radius:4px;border:1px solid #e8e7e2;display:flex;align-items:center;padding:4px 6px 3px;gap:10px;overflow:visible;position:relative;flex-wrap:wrap;}
+.queue-pkt{height:16px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;font-family:monospace;flex-shrink:0;transition:all .3s;border:1px solid rgba(0,0,0,.15);}
+.queue-empty{font-size:9px;color:#c0beb6;font-style:italic;position:absolute;left:6px;}
+.priority-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+/* Log */
+#log-body{height:80px;overflow-y:auto;background:#fff;}
+.log-row{display:grid;grid-template-columns:52px 1fr 60px 60px;padding:2px 10px;font-size:10px;font-family:monospace;border-bottom:1px solid #f5f4f0;align-items:center;}
+.log-time{color:#888780;}
+.log-msg{color:#1a1a1a;}
+.log-port{text-align:center;font-weight:700;}
+.log-event{text-align:right;font-size:9px;font-weight:700;}
+.ev-fwd{color:#1D9E75;}.ev-drop{color:#A32D2D;}.ev-queue{color:#BA7517;}.ev-lpm{color:#185FA5;}.ev-hol{color:#534AB7;}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px 12px 8px;background:#fff;}
+.stat-cell{display:flex;flex-direction:column;gap:1px;}
+.stat-label{font-size:9px;color:#888780;text-transform:uppercase;letter-spacing:.06em;font-weight:600;}
+.stat-value{font-size:13px;font-weight:700;font-family:monospace;color:#1a1a1a;}
+
+/* Packet inject */
+.inject-row{display:flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;flex-wrap:wrap;}
+.field-label{font-size:9px;font-weight:700;color:#888780;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
+select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB;border-radius:4px;background:#fff;color:#042C53;font-weight:600;padding:0 4px;cursor:pointer;}
+
+/* Legend */
+.legend-row{display:flex;gap:10px;padding:5px 12px;background:#fff;flex-wrap:wrap;}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:9px;color:#888780;}
+.leg-swatch{width:12px;height:12px;border-radius:2px;border:1px solid rgba(0,0,0,.15);}
+
+/* Input queue pills with ring */
+.in-pkt{display:flex;align-items:center;gap:4px;padding:2px 5px 2px 6px;border-radius:5px;border-left:3px solid;flex-shrink:0;min-width:0;}
+.in-pkt-info{display:flex;flex-direction:column;gap:0px;flex:1;min-width:0;}
+.in-pkt-name{font-size:9px;font-weight:700;font-family:monospace;white-space:nowrap;}
+.in-pkt-sub{font-size:8px;font-weight:500;opacity:.7;white-space:nowrap;}
+.ring-wrap{flex-shrink:0;width:20px;height:20px;position:relative;}
+.ring-wrap svg{position:absolute;top:0;left:0;}
+.ring-txt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:6px;font-weight:700;color:#185FA5;line-height:1;}
+
+/* Tooltips — render downward, max z-index, delayed */
+.tt{position:relative;display:inline-flex;align-items:center;}
+.tt[data-tip]:hover::after{
+  content:attr(data-tip);
+  position:fixed;
+  background:#2C2C2A;color:#fff;font-size:10px;font-weight:400;line-height:1.4;
+  padding:5px 8px;border-radius:5px;z-index:999999;
+  pointer-events:none;min-width:160px;max-width:260px;white-space:normal;
+  box-shadow:0 2px 8px rgba(0,0,0,.35);
+  margin-top:28px;
+  opacity:0;animation:tt-show 0s 600ms forwards;
+}
+.tt[data-tip]:hover::before{
+  content:'';position:absolute;top:calc(100% + 1px);left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-bottom-color:#2C2C2A;z-index:999999;pointer-events:none;
+  opacity:0;animation:tt-show 0s 600ms forwards;
+}
+@keyframes tt-show{to{opacity:1;}}
+.info-icon{display:inline-flex;align-items:center;justify-content:center;
+  width:13px;height:13px;border-radius:50%;background:#c0beb6;color:#fff;
+  font-size:8px;font-weight:700;cursor:default;flex-shrink:0;margin-left:3px;
+  font-style:normal;line-height:1;}
+.info-icon:hover{background:#888780;}
+
+/* Highlight flash */
+@keyframes flash{0%{opacity:1}50%{opacity:.4}100%{opacity:1}}
+.flash{animation:flash .4s ease;}
+</style>
+
+<div id="root">
+
+  <!-- Title bar -->
+  <div id="titlebar">
+    <div id="titlebar-left">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#185FA5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="1" y="6" width="22" height="12" rx="2"/>
+        <line x1="5" y1="10" x2="5" y2="14"/>
+        <line x1="9" y1="10" x2="9" y2="14"/>
+        <circle cx="17" cy="12" r="2"/>
+        <line x1="19" y1="12" x2="21" y2="12"/>
+      </svg>
+      <div id="titlebar-title">Router Interactive Visualizer</div>
+    </div>
+    <div id="titlebar-right">
+      <span>Developed by Professor Chris Rosa &mdash; CS339 Networks, Sacred Heart University</span>
+      <a href="mailto:rosac@sacredheart.edu" title="rosac@sacredheart.edu" style="display:inline-flex;align-items:center;color:#185FA5;text-decoration:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+      </a>
+      <a href="https://linkedin.com/in/chris-rosa-3192326" target="_blank" title="LinkedIn" style="display:inline-flex;align-items:center;color:#0A66C2;text-decoration:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.354V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- Controls bar -->
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">Inject Packet</span>
+      <div class="vsep"></div>
+      <span class="field-label">Dest IP</span>
+      <select id="sel-dest">
+        <option value="0">Host-A (10.1.0.55 → P0)</option>
+        <option value="1">Host-B (10.2.0.100 → P1)</option>
+        <option value="2">Host-C (10.3.0.1 → P2)</option>
+        <option value="3">Srv-1 (172.16.5.10 → P1)</option>
+        <option value="4">WAN (8.8.8.8 → P2)</option>
+      </select>
+      <span class="field-label">Priority</span>
+      <select id="sel-pri">
+        <option value="2">High</option>
+        <option value="1" selected>Normal</option>
+        <option value="0">Low</option>
+      </select>
+      <span class="field-label">Input Port</span>
+      <select id="sel-inport">
+        <option value="0">Port 0</option>
+        <option value="1">Port 1</option>
+        <option value="2">Port 2</option>
+      </select>
+      <button class="btn btn-blue" id="btn-inject">&#9654; Send Packet</button>
+      <div class="vsep"></div>
+      <span class="tt" data-tip="Rapidly injects packets across all ports and destinations to fill queues and trigger congestion and tail drops."><button class="btn btn-amber" id="btn-congestion">Flood</button></span>
+      <button class="btn btn-red" id="btn-reset">Reset</button>
+    </div>
+  </div>
+
+  <div id="main">
+    <!-- Left: canvas + log -->
+    <div id="canvas-col">
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Router Architecture</span>
+          <div class="vsep"></div>
+          <span class="tt" data-tip="Memory: packet copied to shared RAM then out. Two bus traversals per packet — bus is the bottleneck."><button class="btn-outline active" id="fab-mem">Memory</button></span>
+          <span class="tt" data-tip="Shared Bus: all ports contend for a single bus. Only one transfer at a time — bandwidth is limited."><button class="btn-outline" id="fab-bus">Bus</button></span>
+          <span class="tt" data-tip="Crossbar: dedicated path per input-output pair. Multiple transfers happen simultaneously — no contention."><button class="btn-outline" id="fab-xbar">Crossbar</button></span>
+          <div style="flex:1"></div>
+          <span id="state-msg" style="font-size:10px;font-weight:600;color:#185FA5;"></span>
+        </div>
+        <div id="router-wrap">
+          <canvas id="router-cv" height="360"></canvas>
+        </div>
+        <div id="canvas-state-bar">Ready — inject a packet to begin</div>
+      </div>
+
+      <!-- Input + Output queues side by side -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+
+        <!-- Input queues -->
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">Input Queues</span>
+            <div class="vsep"></div>
+            <span class="tt" data-tip="Real-time: instant lookup, no animation. Packets forward immediately — output queues build up fast."><button class="btn-outline" id="lpm-rt" style="font-size:10px;">RT</button></span>
+            <span class="tt" data-tip="Auto: steps through each forwarding table row at the selected speed."><button class="btn-outline active" id="lpm-auto" style="font-size:10px;">Auto</button></span>
+            <span class="tt" data-tip="Step: pauses after each row — click Next Row to advance manually."><button class="btn-outline" id="lpm-step" style="font-size:10px;">Step</button></span>
+            <button class="btn btn-teal" id="btn-step" style="display:none;font-size:10px;padding:0 8px;">&#9654; Next</button>
+            <select id="lpm-speed" style="width:68px;">
+              <option value="1200">Slow</option>
+              <option value="700" selected>Medium</option>
+              <option value="250">Fast</option>
+            </select>
+          </div>
+          <div class="legend-row" style="gap:6px;padding:4px 8px;">
+            <div class="leg-item"><div class="leg-swatch" style="background:#FAEEDA;border-color:#BA7517;"></div> Hi</div>
+            <div class="leg-item"><div class="leg-swatch" style="background:#E6F1FB;border-color:#185FA5;"></div> Nm</div>
+            <div class="leg-item"><div class="leg-swatch" style="background:#F1EFE8;border-color:#888780;"></div> Lo</div>
+            <div class="leg-item" style="margin-left:4px;">
+              <svg width="14" height="14" viewBox="0 0 14 14" style="flex-shrink:0;"><circle cx="7" cy="7" r="5" fill="none" stroke="#e8e7e2" stroke-width="2"/><circle cx="7" cy="7" r="5" fill="none" stroke="#185FA5" stroke-width="2" stroke-dasharray="10 22" stroke-dashoffset="0" transform="rotate(-90 7 7)"/></svg>
+              LPM
+            </div>
+          </div>
+          <div class="queue-wrap" id="in-queue-wrap"></div>
+        </div>
+
+        <!-- Output queues -->
+        <div class="card">
+          <div class="card-hdr" style="flex-wrap:nowrap;">
+            <span class="card-title">Output Queues</span>
+            <div class="vsep"></div>
+            <span class="tt" data-tip="First Come First Served: transmits in arrival order. Simple but ignores priority."><button class="btn-outline-amber active" id="sched-fcfs" style="font-size:10px;">FCFS</button></span>
+            <span class="tt" data-tip="Priority: high-priority packets always leave before lower-priority ones, regardless of arrival order."><button class="btn-outline-amber" id="sched-pri" style="font-size:10px;">Priority</button></span>
+            <span class="tt" data-tip="Round Robin: cycles through output ports in order, one packet per port per round. Fair across ports."><button class="btn-outline-amber" id="sched-rr" style="font-size:10px;">RR</button></span>
+            <span class="tt" data-tip="Weighted Fair Queueing: like round robin but high-priority classes get proportionally more bandwidth."><button class="btn-outline-amber" id="sched-wfq" style="font-size:10px;">WFQ</button></span>
+            <div style="flex:1"></div>
+            <span class="field-label" style="font-size:9px;">Rate</span>
+            <button class="btn-outline-amber" id="rate-slow" style="font-size:10px;">Slow</button>
+            <button class="btn-outline-amber active" id="rate-med" style="font-size:10px;">Medium</button>
+            <button class="btn-outline-amber" id="rate-rt" style="font-size:10px;">RT</button>
+            <div class="vsep"></div>
+            <button class="btn btn-outline" id="btn-pause-drain" style="font-size:9px;padding:0 9px;">⏸ Pause</button>
+          </div>
+          <div class="legend-row" style="gap:6px;padding:4px 8px;">
+            <div class="leg-item"><div class="leg-swatch" style="background:#FAEEDA;border-color:#BA7517;"></div> Hi</div>
+            <div class="leg-item"><div class="leg-swatch" style="background:#E6F1FB;border-color:#185FA5;"></div> Nm</div>
+            <div class="leg-item"><div class="leg-swatch" style="background:#F1EFE8;border-color:#888780;"></div> Lo</div>
+            <div class="leg-item"><div class="leg-swatch" style="background:#FCEBEB;border-color:#A32D2D;"></div> Drop</div>
+          </div>
+          <div class="queue-wrap" id="queue-wrap"></div>
+        </div>
+
+      </div>
+
+      <!-- Event log -->
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Event Log</span>
+          <div style="flex:1"></div>
+          <button class="btn btn-gray" id="btn-clear-log" style="font-size:10px;padding:0 8px;height:22px;">Clear</button>
+        </div>
+        <div style="display:grid;grid-template-columns:52px 1fr 60px 60px;padding:2px 10px;background:#f0efea;border-bottom:1px solid #e8e7e2;">
+          <span style="font-size:9px;font-weight:700;color:#888780;text-transform:uppercase;letter-spacing:.06em;">Time</span>
+          <span style="font-size:9px;font-weight:700;color:#888780;text-transform:uppercase;letter-spacing:.06em;">Event</span>
+          <span style="font-size:9px;font-weight:700;color:#888780;text-transform:uppercase;letter-spacing:.06em;text-align:center;">Port</span>
+          <span style="font-size:9px;font-weight:700;color:#888780;text-transform:uppercase;letter-spacing:.06em;text-align:right;">Type</span>
+        </div>
+        <div id="log-body"></div>
+      </div>
+    </div>
+
+    <!-- Right: forwarding table + stats -->
+    <div id="side-col">
+      <!-- Forwarding table -->
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Forwarding Table (LPM)</span></div>
+        <div style="display:flex;gap:10px;padding:4px 8px;background:#f0efea;border-bottom:1px solid #e8e7e2;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:#888780;">
+            <div style="width:10px;height:10px;background:#DBEAFE;border:1.5px solid #185FA5;border-radius:2px;"></div>Checking now
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:#888780;">
+            <div style="width:10px;height:10px;background:#FFF3CD;border:1px solid #BA7517;border-radius:2px;"></div>Matched
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:#888780;">
+            <div style="width:10px;height:10px;background:#D4EDDA;border:1px solid #1D9E75;border-radius:2px;"></div>Winner (longest)
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:#aaa9a2;">
+            <div style="width:10px;height:10px;background:#f8f8f6;border:1px solid #e0e0e0;border-radius:2px;"></div>No match
+          </div>
+        </div>
+        <div style="padding:0;overflow:auto;background:#fff;">
+          <table id="ftable">
+            <thead><tr><th>Prefix</th><th>Len</th><th>Out Port</th><th>Next Hop</th></tr></thead>
+            <tbody id="ftable-body"></tbody>
+          </table>
+        </div>
+        <div id="lpm-status" style="font-size:9px;padding:3px 8px;background:#f0efea;border-top:1px solid #e8e7e2;color:#888780;font-style:italic;">Awaiting packet...</div>
+      </div>
+
+      <!-- LPM detail -->
+      <div class="card" id="lpm-card">
+        <div class="card-hdr"><span class="card-title">LPM Lookup</span></div>
+        <div class="kv-grid">
+          <div class="kv-key"><span class="rfc">Dest IP</span></div><div class="kv-val" id="lpm-dest">—</div>
+        </div>
+        <div class="sec-hdr" style="border-top:1px solid #e8e7e2;">Currently checking</div>
+        <div class="kv-grid">
+          <div class="kv-key"><span class="rfc">Row</span></div><div class="kv-val" id="lpm-cur-row">—</div>
+          <div class="kv-div"></div>
+          <div class="kv-key"><span class="rfc">Prefix</span></div><div class="kv-val" id="lpm-cur-prefix">—</div>
+          <div class="kv-div"></div>
+          <div class="kv-key"><span class="rfc">Result</span></div><div class="kv-val" id="lpm-cur-result">—</div>
+        </div>
+        <div class="sec-hdr" style="border-top:1px solid #e8e7e2;">Best match so far</div>
+        <div class="kv-grid">
+          <div class="kv-key"><span class="rfc">Prefix</span></div><div class="kv-val hi-g" id="lpm-match">—</div>
+          <div class="kv-div"></div>
+          <div class="kv-key"><span class="rfc">Out port</span></div><div class="kv-val hi-a" id="lpm-port">—</div>
+          <div class="kv-div"></div>
+          <div class="kv-key"><span class="rfc">Next hop</span></div><div class="kv-val" id="lpm-hop">—</div>
+        </div>
+      </div>
+
+      <!-- Fabric detail -->
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Switching Fabric</span></div>
+        <div class="kv-grid">
+          <div class="kv-key"><span class="rfc">Type</span></div><div class="kv-val hi-b" id="fab-type">Memory</div>
+          <div class="kv-div"></div>
+          <div class="kv-key"><span class="rfc">Bandwidth</span><span class="sub">relative</span></div><div class="kv-val" id="fab-bw">1× line rate</div>
+          <div class="kv-div"></div>
+          <div class="kv-key"><span class="rfc">Parallel?</span></div><div class="kv-val" id="fab-par">No</div>
+          <div class="kv-div"></div>
+          <div class="kv-key"><span class="rfc">Bottleneck</span></div><div class="kv-val hi-r" id="fab-bot">System bus</div>
+        </div>
+        <div id="fab-note" style="font-size:9px;padding:3px 8px;background:#f0efea;border-top:1px solid #e8e7e2;color:#5F5E5A;font-style:italic;">Each pkt copied twice via shared memory — bus is bottleneck</div>
+      </div>
+
+      <!-- Stats -->
+      <div class="card">
+        <div class="sec-hdr">Session Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-cell"><div class="stat-label">Forwarded</div><div class="stat-value hi-g" id="st-fwd">0</div></div>
+          <div class="stat-cell"><div class="stat-label">Dropped</div><div class="stat-value hi-r" id="st-drop">0</div></div>
+          <div class="stat-cell"><div class="stat-label">Transmitted</div><div class="stat-value hi-b" id="st-tx">0</div></div>
+          <div class="stat-cell"><div class="stat-label">Queue Fills</div><div class="stat-value hi-a" id="st-qfill">0</div></div>
+        </div>
+        <div class="kv-grid" style="padding-top:2px;">
+          <div class="kv-key"><span class="rfc">Pkts injected</span></div><div class="kv-val" id="st-inj">0</div>
+          <div class="kv-div"></div>
+          <div class="kv-key"><span class="rfc">Avg queue depth</span></div><div class="kv-val hi-a" id="st-qdepth">0.0</div>
+          <div class="kv-div"></div>
+          <div class="kv-key"><span class="rfc">Scheduler</span></div><div class="kv-val hi-a" id="st-sched">FCFS</div>
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- LPM Result Overlay — step mode only -->
+<div id="lpm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:99998;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;padding:24px 28px;max-width:480px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.25);font-family:system-ui,sans-serif;">
+    <div style="font-size:13px;font-weight:700;color:#0C447C;margin-bottom:4px;" id="ov-title"></div>
+    <div style="font-size:10px;color:#888780;margin-bottom:16px;" id="ov-subtitle"></div>
+
+    <div style="font-size:11px;font-weight:700;color:#5F5E5A;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Entries checked</div>
+    <div id="ov-rows" style="display:flex;flex-direction:column;gap:4px;margin-bottom:16px;font-family:monospace;font-size:11px;"></div>
+
+    <div style="background:#D4EDDA;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+      <div style="font-size:11px;font-weight:700;color:#0F6E56;margin-bottom:4px;" id="ov-winner"></div>
+      <div style="font-size:11px;color:#085041;line-height:1.5;" id="ov-explain"></div>
+    </div>
+
+    <div style="font-size:10px;color:#888780;line-height:1.5;margin-bottom:16px;" id="ov-why"></div>
+
+    <button id="ov-dismiss" class="btn btn-blue" style="width:100%;justify-content:center;height:32px;font-size:12px;">
+      Forward Packet →
+    </button>
+  </div>
+</div>
+
+<!-- Drop log popover -->
+<div id="drop-popover" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:99998;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:10px;padding:18px 22px;max-width:380px;width:90%;box-shadow:0 6px 24px rgba(0,0,0,.22);font-family:system-ui,sans-serif;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-size:12px;font-weight:700;color:#791F1F;" id="drop-pop-title">Drops — Port 0</div>
+      <button id="drop-pop-close" style="background:none;border:none;cursor:pointer;font-size:16px;color:#888780;line-height:1;padding:0 2px;">✕</button>
+    </div>
+    <div id="drop-pop-body" style="display:flex;flex-direction:column;gap:4px;max-height:260px;overflow-y:auto;font-size:11px;font-family:monospace;"></div>
+    <div style="margin-top:12px;font-size:9px;color:#b0b0b0;text-align:center;">Drops reset when you click Reset</div>
+  </div>
+</div>
+
+<script>
+// ─── Constants ───────────────────────────────────────────────────────────────
+var NUM_PORTS = 3;
+var MAX_QUEUE = 6;
+var PKT_COLORS = {
+  2: {bg:'#FAEEDA', bd:'#BA7517', tx:'#633806', label:'HI'},
+  1: {bg:'#E6F1FB', bd:'#185FA5', tx:'#042C53', label:'NM'},
+  0: {bg:'#F1EFE8', bd:'#888780', tx:'#2C2C2A', label:'LO'}
+};
+
+// ─── Forwarding table — designed so common destinations cross ports ────────────
+var FT = [
+  {prefix:'10.1.0.0',    len:24, port:0, hop:'10.1.0.1',    mask:0xFFFFFF00, net:0x0A010000},
+  {prefix:'10.2.0.0',    len:24, port:1, hop:'10.2.0.1',    mask:0xFFFFFF00, net:0x0A020000},
+  {prefix:'10.0.0.0',    len:8,  port:2, hop:'10.255.0.1',  mask:0xFF000000, net:0x0A000000},
+  {prefix:'172.16.0.0',  len:16, port:1, hop:'172.16.0.1',  mask:0xFFFF0000, net:0xAC100000},
+  {prefix:'0.0.0.0',     len:0,  port:2, hop:'203.0.113.1', mask:0x00000000, net:0x00000000},
+];
+
+// Dest IPs chosen so each maps to a different port, making crossing visible
+var DEST_IPS = [
+  {label:'10.1.0.55',   alias:'Host-A', ip:0x0A010037},  // → Port 0 via /24
+  {label:'10.2.0.100',  alias:'Host-B', ip:0x0A020064},  // → Port 1 via /24
+  {label:'10.3.0.1',    alias:'Host-C', ip:0x0A030001},  // → Port 2 via /8
+  {label:'172.16.5.10', alias:'Srv-1',  ip:0xAC10050A},  // → Port 1 via /16
+  {label:'8.8.8.8',     alias:'WAN',    ip:0x08080808},  // → Port 2 via default
+];
+
+var FABRIC_INFO = {
+  mem:  {label:'Memory',    bw:'1× line rate', par:'No',  bot:'System bus',   note:'Pkt copied to/from shared memory — bus is bottleneck'},
+  bus:  {label:'Bus',       bw:'1× line rate', par:'No',  bot:'Shared bus',   note:'All ports contend for single shared bus'},
+  xbar: {label:'Crossbar',  bw:'N× line rate', par:'Yes', bot:'None (ideal)', note:'Each input-output pair gets dedicated path'},
+};
+
+var SCHED_LABELS = {fcfs:'FCFS', pri:'Priority', rr:'Round Robin', wfq:'WFQ'};
+
+// ─── State ────────────────────────────────────────────────────────────────────
+var fabric = 'mem';
+var sched  = 'fcfs';
+var queues    = [[],[],[]];  // output port queues
+var inQueues  = [[],[],[]];  // input port queues
+var MAX_IN_QUEUE = 4;
+var rrPtr  = 0;
+var stats  = {fwd:0, drop:0, tx:0, qfill:0, inj:0, drains:0};
+var logTime = 0;
+var animPkts = [];
+var lastMatchIdx = -1;
+var drainPaused = false;
+var lineRate = 1;
+var DRAIN_INTERVAL = 1800; // ms — controlled by rate buttons
+var lookupProcessing = false; // true while a packet is being looked up
+
+// Per-port drop tracking
+var portDrops   = [[], [], []]; // output queue drops: portDrops[port]
+var inPortDrops = [[], [], []]; // input queue drops:  inPortDrops[port]
+
+// ─── LPM step-through state ───────────────────────────────────────────────────
+var lkp = {
+  active:    false,
+  rowIdx:    -1,
+  matches:   [],
+  bestIdx:   -1,
+  destIp:    0,
+  destLabel: '',
+  destAlias: '',
+  pri:       1,
+  inPort:    0,
+  stepMode:  false,
+  realtime:  false,   // true = skip lookup animation entirely
+  rowDelay:  700,
+  pendingCb: null,
+  waiting:   false,
+};
+var lkpTimer = null;
+var waitingPkt = null;
+// Active switching path: {inPort, outPort, progress 0-1, col}
+var activePath = null;
+
+// ─── Canvas setup ─────────────────────────────────────────────────────────────
+var cv = document.getElementById('router-cv');
+var ctx = cv.getContext('2d');
+
+function resizeCv(){
+  cv.width = cv.offsetWidth;
+  draw();
+}
+window.addEventListener('resize', resizeCv);
+
+// ─── Layout geometry — router box with ports along top ────────────────────────
+function geom(){
+  var W = cv.width, H = cv.height;
+
+  // Router box: centered, occupies middle band of canvas
+  var rtrX = W*0.08, rtrW = W*0.84;
+  var rtrY = 90,     rtrH = H - 110;
+
+  // Switching fabric: inside router, lower portion
+  var fabPad = 14;
+  var fabX = rtrX + fabPad, fabW = rtrW - fabPad*2;
+  var fabY = rtrY + 56,     fabH = rtrH - 70;
+
+  // Ports: evenly spaced along router top edge
+  var portW = 68, portH = 32;
+  var portSpacing = rtrW / NUM_PORTS;
+  var ports = [];
+  for(var i=0;i<NUM_PORTS;i++){
+    var px = rtrX + portSpacing*i + portSpacing/2 - portW/2;
+    var py = rtrY - portH/2; // straddles top edge of router
+    ports.push({
+      x:px, y:py, w:portW, h:portH,
+      cx: px+portW/2,
+      topY: py,           // top of port box (wire arrives here from above)
+      midY: py+portH/2,   // vertical center
+      botY: py+portH,     // bottom of port box (enters router body)
+      wireX: px+portW/2,  // x center of wire above
+    });
+  }
+  return {W,H,rtrX,rtrW,rtrY,rtrH,fabX,fabW,fabY,fabH,ports};
+}
+
+// ─── Draw ─────────────────────────────────────────────────────────────────────
+function draw(){
+  var g = geom();
+  ctx.clearRect(0,0,g.W,g.H);
+  ctx.fillStyle='#f5f4f0';
+  ctx.fillRect(0,0,g.W,g.H);
+  drawRouter(g);
+  drawAnimPkts(g);
+}
+
+function rrect(x,y,w,h,r,fill,stroke,lw){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+  if(fill){ctx.fillStyle=fill;ctx.fill();}
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw||1;ctx.stroke();}
+}
+
+function arrow(x1,y1,x2,y2,col){
+  ctx.strokeStyle=col||'#b0b8c1';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  // Arrowhead
+  var ang=Math.atan2(y2-y1,x2-x1);
+  ctx.fillStyle=col||'#b0b8c1';
+  ctx.beginPath();
+  ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-8*Math.cos(ang-0.4),y2-8*Math.sin(ang-0.4));
+  ctx.lineTo(x2-8*Math.cos(ang+0.4),y2-8*Math.sin(ang+0.4));
+  ctx.closePath();ctx.fill();
+}
+
+function drawRouter(g){
+  // ── Router chassis ──
+  rrect(g.rtrX, g.rtrY, g.rtrW, g.rtrH, 12, '#fff', '#85B7EB', 2);
+
+  // Router label (bottom-left, clearly inside box)
+  ctx.fillStyle='#c0beb6';ctx.font='700 8px system-ui';ctx.textAlign='left';
+  ctx.fillText('ROUTER', g.rtrX+10, g.rtrY+g.rtrH-6);
+
+  // ── Switching fabric inside router ──
+  var fc = fabric==='xbar'?{bg:'#E1F5EE',bd:'#1D9E75',tx:'#0F6E56',dim:'rgba(29,158,117,'}:
+           fabric==='bus' ?{bg:'#FFF3CD',bd:'#BA7517',tx:'#854F0B',dim:'rgba(186,117,23,'}:
+                           {bg:'#E6F1FB',bd:'#185FA5',tx:'#0C447C',dim:'rgba(24,95,165,'};
+  rrect(g.fabX, g.fabY, g.fabW, g.fabH, 8, fc.bg, fc.bd, 1.5);
+
+  var fabMidY = g.fabY + g.fabH/2;
+  var fabMidX = g.fabX + g.fabW/2;
+
+  // Port stem x-positions aligned with port centers
+  var stemXs = g.ports.map(function(p){ return p.cx; });
+
+  if(fabric==='mem'){
+    // ── Memory fabric internals ──
+    // Shared bus line connecting all stems to memory block
+    var busY = g.fabY + g.fabH*0.35;
+    ctx.strokeStyle=fc.dim+'0.3)';ctx.lineWidth=6;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(g.fabX+20,busY);ctx.lineTo(g.fabX+g.fabW-20,busY);ctx.stroke();
+    ctx.strokeStyle=fc.dim+'0.6)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(g.fabX+20,busY);ctx.lineTo(g.fabX+g.fabW-20,busY);ctx.stroke();
+    ctx.lineCap='butt';
+
+    // Tap lines from each port stem down to bus
+    stemXs.forEach(function(sx){
+      ctx.strokeStyle=fc.dim+'0.4)';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(sx,g.fabY+4);ctx.lineTo(sx,busY);ctx.stroke();
+    });
+
+    // Memory block in center
+    var mw=80,mh=36,mx=fabMidX-mw/2,my=busY+20;
+    rrect(mx,my,mw,mh,5,fc.dim+'0.15)','rgba(24,95,165,0.4)',1.5);
+    ctx.fillStyle=fc.tx;ctx.font='700 9px system-ui';ctx.textAlign='center';
+    ctx.fillText('RAM', fabMidX, my+14);
+    ctx.font='500 8px system-ui';ctx.fillStyle=fc.dim+'0.7)';
+    ctx.fillText('shared memory', fabMidX, my+27);
+
+    // Arrow from bus down to memory
+    ctx.strokeStyle=fc.dim+'0.5)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(fabMidX,busY+3);ctx.lineTo(fabMidX,my-1);ctx.stroke();
+
+    // Bus label
+    ctx.fillStyle=fc.dim+'0.6)';ctx.font='600 8px system-ui';ctx.textAlign='left';
+    ctx.fillText('System Bus', g.fabX+24, busY-6);
+
+    // Write/read annotation
+    ctx.fillStyle=fc.dim+'0.5)';ctx.font='500 7px system-ui';ctx.textAlign='center';
+    ctx.fillText('① write to RAM', fabMidX-36, my+mh+12);
+    ctx.fillText('② read from RAM', fabMidX+36, my+mh+12);
+
+    // Active path highlight
+    if(activePath){
+      var ap=activePath, sx=stemXs[ap.inPort];
+      var phase = ap.progress < 0.5 ? 'write' : 'read';
+      // Write phase: input stem → bus → memory
+      if(phase==='write'){
+        var t=ap.progress/0.5;
+        ctx.strokeStyle='rgba(24,95,165,0.8)';ctx.lineWidth=3;
+        ctx.beginPath();ctx.moveTo(sx,g.fabY+4);ctx.lineTo(sx,busY);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(sx,busY);ctx.lineTo(fabMidX,busY);ctx.stroke();
+        if(t>0.7){ctx.beginPath();ctx.moveTo(fabMidX,busY);ctx.lineTo(fabMidX,my);ctx.stroke();}
+        // Moving dot
+        var dotT=Math.min(t,1);
+        var dotX = sx + (fabMidX-sx)*dotT;
+        ctx.beginPath();ctx.arc(dotX,busY,5,0,Math.PI*2);
+        ctx.fillStyle='#185FA5';ctx.fill();
+      } else {
+        // Read phase: memory → bus → output stem (exits upward)
+        var t=(ap.progress-0.5)/0.5;
+        var osx=stemXs[ap.outPort];
+        ctx.strokeStyle='rgba(29,158,117,0.8)';ctx.lineWidth=3;
+        ctx.beginPath();ctx.moveTo(fabMidX,my);ctx.lineTo(fabMidX,busY);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(fabMidX,busY);ctx.lineTo(osx,busY);ctx.stroke();
+        if(t>0.7){ctx.beginPath();ctx.moveTo(osx,busY);ctx.lineTo(osx,g.fabY+4);ctx.stroke();}
+        var dotX2=fabMidX+(osx-fabMidX)*Math.min(t,1);
+        ctx.beginPath();ctx.arc(dotX2,busY,5,0,Math.PI*2);
+        ctx.fillStyle='#1D9E75';ctx.fill();
+      }
+    }
+
+  } else if(fabric==='bus'){
+    // ── Shared Bus internals — both connect at top, colors match link wires ──
+    var busY2 = g.fabY + g.fabH*0.65;
+
+    // Bus bar
+    rrect(g.fabX+16, busY2-8, g.fabW-32, 16, 4,
+          'rgba(186,117,23,0.12)', 'rgba(186,117,23,0.6)', 2);
+    ctx.fillStyle='rgba(186,117,23,0.7)';ctx.font='700 9px system-ui';ctx.textAlign='center';
+    ctx.fillText('SHARED BUS', fabMidX, busY2+4);
+
+    // Each port: input tap (gray, left) and output tap (green, right)
+    g.ports.forEach(function(p, i){
+      var inX  = p.cx - 10; // matches inWX
+      var outX = p.cx + 10; // matches outWX
+
+      // Input tap: top → bus (gray, solid)
+      ctx.strokeStyle='rgba(176,184,193,0.6)'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(inX, g.fabY+22); ctx.lineTo(inX, busY2-8); ctx.stroke();
+
+      // Output tap: top → bus (green, dashed)
+      ctx.strokeStyle='rgba(29,158,117,0.5)'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.moveTo(outX, g.fabY+22); ctx.lineTo(outX, busY2-8); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Labels near fabric top — gray for in, green for out, spaced apart
+      ctx.fillStyle='#b0b8c1'; ctx.font='600 7px system-ui'; ctx.textAlign='center';
+      ctx.fillText('In '+i, inX, g.fabY+18);
+      ctx.fillStyle='rgba(29,158,117,0.7)'; ctx.font='600 7px system-ui';
+      ctx.fillText('Out '+i, outX, g.fabY+18);
+    });
+
+    // Annotation
+    ctx.fillStyle='rgba(186,117,23,0.45)'; ctx.font='500 7px system-ui'; ctx.textAlign='right';
+    ctx.fillText('only one transfer at a time', g.fabX+g.fabW-12, g.fabY+g.fabH-8);
+
+    // Active path highlight
+    if(activePath){
+      var ap=activePath;
+      var isx=g.ports[ap.inPort].cx-10, osx=g.ports[ap.outPort].cx+10;
+
+      // Input tap — gray
+      ctx.strokeStyle='rgba(100,130,160,0.9)'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(isx,g.fabY+22); ctx.lineTo(isx,busY2-8); ctx.stroke();
+      // Bus segment
+      var bx1=Math.min(isx,osx), bx2=Math.max(isx,osx);
+      ctx.strokeStyle='rgba(186,117,23,0.9)'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(bx1,busY2); ctx.lineTo(bx2,busY2); ctx.stroke();
+      // Output tap — green
+      ctx.strokeStyle='rgba(29,158,117,0.9)'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(osx,busY2-8); ctx.lineTo(osx,g.fabY+22); ctx.stroke();
+
+      // Moving dot
+      var path=[
+        {x:isx,y:g.fabY+22}, {x:isx,y:busY2},
+        {x:osx,y:busY2},      {x:osx,y:g.fabY+22}
+      ];
+      var seg=Math.min(Math.floor(ap.progress*3),2);
+      var frac=(ap.progress*3)-seg;
+      var ax=path[seg].x+(path[seg+1].x-path[seg].x)*frac;
+      var ay=path[seg].y+(path[seg+1].y-path[seg].y)*frac;
+      var dotCol = seg===0?'#7090A0':seg===1?'#BA7517':'#1D9E75';
+      ctx.beginPath(); ctx.arc(ax,ay,5,0,Math.PI*2);
+      ctx.fillStyle=dotCol; ctx.fill();
+    }
+
+  } else {
+    // ── Crossbar internals — top-entry, top-exit ──
+    var pad = 20;
+    var xbX = g.fabX+pad, xbW = g.fabW-pad*2;
+    var xbY = g.fabY+28, xbH = g.fabH-40; // leave room at top for labels
+
+    // Use same x-offsets as the link wires above
+    var inXs  = g.ports.map(function(p){ return p.cx - 10; }); // matches inWX
+    var outXs = g.ports.map(function(p){ return p.cx + 10; }); // matches outWX
+
+    // Row Y positions — one per input port
+    var rowYs = [];
+    for(var i=0;i<NUM_PORTS;i++){
+      rowYs.push(xbY + (i+0.5)*(xbH/NUM_PORTS));
+    }
+
+    // Input vertical stems (gray — matches incoming link color)
+    inXs.forEach(function(ix){
+      ctx.strokeStyle='rgba(176,184,193,0.5)'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(ix, g.fabY+22); ctx.lineTo(ix, xbY+xbH); ctx.stroke();
+    });
+
+    // Horizontal rows (faint gray)
+    rowYs.forEach(function(ry){
+      ctx.strokeStyle='rgba(176,184,193,0.25)'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(xbX, ry); ctx.lineTo(xbX+xbW, ry); ctx.stroke();
+    });
+
+    // Output vertical stems (green — matches outgoing link color)
+    outXs.forEach(function(ox){
+      ctx.strokeStyle='rgba(29,158,117,0.35)'; ctx.lineWidth=1.5;
+      ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.moveTo(ox, g.fabY+22); ctx.lineTo(ox, xbY+xbH); ctx.stroke();
+      ctx.setLineDash([]);
+    });
+
+    // Crosspoints at every (row, outCol) intersection
+    rowYs.forEach(function(ry){
+      outXs.forEach(function(ox){
+        ctx.beginPath(); ctx.arc(ox, ry, 3, 0, Math.PI*2);
+        ctx.fillStyle='rgba(29,158,117,0.4)'; ctx.fill();
+      });
+    });
+
+    // Labels at fabric top — "In N" gray, "Out N" green, spaced apart
+    g.ports.forEach(function(p, i){
+      ctx.fillStyle='#b0b8c1'; ctx.font='600 7px system-ui'; ctx.textAlign='center';
+      ctx.fillText('In '+i, inXs[i], g.fabY+18);
+      ctx.fillStyle='rgba(29,158,117,0.7)'; ctx.font='600 7px system-ui';
+      ctx.fillText('Out '+i, outXs[i], g.fabY+18);
+    });
+
+    // Annotation bottom-right
+    ctx.fillStyle='rgba(29,158,117,0.45)'; ctx.font='500 7px system-ui'; ctx.textAlign='right';
+    ctx.fillText('parallel paths — no contention', g.fabX+g.fabW-12, g.fabY+g.fabH-8);
+
+    // Active path
+    if(activePath){
+      var ap = activePath;
+      var ix  = inXs[ap.inPort];
+      var ry  = rowYs[ap.inPort];
+      var ox  = outXs[ap.outPort];
+
+      // Input path — gray
+      ctx.strokeStyle='rgba(100,130,160,0.9)'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(ix, g.fabY+22); ctx.lineTo(ix, ry); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ix, ry); ctx.lineTo(ox, ry); ctx.stroke();
+
+      // Output path — green
+      ctx.strokeStyle='rgba(29,158,117,0.9)'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(ox, ry); ctx.lineTo(ox, g.fabY+22); ctx.stroke();
+
+      // Crosspoint lit
+      ctx.beginPath(); ctx.arc(ox, ry, 6, 0, Math.PI*2);
+      ctx.fillStyle='#1D9E75'; ctx.fill();
+      ctx.strokeStyle='#0F6E56'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.arc(ox, ry, 6, 0, Math.PI*2); ctx.stroke();
+
+      // Moving dot
+      var path4 = [
+        {x:ix, y:g.fabY+22}, {x:ix, y:ry},
+        {x:ox, y:ry},         {x:ox, y:g.fabY+22}
+      ];
+      var seg4  = Math.min(Math.floor(ap.progress*3), 2);
+      var frac4 = (ap.progress*3) - seg4;
+      var adx   = path4[seg4].x + (path4[seg4+1].x - path4[seg4].x)*frac4;
+      var ady   = path4[seg4].y + (path4[seg4+1].y - path4[seg4].y)*frac4;
+      var dotCol= seg4 < 2 ? '#7090A0' : '#1D9E75';
+      ctx.beginPath(); ctx.arc(adx, ady, 5, 0, Math.PI*2);
+      ctx.fillStyle=dotCol; ctx.fill();
+    }
+  }
+
+  // Fabric label — top left inside box
+  ctx.fillStyle=fc.tx;ctx.font='700 10px system-ui';ctx.textAlign='left';
+  ctx.fillText('Switching Fabric', g.fabX+10, g.fabY+14);
+
+  // ── Ports and wires ──
+  for(var i=0;i<NUM_PORTS;i++){
+    var p = g.ports[i];
+    var q = queues[i];
+    var qPct = q.length/MAX_QUEUE;
+
+    // Incoming wire: top of canvas → top of port (solid, labeled "link")
+    var inWX = p.wireX - 10; // offset left slightly so in/out don't overlap
+    var outWX = p.wireX + 10;
+
+    ctx.strokeStyle='#b0b8c1';ctx.lineWidth=1.5;
+    ctx.setLineDash([5,4]);
+    ctx.beginPath();ctx.moveTo(inWX,0);ctx.lineTo(inWX,p.topY);ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Outgoing wire: bottom of port → exits upward (dashed, offset right)
+    var outFill = qPct>=1?'#FCEBEB':qPct>0.6?'#FFF3CD':'#E1F5EE';
+    var outBdr  = qPct>=1?'#A32D2D':qPct>0.6?'#BA7517':'#1D9E75';
+    ctx.strokeStyle=outBdr;ctx.lineWidth=1.5;
+    ctx.setLineDash([5,4]);
+    ctx.beginPath();ctx.moveTo(outWX,0);ctx.lineTo(outWX,p.topY);ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Downward arrow tip on incoming wire
+    arrow(inWX, p.topY-14, inWX, p.topY+1, '#b0b8c1');
+
+    // Upward arrow on outgoing wire (at top of canvas)
+    arrow(outWX, 18, outWX, 3, outBdr);
+
+    // Tiny "in"/"out" labels above canvas top
+    ctx.fillStyle='#888780';ctx.font='500 8px system-ui';ctx.textAlign='center';
+    ctx.fillText('in', inWX, 10);
+    ctx.fillStyle=qPct>=1?'#A32D2D':qPct>0.6?'#BA7517':'#1D9E75';
+    ctx.fillText('out', outWX, 10);
+
+    // Vertical stem from port bottom into fabric
+    ctx.strokeStyle='#c0beb6';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(p.cx,p.botY);ctx.lineTo(p.cx,g.fabY);ctx.stroke();
+
+    // Port box — straddles router top edge
+    var portFill = '#E6F1FB';
+    var portBdr  = '#185FA5';
+    // Tint port if it's the active lookup input
+    if(lkp.active && i===lkp.inPort){
+      portFill='#DBEAFE'; portBdr='#185FA5';
+    }
+    rrect(p.x, p.y, p.w, p.h, 6, portFill, portBdr, 1.5);
+
+    // Port label
+    ctx.fillStyle='#0C447C';ctx.font='700 9px system-ui';ctx.textAlign='center';
+    ctx.fillText('Port '+i, p.cx, p.midY-4);
+
+    // Queue depth badge — combines input + output
+    var inDepth  = inQueues[i] ? inQueues[i].length  : 0;
+    var outDepth = queues[i]   ? queues[i].length    : 0;
+    var badgeCol = outDepth>=MAX_QUEUE?'#A32D2D':outDepth>3?'#BA7517':'#1D9E75';
+    ctx.fillStyle=badgeCol;ctx.font='600 7px system-ui';
+    ctx.fillText('in:'+inDepth+'  out:'+outDepth, p.cx, p.midY+8);
+  }
+}
+
+function drawAnimPkts(g){
+  var now = Date.now();
+  animPkts = animPkts.filter(function(p){ return now < p.end; });
+  animPkts.forEach(function(p){
+    if(now < p.start) return;
+    var t = (now - p.start) / (p.end - p.start);
+    var e = t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+    var x = p.x0 + (p.x1-p.x0)*e;
+    var y = p.y0 + (p.y1-p.y0)*e;
+    var alpha = p.exit ? (1-t) : 1;
+    var c = PKT_COLORS[p.pri];
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    rrect(x-28,y-9,56,18,3,c.bg,c.bd,1.5);
+    ctx.fillStyle=c.tx;ctx.font='700 8px system-ui';ctx.textAlign='center';
+    ctx.fillText(p.label,x,y+3);
+    ctx.restore();
+  });
+
+  // Draw packet parked at input port during LPM lookup
+  if(lkp.active && inQueues[lkp.inPort] && inQueues[lkp.inPort].length>0){
+    var pkt = inQueues[lkp.inPort][0];
+    var port = g.ports[lkp.inPort];
+    var c = PKT_COLORS[pkt.pri];
+    var px = port.cx, py = port.midY;
+    // Pulse the border weight
+    var pulse = 1.5 + 1.5 * Math.abs(Math.sin(now / 300));
+    rrect(px-26, py-8, 52, 16, 3, c.bg, c.bd, pulse);
+    ctx.fillStyle=c.tx; ctx.font='700 8px system-ui'; ctx.textAlign='center';
+    ctx.fillText(pkt.alias, px, py+3);
+    // Row progress underneath port box
+    var total = FT.length, done = pkt.rowsDone||0;
+    var barW = 52, barH = 3;
+    var bx = px-26, by = py+11;
+    rrect(bx, by, barW, barH, 1, '#e8e7e2', null, 0);
+    if(done>0) rrect(bx, by, barW*(done/total), barH, 1, '#185FA5', null, 0);
+  }
+
+  requestAnimationFrame(draw);
+}
+
+// ─── Forwarding table render ──────────────────────────────────────────────────
+function renderFT(matchIdxs, winnerIdx, activeIdx){
+  var tb = document.getElementById('ftable-body');
+  tb.innerHTML='';
+  FT.forEach(function(r,i){
+    var tr=document.createElement('tr');
+    if(i===winnerIdx)        tr.className='winner';
+    else if(i===activeIdx)   tr.className='checking';
+    else if(matchIdxs && matchIdxs.indexOf(i)>=0) tr.className='match';
+    else if(activeIdx>=0 && i<activeIdx) tr.className='checked';
+    tr.innerHTML='<td>'+r.prefix+'</td><td>/'+r.len+'</td><td>'+r.port+'</td><td>'+r.hop+'</td>';
+    tb.appendChild(tr);
+  });
+}
+
+// ─── LPM animated step-through ───────────────────────────────────────────────
+function lpmStart(pkt, inPort){
+  var dest = DEST_IPS[pkt.destIdx];
+  var pri  = pkt.pri;
+
+  lkp.active    = true;
+  lkp.rowIdx    = -1;
+  lkp.matches   = [];
+  lkp.bestIdx   = -1;
+  lkp.destIp    = dest.ip;
+  lkp.destLabel = dest.label;
+  lkp.destAlias = dest.alias;
+  lkp.pri       = pri;
+  lkp.inPort    = inPort;
+  lkp.noAnim    = false;
+  lkp.waiting   = true;
+
+  // Real-time mode: skip the step-through entirely
+  if(lkp.realtime){
+    // Run full LPM instantly
+    var matches=[], bestLen=-1, bestIdx=-1;
+    FT.forEach(function(r,i){
+      if((dest.ip & r.mask)===(r.net & r.mask)){
+        matches.push(i);
+        if(r.len>bestLen){bestLen=r.len;bestIdx=i;}
+      }
+    });
+    lkp.matches=matches; lkp.bestIdx=bestIdx;
+    lkp.active=false; lkp.waiting=false;
+    renderFT(matches, bestIdx, -1);
+    if(bestIdx>=0){
+      var e=FT[bestIdx];
+      document.getElementById('lpm-dest').textContent    = dest.alias+' — '+dest.label;
+      document.getElementById('lpm-match').textContent   = e.prefix+'/'+e.len+' ✓';
+      document.getElementById('lpm-match').style.color  = '#1D9E75';
+      document.getElementById('lpm-port').textContent   = e.port;
+      document.getElementById('lpm-hop').textContent    = e.hop;
+      if(queues[e.port].length>=MAX_QUEUE){
+        stats.drop++;stats.qfill++;
+        inQueues[inPort].shift(); lookupProcessing=false;
+        renderInQueues(); updateStats();
+        addLog('DROP: output queue full → port '+e.port, inPort, 'drop');
+        recordPortDrop(e.port, dest.alias, pri, 'queue full (tail drop)');
+        setTimeout(processNextInput,50); return;
+      }
+      inQueues[inPort].shift(); renderInQueues();
+      forwardPacket(dest.label, pri, inPort, e.port, false);
+    } else {
+      stats.drop++;
+      inQueues[inPort].shift(); lookupProcessing=false;
+      renderInQueues(); updateStats();
+      addLog('DROP: no route for '+dest.label, inPort, 'drop');
+      setTimeout(processNextInput,50);
+    }
+    return;
+  }
+
+  // Mark head-of-queue packet as being looked up (ring starts)
+  inQueues[inPort][0].lookingUp = true;
+  inQueues[inPort][0].rowsDone  = 0;
+  inQueues[inPort][0].totalRows = FT.length;
+  renderInQueues();
+
+  // Update status bar
+  document.getElementById('canvas-state-bar').textContent =
+    'LPM lookup: ' + dest.alias + ' (' + dest.label + ')';
+  document.getElementById('lpm-dest').textContent      = dest.alias + ' — ' + dest.label;
+  document.getElementById('lpm-cur-row').textContent   = '—';
+  document.getElementById('lpm-cur-prefix').textContent= '—';
+  document.getElementById('lpm-cur-result').textContent= '—';
+  document.getElementById('lpm-cur-result').style.color= '';
+  document.getElementById('lpm-match').textContent     = '—';
+  document.getElementById('lpm-match').style.color     = '';
+  document.getElementById('lpm-port').textContent      = '—';
+  document.getElementById('lpm-hop').textContent       = '—';
+
+  addLog('LOOKUP: '+dest.alias+' on port '+inPort, inPort, 'lpm');
+
+  // Show step button if in step mode
+  if(lkp.stepMode){
+    document.getElementById('btn-step').style.display='';
+  }
+
+  setTimeout(lpmAdvance, lkp.stepMode?0:300);
+}
+
+function lpmAdvance(){
+  if(!lkp.active) return;
+  lkp.rowIdx++;
+
+  if(lkp.rowIdx >= FT.length){
+    lpmComplete();
+    return;
+  }
+
+  var r = FT[lkp.rowIdx];
+  var isMatch = (lkp.destIp & r.mask) === (r.net & r.mask);
+
+  // Highlight current row being checked
+  renderFT(lkp.matches, -1, lkp.rowIdx);
+
+  // Update "currently checking" section
+  document.getElementById('lpm-cur-row').textContent    = lkp.rowIdx + ' of ' + (FT.length-1);
+  document.getElementById('lpm-cur-prefix').textContent = r.prefix + '/' + r.len;
+  document.getElementById('lpm-cur-result').textContent = isMatch ? 'MATCH ✓' : 'no match ✗';
+  document.getElementById('lpm-cur-result').style.color = isMatch ? '#1D9E75' : '#A32D2D';
+
+  if(isMatch){
+    lkp.matches.push(lkp.rowIdx);
+    if(r.len > (lkp.bestIdx>=0 ? FT[lkp.bestIdx].len : -1)){
+      lkp.bestIdx = lkp.rowIdx;
+    }
+    // Update "best match so far" section
+    document.getElementById('lpm-match').textContent = FT[lkp.bestIdx].prefix+'/'+FT[lkp.bestIdx].len;
+    document.getElementById('lpm-match').style.color = '#1D9E75';
+    document.getElementById('lpm-port').textContent  = FT[lkp.bestIdx].port;
+    document.getElementById('lpm-hop').textContent   = FT[lkp.bestIdx].hop;
+    addLog('ROW '+lkp.rowIdx+': '+r.prefix+'/'+r.len+' → MATCH', lkp.inPort, 'lpm');
+  } else {
+    addLog('ROW '+lkp.rowIdx+': '+r.prefix+'/'+r.len+' → no match', lkp.inPort, 'lpm');
+  }
+
+  document.getElementById('canvas-state-bar').textContent =
+    'Checking row '+lkp.rowIdx+': '+r.prefix+'/'+r.len+
+    (isMatch?' → match! (len /'+r.len+')'  : ' → no match');
+
+  // Advance ring on head-of-queue packet
+  if(inQueues[lkp.inPort].length>0){
+    inQueues[lkp.inPort][0].rowsDone = lkp.rowIdx+1;
+    renderInQueues();
+  }
+
+  if(!lkp.stepMode){
+    lkpTimer = setTimeout(lpmAdvance, lkp.rowDelay);
+  }
+  // In step mode: user clicks Next Row button
+}
+
+function lpmComplete(){
+  lkp.active  = false;
+  lkp.waiting = false;
+  document.getElementById('btn-step').style.display='none';
+
+  // Show final winner
+  renderFT(lkp.matches, lkp.bestIdx, -1);
+
+  // Clear currently-checking section
+  document.getElementById('lpm-cur-row').textContent    = 'done';
+  document.getElementById('lpm-cur-prefix').textContent = '—';
+  document.getElementById('lpm-cur-result').textContent = '—';
+  document.getElementById('lpm-cur-result').style.color = '';
+
+  if(lkp.bestIdx < 0){
+    waitingPkt = null;
+    inQueues[lkp.inPort].shift(); // remove from input queue
+    lookupProcessing = false;
+    renderInQueues();
+    document.getElementById('canvas-state-bar').textContent =
+      'No route found — packet dropped';
+    document.getElementById('lpm-match').textContent = 'No match — DROP';
+    document.getElementById('lpm-match').style.color = '#A32D2D';
+    stats.drop++; updateStats();
+    addLog('DROP: no route for '+lkp.destLabel, lkp.inPort, 'drop');
+    setTimeout(processNextInput, 200);
+    return;
+  }
+
+  var entry = FT[lkp.bestIdx];
+  var outPort = entry.port;
+
+  document.getElementById('lpm-match').textContent = entry.prefix+'/'+entry.len+' ✓ WINNER';
+  document.getElementById('lpm-match').style.color = '#1D9E75';
+  document.getElementById('lpm-port').textContent  = outPort;
+  document.getElementById('lpm-hop').textContent   = entry.hop;
+  document.getElementById('canvas-state-bar').textContent =
+    'Winner: '+entry.prefix+'/'+entry.len+' → Port '+outPort+'. Forwarding packet...';
+
+  addLog('LPM winner: /'+entry.len+' → port '+outPort, lkp.inPort, 'lpm');
+
+  // Check queue full
+  if(queues[outPort].length >= MAX_QUEUE){
+    stats.drop++;stats.qfill++;
+    inQueues[lkp.inPort].shift();
+    lookupProcessing = false;
+    renderInQueues();
+    addLog('DROP: output queue full → port '+outPort, lkp.inPort, 'drop');
+    recordPortDrop(outPort, lkp.destAlias, lkp.pri, 'queue full (tail drop)');
+    updateStats(); renderQueues();
+    document.getElementById('canvas-state-bar').textContent =
+      'DROP — Port '+outPort+' queue full (tail drop)';
+    setTimeout(processNextInput, 200);
+    return;
+  }
+
+  // In step mode — show overlay explaining the result, forward on dismiss
+  if(lkp.stepMode){
+    showLpmOverlay(lkp.destAlias, lkp.destLabel, lkp.matches, lkp.bestIdx, function(){
+      forwardPacket(lkp.destLabel, lkp.pri, lkp.inPort, outPort, false);
+    });
+  } else {
+    forwardPacket(lkp.destLabel, lkp.pri, lkp.inPort, outPort, lkp.noAnim);
+  }
+}
+
+// ─── LPM Result Overlay ───────────────────────────────────────────────────────
+var overlayCallback = null;
+
+function showLpmOverlay(destAlias, destLabel, matches, winnerIdx, onDismiss){
+  var entry = FT[winnerIdx];
+
+  // Title
+  document.getElementById('ov-title').textContent =
+    'LPM Lookup Complete — ' + destAlias + ' (' + destLabel + ')';
+  document.getElementById('ov-subtitle').textContent =
+    FT.length + ' entries checked, ' + matches.length + ' matched';
+
+  // Rows
+  var rowsEl = document.getElementById('ov-rows');
+  rowsEl.innerHTML = '';
+  FT.forEach(function(r, i){
+    var isMatch  = matches.indexOf(i) >= 0;
+    var isWinner = i === winnerIdx;
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:5px;' +
+      (isWinner ? 'background:#D4EDDA;' : isMatch ? 'background:#FFF3CD;' : 'background:#f5f4f0;opacity:.6;');
+    var badge = isWinner ? '✓ WINNER' : isMatch ? 'match' : 'no match';
+    var badgeCol = isWinner ? '#0F6E56' : isMatch ? '#854F0B' : '#888780';
+    row.innerHTML =
+      '<span style="min-width:120px;color:#1a1a1a;">' + r.prefix + '/' + r.len + '</span>' +
+      '<span style="color:#888780;min-width:60px;">→ Port ' + r.port + '</span>' +
+      '<span style="color:#888780;flex:1;">' + r.hop + '</span>' +
+      '<span style="font-weight:700;font-size:10px;color:'+badgeCol+';">' + badge + '</span>';
+    rowsEl.appendChild(row);
+  });
+
+  // Winner line
+  document.getElementById('ov-winner').textContent =
+    'Winner: ' + entry.prefix + '/' + entry.len + ' → Port ' + entry.port + ' (next hop: ' + entry.hop + ')';
+
+  // Explanation of LPM rule
+  var otherMatches = matches.filter(function(i){ return i !== winnerIdx; });
+  var explainParts = ['Longest Prefix Match rule: when multiple entries match, the one with the longest prefix length wins because it is the most specific route.'];
+  if(otherMatches.length > 0){
+    var losers = otherMatches.map(function(i){ return FT[i].prefix+'/'+FT[i].len; }).join(', ');
+    explainParts.push(
+      losers + ' also matched, but /' + entry.len + ' is longer — it narrows down the destination more precisely.'
+    );
+  } else {
+    explainParts.push('This was the only matching entry, so it wins by default.');
+  }
+  document.getElementById('ov-explain').textContent = explainParts.join(' ');
+
+  // Why this matters — dynamic based on actual matches
+  var whyText;
+  if(otherMatches.length > 0){
+    var longestOther = otherMatches.reduce(function(best, i){
+      return FT[i].len > FT[best].len ? i : best;
+    }, otherMatches[0]);
+    var loserEntry = FT[longestOther];
+    var winnerHosts = Math.pow(2, 32-entry.len).toLocaleString();
+    var loserHosts  = Math.pow(2, 32-loserEntry.len).toLocaleString();
+    whyText = 'Think of it like a mailing address: "' + loserEntry.prefix + '/' + loserEntry.len +
+      '" covers ~' + loserHosts + ' addresses — a broad neighborhood. ' +
+      '"' + entry.prefix + '/' + entry.len + '" covers only ~' + winnerHosts +
+      ' addresses — a specific street. The router always picks the most specific match, ' +
+      'because a more specific route means a more precise forwarding decision.';
+  } else {
+    whyText = 'This was the only matching entry. In practice, routers always have a default route ' +
+      '(0.0.0.0/0) as a catch-all, so every packet finds at least one match.';
+  }
+  document.getElementById('ov-why').textContent = whyText;
+
+  // Show overlay
+  var ov = document.getElementById('lpm-overlay');
+  ov.style.display = 'flex';
+  overlayCallback = onDismiss;
+}
+
+document.getElementById('ov-dismiss').addEventListener('click', function(){
+  document.getElementById('lpm-overlay').style.display = 'none';
+  if(overlayCallback){ overlayCallback(); overlayCallback=null; }
+});
+function forwardPacket(destLabel, pri, inPort, outPort, noAnim){
+  waitingPkt = null;
+  inQueues[inPort].shift();
+  renderInQueues();
+
+  var g   = geom();
+  var p0  = g.ports[inPort];
+  var dur = fabric==='xbar' ? 500 : fabric==='bus' ? 900 : 750;
+  var alias = lkp.destAlias || destLabel.split('.').slice(-2).join('.');
+  var pktCol = PKT_COLORS[pri].bd;
+
+  if(!noAnim){
+    // Set active path for fabric animation
+    activePath = {inPort:inPort, outPort:outPort, progress:0, col:pktCol};
+    var startTime = Date.now();
+    var pathTimer = setInterval(function(){
+      var elapsed = Date.now() - startTime;
+      var t = Math.min(elapsed / dur, 1);
+      activePath.progress = t;
+      if(t >= 1){ clearInterval(pathTimer); activePath = null; }
+    }, 16);
+
+    // Phase 2: port pill → fabric center on canvas
+    animPkts.push({
+      x0:p0.cx, y0:p0.midY,
+      x1:g.fabX+g.fabW/2, y1:g.fabY+g.fabH/2,
+      start:Date.now(), end:Date.now()+dur/2,
+      pri:pri, label:alias
+    });
+    requestAnimationFrame(draw);
+    // Phase 3: fabric center → dest port
+    setTimeout(function(){
+      var g2=geom(), p2=g2.ports[outPort];
+      animPkts.push({
+        x0:g2.fabX+g2.fabW/2, y0:g2.fabY+g2.fabH/2,
+        x1:p2.cx, y1:p2.midY,
+        start:Date.now(), end:Date.now()+dur/2,
+        pri:pri, label:'→P'+outPort
+      });
+      requestAnimationFrame(draw);
+    }, dur/2);
+  }
+
+  setTimeout(function(){
+    queues[outPort].push({dest:destLabel, alias:lkp.destAlias, pri:pri, inPort:inPort});
+    sortQueue(outPort);
+    stats.fwd++;
+    addLog('FWD: '+lkp.destAlias+' → port '+outPort, inPort, 'fwd');
+    updateStats(); renderQueues(); draw();
+    lookupProcessing = false;
+    setTimeout(processNextInput, 100);
+  }, noAnim?0:dur);
+}
+
+// ─── Input queue render — pill + ring ─────────────────────────────────────────
+function renderInQueues(){
+  var wrap = document.getElementById('in-queue-wrap');
+  wrap.innerHTML='';
+  inQueues.forEach(function(q,i){
+    var row=document.createElement('div');row.className='queue-row';
+    var lbl=document.createElement('div');lbl.className='queue-label';lbl.textContent=i;
+    var lane=document.createElement('div');lane.className='queue-lane';
+    lane.style.height='30px';
+    if(q.length===0){
+      var em=document.createElement('span');em.className='queue-empty';em.textContent='empty';
+      lane.appendChild(em);
+    } else {
+      q.forEach(function(pkt, pi){
+        var c = PKT_COLORS[pkt.pri];
+        var isHead = pi===0 && pkt.lookingUp;
+        var pill = document.createElement('div');
+        pill.className='in-pkt';
+        pill.style.background = c.bg;
+        pill.style.borderColor = c.bd;
+        pill.style.color = c.tx;
+
+        // Text info
+        var info = document.createElement('div');info.className='in-pkt-info';
+        var nm = document.createElement('div');nm.className='in-pkt-name';nm.textContent=pkt.alias;
+        var sub= document.createElement('div');sub.className='in-pkt-sub';
+        sub.textContent = c.label + (isHead?' — lookup':'');
+        info.appendChild(nm);info.appendChild(sub);
+        pill.appendChild(info);
+
+        // Ring indicator
+        var ring = document.createElement('div');ring.className='ring-wrap';
+        var total = pkt.totalRows||FT.length;
+        var done  = pkt.rowsDone||0;
+        var pct   = isHead ? done/total : 0;
+        var circ  = 2*Math.PI*7; // r=7
+        var dash  = pct*circ;
+        ring.innerHTML =
+          '<svg width="20" height="20" viewBox="0 0 20 20">'+
+            '<circle cx="10" cy="10" r="7" fill="none" stroke="#e8e7e2" stroke-width="2.5"/>'+
+            '<circle cx="10" cy="10" r="7" fill="none" stroke="'+(isHead?'#185FA5':'#d0d0d0')+'" stroke-width="2.5"'+
+              ' stroke-dasharray="'+dash.toFixed(1)+' '+circ.toFixed(1)+'"'+
+              ' stroke-dashoffset="0" transform="rotate(-90 10 10)"/>'+
+          '</svg>'+
+          '<div class="ring-txt">'+(isHead?done:'')+'</div>';
+        pill.appendChild(ring);
+        lane.appendChild(pill);
+      });
+    }
+    row.appendChild(lbl);row.appendChild(lane);
+
+    // Input drop badge
+    var inDrop = inPortDrops[i] ? inPortDrops[i].length : 0;
+    var inBadge = document.createElement('div');
+    inBadge.style.cssText =
+      'flex-shrink:0;min-width:22px;height:22px;border-radius:11px;'+
+      'background:'+(inDrop>0?'#A32D2D':'#e8e7e2')+';'+
+      'color:'+(inDrop>0?'#fff':'#c0beb6')+';'+
+      'font-size:9px;font-weight:700;font-family:monospace;'+
+      'display:flex;align-items:center;justify-content:center;'+
+      'padding:0 5px;cursor:'+(inDrop>0?'pointer':'default')+';';
+    inBadge.textContent = inDrop > 0 ? inDrop : '—';
+    if(inDrop > 0){
+      (function(port){
+        inBadge.addEventListener('click', function(){ showInDropLog(port); });
+        inBadge.addEventListener('mouseenter', function(){ this.style.background='#791F1F'; });
+        inBadge.addEventListener('mouseleave', function(){ this.style.background='#A32D2D'; });
+      })(i);
+    }
+    row.appendChild(inBadge);
+    wrap.appendChild(row);
+  });
+}
+function recordPortDrop(port, alias, pri, reason){
+  portDrops[port].push({
+    alias: alias,
+    pri:   pri,
+    reason: reason,
+    t: ++logTime
+  });
+  renderQueues(); // refresh badge count
+}
+
+function showDropLog(port){
+  document.getElementById('drop-pop-title').textContent = 'Drops — Port '+port+' ('+portDrops[port].length+' total)';
+  var body = document.getElementById('drop-pop-body');
+  body.innerHTML = '';
+  portDrops[port].slice().reverse().forEach(function(d){
+    var c = PKT_COLORS[d.pri];
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:4px;background:#FCEBEB;border-left:3px solid #A32D2D;';
+    row.innerHTML =
+      '<span style="font-weight:700;color:'+c.tx+';background:'+c.bg+';border:1px solid '+c.bd+';border-radius:3px;padding:1px 5px;font-size:10px;">'+d.alias+'</span>'+
+      '<span style="color:#888780;font-size:10px;flex:1;">'+d.reason+'</span>'+
+      '<span style="color:#aaa;font-size:9px;">#'+d.t+'</span>';
+    body.appendChild(row);
+  });
+  document.getElementById('drop-popover').style.display = 'flex';
+}
+
+document.getElementById('drop-pop-close').addEventListener('click', function(){
+  document.getElementById('drop-popover').style.display = 'none';
+});
+
+function showInDropLog(port){
+  document.getElementById('drop-pop-title').textContent = 'Input Drops — Port '+port+' ('+inPortDrops[port].length+' total)';
+  var body = document.getElementById('drop-pop-body');
+  body.innerHTML = '';
+  inPortDrops[port].slice().reverse().forEach(function(d){
+    var c = PKT_COLORS[d.pri];
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:4px;background:#FCEBEB;border-left:3px solid #A32D2D;';
+    row.innerHTML =
+      '<span style="font-weight:700;color:'+c.tx+';background:'+c.bg+';border:1px solid '+c.bd+';border-radius:3px;padding:1px 5px;font-size:10px;">'+d.alias+'</span>'+
+      '<span style="color:#888780;font-size:10px;flex:1;">'+d.reason+'</span>'+
+      '<span style="color:#aaa;font-size:9px;">#'+d.t+'</span>';
+    body.appendChild(row);
+  });
+  document.getElementById('drop-popover').style.display = 'flex';
+}
+function computeDepartureOrder(){
+  // Returns array of {port, pktIdx, seqNum} — global transmit sequence
+  var order = [];
+  var qCopies = queues.map(function(q){ return q.slice(); }); // shallow copies
+  var rrP = 0;
+  var seq = 1;
+  var maxIter = queues.reduce(function(s,q){return s+q.length;},0);
+
+  for(var iter=0; iter<maxIter; iter++){
+    var target=-1, pkt=null;
+    if(sched==='rr'){
+      for(var k=0;k<NUM_PORTS;k++){
+        var idx=(rrP+k)%NUM_PORTS;
+        if(qCopies[idx].length>0){ target=idx; rrP=(idx+1)%NUM_PORTS; break; }
+      }
+      if(target>=0){ pkt=qCopies[target].shift(); }
+    } else if(sched==='fcfs'){
+      // Strict arrival order — find global head with earliest arrival
+      // Since packets are in arrival order within each port queue,
+      // pick head of whichever port queue has the packet with lowest seqId
+      // We'll use a simple approximation: rotate round-robin for FCFS sim
+      for(var k2=0;k2<NUM_PORTS;k2++){
+        if(qCopies[k2].length>0){ target=k2; break; }
+      }
+      if(target>=0){ pkt=qCopies[target].shift(); }
+    } else {
+      // Priority / WFQ: pick highest-priority head across all queues
+      var best=null;
+      for(var pi=0;pi<NUM_PORTS;pi++){
+        if(qCopies[pi].length>0){
+          var h=qCopies[pi][0];
+          if(!best || h.pri>best.pkt.pri){ best={port:pi,pkt:h}; }
+        }
+      }
+      if(best){ target=best.port; pkt=qCopies[target].shift(); }
+    }
+    if(!pkt) break;
+    order.push({port:target, pkt:pkt, seq:seq++});
+  }
+  return order;
+}
+
+// ─── Output queue render with departure-sequence badges ───────────────────────
+function renderQueues(){
+  var wrap = document.getElementById('queue-wrap');
+  wrap.innerHTML='';
+
+  // Compute departure sequence
+  var depOrder = computeDepartureOrder();
+  // Build lookup: port → [{pktIdx, seq}]
+  var seqMap = {};
+  var portCounters = {};
+  depOrder.forEach(function(d){
+    if(!seqMap[d.port]) seqMap[d.port]=[];
+    seqMap[d.port].push(d.seq);
+  });
+
+  queues.forEach(function(q,i){
+    var row=document.createElement('div');row.className='queue-row';
+    var lbl=document.createElement('div');lbl.className='queue-label';lbl.textContent=i;
+    var lane=document.createElement('div');lane.className='queue-lane';
+    lane.style.minHeight='28px';
+    if(q.length===0){
+      var em=document.createElement('span');em.className='queue-empty';em.textContent='empty';
+      lane.appendChild(em);
+    } else {
+      var portSeqs = seqMap[i]||[];
+      q.forEach(function(pkt, pi){
+        var c=PKT_COLORS[pkt.pri];
+        var seq = portSeqs[pi];
+        var isNext = seq===1;
+
+        var wrap2=document.createElement('div');
+        wrap2.style.cssText='position:relative;display:inline-flex;flex-shrink:0;';
+
+        var el=document.createElement('div');el.className='queue-pkt';
+        el.style.background=c.bg;
+        el.style.borderColor= isNext ? c.bd : c.bd;
+        el.style.color=c.tx;
+        el.style.width='62px';
+        el.style.height='22px';
+        el.style.outline = isNext ? '2px solid '+c.bd : 'none';
+        el.style.outlineOffset = '1px';
+        el.style.fontSize='8px';
+        el.style.display='flex';
+        el.style.flexDirection='column';
+        el.style.alignItems='center';
+        el.style.justifyContent='center';
+        el.style.gap='1px';
+        el.style.padding='1px 3px';
+
+        var nameEl=document.createElement('div');
+        nameEl.style.cssText='font-weight:700;font-size:8px;font-family:monospace;white-space:nowrap;';
+        nameEl.textContent=(pkt.alias||pkt.dest.split('.').slice(-1)[0]);
+        var priEl=document.createElement('div');
+        priEl.style.cssText='font-size:7px;opacity:.75;font-weight:500;';
+        priEl.textContent=c.label;
+        el.appendChild(nameEl);el.appendChild(priEl);
+
+        // Sequence badge — top-right corner
+        var badge=document.createElement('div');
+        badge.style.cssText=
+          'position:absolute;top:-7px;right:-7px;'+
+          'width:15px;height:15px;border-radius:50%;'+
+          'background:'+(isNext?c.bd:'#888780')+';'+
+          'color:#fff;font-size:8px;font-weight:700;'+
+          'display:flex;align-items:center;justify-content:center;'+
+          'font-family:monospace;line-height:1;'+
+          'box-shadow:0 0 0 1.5px #fff;';
+        badge.textContent=seq||'?';
+
+        wrap2.appendChild(el);wrap2.appendChild(badge);
+        lane.appendChild(wrap2);
+      });
+    }
+    row.appendChild(lbl);row.appendChild(lane);
+
+    // Red drop badge at row end
+    var dropCount = portDrops[i] ? portDrops[i].length : 0;
+    var dropBadge = document.createElement('div');
+    dropBadge.style.cssText =
+      'flex-shrink:0;min-width:22px;height:22px;border-radius:11px;'+
+      'background:'+(dropCount>0?'#A32D2D':'#e8e7e2')+';'+
+      'color:'+(dropCount>0?'#fff':'#c0beb6')+';'+
+      'font-size:9px;font-weight:700;font-family:monospace;'+
+      'display:flex;align-items:center;justify-content:center;'+
+      'padding:0 5px;cursor:'+(dropCount>0?'pointer':'default')+';';
+    dropBadge.textContent = dropCount > 0 ? dropCount : '—';
+    if(dropCount > 0){
+      (function(port){
+        dropBadge.addEventListener('click', function(){ showDropLog(port); });
+        dropBadge.addEventListener('mouseenter', function(){ this.style.background='#791F1F'; });
+        dropBadge.addEventListener('mouseleave', function(){ this.style.background='#A32D2D'; });
+      })(i);
+    }
+    row.appendChild(dropBadge);
+    wrap.appendChild(row);
+  });
+}
+
+// ─── Inject packet — enqueue into input queue ─────────────────────────────────
+function injectPacket(destIdx, pri, inPort, noAnim){
+  var dest = DEST_IPS[destIdx];
+  stats.inj++;
+  updateStats();
+
+  // Drop if input queue full
+  if(inQueues[inPort].length >= MAX_IN_QUEUE){
+    stats.drop++;
+    addLog('DROP: input queue full port '+inPort, inPort, 'drop');
+    inPortDrops[inPort].push({alias:dest.alias, pri:pri, reason:'input queue full', t:++logTime});
+    updateStats(); renderInQueues();
+    return;
+  }
+
+  // Animate packet dropping in from link above
+  if(!noAnim){
+    var g=geom(), p0=g.ports[inPort];
+    animPkts.push({
+      x0:p0.wireX-10, y0:-20,
+      x1:p0.cx, y1:p0.midY,
+      start:Date.now(), end:Date.now()+350,
+      pri:pri, label:dest.alias
+    });
+    requestAnimationFrame(draw);
+  }
+
+  inQueues[inPort].push({destIdx:destIdx, dest:dest.label, alias:dest.alias, pri:pri, inPort:inPort, rows:0});
+  addLog('ARRIVE: '+dest.alias+' ('+dest.label+') → input queue '+inPort, inPort, 'fwd');
+  renderInQueues();
+
+  // Kick off processing if idle
+  setTimeout(processNextInput, noAnim?0:360);
+}
+
+// ─── Process head of input queues through LPM ─────────────────────────────────
+function processNextInput(){
+  if(lookupProcessing) return; // already running a lookup
+  // Find a non-empty input queue (round-robin across ports)
+  var found = -1;
+  for(var k=0;k<NUM_PORTS;k++){
+    if(inQueues[k].length>0){ found=k; break; }
+  }
+  if(found<0) return; // all queues empty
+  lookupProcessing = true;
+  var pkt = inQueues[found][0]; // peek — don't shift yet, keep visible during lookup
+  lpmStart(pkt, found);
+}
+
+// ─── Queue sort by scheduler ──────────────────────────────────────────────────
+function sortQueue(port){
+  var q = queues[port];
+  if(sched==='fcfs') return; // already in order
+  if(sched==='pri'){
+    q.sort(function(a,b){ return b.pri-a.pri; });
+  } else if(sched==='rr'){
+    // Round robin: preserve arrival order (visual label handles it)
+  } else if(sched==='wfq'){
+    q.sort(function(a,b){ return b.pri-a.pri; }); // simplified WFQ by weight class
+  }
+}
+
+// ─── Auto drain loop ──────────────────────────────────────────────────────────
+function drainTick(){
+  if(drainPaused){ setTimeout(drainTick, DRAIN_INTERVAL); return; }
+  var drained=0;
+  for(var attempt=0; attempt<lineRate && drained<lineRate; attempt++){
+    var pkt=null, target=-1;
+    if(sched==='rr'){
+      for(var k=0;k<NUM_PORTS;k++){
+        var idx=(rrPtr+k)%NUM_PORTS;
+        if(queues[idx].length>0){ target=idx; rrPtr=(idx+1)%NUM_PORTS; break; }
+      }
+      if(target>=0){ pkt=queues[target].shift(); }
+    } else {
+      // FCFS / Priority / WFQ: pick head of highest-priority non-empty queue
+      var best=null;
+      for(var i=0;i<NUM_PORTS;i++){
+        if(queues[i].length>0){
+          var h=queues[i][0];
+          if(!best || h.pri>best.pkt.pri) best={port:i,pkt:h};
+        }
+      }
+      if(best){ target=best.port; pkt=queues[target].shift(); }
+    }
+    if(!pkt) break;
+    drained++;
+    stats.tx++;
+    addLog('TX → wire from port '+target+' ['+PKT_COLORS[pkt.pri].label+']', target, 'tx');
+    // Phase exit: packet departs upward off canvas from output wire
+    (function(port, p){
+      var g=geom(), po=g.ports[port];
+      animPkts.push({
+        x0:po.wireX+10, y0:po.midY,
+        x1:po.wireX+10, y1:-30,
+        start:Date.now(), end:Date.now()+450,
+        pri:p.pri, label:p.dest.split('.').slice(-2).join('.'),
+        exit:true
+      });
+    })(target, pkt);
+  }
+  if(drained>0){ updateStats(); renderQueues(); draw(); }
+  setTimeout(drainTick, DRAIN_INTERVAL);
+}
+setTimeout(drainTick, DRAIN_INTERVAL);
+
+// ─── Flood ────────────────────────────────────────────────────────────────────
+function flood(){
+  var delay=0;
+  for(var i=0;i<10;i++){
+    (function(d){
+      setTimeout(function(){
+        var di   = Math.floor(Math.random()*5);
+        var pri  = Math.floor(Math.random()*3);
+        var port = Math.floor(Math.random()*NUM_PORTS);
+        injectPacket(di, pri, port, true);
+      }, d);
+    })(delay);
+    delay += 120;
+  }
+}
+
+// ─── Log ──────────────────────────────────────────────────────────────────────
+function addLog(msg, port, type){
+  logTime++;
+  var body = document.getElementById('log-body');
+  var row=document.createElement('div');row.className='log-row';
+  var typeClass = type==='drop'?'ev-drop':type==='tx'?'ev-lpm':type==='lpm'?'ev-lpm':'ev-fwd';
+  var typeLabel  = type==='drop'?'DROP':type==='tx'?'TX':type==='lpm'?'LPM':'FWD';
+  row.innerHTML='<span class="log-time">'+String(logTime).padStart(4,'0')+'</span>'+
+    '<span class="log-msg">'+msg+'</span>'+
+    '<span class="log-port" style="color:#185FA5;">P'+port+'</span>'+
+    '<span class="log-event '+typeClass+'">'+typeLabel+'</span>';
+  body.insertBefore(row, body.firstChild);
+  if(body.children.length>80) body.removeChild(body.lastChild);
+}
+
+// ─── Stats ────────────────────────────────────────────────────────────────────
+function updateStats(){
+  document.getElementById('st-fwd').textContent   = stats.fwd;
+  document.getElementById('st-drop').textContent  = stats.drop;
+  document.getElementById('st-tx').textContent    = stats.tx;
+  document.getElementById('st-qfill').textContent = stats.qfill;
+  document.getElementById('st-inj').textContent   = stats.inj;
+  var totalQ = queues.reduce(function(s,q){return s+q.length;},0);
+  document.getElementById('st-qdepth').textContent = (totalQ/NUM_PORTS).toFixed(1);
+}
+
+function updateFabricUI(){
+  var info = FABRIC_INFO[fabric];
+  document.getElementById('fab-type').textContent = info.label;
+  document.getElementById('fab-bw').textContent   = info.bw;
+  document.getElementById('fab-par').textContent  = info.par;
+  document.getElementById('fab-bot').textContent  = info.bot;
+  var notes = {'mem':'Each pkt copied twice via shared memory — bus is bottleneck',
+               'bus':'All ports contend for single shared bus bandwidth',
+               'xbar':'Dedicated path per input-output pair — true parallelism'};
+  var tips = {
+    'mem':'Memory fabric: packet written to shared RAM, then read back out. Requires two bus crossings per packet — the bus is the bottleneck regardless of port count.',
+    'bus':'Shared Bus: a single wire connects all ports. Only one packet can cross at a time. Adding more ports does not increase bandwidth.',
+    'xbar':'Crossbar: a dedicated switching path exists for every input-output port pair. Multiple packets can cross simultaneously with no contention.'
+  };
+  document.getElementById('fab-note').textContent = notes[fabric];
+}
+
+function updateSchedUI(){
+  document.getElementById('st-sched').textContent    = SCHED_LABELS[sched];
+  var tips = {
+    fcfs:'First Come First Served: packets leave in the order they arrived. Simple and fair across time, but ignores priority — a low-priority packet that arrived first blocks high-priority ones behind it.',
+    pri: 'Priority: high-priority packets always leave before normal or low-priority ones, regardless of arrival order. Risk of starvation — low-priority packets may never transmit if high-priority traffic never stops.',
+    rr:  'Round Robin: cycles through output ports in order, sending one packet per port per round. Guarantees each port gets a turn — prevents any single port from monopolizing the link.',
+    wfq: 'Weighted Fair Queueing: like round robin but each priority class gets bandwidth proportional to its weight. High-priority traffic gets more slots per round without completely starving lower classes.'
+  };
+}
+
+function setFabric(f){
+  fabric=f;
+  ['mem','bus','xbar'].forEach(function(x){
+    document.getElementById('fab-'+x).classList.toggle('active',x===f);
+  });
+  updateFabricUI();
+  draw();
+}
+
+function setSched(s){
+  sched=s;
+  ['fcfs','pri','rr','wfq'].forEach(function(x){
+    document.getElementById('sched-'+x).classList.toggle('active',x===s);
+  });
+  // Re-sort all queues and recompute departure sequence
+  for(var i=0;i<NUM_PORTS;i++) sortQueue(i);
+  updateSchedUI();
+  renderQueues(); // sequence badges update instantly
+}
+
+// ─── Event wiring ─────────────────────────────────────────────────────────────
+document.getElementById('btn-inject').addEventListener('click', function(){
+  var di  = parseInt(document.getElementById('sel-dest').value);
+  var pri = parseInt(document.getElementById('sel-pri').value);
+  var inp = parseInt(document.getElementById('sel-inport').value);
+  injectPacket(di, pri, inp, false);
+});
+
+document.getElementById('btn-step').addEventListener('click', function(){
+  if(lkp.active && lkp.stepMode) lpmAdvance();
+});
+
+document.getElementById('lpm-rt').addEventListener('click', function(){
+  lkp.realtime = true; lkp.stepMode = false;
+  ['lpm-rt','lpm-auto','lpm-step'].forEach(function(id){
+    document.getElementById(id).classList.toggle('active', id==='lpm-rt');
+  });
+  document.getElementById('lpm-speed').style.display='none';
+  document.getElementById('btn-step').style.display='none';
+});
+
+document.getElementById('lpm-auto').addEventListener('click', function(){
+  lkp.stepMode = false; lkp.realtime = false;
+  ['lpm-rt','lpm-auto','lpm-step'].forEach(function(id){
+    document.getElementById(id).classList.toggle('active', id==='lpm-auto');
+  });
+  document.getElementById('lpm-speed').style.display='';
+  document.getElementById('btn-step').style.display='none';
+});
+
+document.getElementById('lpm-step').addEventListener('click', function(){
+  lkp.stepMode = true; lkp.realtime = false;
+  ['lpm-rt','lpm-auto','lpm-step'].forEach(function(id){
+    document.getElementById(id).classList.toggle('active', id==='lpm-step');
+  });
+  document.getElementById('lpm-speed').style.display='none';
+});
+
+document.getElementById('lpm-speed').addEventListener('change', function(){
+  lkp.rowDelay = parseInt(this.value);
+});
+
+// Rate buttons
+['slow','med','rt'].forEach(function(r){
+  document.getElementById('rate-'+r).addEventListener('click', function(){
+    ['slow','med','rt'].forEach(function(x){
+      document.getElementById('rate-'+x).classList.toggle('active', x===r);
+    });
+    if(r==='slow'){ DRAIN_INTERVAL=3000; lineRate=1; }
+    else if(r==='med'){ DRAIN_INTERVAL=1500; lineRate=1; }
+    else { DRAIN_INTERVAL=400; lineRate=1; }
+  });
+});
+
+document.getElementById('btn-pause-drain').addEventListener('click', function(){
+  drainPaused = !drainPaused;
+  this.textContent = drainPaused ? '▶ Resume' : '⏸ Pause';
+  this.classList.toggle('active', drainPaused);
+});
+
+document.getElementById('btn-congestion').addEventListener('click', flood);
+
+document.getElementById('btn-reset').addEventListener('click', function(){
+  queues=[[],[],[]]; inQueues=[[],[],[]]; animPkts=[];
+  portDrops=[[],[],[]]; inPortDrops=[[],[],[]]; activePath=null;
+  stats={fwd:0,drop:0,tx:0,qfill:0,inj:0,drains:0};
+  logTime=0; rrPtr=0; lastMatchIdx=-1; lookupProcessing=false;
+  lkp.active=false; lkp.waiting=false; lkp.rowIdx=-1;
+  lkp.matches=[]; lkp.bestIdx=-1;
+  waitingPkt = null;
+  if(lkpTimer){ clearTimeout(lkpTimer); lkpTimer=null; }
+  document.getElementById('btn-step').style.display='none';
+  document.getElementById('log-body').innerHTML='';
+  document.getElementById('lpm-dest').textContent       = '—';
+  document.getElementById('lpm-cur-row').textContent    = '—';
+  document.getElementById('lpm-cur-prefix').textContent = '—';
+  document.getElementById('lpm-cur-result').textContent = '—';
+  document.getElementById('lpm-cur-result').style.color = '';
+  document.getElementById('lpm-match').textContent      = '—';
+  document.getElementById('lpm-match').style.color      = '';
+  document.getElementById('lpm-port').textContent       = '—';
+  document.getElementById('lpm-hop').textContent        = '—';
+  renderFT([],-1,-1); renderQueues(); renderInQueues(); updateStats();
+  document.getElementById('canvas-state-bar').textContent='Ready — inject a packet to begin';
+  draw();
+});
+
+document.getElementById('btn-clear-log').addEventListener('click',function(){
+  document.getElementById('log-body').innerHTML=''; logTime=0;
+});
+
+['mem','bus','xbar'].forEach(function(f){
+  document.getElementById('fab-'+f).addEventListener('click',function(){ setFabric(f); });
+});
+['fcfs','pri','rr','wfq'].forEach(function(s){
+  document.getElementById('sched-'+s).addEventListener('click',function(){ setSched(s); });
+});
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+renderFT([],-1,-1);
+renderQueues();
+renderInQueues();
+updateFabricUI();
+updateSchedUI();
+updateStats();
+
+// Wait for layout then size canvas
+window.addEventListener('load', function(){
+  resizeCv();
+  draw();
+});
+setTimeout(resizeCv, 50);
+</script>
+</html>

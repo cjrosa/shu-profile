@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS-339 Network Stack Jeopardy</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230F6E56'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='monospace' font-size='15' font-weight='bold' fill='white'%3EJ%3C/text%3E%3C/svg%3E">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f8f7f4;--bg2:#ffffff;--bg3:#eeedea;
+  --text:#1a1a18;--text2:#6b6a65;--text3:#9e9d98;
+  --border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.2);
+  --green:#0F6E56;--green-l:#E1F5EE;--green-m:#5DCAA5;--green-t:#085041;
+  --blue:#185FA5;--blue-l:#E6F1FB;--blue-m:#85B7EB;--blue-t:#0C447C;
+  --amber:#854F0B;--amber-l:#FAEEDA;--amber-m:#EF9F27;--amber-t:#5A3300;
+  --red:#A32D2D;--red-l:#FCEBEB;--red-m:#F09595;
+  --purple:#5B3F9E;--purple-l:#EDE9F8;--purple-m:#9b80e8;--purple-t:#3B2570;
+  --r:8px;--hh:48px;
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,"Helvetica Neue",sans-serif;font-size:13px;line-height:1.5;min-height:100vh;display:flex;flex-direction:column;}
+.hdr{height:var(--hh);display:flex;align-items:center;justify-content:space-between;padding:0 1rem;border-bottom:0.5px solid var(--border2);background:var(--bg2);flex-shrink:0;}
+.hl{display:flex;align-items:center;gap:10px;}
+.hi{width:28px;height:28px;background:var(--green);border-radius:6px;display:flex;align-items:center;justify-content:center;}
+.ht{font-size:14px;font-weight:500;}
+.hr{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:5px 11px;border-radius:var(--r);border:0.5px solid var(--border2);background:var(--bg2);color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;transition:background .15s;white-space:nowrap;}
+.btn:hover{background:var(--bg3);}
+.btn.pri{background:var(--green);color:white;border-color:var(--green);}
+.btn.pri:hover{background:var(--green-t);}
+.btn.sec{background:var(--blue-l);color:var(--blue-t);border-color:var(--blue-m);}
+.btn.dan{background:var(--red-l);color:var(--red);border-color:var(--red-m);}
+.btn.sm{padding:3px 8px;font-size:11px;}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;}
+input[type=text],input[type=number]{width:100%;padding:5px 8px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;outline:none;}
+input:focus{border-color:var(--green-m);box-shadow:0 0 0 2px rgba(93,202,165,0.15);}
+label{font-size:11px;color:var(--text2);display:block;margin-bottom:2px;}
+.f{margin-bottom:8px;}.f:last-child{margin-bottom:0;}
+.fr{display:flex;gap:6px;}.fr .f{flex:1;}
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;align-items:center;justify-content:center;padding:16px;}
+.modal-backdrop.open{display:flex;}
+.modal{background:var(--bg2);border-radius:12px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.18);}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px;background:var(--bg3);border-bottom:0.5px solid var(--border2);}
+.modal-hd-l{display:flex;align-items:center;gap:8px;}
+.modal-badge{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.modal-badge.green{background:var(--green-l);color:var(--green-t);}
+.modal-title{font-size:14px;font-weight:600;color:var(--text);}
+.modal-x{background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:0;line-height:1;}
+.modal-x:hover{color:var(--text);}
+.modal-body{padding:16px;display:flex;flex-direction:column;gap:10px;}
+.modal-foot{padding:0 16px 16px;display:flex;gap:8px;justify-content:flex-end;}
+
+/* SETUP */
+#setup-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;gap:1.5rem;}
+.setup-card{background:var(--bg2);border:0.5px solid var(--border2);border-radius:12px;width:100%;max-width:560px;overflow:hidden;}
+.setup-card-hd{padding:14px 18px 12px;background:var(--bg3);border-bottom:0.5px solid var(--border2);display:flex;align-items:center;gap:8px;}
+.setup-card-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.setup-card-icon.green{background:var(--green);color:white;}
+.setup-card-icon.blue{background:var(--blue);color:white;}
+.setup-card-body{padding:16px 18px;}
+.team-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.team-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r);border:0.5px solid var(--border2);background:var(--bg);}
+.team-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.team-name-input{flex:1;border:none;background:transparent;outline:none;font-size:13px;font-family:inherit;color:var(--text);padding:0;}
+.team-del{background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:0 2px;line-height:1;}
+.team-del:hover{color:var(--red);}
+
+/* GAME SCREEN */
+#game-screen{display:none;flex:1;flex-direction:column;}
+.scoreboard{background:var(--bg2);border-bottom:0.5px solid var(--border2);padding:8px 1rem;display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;}
+.score-card{flex:1;min-width:120px;border-radius:var(--r);border:1.5px solid var(--border2);background:var(--bg);padding:7px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;transition:border-color .2s,background .2s;}
+.score-card.active{border-color:var(--green-m);background:var(--green-l);}
+.score-left{display:flex;align-items:center;gap:7px;}
+.score-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.score-name{font-size:12px;font-weight:500;}
+.score-pts{font-size:16px;font-weight:600;font-family:monospace;}
+.toolbar{height:38px;background:var(--bg2);border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:8px;padding:0 1rem;flex-shrink:0;}
+.tsep{width:0.5px;height:18px;background:var(--border2);margin:0 2px;}
+.cat-bar{display:grid;background:var(--bg2);border-bottom:0.5px solid var(--border2);flex-shrink:0;}
+.cat-cell{padding:8px 4px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text2);border-right:0.5px solid var(--border);}
+.cat-cell:last-child{border-right:none;}
+.board-wrap{flex:1;overflow-y:auto;padding:10px 10px 16px;}
+.board{display:grid;gap:6px;}
+.tile{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--r);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,border-color .15s,transform .1s;min-height:52px;padding:8px 6px;position:relative;user-select:none;}
+.tile:hover:not(.used){background:var(--green-l);border-color:var(--green-m);}
+.tile:active:not(.used){transform:scale(0.97);}
+.tile.used{background:var(--bg3);border-color:var(--border);cursor:default;}
+.tile-val{font-size:17px;font-weight:600;color:var(--green);font-family:monospace;}
+.tile.used .tile-val{font-size:0;}
+.tile.used .tile-val::after{content:'✓';font-size:16px;color:var(--text3);}
+
+/* CLUE OVERLAY — projector side shows only clue text, no answer */
+.clue-overlay{display:none;position:fixed;inset:0;background:var(--bg2);z-index:200;flex-direction:column;}
+.clue-overlay.open{display:flex;}
+.clue-ov-hd{padding:14px 20px 12px;border-bottom:0.5px solid var(--border2);background:var(--bg3);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.clue-ov-cat{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);}
+.clue-ov-pts{font-size:13px;font-weight:700;font-family:monospace;color:var(--green-t);background:var(--green-l);border:0.5px solid var(--green-m);padding:2px 10px;border-radius:10px;}
+.clue-ov-pts.dd{color:var(--amber-t);background:var(--amber-l);border-color:var(--amber-m);}
+.clue-ov-body{flex:1;display:flex;align-items:center;justify-content:center;padding:40px;}
+.clue-ov-text{font-size:22px;line-height:1.65;color:var(--text);font-weight:500;max-width:760px;text-align:center;}
+.clue-ov-status{padding:10px 20px;background:var(--bg3);border-top:0.5px solid var(--border2);font-size:11px;color:var(--text3);text-align:center;flex-shrink:0;}
+
+/* DD celebration */
+.dd-celebrate{display:none;position:fixed;inset:0;z-index:700;align-items:center;justify-content:center;flex-direction:column;}
+.dd-celebrate.open{display:flex;}
+.dd-celebrate-bg{position:absolute;inset:0;background:radial-gradient(ellipse at center,#1a1000,#0a0800);animation:ddFade .3s ease;}
+@keyframes ddFade{from{opacity:0}to{opacity:1}}
+.dd-content{position:relative;z-index:1;text-align:center;animation:ddPop .4s cubic-bezier(.175,.885,.32,1.275);}
+@keyframes ddPop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+.dd-star{font-size:72px;display:block;animation:ddSpin 1.2s ease-in-out infinite alternate;}
+@keyframes ddSpin{from{transform:rotate(-8deg) scale(1)}to{transform:rotate(8deg) scale(1.08)}}
+.dd-title{font-size:52px;font-weight:800;color:#f5c842;letter-spacing:-.02em;text-shadow:0 0 40px #f5c84288,0 4px 0 #7a5f00;margin:8px 0 4px;}
+.dd-sub{font-size:16px;color:#f5c84299;letter-spacing:.15em;text-transform:uppercase;font-weight:600;margin-bottom:28px;}
+.confetti-wrap{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.cp{position:absolute;border-radius:2px;animation:cpFall linear forwards;}
+@keyframes cpFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+/* Score flash */
+@keyframes scorePop{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
+.score-pop{animation:scorePop .35s ease;}
+
+/* Winner */
+.winner-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:900;align-items:center;justify-content:center;}
+.winner-backdrop.open{display:flex;}
+.winner-panel{background:var(--bg2);border-radius:16px;padding:40px 48px;text-align:center;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.winner-trophy{font-size:56px;margin-bottom:12px;}
+.winner-name{font-size:28px;font-weight:700;color:var(--green-t);margin-bottom:4px;}
+.winner-pts{font-size:18px;font-family:monospace;color:var(--text2);}
+
+@media(max-width:600px){.tile-val{font-size:14px;}.score-pts{font-size:14px;}.clue-ov-text{font-size:16px;}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hl">
+    <div class="hi">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="1" y="1" width="6" height="6" rx="1.5" fill="white" opacity=".9"/>
+        <rect x="9" y="1" width="6" height="6" rx="1.5" fill="white" opacity=".7"/>
+        <rect x="1" y="9" width="6" height="6" rx="1.5" fill="white" opacity=".7"/>
+        <rect x="9" y="9" width="6" height="6" rx="1.5" fill="white" opacity=".5"/>
+      </svg>
+    </div>
+    <span class="ht">CS-339 Network Stack Jeopardy</span>
+  </div>
+  <div class="hr">Developed by Professor Chris Rosa &mdash; CS339 Networks, Sacred Heart University</div>
+</header>
+
+<!-- SETUP -->
+<div id="setup-screen">
+  <div class="setup-card">
+    <div class="setup-card-hd">
+      <div class="setup-card-icon green">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" fill="white"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
+      </div>
+      <span style="font-size:14px;font-weight:600;color:var(--text)">Teams</span>
+    </div>
+    <div class="setup-card-body">
+      <div class="team-list" id="team-list"></div>
+      <div class="btn-row">
+        <button class="btn sm" onclick="addTeam()">+ Add Team</button>
+        <button class="btn sm dan" onclick="clearTeams()">Clear All</button>
+      </div>
+    </div>
+  </div>
+  <div class="setup-card">
+    <div class="setup-card-hd">
+      <div class="setup-card-icon blue">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="2" stroke="white" stroke-width="1.4" fill="none"/><path d="M1 6h14" stroke="white" stroke-width="1.2"/><path d="M5 9.5h6M5 12h4" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </div>
+      <span style="font-size:14px;font-weight:600;color:var(--text)">Game Board</span>
+    </div>
+    <div class="setup-card-body">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">5 categories × 5 point values = 25 clues. One Daily Double hidden on the board. Final Jeopardy included.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;">
+        <div style="background:var(--bg3);border-radius:var(--r);padding:8px 10px;border:0.5px solid var(--border);">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:2px;">Categories</div>
+          <div style="font-size:11px;color:var(--text);font-weight:500;">Transport · Network · Link Layer<br>Network Potpourri · It's All in Your Header</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:var(--r);padding:8px 10px;border:0.5px solid var(--border);">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:2px;">Point Values</div>
+          <div style="font-size:11px;color:var(--text);font-weight:500;">$100 · $200 · $300 · $400 · $500<br>+ Final Jeopardy</div>
+        </div>
+      </div>
+      <button class="btn pri" style="width:100%;justify-content:center;" onclick="startGame()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polygon points="3,2 13,8 3,14" fill="white"/></svg>
+        Start Game
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game-screen">
+  <div class="scoreboard" id="scoreboard"></div>
+  <div class="toolbar">
+    <span style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;">Board</span>
+    <div class="tsep"></div>
+    <button class="btn sm pri" onclick="openTeacherPanel()" id="btn-teacher-panel">
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="10" rx="2" stroke="white" stroke-width="1.4" fill="none"/><path d="M5 15h6M8 12v3" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Teacher Panel
+    </button>
+    <div class="tsep"></div>
+    <button class="btn sm" onclick="resetBoard()">Reset Board</button>
+    <button class="btn sm dan" onclick="backToSetup()">← Setup</button>
+  </div>
+  <div class="cat-bar" id="cat-bar"></div>
+  <div class="board-wrap"><div class="board" id="board"></div></div>
+</div>
+
+<!-- CLUE OVERLAY (projector — no answer) -->
+<div class="clue-overlay" id="clue-overlay">
+  <div class="clue-ov-hd">
+    <div>
+      <div class="clue-ov-cat" id="ov-cat"></div>
+    </div>
+    <span class="clue-ov-pts" id="ov-pts"></span>
+  </div>
+  <div class="clue-ov-body">
+    <div class="clue-ov-text" id="ov-text"></div>
+  </div>
+  <div class="clue-ov-status" id="ov-status">Waiting for buzz-in…</div>
+</div>
+
+<!-- DD CELEBRATION -->
+<div class="dd-celebrate" id="dd-celebrate">
+  <div class="dd-celebrate-bg"></div>
+  <div class="confetti-wrap" id="confetti-wrap"></div>
+  <div class="dd-content">
+    <span class="dd-star">⭐</span>
+    <div class="dd-title">DAILY DOUBLE!</div>
+    <div class="dd-sub">Place your wager</div>
+  </div>
+</div>
+
+<!-- WINNER -->
+<div class="winner-backdrop" id="winner-backdrop">
+  <div class="winner-panel">
+    <div class="winner-trophy">🏆</div>
+    <div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;">Game Over — Winner</div>
+    <div class="winner-name" id="winner-name"></div>
+    <div class="winner-pts" id="winner-pts"></div>
+    <div style="margin-top:20px;display:flex;justify-content:center;">
+      <button class="btn pri" onclick="document.getElementById('winner-backdrop').classList.remove('open');backToSetup();">Play Again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════
+// GAME DATA
+// ═══════════════════════════════
+const TEAM_COLORS = ['#0F6E56','#185FA5','#854F0B','#5B3F9E','#A32D2D','#2E7D32'];
+const CATEGORIES = ['Transport','Network','Link Layer','Network Potpourri',"It's All in Your Header"];
+const POINTS = [100,200,300,400,500];
+
+const CLUES = {
+  // ── TRANSPORT ──
+  '0-0':{clue:"This TCP mechanism prevents the sender from overwhelming the receiver's buffer — the receiver advertises how much space it has left, and the sender must not exceed it.",answer:"What is flow control (receive window / rwnd)?"},
+  '0-1':{clue:"In a TCP three-way handshake, the client sends SYN with seq=100. The server responds with SYN-ACK. This is the ACK number carried in the server's SYN-ACK.",answer:"What is 101? (ACK = client ISN + 1)"},
+  '0-2':{clue:"TCP uses this technique to send multiple segments without waiting for an ACK after each one, keeping the pipe full and improving throughput on high-latency links.",answer:"What is pipelining (sliding window)?"},
+  '0-3':{clue:"This is the key difference between flow control and congestion control: flow control protects this entity, while congestion control protects this other entity.",answer:"What is the receiver (flow control) vs. the network (congestion control)?"},
+  '0-4':{clue:"After the initiating side of a TCP connection sends its final FIN and receives FIN+ACK, it enters this state — waiting two MSLs to ensure the peer received the final ACK before fully closing.",answer:"What is the TIME_WAIT state?"},
+
+  // ── NETWORK ──
+  '1-0':{clue:"This protocol's four-message sequence — Discover, Offer, Request, Acknowledge — automatically hands a new host its IP address, subnet mask, default gateway, and DNS server.",answer:"What is DHCP (Dynamic Host Configuration Protocol)?"},
+  '1-1':{clue:"A router has three entries: 192.168.1.0/24, 192.168.0.0/16, and 0.0.0.0/0. A packet arrives destined for 192.168.1.55. The router uses this entry — and this is the rule that selects it.",answer:"What is 192.168.1.0/24, selected by longest prefix match (/24 is most specific)?"},
+  '1-2':{clue:"The exam subnet design problem gives you 10.0.1.0/24 and four departments. Engineering needs 50 hosts. This is the correct prefix length for Engineering's subnet, and this is its network address.",answer:"What is /26 (62 usable hosts), network address 10.0.1.0/26?",dailyDouble:true},
+  '1-3':{clue:"A NAT router maps private address 192.168.1.5:4321 to public address 203.0.113.1:9000. When the internet's reply arrives at port 9000, the router does this to deliver it.",answer:"What is rewrite the destination to 192.168.1.5:4321 and forward inward? (Reverse NAT / PAT translation)"},
+  '1-4':{clue:"In link-state routing, every router floods this specific information to all others, giving every router a complete map of the topology to run Dijkstra's algorithm independently.",answer:"What is its LSA — directly connected neighbors and their link costs?"},
+
+  // ── LINK LAYER ──
+  '2-0':{clue:"Host A wants to send a frame to Host B on the same LAN but has no entry in its ARP cache. Host A sends this type of message — to this destination — to resolve the mapping.",answer:"What is an ARP Request broadcast (destination MAC = FF:FF:FF:FF:FF:FF)?"},
+  '2-1':{clue:"A switch receives a frame whose destination MAC address is not in its forwarding table. Rather than drop it, it does this — and this is what the behavior is called.",answer:"What is flood the frame out all ports except the ingress port? (Unknown unicast flooding)"},
+  '2-2':{clue:"A switch builds its MAC forwarding table automatically by inspecting this specific field on every frame that arrives — no configuration or protocol required.",answer:"What is the source MAC address (plus the port it arrived on)? (Self-learning)"},
+  '2-3':{clue:"Host A sends a frame to Host B on the same switch. The switch knows B's port but has never seen A before. After this single exchange, these two things happen to the forwarding table.",answer:"What is: (1) A's MAC is learned on its ingress port, and (2) the frame is forwarded only to B's known port — no flooding?"},
+  '2-4':{clue:"A frame travels from Host A through a router to Host B on a different subnet. At each router hop, the router rewrites this field. This other field in the same datagram is never modified end-to-end.",answer:"What is the destination MAC (rewritten at every hop) and the destination IP (unchanged end-to-end)?"},
+
+  // ── NETWORK POTPOURRI ──
+  '3-0':{clue:"The subnet mask 255.255.255.0 written in CIDR prefix notation.",answer:"What is /24?"},
+  '3-1':{clue:"In the exam subnet design problem, the Sales department needs 25 hosts from 10.0.1.0/24. After allocating Engineering's /26 first, this is the correct prefix for Sales and its network address.",answer:"What is /27 (30 usable hosts), network address 10.0.1.64/27?"},
+  '3-2':{clue:"The four DHCP messages in order, from the moment a host powers on with no IP address to the moment it has a valid lease.",answer:"What is Discover → Offer → Request → Acknowledge (DORA)?"},
+  '3-3':{clue:"In distance-vector routing, routers only share information with direct neighbors. In link-state routing, routers share this with everyone. This is the fundamental difference in what each router knows.",answer:"What is DV routers know only neighbor costs; LS routers know the complete network topology?"},
+  '3-4':{clue:"This form of NAT lets hundreds of private hosts share a single public IP by mapping each internal connection to a unique source port number on the public side.",answer:"What is PAT — Port Address Translation (also called NAPT or NAT overload)?"},
+
+  // ── IT'S ALL IN YOUR HEADER ──
+  '4-0':{clue:"This 8-bit IP header field is decremented by 1 at every router hop. When it reaches zero the packet is dropped — its purpose is to prevent packets from circulating forever.",answer:"What is TTL (Time To Live)?"},
+  '4-1':{clue:"These two 32-bit TCP header fields work in tandem: one tells the receiver which byte the sender is sending now, the other tells the sender which byte the receiver expects next.",answer:"What are the Sequence Number and Acknowledgment Number fields?"},
+  '4-2':{clue:"This single-bit TCP header flag is set only in the first segment of a connection. Its presence triggers the receiver to synchronize sequence numbers and respond with its own version of this flag.",answer:"What is the SYN flag?"},
+  '4-3':{clue:"This TCP header flag is set to signal that the sender has finished sending data and wants to begin the four-step connection teardown.",answer:"What is the FIN flag?"},
+  '4-4':{clue:"An Ethernet frame header contains source MAC, destination MAC, and this 16-bit field — which tells the receiving NIC whether the payload is IPv4, IPv6, or ARP.",answer:"What is the EtherType field?"}
+};
+
+// ═══════════════════════════════
+// STATE
+// ═══════════════════════════════
+let teams = [{name:'Team 1',score:0},{name:'Team 2',score:0},{name:'Team 3',score:0},{name:'Team 4',score:0}];
+let usedTiles = new Set();
+let currentTileKey = null;
+let currentPts = 0;
+let teacherWin = null;
+
+// Use direct window.postMessage instead of BroadcastChannel
+// BroadcastChannel doesn't work between blob: and parent origins in Edge/Chrome
+function send(msg){
+  if(teacherWin && !teacherWin.closed) teacherWin.postMessage(msg,'*');
+}
+
+// Listen for messages from teacher panel
+window.addEventListener('message', e => handleTeacherMsg(e.data));
+
+// ═══════════════════════════════
+// SETUP
+// ═══════════════════════════════
+function renderTeamList(){
+  document.getElementById('team-list').innerHTML = teams.map((t,i)=>`
+    <div class="team-row">
+      <div class="team-dot" style="background:${TEAM_COLORS[i%TEAM_COLORS.length]}"></div>
+      <input class="team-name-input" type="text" value="${t.name}" placeholder="Team name" oninput="teams[${i}].name=this.value">
+      <button class="team-del" onclick="removeTeam(${i})">✕</button>
+    </div>`).join('');
+}
+function addTeam(){if(teams.length>=6)return;teams.push({name:'Team '+(teams.length+1),score:0});renderTeamList();}
+function removeTeam(i){if(teams.length<=2)return;teams.splice(i,1);renderTeamList();}
+function clearTeams(){teams=[{name:'Team 1',score:0},{name:'Team 2',score:0},{name:'Team 3',score:0},{name:'Team 4',score:0}];renderTeamList();}
+
+function startGame(){
+  if(teams.length<2){alert('Need at least 2 teams.');return;}
+  teams.forEach(t=>t.score=0);
+  usedTiles.clear();
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('game-screen').style.display='flex';
+  buildBoard();
+  renderScoreboard();
+}
+function backToSetup(){
+  document.getElementById('game-screen').style.display='none';
+  document.getElementById('setup-screen').style.display='flex';
+  document.getElementById('clue-overlay').classList.remove('open');
+  renderTeamList();
+}
+
+// ═══════════════════════════════
+// BOARD
+// ═══════════════════════════════
+function buildBoard(){
+  const cb=document.getElementById('cat-bar');
+  cb.style.gridTemplateColumns=`repeat(${CATEGORIES.length},1fr)`;
+  cb.innerHTML=CATEGORIES.map(c=>`<div class="cat-cell">${c}</div>`).join('');
+  const b=document.getElementById('board');
+  b.style.gridTemplateColumns=`repeat(${CATEGORIES.length},1fr)`;
+  b.innerHTML='';
+  POINTS.forEach((pts,pi)=>{
+    CATEGORIES.forEach((_,ci)=>{
+      const key=`${ci}-${pi}`;
+      const used=usedTiles.has(key);
+      const tile=document.createElement('div');
+      tile.className='tile'+(used?' used':'');
+      tile.dataset.key=key;
+      tile.innerHTML=`<span class="tile-val">$${pts}</span>`;
+      if(!used) tile.onclick=()=>tileClicked(key);
+      b.appendChild(tile);
+    });
+  });
+}
+
+function tileClicked(key){
+  const data=CLUES[key];
+  if(!data||usedTiles.has(key)) return;
+  currentTileKey=key;
+  const [ci,pi]=key.split('-').map(Number);
+  currentPts=POINTS[pi];
+  if(data.dailyDouble){
+    showDDCelebration(()=>{
+      openTeacherPanel();
+      setTimeout(()=>send({type:'DD_CELEBRATE_DONE',key,ci,pi,clue:data.clue,answer:data.answer,teams:getTeamState()}),200);
+    });
+  } else {
+    showClueOnProjector(key,currentPts,false);
+    openTeacherPanel();
+    setTimeout(()=>send({type:'OPEN_CLUE',key,ci,pi,pts:currentPts,clue:data.clue,answer:data.answer,teams:getTeamState()}),200);
+  }
+}
+
+function showClueOnProjector(key,pts,isDD){
+  const [ci]=key.split('-').map(Number);
+  const data=CLUES[key];
+  document.getElementById('ov-cat').textContent=CATEGORIES[ci];
+  const pb=document.getElementById('ov-pts');
+  pb.textContent=isDD?`$${pts} wagered`:`$${pts}`;
+  pb.className='clue-ov-pts'+(isDD?' dd':'');
+  document.getElementById('ov-text').textContent=data.clue;
+  document.getElementById('ov-status').textContent='Waiting for buzz-in…';
+  document.getElementById('clue-overlay').classList.add('open');
+}
+
+function resetBoard(){if(!confirm('Reset board? Scores kept.'))return;usedTiles.clear();buildBoard();}
+
+// ═══════════════════════════════
+// SCOREBOARD
+// ═══════════════════════════════
+function renderScoreboard(){
+  document.getElementById('scoreboard').innerHTML=teams.map((t,i)=>`
+    <div class="score-card" id="sc-${i}">
+      <div class="score-left">
+        <div class="score-dot" style="background:${TEAM_COLORS[i%TEAM_COLORS.length]}"></div>
+        <span class="score-name">${t.name}</span>
+      </div>
+      <span class="score-pts" id="pts-${i}">$${t.score.toLocaleString()}</span>
+    </div>`).join('');
+}
+
+function updateScore(idx,delta){
+  teams[idx].score+=delta;
+  const el=document.getElementById(`pts-${idx}`);
+  if(el){
+    el.textContent='$'+teams[idx].score.toLocaleString();
+    el.style.color=delta>=0?'var(--green)':'var(--red)';
+    el.classList.add('score-pop');
+    setTimeout(()=>{el.style.color='';el.classList.remove('score-pop');},600);
+  }
+  const sc=document.getElementById(`sc-${idx}`);
+  if(sc) setTimeout(()=>sc.classList.remove('active'),800);
+}
+
+function highlightTeam(idx){
+  teams.forEach((_,i)=>{
+    const sc=document.getElementById(`sc-${i}`);
+    if(sc) sc.classList.toggle('active',i===idx);
+  });
+}
+
+function clearHighlight(){
+  teams.forEach((_,i)=>{const sc=document.getElementById(`sc-${i}`);if(sc)sc.classList.remove('active');});
+}
+
+function getTeamState(){return teams.map((t,i)=>({name:t.name,score:t.score,color:TEAM_COLORS[i%TEAM_COLORS.length]}));}
+
+// ═══════════════════════════════
+// DD CELEBRATION
+// ═══════════════════════════════
+let confettiTimer=null;
+function showDDCelebration(onDone){
+  const cel=document.getElementById('dd-celebrate');
+  cel.classList.add('open');
+  spawnConfetti();
+  const dismiss=()=>{
+    cel.classList.remove('open');
+    cel.removeEventListener('click',dismiss);
+    clearInterval(confettiTimer);
+    onDone();
+  };
+  cel.addEventListener('click',dismiss);
+  setTimeout(dismiss,2800);
+}
+function spawnConfetti(){
+  const wrap=document.getElementById('confetti-wrap');
+  wrap.innerHTML='';
+  const colors=['#f5c842','#ff6b6b','#4ecdc4','#45b7d1','#96ceb4','#ffeaa7','#dda0dd'];
+  let n=0;
+  confettiTimer=setInterval(()=>{
+    if(n++>80){clearInterval(confettiTimer);return;}
+    const p=document.createElement('div');p.className='cp';
+    p.style.cssText=`left:${Math.random()*100}%;top:-10px;background:${colors[n%colors.length]};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*.5}s;`;
+    wrap.appendChild(p);setTimeout(()=>p.remove(),3500);
+  },30);
+}
+
+// ═══════════════════════════════
+// TEACHER PANEL
+// ═══════════════════════════════
+function openTeacherPanel(){
+  if(teacherWin && !teacherWin.closed){
+    teacherWin.focus();
+    // Push fresh scores in case they've changed
+    send({type:'SYNC', teams:getTeamState(), usedTiles:[...usedTiles]});
+    return;
+  }
+  const html=buildTeacherHTML();
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  teacherWin=window.open(url,'cs339-teacher','width=720,height=860,resizable=yes');
+}
+
+// ═══════════════════════════════
+// HANDLE MESSAGES FROM TEACHER
+// ═══════════════════════════════
+function handleTeacherMsg(msg){
+  switch(msg.type){
+    case 'BUZZ_HIGHLIGHT': highlightTeam(msg.teamIdx); document.getElementById('ov-status').textContent=`${teams[msg.teamIdx].name} buzzed in!`; break;
+    case 'CLEAR_HIGHLIGHT': clearHighlight(); document.getElementById('ov-status').textContent='Waiting for buzz-in…'; break;
+    case 'SCORE_CORRECT': updateScore(msg.teamIdx,msg.pts); clearHighlight(); document.getElementById('ov-status').textContent=`✓ ${teams[msg.teamIdx].name} +$${msg.pts.toLocaleString()}`; break;
+    case 'SCORE_WRONG': updateScore(msg.teamIdx,-msg.pts); clearHighlight(); document.getElementById('ov-status').textContent=`✗ ${teams[msg.teamIdx].name} −$${msg.pts.toLocaleString()}`; break;
+    case 'SCORE_MANUAL': updateScore(msg.teamIdx,msg.delta); break;
+    case 'CLOSE_CLUE':
+      document.getElementById('clue-overlay').classList.remove('open');
+      if(currentTileKey){ markTileUsed(currentTileKey); currentTileKey=null; }
+      checkAllUsed(); break;
+    case 'DD_WAGER_SET': currentPts=msg.wager; showClueOnProjector(msg.key,msg.wager,true); break;
+    case 'FJ_OPEN': showFJOnProjector(msg.phase,msg.fjWagers); break;
+    case 'FJ_CLOSE': document.getElementById('clue-overlay').classList.remove('open'); break;
+    case 'REQUEST_SYNC': send({type:'SYNC',teams:getTeamState(),usedTiles:[...usedTiles]}); break;
+    case 'TEACHER_OPEN_TILE': tileClicked(msg.key); break;
+    case 'SHOW_WINNER': showWinner(); break;
+  }
+}
+
+function markTileUsed(key){
+  usedTiles.add(key);
+  const tile=document.querySelector(`.tile[data-key="${key}"]`);
+  if(tile){tile.className='tile used';tile.innerHTML='<span class="tile-val"></span>';tile.onclick=null;}
+}
+
+function checkAllUsed(){
+  if(usedTiles.size>=CATEGORIES.length*POINTS.length) setTimeout(()=>openTeacherPanel(),400);
+}
+
+function showFJOnProjector(phase,fjWagers){
+  if(phase==='clue'){
+    document.getElementById('ov-cat').textContent='Final Jeopardy — Cross-Layer Scenario';
+    document.getElementById('ov-pts').textContent='Final Jeopardy';
+    document.getElementById('ov-pts').className='clue-ov-pts';
+    document.getElementById('ov-text').textContent="Host A (10.0.0.5) opens a browser and requests a web page from Server S (203.0.113.10) — on the public internet. Host A sits behind a NAT router with public IP 198.51.100.1. The network uses a /24 subnet.\n\nName three distinct protocol actions — one at each of the Transport, Network, and Link layers — before the first byte of the HTTP request leaves Host A's NIC.";
+    document.getElementById('ov-status').textContent='All teams writing answers…';
+    document.getElementById('clue-overlay').classList.add('open');
+  } else if(phase==='wagers'){
+    document.getElementById('ov-cat').textContent='Final Jeopardy';
+    document.getElementById('ov-pts').textContent='Place Your Wagers';
+    document.getElementById('ov-text').textContent='All teams — write down your wager now.';
+    document.getElementById('ov-status').textContent='Wagers locked before the clue is revealed.';
+    document.getElementById('clue-overlay').classList.add('open');
+  }
+}
+
+function showWinner(){
+  const w=teams.reduce((a,b)=>b.score>a.score?b:a);
+  document.getElementById('winner-name').textContent=w.name;
+  document.getElementById('winner-pts').textContent='$'+w.score.toLocaleString();
+  document.getElementById('winner-backdrop').classList.add('open');
+}
+
+// ═══════════════════════════════
+// TEACHER HTML (injected into popup)
+// ═══════════════════════════════
+function buildTeacherHTML(){
+  // All game data injected as JSON into a <script> block — zero template literal interpolation in the HTML body
+  const DATA = {
+    TEAM_COLORS: TEAM_COLORS,
+    CLUES: CLUES,
+    CATEGORIES: CATEGORIES,
+    POINTS: POINTS,
+    teams: getTeamState(),
+    usedTiles: [...usedTiles]
+  };
+  const dataScript = '<scr'+'ipt>window.__JEOPARDY__='+JSON.stringify(DATA)+';<'+'/scr'+'ipt>';
+
+  const css = [
+    '*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}',
+    ':root{--bg:#f8f7f4;--bg2:#fff;--bg3:#eeedea;--text:#1a1a18;--text2:#6b6a65;--text3:#9e9d98;',
+    '--border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.2);',
+    '--green:#0F6E56;--green-l:#E1F5EE;--green-m:#5DCAA5;--green-t:#085041;',
+    '--blue:#185FA5;--blue-l:#E6F1FB;--blue-m:#85B7EB;--blue-t:#0C447C;',
+    '--amber:#854F0B;--amber-l:#FAEEDA;--amber-m:#EF9F27;--amber-t:#5A3300;',
+    '--red:#A32D2D;--red-l:#FCEBEB;--red-m:#F09595;',
+    '--purple:#5B3F9E;--purple-l:#EDE9F8;--purple-m:#9b80e8;--purple-t:#3B2570;--r:8px;}',
+    'body{background:var(--bg);color:var(--text);font-family:-apple-system,"Helvetica Neue",sans-serif;font-size:13px;line-height:1.5;display:flex;flex-direction:column;height:100vh;overflow:hidden;}',
+    '.hdr{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 1rem;border-bottom:0.5px solid var(--border2);background:var(--bg2);flex-shrink:0;}',
+    '.hl{display:flex;align-items:center;gap:8px;}',
+    '.hi{width:26px;height:26px;background:#854F0B;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;}',
+    '.ht{font-size:13px;font-weight:600;}',
+    '.badge{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:10px;background:var(--amber-l);color:var(--amber-t);border:0.5px solid var(--amber-m);}',
+    '.scroll{flex:1;overflow-y:auto;padding:12px;}',
+    '.section{background:var(--bg2);border:0.5px solid var(--border2);border-radius:10px;overflow:hidden;margin-bottom:10px;}',
+    '.sec-hd{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg3);border-bottom:0.5px solid var(--border2);}',
+    '.sec-title{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);}',
+    '.sec-body{padding:12px;}',
+    '.btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:5px 10px;border-radius:var(--r);border:0.5px solid var(--border2);background:var(--bg2);color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;transition:background .15s;white-space:nowrap;}',
+    '.btn:hover{background:var(--bg3);}',
+    '.btn.pri{background:var(--green);color:white;border-color:var(--green);}',
+    '.btn.pri:hover{background:var(--green-t);}',
+    '.btn.dan{background:var(--red-l);color:var(--red);border-color:var(--red-m);}',
+    '.btn.dan:hover{background:#f5d0d0;}',
+    '.btn.amb{background:var(--amber-l);color:var(--amber-t);border-color:var(--amber-m);}',
+    '.btn.pur{background:var(--purple-l);color:var(--purple-t);border-color:var(--purple-m);}',
+    '.btn.sm{padding:3px 8px;font-size:11px;}',
+    '.btn.lg{padding:9px 18px;font-size:13px;font-weight:600;}',
+    '.btn-row{display:flex;gap:6px;flex-wrap:wrap;}',
+    '.btn:disabled{opacity:.4;cursor:default;}',
+    'input[type=text],input[type=number]{width:100%;padding:5px 8px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;outline:none;}',
+    'input:focus{border-color:var(--green-m);}',
+    'label{font-size:11px;color:var(--text2);display:block;margin-bottom:2px;}',
+    '.f{margin-bottom:8px;}.f:last-child{margin-bottom:0;}',
+    '.fr{display:flex;gap:6px;}.fr .f{flex:1;}',
+    '.score-grid{display:flex;flex-direction:column;gap:6px;}',
+    '.score-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border2);background:var(--bg);}',
+    '.score-row.active{border-color:var(--green-m);background:var(--green-l);}',
+    '.sdot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}',
+    '.sname{flex:1;font-size:13px;font-weight:500;}',
+    '.spts{font-size:14px;font-weight:700;font-family:monospace;color:var(--text);}',
+    '.sadj{display:flex;gap:3px;}',
+    '.sadj-btn{width:22px;height:22px;border-radius:4px;border:0.5px solid var(--border2);background:var(--bg2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;font-family:inherit;color:var(--text2);}',
+    '.sadj-btn:hover{background:var(--bg3);}',
+    '.clue-box{background:var(--bg3);border-radius:var(--r);padding:12px 14px;font-size:13px;line-height:1.6;color:var(--text);border:0.5px solid var(--border2);margin-bottom:10px;}',
+    '.answer-box{background:var(--green-l);border:0.5px solid var(--green-m);border-radius:var(--r);padding:10px 14px;font-size:13px;font-weight:600;color:var(--green-t);font-family:monospace;line-height:1.5;}',
+    '.buzz-grid{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}',
+    '.buzz-btn{flex:1;min-width:100px;display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--border2);background:var(--bg2);cursor:pointer;font-size:12px;font-weight:500;font-family:inherit;transition:all .15s;}',
+    '.buzz-btn:hover{background:var(--bg3);}',
+    '.buzz-btn.selected{border-color:var(--green-m);background:var(--green-l);color:var(--green-t);}',
+    '.bdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}',
+    '.status-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:10px;font-size:11px;font-weight:600;}',
+    '.status-chip.waiting{background:var(--bg3);color:var(--text3);border:0.5px solid var(--border2);}',
+    '.status-chip.buzzed{background:var(--amber-l);color:var(--amber-t);border:0.5px solid var(--amber-m);}',
+    '.status-chip.scored{background:var(--green-l);color:var(--green-t);border:0.5px solid var(--green-m);}',
+    '.fj-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--border);}',
+    '.fj-row:last-child{border-bottom:none;}',
+    '.mini-board-grid{display:grid;gap:3px;}',
+    '.mini-cat-row{display:grid;gap:3px;margin-bottom:4px;}',
+    '.mini-cat{font-size:8px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text3);text-align:center;padding:2px 1px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}',
+    '.mini-tile{border-radius:5px;border:0.5px solid var(--border2);background:var(--bg2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .12s,border-color .12s,transform .08s;padding:4px 2px;min-height:32px;user-select:none;}',
+    '.mini-tile:hover:not(.used){background:var(--green-l);border-color:var(--green-m);}',
+    '.mini-tile:active:not(.used){transform:scale(0.94);}',
+    '.mini-tile.used{background:var(--bg3);border-color:var(--border);cursor:default;opacity:.5;}',
+    '.mini-tile.active-tile{background:var(--amber-l);border-color:var(--amber-m);}',
+    '.mini-tile-val{font-size:11px;font-weight:700;color:var(--green);font-family:monospace;}',
+    '.mini-tile.used .mini-tile-val{font-size:0;}',
+    '.mini-tile.used .mini-tile-val::after{content:"\u2713";font-size:11px;color:var(--text3);}',
+    '.adj-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center;padding:16px;}',
+    '.adj-backdrop.open{display:flex;}',
+    '.adj-panel{background:var(--bg2);border-radius:12px;width:100%;max-width:320px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.2);}',
+    '.adj-hd{padding:12px 14px;background:var(--bg3);border-bottom:0.5px solid var(--border2);display:flex;align-items:center;justify-content:space-between;}',
+    '.adj-hd span{font-size:13px;font-weight:600;}',
+    '.adj-x{background:none;border:none;cursor:pointer;font-size:15px;color:var(--text3);padding:0;}',
+    '.adj-x:hover{color:var(--text);}'
+  ].join('');
+
+  const body = [
+    '<div class="hdr"><div class="hl"><div class="hi">&#127891;</div><span class="ht">Teacher Panel</span><span class="badge">PRIVATE</span></div><div id="conn-status" style="font-size:11px;color:var(--text3);">&#11044; Connected</div></div>',
+    '<div class="scroll" id="scroll">',
+
+    // SCORES
+    '<div class="section"><div class="sec-hd"><span class="sec-title">Scores</span><button class="btn sm pur" onclick="openFJ()">&#9733; Final Jeopardy</button></div><div class="sec-body"><div class="score-grid" id="score-grid"></div></div></div>',
+
+    // MINI BOARD
+    '<div class="section"><div class="sec-hd"><span class="sec-title">Board</span><span style="font-size:10px;color:var(--text3);">Tap a tile to open it</span></div><div class="sec-body" style="padding:8px 10px;"><div id="mini-board-wrap"></div></div></div>',
+
+    // ACTIVE CLUE
+    '<div class="section" id="clue-section">',
+    '<div class="sec-hd"><div><span class="sec-title" id="clue-sec-title">No Active Clue</span><span id="clue-status-chip" class="status-chip waiting" style="margin-left:8px;">Waiting</span></div><button class="btn sm dan" id="btn-close-clue" onclick="closeClue()" disabled>Close Clue</button></div>',
+    '<div class="sec-body">',
+    '<div id="no-clue-msg" style="font-size:12px;color:var(--text3);font-style:italic;">Select a tile above to load a clue.</div>',
+    '<div id="clue-active" style="display:none;">',
+    '<div class="clue-box" id="tp-clue-text"></div>',
+    // DD wager
+    '<div id="dd-wager-section" style="display:none;margin-bottom:10px;">',
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;">Daily Double &#8212; Set Wager</div>',
+    '<div class="fr"><div class="f"><label>Wagering Team</label><select id="dd-team-sel" style="width:100%;padding:5px 8px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;outline:none;"></select></div>',
+    '<div class="f"><label>Wager ($)</label><input type="number" id="dd-wager-input" placeholder="e.g. 400" min="100" style="font-family:monospace;"></div></div>',
+    '<button class="btn amb" onclick="confirmDDWager()" style="margin-top:6px;width:100%;justify-content:center;">Set Wager &amp; Show Clue on Projector &#8594;</button></div>',
+    // Buzz section
+    '<div id="buzz-section" style="display:none;">',
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;">Who buzzed in?</div>',
+    '<div class="buzz-grid" id="buzz-grid"></div>',
+    '<div class="btn-row"><button class="btn lg pri" id="btn-correct" onclick="scoreCorrect()" disabled>&#10003; Correct</button><button class="btn lg dan" id="btn-wrong" onclick="scoreWrong()" disabled>&#10007; Wrong</button><button class="btn sm" onclick="clearBuzzer()" id="btn-clear-buzz" style="display:none">&#8617; Clear</button></div>',
+    '<div style="margin-top:8px;display:flex;align-items:center;gap:8px;"><button class="btn sm" id="btn-nobody" onclick="nobody()">Nobody answered &#8212; close</button><button class="btn sm" id="btn-undo" onclick="undoScore()" style="display:none;background:var(--amber-l);color:var(--amber-t);border-color:var(--amber-m);">&#8635; Undo Last Score</button></div>',
+    '</div>',
+    // Answer
+    '<div style="margin-top:12px;"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;">Correct Answer</div><div class="answer-box" id="tp-answer-text"></div></div>',
+    '</div></div></div>',
+
+    // FINAL JEOPARDY
+    '<div class="section" id="fj-section" style="display:none;">',
+    '<div class="sec-hd"><span class="sec-title">&#9733; Final Jeopardy</span><button class="btn sm" onclick="closeFJSection()">Hide</button></div>',
+    '<div class="sec-body">',
+    '<div style="font-size:12px;color:var(--text2);margin-bottom:10px;">Category: <strong>End-to-End &#8212; Transport + Network + Link</strong></div>',
+    '<div class="btn-row" style="margin-bottom:12px;"><button class="btn amb" onclick="fjShowWagers()">Show Wager Screen on Projector</button><button class="btn sec" onclick="fjShowClue()">Reveal Clue on Projector</button></div>',
+    '<div id="fj-wager-form"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;">Enter Wagers</div><div id="fj-wager-rows"></div></div>',
+    '<div style="margin-top:12px;"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;">Correct Answer</div>',
+    '<div class="answer-box" id="fj-answer-box"><strong>Transport:</strong> TCP three-way handshake (SYN &rarr; SYN-ACK &rarr; ACK) establishes a reliable connection and negotiates ISNs and receive window.<br><br><strong>Network:</strong> Host A does a longest-prefix match, determines 203.0.113.10 is off-subnet, forwards to default gateway. NAT router rewrites src IP:port &rarr; 198.51.100.1:&lt;port&gt; and records the mapping.<br><br><strong>Link:</strong> Host A checks ARP cache for gateway MAC. If absent, broadcasts ARP Request, receives Reply, caches mapping, encapsulates IP datagram in Ethernet frame addressed to gateway MAC.</div></div>',
+    '<div style="margin-top:12px;"><div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;">Score Adjustments</div><div id="fj-score-rows"></div></div>',
+    '<div style="margin-top:10px;" class="btn-row"><button class="btn pur" onclick="showWinnerOnProjector()">&#127942; Show Winner</button></div>',
+    '</div></div>',
+
+    '</div>', // end scroll
+
+    // ADJ MODAL
+    '<div class="adj-backdrop" id="adj-backdrop"><div class="adj-panel"><div class="adj-hd"><span>Adjust Score &#8212; <span id="adj-team-name"></span></span><button class="adj-x" onclick="closeAdj()">&#10005;</button></div><div style="padding:14px;display:flex;flex-direction:column;gap:10px;"><div class="f"><label>Points to add / subtract (negative to deduct)</label><input type="number" id="adj-amount" placeholder="e.g. 200 or -100" style="font-family:monospace;"></div><div class="btn-row" style="justify-content:flex-end;"><button class="btn" onclick="closeAdj()">Cancel</button><button class="btn pri" onclick="applyAdj()">Apply</button></div></div></div></div>'
+  ].join('');
+
+  // Teacher panel JS — no template literals, all plain strings
+  const js = "var D=window.__JEOPARDY__;\nvar TEAM_COLORS=D.TEAM_COLORS,CLUES=D.CLUES,CATEGORIES=D.CATEGORIES,POINTS=D.POINTS;\nvar teams=D.teams.slice(),usedTiles=new Set(D.usedTiles);\nvar currentKey=null,currentPts=0,selectedBuzzer=-1,isDD=false,adjIdx=-1,lastScore=null;\n\nfunction send(m){if(window.opener)window.opener.postMessage(m,'*');}\nwindow.addEventListener('message',function(e){handleMsg(e.data);});\n\nfunction handleMsg(msg){\n  if(msg.type==='SYNC'){teams=msg.teams;if(msg.usedTiles)usedTiles=new Set(msg.usedTiles);renderScores();renderMiniBoard();}\n  else if(msg.type==='OPEN_CLUE'){loadClue(msg.key,msg.pts,false,msg.teams);}\n  else if(msg.type==='DD_CELEBRATE_DONE'){loadClue(msg.key,0,true,msg.teams);}\n}\n\nfunction q(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}\n\nfunction renderScores(){\n  var sg=document.getElementById('score-grid');\n  if(!sg)return;\n  sg.innerHTML=teams.map(function(t,i){\n    var c=TEAM_COLORS[i%TEAM_COLORS.length];\n    return '<div class=\"score-row\" id=\"tsc-'+i+'\">'\n      +'<div class=\"sdot\" style=\"background:'+c+'\"></div>'\n      +'<span class=\"sname\">'+q(t.name)+'</span>'\n      +'<span class=\"spts\" id=\"tpts-'+i+'\">$'+t.score.toLocaleString()+'</span>'\n      +'<div class=\"sadj\"><button class=\"sadj-btn\" onclick=\"openAdj('+i+')\" title=\"Adjust\">\\xb1</button></div>'\n      +'</div>';\n  }).join('');\n  var wr=document.getElementById('fj-wager-rows');\n  if(wr)wr.innerHTML=teams.map(function(t,i){\n    var c=TEAM_COLORS[i%TEAM_COLORS.length];\n    return '<div class=\"fj-row\">'\n      +'<div class=\"sdot\" style=\"background:'+c+';flex-shrink:0\"></div>'\n      +'<span style=\"flex:1;font-size:12px;font-weight:500\">'+q(t.name)+'</span>'\n      +'<span style=\"font-size:11px;font-family:monospace;color:var(--text3);margin-right:6px\">$'+t.score.toLocaleString()+'</span>'\n      +'<input type=\"number\" id=\"fjw-'+i+'\" placeholder=\"wager\" min=\"0\" style=\"width:90px;font-family:monospace;text-align:right;padding:4px 6px;border:0.5px solid var(--border2);border-radius:6px;background:var(--bg);color:var(--text);font-size:12px;outline:none;\">'\n      +'</div>';\n  }).join('');\n  var sr=document.getElementById('fj-score-rows');\n  if(sr)sr.innerHTML=teams.map(function(t,i){\n    var c=TEAM_COLORS[i%TEAM_COLORS.length];\n    return '<div class=\"fj-row\">'\n      +'<div class=\"sdot\" style=\"background:'+c+';flex-shrink:0\"></div>'\n      +'<span style=\"flex:1;font-size:12px;font-weight:500\">'+q(t.name)+'</span>'\n      +'<button class=\"btn sm pri\" onclick=\"fjCorrect('+i+')\" style=\"margin-right:4px;\">\\u2713</button>'\n      +'<button class=\"btn sm dan\" onclick=\"fjWrong('+i+')\">\\u2717</button>'\n      +'</div>';\n  }).join('');\n}\n\nfunction renderMiniBoard(){\n  var cols=CATEGORIES.length;\n  var shortNames=['Transport','Network','Link','Net Mix','Headers'];\n  var h='<div style=\"display:grid;grid-template-columns:repeat('+cols+',1fr);gap:3px;margin-bottom:4px;\">';\n  shortNames.forEach(function(n){\n    h+='<div style=\"font-size:8px;font-weight:700;text-transform:uppercase;color:var(--text3);text-align:center;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:2px 1px\">'+n+'</div>';\n  });\n  h+='</div><div style=\"display:grid;grid-template-columns:repeat('+cols+',1fr);gap:3px;\">';\n  POINTS.forEach(function(p,pi){\n    CATEGORIES.forEach(function(_,ci){\n      var key=ci+'-'+pi;\n      var used=usedTiles.has(key);\n      var active=key===currentKey;\n      var cls='mini-tile'+(used?' used':'')+(active?' active-tile':'');\n      h+='<div class=\"'+cls+'\" data-mk=\"'+key+'\">'\n        +'<span class=\"mini-tile-val\">$'+p+'</span></div>';\n    });\n  });\n  h+='</div>';\n  var wrap=document.getElementById('mini-board-wrap');\n  if(!wrap)return;\n  wrap.innerHTML=h;\n  wrap.onclick=function(e){\n    var t=e.target.closest('[data-mk]');\n    if(t&&!t.classList.contains('used'))miniTileClicked(t.getAttribute('data-mk'));\n  };\n}\n\nfunction miniTileClicked(key){if(!key||usedTiles.has(key))return;send({type:'TEACHER_OPEN_TILE',key:key});}\n\nfunction setActiveMiniTile(key){\n  document.querySelectorAll('.mini-tile.active-tile').forEach(function(e){e.classList.remove('active-tile');});\n  if(key)document.querySelectorAll('[data-mk]').forEach(function(e){if(e.getAttribute('data-mk')===key)e.classList.add('active-tile');});\n}\n\nfunction markMiniTileUsed(key){\n  usedTiles.add(key);\n  document.querySelectorAll('[data-mk]').forEach(function(e){\n    if(e.getAttribute('data-mk')===key){e.classList.add('used');e.classList.remove('active-tile');}\n  });\n}\n\nfunction updateLocalScore(idx,delta){\n  teams[idx].score+=delta;\n  var el=document.getElementById('tpts-'+idx);\n  if(el)el.textContent='$'+teams[idx].score.toLocaleString();\n}\n\nfunction loadClue(key,pts,dd,newTeams){\n  if(newTeams)teams=newTeams;\n  renderScores();\n  currentKey=key;currentPts=pts;isDD=dd;selectedBuzzer=-1;lastScore=null;\n  var data=CLUES[key];\n  if(!data)return;\n  var parts=key.split('-');var ci=parseInt(parts[0]);var pi=parseInt(parts[1]);\n  document.getElementById('no-clue-msg').style.display='none';\n  document.getElementById('clue-active').style.display='block';\n  document.getElementById('clue-sec-title').textContent=CATEGORIES[ci]+' \\u2014 $'+POINTS[pi];\n  setChip('waiting','Waiting');\n  document.getElementById('btn-close-clue').disabled=false;\n  document.getElementById('tp-clue-text').textContent=data.clue;\n  document.getElementById('tp-answer-text').textContent=data.answer;\n  document.getElementById('btn-undo').style.display='none';\n  if(dd){\n    document.getElementById('dd-wager-section').style.display='block';\n    document.getElementById('buzz-section').style.display='none';\n    var sel=document.getElementById('dd-team-sel');\n    sel.innerHTML=teams.map(function(t,i){return '<option value=\"'+i+'\">'+q(t.name)+' ($'+t.score.toLocaleString()+')</option>';}).join('');\n  } else {\n    document.getElementById('dd-wager-section').style.display='none';\n    document.getElementById('buzz-section').style.display='block';\n    renderBuzzGrid();\n  }\n  setActiveMiniTile(key);\n}\n\nfunction renderBuzzGrid(){\n  var bg=document.getElementById('buzz-grid');\n  bg.innerHTML=teams.map(function(t,i){\n    var sel=selectedBuzzer===i?' selected':'';\n    var c=TEAM_COLORS[i%TEAM_COLORS.length];\n    return '<button class=\"buzz-btn'+sel+'\" onclick=\"selectBuzzer('+i+')\">'\n      +'<div class=\"bdot\" style=\"background:'+c+'\"></div>'+q(t.name)+'</button>';\n  }).join('');\n  document.getElementById('btn-correct').disabled=selectedBuzzer<0;\n  document.getElementById('btn-wrong').disabled=selectedBuzzer<0;\n  document.getElementById('btn-clear-buzz').style.display=selectedBuzzer>=0?'inline-flex':'none';\n}\n\nfunction selectBuzzer(idx){\n  selectedBuzzer=idx;renderBuzzGrid();\n  setChip('buzzed',teams[idx].name+' buzzed in!');\n  send({type:'BUZZ_HIGHLIGHT',teamIdx:idx});\n}\n\nfunction clearBuzzer(){\n  selectedBuzzer=-1;renderBuzzGrid();\n  setChip('waiting','Waiting');\n  send({type:'CLEAR_HIGHLIGHT'});\n}\n\nfunction scoreCorrect(){\n  if(selectedBuzzer<0)return;\n  var idx=selectedBuzzer,delta=currentPts;\n  send({type:'SCORE_CORRECT',teamIdx:idx,pts:delta});\n  updateLocalScore(idx,delta);\n  lastScore={teamIdx:idx,delta:delta,label:'Correct +$'+delta.toLocaleString()+' to '+teams[idx].name};\n  setChip('scored','\\u2713 '+lastScore.label);\n  document.getElementById('btn-correct').disabled=true;\n  document.getElementById('btn-wrong').disabled=true;\n  document.getElementById('buzz-section').style.display='none';\n  document.getElementById('btn-undo').style.display='inline-flex';\n}\n\nfunction scoreWrong(){\n  if(selectedBuzzer<0)return;\n  var idx=selectedBuzzer,delta=-currentPts;\n  send({type:'SCORE_WRONG',teamIdx:idx,pts:currentPts});\n  updateLocalScore(idx,delta);\n  lastScore={teamIdx:idx,delta:delta,label:'Wrong -$'+currentPts.toLocaleString()+' from '+teams[idx].name};\n  setChip('scored','\\u2717 '+lastScore.label);\n  document.getElementById('btn-undo').style.display='inline-flex';\n  selectedBuzzer=-1;renderBuzzGrid();\n  setChip('waiting','Waiting \\u2014 rebuzz?');\n  send({type:'CLEAR_HIGHLIGHT'});\n}\n\nfunction undoScore(){\n  if(!lastScore)return;\n  send({type:'SCORE_MANUAL',teamIdx:lastScore.teamIdx,delta:-lastScore.delta});\n  updateLocalScore(lastScore.teamIdx,-lastScore.delta);\n  setChip('waiting','\\u21ba Undid: '+lastScore.label);\n  lastScore=null;\n  document.getElementById('btn-undo').style.display='none';\n  document.getElementById('buzz-section').style.display='block';\n  document.getElementById('btn-correct').disabled=selectedBuzzer<0;\n  document.getElementById('btn-wrong').disabled=selectedBuzzer<0;\n}\n\nfunction nobody(){closeClue();}\n\nfunction confirmDDWager(){\n  var idx=parseInt(document.getElementById('dd-team-sel').value);\n  var w=parseInt(document.getElementById('dd-wager-input').value);\n  if(isNaN(w)||w<100){alert('Enter a valid wager (min $100).');return;}\n  var max=Math.max(teams[idx].score,500);\n  if(w>max){alert('Max wager is $'+max.toLocaleString());return;}\n  currentPts=w;selectedBuzzer=idx;\n  send({type:'DD_WAGER_SET',key:currentKey,wager:w,teamIdx:idx});\n  document.getElementById('dd-wager-section').style.display='none';\n  document.getElementById('buzz-section').style.display='block';\n  renderBuzzGrid();\n  setChip('buzzed',teams[idx].name+' wagered $'+w.toLocaleString());\n}\n\nfunction closeClue(){\n  send({type:'CLOSE_CLUE'});\n  if(currentKey)markMiniTileUsed(currentKey);\n  currentKey=null;setActiveMiniTile(null);\n  document.getElementById('clue-active').style.display='none';\n  document.getElementById('no-clue-msg').style.display='block';\n  document.getElementById('clue-sec-title').textContent='No Active Clue';\n  setChip('waiting','Waiting');\n  document.getElementById('btn-close-clue').disabled=true;\n}\n\nfunction setChip(state,text){\n  var c=document.getElementById('clue-status-chip');\n  c.className='status-chip '+state;c.textContent=text;\n}\n\nfunction openAdj(idx){\n  adjIdx=idx;\n  document.getElementById('adj-team-name').textContent=teams[idx].name;\n  document.getElementById('adj-amount').value='';\n  document.getElementById('adj-backdrop').classList.add('open');\n}\nfunction closeAdj(){document.getElementById('adj-backdrop').classList.remove('open');adjIdx=-1;}\nfunction applyAdj(){\n  var amt=parseInt(document.getElementById('adj-amount').value);\n  if(isNaN(amt)){alert('Enter a number.');return;}\n  send({type:'SCORE_MANUAL',teamIdx:adjIdx,delta:amt});\n  updateLocalScore(adjIdx,amt);closeAdj();\n}\n\nfunction openFJ(){\n  document.getElementById('fj-section').style.display='block';\n  document.getElementById('scroll').scrollTop=99999;\n}\nfunction closeFJSection(){document.getElementById('fj-section').style.display='none';}\nfunction fjShowWagers(){send({type:'FJ_OPEN',phase:'wagers'});}\nfunction fjShowClue(){send({type:'FJ_OPEN',phase:'clue'});}\nfunction fjCorrect(idx){\n  var w=parseInt(document.getElementById('fjw-'+idx).value)||0;\n  send({type:'SCORE_MANUAL',teamIdx:idx,delta:w});updateLocalScore(idx,w);\n}\nfunction fjWrong(idx){\n  var w=parseInt(document.getElementById('fjw-'+idx).value)||0;\n  send({type:'SCORE_MANUAL',teamIdx:idx,delta:-w});updateLocalScore(idx,-w);\n}\nfunction showWinnerOnProjector(){send({type:'SHOW_WINNER'});}\n\nrenderScores();\nrenderMiniBoard();";
+
+  return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Teacher Panel — CS339 Jeopardy</title>'
+    + dataScript
+    + '<style>' + css + '</style></head><body>'
+    + body
+    + '<script>' + js + '<' + '/script></body></html>';
+}
+
+// ═══════════════════════════════
+// INIT
+// ═══════════════════════════════
+renderTeamList();
+</script>
+</body>
+</html>

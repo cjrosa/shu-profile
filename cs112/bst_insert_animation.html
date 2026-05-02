@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binary Tree Insertion</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;700;800&display=swap');
+
+  :root {
+    --bg: #f5f5f0;
+    --surface: #ffffff;
+    --border: #d8d8cc;
+    --node-bg: #ffffff;
+    --label: #6b7280;
+    --accent: #d97706;
+    --blue: #2563eb;
+    --green: #16a34a;
+    --text: #1e1e2e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 32px;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+    color: #111;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    font-size: 0.72rem;
+    color: var(--label);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 900px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .canvas-wrap {
+    width: 100%;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+
+  canvas { display: block; width: 100%; height: 400px; }
+
+  .controls {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .status-box {
+    flex: 1; min-width: 200px;
+    font-size: 0.8rem; color: var(--label); line-height: 1.5;
+  }
+  .status-box .val { color: var(--accent); font-weight: 500; }
+  .status-box .cmp { color: var(--blue);   font-weight: 500; }
+  .status-box .ok  { color: var(--green);  font-weight: 500; }
+
+  button {
+    font-family: 'DM Mono', monospace; font-size: 0.78rem;
+    padding: 7px 16px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--node-bg);
+    color: var(--text); cursor: pointer; transition: all 0.15s;
+  }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button:disabled { opacity: 0.35; cursor: default; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 500; }
+  button.primary:hover { background: #b45309; border-color: #b45309; }
+
+  .speed-wrap { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; color: var(--label); }
+  input[type=range] {
+    -webkit-appearance: none; width: 80px; height: 4px;
+    border-radius: 2px; background: var(--border); outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 14px; height: 14px;
+    border-radius: 50%; background: var(--accent); cursor: pointer;
+  }
+
+  .sequence {
+    padding: 14px 20px;
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  }
+  .seq-label { font-size: 0.7rem; color: var(--label); letter-spacing: 0.07em; text-transform: uppercase; margin-right: 4px; }
+  .seq-chip {
+    font-family: 'DM Mono', monospace; font-size: 0.78rem;
+    width: 32px; height: 32px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--node-bg);
+    color: var(--label); display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s;
+  }
+  .seq-chip.done  { border-color: var(--green); color: var(--green); background: rgba(22,163,74,0.08); }
+  .seq-chip.active { border-color: var(--accent); color: var(--accent); background: rgba(217,119,6,0.10); transform: scale(1.15); box-shadow: 0 0 10px rgba(217,119,6,0.2); }
+
+  .legend { padding: 10px 20px 14px; display: flex; gap: 18px; flex-wrap: wrap; }
+  .leg-item { display: flex; align-items: center; gap: 7px; font-size: 0.7rem; color: var(--label); }
+  .leg-dot  { width: 11px; height: 11px; border-radius: 50%; border: 2px solid; }
+</style>
+</head>
+<body>
+
+<h1>Binary Tree Insertion</h1>
+<p class="subtitle">Animated step-by-step traversal</p>
+
+<div class="container">
+  <div class="canvas-wrap"><canvas id="treeCanvas"></canvas></div>
+
+  <div class="controls">
+    <div class="status-box" id="statusBox">Press <span class="val">Next</span> to begin.</div>
+    <div class="speed-wrap">Speed <input type="range" id="speedSlider" min="1" max="5" value="3"></div>
+    <button id="btnReset">Reset</button>
+    <button id="btnNext" class="primary">▶ Next</button>
+    <button id="btnAuto">Auto Play</button>
+  </div>
+
+  <div class="sequence" id="seqRow"><span class="seq-label">Insert order:</span></div>
+
+  <div class="legend">
+    <div class="leg-item"><div class="leg-dot" style="border-color:#d97706;background:rgba(217,119,6,0.12)"></div>New node</div>
+    <div class="leg-item"><div class="leg-dot" style="border-color:#2563eb;background:rgba(37,99,235,0.10)"></div>Comparing</div>
+    <div class="leg-item"><div class="leg-dot" style="border-color:#16a34a;background:rgba(22,163,74,0.10)"></div>Placed</div>
+  </div>
+</div>
+
+<script>
+/* ── VALUES ── */
+const VALUES = [5, 9, 7, 3, 8, 12, 6, 4, 20];
+
+/* ── TREE NODE ── */
+class TNode {
+  constructor(val) { this.val = val; this.left = this.right = null; this.x = this.y = 0; }
+}
+
+/* ── LAYOUT constants ── */
+const CANVAS_H = 400, PAD_X = 46, PAD_TOP = 110, PAD_BOT = 36, MAX_LH = 68, R = 20;
+
+function computeLayout(root, W) {
+  if (!root) return;
+  const io = [];
+  (function co(n){ if(!n)return; co(n.left); io.push(n); co(n.right); })(root);
+  const dep = new Map();
+  (function sd(n,d){ if(!n)return; dep.set(n,d); sd(n.left,d+1); sd(n.right,d+1); })(root,0);
+  const maxD = Math.max(...dep.values());
+  const lh   = maxD > 0 ? Math.min((CANVAS_H-PAD_TOP-PAD_BOT)/maxD, MAX_LH) : (CANVAS_H-PAD_TOP-PAD_BOT);
+  const n    = io.length;
+  io.forEach((nd,i) => {
+    nd.x = PAD_X + (i/Math.max(n-1,1))*(W-2*PAD_X);
+    nd.y = PAD_TOP + dep.get(nd)*lh;
+  });
+}
+
+/* ── STEP TYPES ──
+   show     – float new node appearing above root
+   compare  – compare float node vs tree node, show badge
+   move     – animate float node left/right toward next slot
+   place    – snap float node into final position
+*/
+function buildSteps(val, root) {
+  const s = [];
+  s.push({ type:'show', val });
+  if (!root) { s.push({ type:'place', parent:null, val, dir:null }); return s; }
+
+  let cur = root;
+  while (true) {
+    s.push({ type:'compare', node:cur, val });
+    if (val < cur.val) {
+      s.push({ type:'move', from:cur, val, dir:'left' });
+      if (!cur.left) { s.push({ type:'place', parent:cur, val, dir:'left' });  break; }
+      cur = cur.left;
+    } else {
+      s.push({ type:'move', from:cur, val, dir:'right' });
+      if (!cur.right){ s.push({ type:'place', parent:cur, val, dir:'right' }); break; }
+      cur = cur.right;
+    }
+  }
+  return s;
+}
+
+/* ── MUTABLE STATE ── */
+let treeRoot     = null;
+let placedSet    = new Set();
+let compareNode  = null;          // currently highlighted tree node
+let compBadge    = null;          // { val, node, op, dir }
+let floatNode    = null;          // { val, x, y, phase:'float'|'placed' }
+
+/* ── INSERT (builds real tree before steps) ── */
+function insertNode(val) {
+  const nd = new TNode(val);
+  if (!treeRoot) { treeRoot = nd; return; }
+  let c = treeRoot;
+  while (true) {
+    if (val < c.val) { if (!c.left)  { c.left  = nd; return; } c = c.left;  }
+    else             { if (!c.right) { c.right = nd; return; } c = c.right; }
+  }
+}
+
+function findNode(root, val) {
+  if (!root) return null;
+  if (root.val === val) return root;
+  return findNode(root.left, val) || findNode(root.right, val);
+}
+
+/* ── CANVAS ── */
+const canvas = document.getElementById('treeCanvas');
+const ctx    = canvas.getContext('2d');
+
+function resizeCanvas() {
+  canvas.width  = canvas.parentElement.getBoundingClientRect().width;
+  canvas.height = CANVAS_H;
+}
+
+/* ── DRAW ── */
+function draw() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if (treeRoot) { computeLayout(treeRoot,canvas.width); drawEdges(treeRoot); drawTreeNodes(treeRoot); }
+  if (floatNode) drawFloat();
+  if (compBadge) drawBadge();
+}
+
+function drawEdges(nd) {
+  if (!nd) return;
+  for (const side of ['left','right']) {
+    const ch = nd[side]; if (!ch) continue;
+    // Suppress the edge to the pending float node until it snaps into place
+    if (floatNode && floatNode.phase !== 'placed' && ch.val === floatNode.val) {
+      drawEdges(ch); continue;
+    }
+    ctx.beginPath(); ctx.moveTo(nd.x,nd.y); ctx.lineTo(ch.x,ch.y);
+    ctx.strokeStyle = 'rgba(192,192,180,0.85)'; ctx.lineWidth = 1.5; ctx.stroke();
+    drawEdges(ch);
+  }
+}
+
+function drawTreeNodes(nd) {
+  if (!nd) return;
+  drawTreeNodes(nd.left); drawTreeNodes(nd.right);
+
+  // Suppress drawing float val until placed
+  if (floatNode && floatNode.val === nd.val && floatNode.phase !== 'placed') return;
+
+  const isCmp     = compareNode === nd;
+  const isPlaced  = placedSet.has(nd);
+
+  let fill, stroke, text, glow;
+  if (isCmp)       { fill='rgba(37,99,235,0.10)';  stroke='#2563eb'; text='#1d4ed8'; glow='rgba(37,99,235,0.28)'; }
+  else if(isPlaced){ fill='rgba(22,163,74,0.10)';  stroke='#16a34a'; text='#15803d'; glow=null; }
+  else             { fill='#ffffff'; stroke='#c0c0b4'; text='#1e1e2e'; glow=null; }
+
+  if (glow) { ctx.shadowColor=glow; ctx.shadowBlur=12; }
+  ctx.beginPath(); ctx.arc(nd.x,nd.y,R,0,Math.PI*2);
+  ctx.fillStyle=fill; ctx.fill();
+  ctx.strokeStyle=stroke; ctx.lineWidth=isCmp?2.5:1.5; ctx.stroke();
+  ctx.shadowBlur=0;
+
+  ctx.font='500 13px "DM Mono",monospace';
+  ctx.fillStyle=text; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(nd.val,nd.x,nd.y);
+}
+
+function drawFloat() {
+  const {x,y,val,phase} = floatNode;
+  const placed = phase==='placed';
+
+  let fill,stroke,text,glow;
+  if (placed) { fill='rgba(22,163,74,0.12)'; stroke='#16a34a'; text='#15803d'; glow=null; }
+  else        { fill='rgba(217,119,6,0.13)';  stroke='#d97706'; text='#b45309'; glow='rgba(217,119,6,0.4)'; }
+
+  if (glow) { ctx.shadowColor=glow; ctx.shadowBlur=16; }
+  ctx.beginPath(); ctx.arc(x,y,R,0,Math.PI*2);
+  ctx.fillStyle=fill; ctx.fill();
+  ctx.strokeStyle=stroke; ctx.lineWidth=2.5; ctx.stroke();
+  ctx.shadowBlur=0;
+
+  ctx.font='500 13px "DM Mono",monospace';
+  ctx.fillStyle=text; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(val,x,y);
+}
+
+function drawBadge() {
+  const {val,node,op,dir} = compBadge;
+  if (!node) return;
+  const dirTxt = dir ? ` → ${dir}` : '';
+  const label  = `${val} ${op} ${node.val}${dirTxt}`;
+
+  ctx.font='600 11px "DM Mono",monospace';
+  const tw = ctx.measureText(label).width;
+  // Badge sits in the gap between float node and tree node:
+  // tree node top edge is at node.y - R, badge center is 14px above that
+  const bw=tw+20, bh=22;
+  // Clamp badge center so it never bleeds past canvas edges
+  const bx = Math.min(Math.max(node.x, bw/2 + 6), canvas.width - bw/2 - 6);
+  const by=node.y - R - 14;
+
+  const bgC = dir==='left'  ? 'rgba(37,99,235,0.11)'  :
+              dir==='right' ? 'rgba(217,119,6,0.11)' :
+                              'rgba(22,163,74,0.11)';
+  const bdC = dir==='left'  ? '#2563eb' :
+              dir==='right' ? '#d97706' :
+                              '#16a34a';
+
+  ctx.beginPath();
+  ctx.roundRect(bx-bw/2, by-bh/2, bw, bh, 6);
+  ctx.fillStyle=bgC; ctx.fill();
+  ctx.strokeStyle=bdC; ctx.lineWidth=1.2; ctx.stroke();
+
+  ctx.fillStyle=bdC; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(label, bx, by);
+}
+
+/* ── ANIMATION ── */
+let rafId = null;
+function animTo(toX, toY, ms, cb) {
+  const fromX=floatNode.x, fromY=floatNode.y, t0=performance.now();
+  function frame(now) {
+    const p = Math.min((now-t0)/ms, 1);
+    const e = p<0.5 ? 2*p*p : -1+(4-2*p)*p;
+    floatNode.x = fromX+(toX-fromX)*e;
+    floatNode.y = fromY+(toY-fromY)*e;
+    draw();
+    if (p<1) rafId=requestAnimationFrame(frame);
+    else { floatNode.x=toX; floatNode.y=toY; draw(); cb&&cb(); }
+  }
+  rafId=requestAnimationFrame(frame);
+}
+
+/* ── STEP ENGINE ── */
+let insertIdx = 0, steps = [], stepIdx = 0, busy = false, autoTmr = null;
+
+function spd() { return 900 - (parseInt(document.getElementById('speedSlider').value)-1)*180; }
+
+function advance() {
+  if (busy || insertIdx >= VALUES.length) return;
+
+  if (steps.length === 0) {
+    // Begin new value: insert into real tree first, then build steps
+    const val = VALUES[insertIdx];
+    insertNode(val);
+    computeLayout(treeRoot, canvas.width);
+    // Build steps using tree state BEFORE this node was added (reconstruct path)
+    steps = buildStepsForVal(val);
+    stepIdx = 0;
+    updateChips();
+  }
+
+  if (stepIdx < steps.length) execStep(steps[stepIdx++]);
+}
+
+/* Build steps by re-tracing the path for val in the already-mutated tree.
+   We need to walk the path val took, stopping one step before val's final node. */
+function buildStepsForVal(val) {
+  const s = [];
+  s.push({ type:'show', val });
+
+  // Walk tree, stopping when we reach the PARENT of val's position
+  // (val is already in the tree, so cur.left or cur.right === the new node)
+  let cur = treeRoot;
+
+  // Special case: val IS the root
+  if (cur.val === val) {
+    s.push({ type:'place', parent:null, val, dir:null });
+    return s;
+  }
+
+  while (cur) {
+    s.push({ type:'compare', node:cur, val });
+    if (val < cur.val) {
+      s.push({ type:'move', from:cur, val, dir:'left' });
+      if (!cur.left || cur.left.val === val) {
+        s.push({ type:'place', parent:cur, val, dir:'left' });
+        break;
+      }
+      cur = cur.left;
+    } else {
+      s.push({ type:'move', from:cur, val, dir:'right' });
+      if (!cur.right || cur.right.val === val) {
+        s.push({ type:'place', parent:cur, val, dir:'right' });
+        break;
+      }
+      cur = cur.right;
+    }
+  }
+  return s;
+}
+
+function execStep(step) {
+  const ms = spd();
+
+  if (step.type === 'show') {
+    compareNode = null; compBadge = null;
+    computeLayout(treeRoot, canvas.width);
+    // Spawn at vertical midpoint of the reserved headroom — always visible
+    const spawnX = canvas.width / 2;
+    const spawnY = PAD_TOP / 2;  // = 45px — clear of canvas edge, below root
+    floatNode = { val:step.val, x:spawnX, y:spawnY, phase:'float' };
+    setStatus(`Inserting <span class="val">${step.val}</span> — compare with root.`);
+    draw(); updateChips();
+
+  } else if (step.type === 'compare') {
+    const nd = step.node;
+    compareNode = nd;
+    const goLeft = step.val < nd.val;
+    const op  = goLeft ? '<' : '≥';
+    const dir = goLeft ? 'left' : 'right';
+    compBadge = { val:step.val, node:nd, op, dir };
+
+    // Float hovers above the badge which sits above the tree node.
+    // Stack (top→bottom): float center → gap → badge → tree node top
+    busy = true;
+    const toX = nd.x;
+    const toY = Math.max(R + 6, nd.y - 3*R - 26);
+    animTo(toX, toY, ms*0.55, () => {
+      busy = false;
+      setStatus(`Compare: <span class="cmp">${step.val} ${op} ${nd.val}</span> → go <span class="cmp">${dir}</span>`);
+      draw();
+    });
+
+  } else if (step.type === 'move') {
+    // Swoop float toward the child slot
+    const nd  = step.from;
+    const ch  = nd[step.dir];
+    const toX = ch ? ch.x : (step.dir==='left' ? nd.x-55 : nd.x+55);
+    const toY = ch ? Math.max(R + 6, ch.y - 3*R - 26) : nd.y + 60;
+    busy = true;
+    animTo(toX, toY, ms*0.5, () => { busy=false; draw(); });
+
+  } else if (step.type === 'place') {
+    compareNode = null; compBadge = null;
+    const nd = findNode(treeRoot, step.val);
+    busy = true;
+    animTo(nd.x, nd.y, ms*0.45, () => {
+      floatNode = { val:step.val, x:nd.x, y:nd.y, phase:'placed' };
+      placedSet.add(nd);
+      busy = false;
+
+      const dirStr = step.dir
+        ? ` as <span class="ok">${step.dir} child</span> of <span class="val">${step.parent.val}</span>`
+        : ' as <span class="ok">root</span>';
+      setStatus(`Placed <span class="val">${step.val}</span>${dirStr}.`);
+      draw();
+
+      setTimeout(() => {
+        floatNode = null; compareNode = null; compBadge = null;
+        insertIdx++;
+        steps = []; stepIdx = 0;
+        draw(); updateChips();
+        if (insertIdx < VALUES.length)
+          setStatus(`Ready. Next: <span class="val">${VALUES[insertIdx]}</span>`);
+        else {
+          setStatus(`All <span class="ok">9 values</span> inserted! Tree complete. 🎉`);
+          document.getElementById('btnNext').disabled = true;
+          document.getElementById('btnAuto').disabled = true;
+        }
+      }, ms*0.65);
+    });
+  }
+}
+
+/* ── UI ── */
+function setStatus(html) { document.getElementById('statusBox').innerHTML = html; }
+
+function updateChips() {
+  const row = document.getElementById('seqRow');
+  row.innerHTML = '<span class="seq-label">Insert order:</span>';
+  VALUES.forEach((v,i) => {
+    const c = document.createElement('div');
+    c.className='seq-chip';
+    c.textContent=v;
+    if (i < insertIdx) c.classList.add('done');
+    else if (i===insertIdx) c.classList.add('active');
+    row.appendChild(c);
+  });
+}
+
+document.getElementById('btnNext').addEventListener('click', () => { stopAuto(); advance(); });
+
+document.getElementById('btnAuto').addEventListener('click', () => {
+  if (autoTmr) { stopAuto(); return; }
+  document.getElementById('btnAuto').textContent='⏸ Pause';
+  autoTmr = setInterval(() => {
+    if (insertIdx >= VALUES.length && steps.length===0) { stopAuto(); return; }
+    if (!busy) advance();
+  }, spd()*0.8);
+});
+
+function stopAuto() {
+  clearInterval(autoTmr); autoTmr=null;
+  document.getElementById('btnAuto').textContent='Auto Play';
+}
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  stopAuto();
+  if (rafId) { cancelAnimationFrame(rafId); rafId=null; }
+  treeRoot=null; placedSet.clear();
+  compareNode=null; compBadge=null; floatNode=null;
+  insertIdx=0; steps=[]; stepIdx=0; busy=false;
+  document.getElementById('btnNext').disabled=false;
+  document.getElementById('btnAuto').disabled=false;
+  updateChips();
+  setStatus('Press <span class="val">Next</span> to begin.');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+});
+
+window.addEventListener('resize', () => { resizeCanvas(); draw(); });
+resizeCanvas();
+updateChips();
+setStatus('Press <span class="val">Next</span> to begin.');
+</script>
+</body>
+</html>

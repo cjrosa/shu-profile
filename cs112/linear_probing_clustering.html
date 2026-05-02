@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Linear Probing – Clustering</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600&family=Syne:wght@700;800&display=swap');
+
+  :root {
+    --bg: #f4f2ed;
+    --surface: #ffffff;
+    --border: #d0cdc8;
+    --text: #1a1a22;
+    --muted: #888490;
+    --empty: #ffffff;
+    --occupied: #eeeaf4;
+    --probe: #f0a500;
+    --insert: #2a7a4b;
+    --cluster: #c0392b;
+    --new: #4a9eff;
+    --accent: #f0a500;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 32px 16px;
+    gap: 28px;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: var(--text);
+    text-align: center;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: center;
+    margin-top: -18px;
+  }
+
+  /* Table layout */
+  .table-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .slot-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .slot {
+    width: 80px;
+    height: 46px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    background: var(--empty);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--muted);
+    transition: background 0.3s, border-color 0.3s, color 0.3s, transform 0.15s;
+    position: relative;
+  }
+
+  .slot.occupied {
+    background: var(--occupied);
+    border-color: #c8c4d8;
+    color: var(--text);
+  }
+
+  .slot.probing {
+    border-color: var(--probe);
+    background: rgba(240,165,0,0.12);
+    color: var(--probe);
+    transform: scaleX(1.04);
+  }
+
+  .slot.inserting {
+    border-color: var(--insert);
+    background: rgba(42,122,75,0.2);
+    color: #1a6e3c;
+    transform: scale(1.06);
+  }
+
+  .slot.cluster-highlight {
+    border-color: var(--cluster);
+    background: rgba(192,57,43,0.18);
+    color: #a02010;
+  }
+
+  .index-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .idx {
+    width: 28px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    font-size: 13px;
+    color: var(--muted);
+    padding-right: 6px;
+  }
+
+  /* Info panel */
+  .info-panel {
+    width: 340px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+  }
+
+  .info-label { color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+  .info-val   { color: var(--text); font-weight: 600; font-size: 0.85rem; }
+  .info-val.highlight { color: var(--accent); }
+
+  .status-msg {
+    font-size: 0.8rem;
+    color: var(--text);
+    min-height: 36px;
+    line-height: 1.5;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+
+  .status-msg .key-inserting { color: var(--new); font-weight: 600; }
+  .status-msg .warn          { color: var(--cluster); font-weight: 600; }
+  .status-msg .ok            { color: #1a6e3c; font-weight: 600; }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .leg {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .leg-dot {
+    width: 12px; height: 12px;
+    border-radius: 2px;
+    border: 1.5px solid;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 10px;
+  }
+
+  button {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 10px 22px;
+    border-radius: 4px;
+    border: 1.5px solid;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  #btn-next {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+  }
+  #btn-next:hover { background: #ffbb33; }
+  #btn-next:disabled { opacity: 0.35; cursor: default; }
+
+  #btn-reset {
+    background: transparent;
+    border-color: #bbb;
+    color: var(--muted);
+  }
+  #btn-reset:hover { border-color: var(--text); color: var(--text); }
+
+  /* Probe count badge */
+  .probe-badge {
+    position: absolute;
+    top: -8px; right: -8px;
+    background: var(--probe);
+    color: #000;
+    font-size: 10px;
+    font-weight: 700;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .slot.probing .probe-badge,
+  .slot.inserting .probe-badge { opacity: 1; }
+</style>
+</head>
+<body>
+
+<h1>Linear Probing <span>&</span> Clustering</h1>
+<p class="subtitle">Watch how clusters form and slow down insertions</p>
+
+<div class="table-wrap">
+  <div class="index-col" id="idx-col"></div>
+  <div class="slot-col"  id="slot-col"></div>
+</div>
+
+<div class="info-panel">
+  <div class="info-row">
+    <span class="info-label">Inserting</span>
+    <span class="info-val highlight" id="info-key">—</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Hash (key % 10)</span>
+    <span class="info-val" id="info-hash">—</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Probes needed</span>
+    <span class="info-val" id="info-probes">—</span>
+  </div>
+  <div class="status-msg" id="status">Press <strong>Next</strong> to begin inserting keys.</div>
+</div>
+
+<div class="legend">
+  <div class="leg"><div class="leg-dot" style="background:rgba(42,122,75,0.2);border-color:#2a7a4b"></div> Inserted</div>
+  <div class="leg"><div class="leg-dot" style="background:rgba(240,165,0,0.12);border-color:#f0a500"></div> Probing</div>
+  <div class="leg"><div class="leg-dot" style="background:rgba(192,57,43,0.18);border-color:#c0392b"></div> Cluster</div>
+</div>
+
+<div class="controls">
+  <button id="btn-reset">Reset</button>
+  <button id="btn-next">Next →</button>
+</div>
+
+<script>
+const SIZE = 10;
+// Keys chosen to demonstrate clustering around slots 4-7
+const KEYS = [34, 14, 24, 44, 54, 7, 17, 91];
+
+let table       = Array(SIZE).fill(null);
+let keyIndex    = 0;   // which key we're inserting next
+let phase       = 'idle';  // idle | probing | done
+let probeSlot   = -1;
+let probeCount  = 0;
+let insertSlot  = -1;
+let currentKey  = null;
+let animTimer   = null;
+
+const slotCol  = document.getElementById('slot-col');
+const idxCol   = document.getElementById('idx-col');
+const infoKey  = document.getElementById('info-key');
+const infoHash = document.getElementById('info-hash');
+const infoProbes = document.getElementById('info-probes');
+const statusEl = document.getElementById('status');
+const btnNext  = document.getElementById('btn-next');
+
+// Build DOM
+for (let i = 0; i < SIZE; i++) {
+  const idx = document.createElement('div');
+  idx.className = 'idx';
+  idx.textContent = i;
+  idxCol.appendChild(idx);
+
+  const slot = document.createElement('div');
+  slot.className = 'slot';
+  slot.id = `slot-${i}`;
+  const badge = document.createElement('div');
+  badge.className = 'probe-badge';
+  badge.id = `badge-${i}`;
+  slot.appendChild(badge);
+  slotCol.appendChild(slot);
+}
+
+function renderTable(highlightProbe = -1, highlightInsert = -1) {
+  for (let i = 0; i < SIZE; i++) {
+    const slot = document.getElementById(`slot-${i}`);
+    const badge = document.getElementById(`badge-${i}`);
+    slot.className = 'slot';
+    badge.textContent = '';
+
+    if (table[i] !== null) {
+      slot.classList.add('occupied');
+      slot.childNodes[0].after(document.createTextNode(''));
+      // set value text
+      slot.childNodes[slot.childNodes.length - 1].textContent = '';
+    }
+
+    // clear text nodes
+    while (slot.childNodes.length > 1) slot.removeChild(slot.lastChild);
+    const txt = document.createTextNode(table[i] !== null ? table[i] : '');
+    slot.appendChild(txt);
+
+    if (table[i] !== null) slot.classList.add('occupied');
+    if (i === highlightProbe && i !== highlightInsert) {
+      slot.classList.add('probing');
+      badge.textContent = probeCount;
+    }
+    if (i === highlightInsert) {
+      slot.classList.add('inserting');
+      badge.textContent = probeCount;
+    }
+  }
+}
+
+function highlightCluster(centerSlot) {
+  // find the run of occupied slots that includes centerSlot
+  for (let i = 0; i < SIZE; i++) {
+    const slot = document.getElementById(`slot-${i}`);
+    if (table[i] !== null && slot.classList.contains('occupied') && !slot.classList.contains('inserting')) {
+      slot.classList.add('cluster-highlight');
+    }
+  }
+}
+
+function clusterSize() {
+  return table.filter(v => v !== null).length;
+}
+
+function setStatus(html) { statusEl.innerHTML = html; }
+
+function startInsert() {
+  if (keyIndex >= KEYS.length) {
+    btnNext.disabled = true;
+    setStatus('<span class="warn">All keys inserted.</span> Notice how keys cluster together — late insertions required many probes!');
+    return;
+  }
+  currentKey = KEYS[keyIndex];
+  probeSlot  = currentKey % SIZE;
+  probeCount = 1;
+  phase      = 'probing';
+
+  infoKey.textContent    = currentKey;
+  infoHash.textContent   = `${currentKey} % ${SIZE} = ${probeSlot}`;
+  infoProbes.textContent = '...';
+
+  renderTable(probeSlot, -1);
+  setStatus(`Inserting <span class="key-inserting">${currentKey}</span> → home slot is <strong>${probeSlot}</strong>. Is it free?`);
+  btnNext.textContent = 'Next →';
+}
+
+function stepProbe() {
+  if (table[probeSlot] === null) {
+    // Found an empty slot — insert
+    table[probeSlot] = currentKey;
+    insertSlot = probeSlot;
+    renderTable(-1, insertSlot);
+
+    const warn = probeCount > 2
+      ? `<span class="warn"> (${probeCount} probes — cluster slowed this down!)</span>`
+      : '';
+    setStatus(`<span class="ok">✓ Inserted ${currentKey}</span> at slot <strong>${insertSlot}</strong>.${warn}`);
+    infoProbes.textContent = probeCount;
+
+    if (probeCount > 1) {
+      setTimeout(() => highlightCluster(insertSlot), 400);
+    }
+
+    phase = 'idle';
+    keyIndex++;
+    btnNext.textContent = keyIndex < KEYS.length ? 'Next →' : 'Done';
+    if (keyIndex >= KEYS.length) btnNext.disabled = true;
+  } else {
+    // Collision — advance probe
+    const occupied = table[probeSlot];
+    const next = (probeSlot + 1) % SIZE;
+    setStatus(`Slot <strong>${probeSlot}</strong> is taken by <strong>${occupied}</strong>. Probe → slot <strong>${next}</strong>.`);
+    probeSlot = next;
+    probeCount++;
+    renderTable(probeSlot, -1);
+    infoProbes.textContent = probeCount - 1 + '…';
+  }
+}
+
+btnNext.addEventListener('click', () => {
+  if (phase === 'idle') {
+    startInsert();
+  } else if (phase === 'probing') {
+    stepProbe();
+  }
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  table      = Array(SIZE).fill(null);
+  keyIndex   = 0;
+  phase      = 'idle';
+  probeSlot  = -1;
+  probeCount = 0;
+  insertSlot = -1;
+  currentKey = null;
+  infoKey.textContent    = '—';
+  infoHash.textContent   = '—';
+  infoProbes.textContent = '—';
+  renderTable();
+  setStatus('Press <strong>Next</strong> to begin inserting keys.');
+  btnNext.textContent = 'Next →';
+  btnNext.disabled    = false;
+});
+
+renderTable();
+</script>
+</body>
+</html>

@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Quadratic Probing – Prime vs Non-Prime Table Size</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600&family=Syne:wght@700;800&display=swap');
+
+  :root {
+    --bg: #f4f2ed;
+    --surface: #ffffff;
+    --border: #d0cdc8;
+    --text: #1a1a22;
+    --muted: #888490;
+    --empty: #ffffff;
+    --occupied: #eeeaf4;
+    --probe: #f0a500;
+    --insert: #2a7a4b;
+    --fail: #c0392b;
+    --accent: #1a5ca8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 32px 16px;
+    gap: 24px;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    text-align: center;
+  }
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: center;
+    margin-top: -16px;
+  }
+
+  /* Two panels side by side */
+  .panels {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1.5px solid #222;
+    box-shadow: 4px 4px 0 #222;
+    padding: 22px 20px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    width: 240px;
+  }
+
+  .panel-title {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 1.5px solid #222;
+    width: 100%;
+  }
+  .panel-title.prime    { color: #2a7a4b; border-color: #2a7a4b; }
+  .panel-title.nonprime { color: #c0392b; border-color: #c0392b; }
+
+  .panel-sub {
+    font-size: 0.6rem;
+    color: var(--muted);
+    text-align: center;
+    margin-top: -6px;
+    letter-spacing: 0.06em;
+  }
+
+  /* Table */
+  .tbl-wrap { display: flex; gap: 4px; }
+  .idx-col  { display: flex; flex-direction: column; }
+  .idx-cell {
+    width: 22px; height: 32px;
+    display: flex; align-items: center; justify-content: flex-end;
+    font-size: 10px; color: var(--muted); padding-right: 4px;
+  }
+  .tbl {
+    border: 1.5px solid #222;
+    display: flex; flex-direction: column;
+    width: 120px;
+  }
+  .slot {
+    height: 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 500;
+    background: var(--empty);
+    color: var(--muted);
+    transition: background 0.25s, border-color 0.25s, color 0.25s;
+    position: relative;
+  }
+  .slot:last-child { border-bottom: none; }
+
+  .slot.occupied {
+    background: var(--occupied);
+    color: var(--text);
+  }
+  .slot.probing {
+    background: rgba(240,165,0,0.15);
+    border-top: 1.5px solid var(--probe);
+    border-bottom: 1.5px solid var(--probe);
+    color: var(--probe);
+  }
+  .slot.inserting {
+    background: rgba(42,122,75,0.15);
+    border-top: 1.5px solid var(--insert);
+    border-bottom: 1.5px solid var(--insert);
+    color: var(--insert);
+    font-weight: 700;
+  }
+  .slot.failed {
+    background: rgba(192,57,43,0.12);
+    border-top: 1.5px solid var(--fail);
+    border-bottom: 1.5px solid var(--fail);
+    color: var(--fail);
+  }
+  .slot.cycle {
+    background: rgba(192,57,43,0.08);
+    color: var(--fail);
+    opacity: 0.7;
+  }
+  .slot.trail {
+    background: rgba(26,92,168,0.07);
+    border-top: 1.5px solid rgba(26,92,168,0.3);
+    border-bottom: 1.5px solid rgba(26,92,168,0.3);
+    color: #aab;
+  }
+  .slot.cycle-trail {
+    background: rgba(192,57,43,0.07);
+    border-top: 1.5px solid rgba(192,57,43,0.25);
+    border-bottom: 1.5px solid rgba(192,57,43,0.25);
+    color: #c88;
+  }
+
+  /* Info panel */
+  .info {
+    width: 100%;
+    background: #f8f7f4;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 0.68rem;
+    color: var(--text);
+    min-height: 52px;
+    line-height: 1.6;
+  }
+  .info .hi   { color: var(--accent);  font-weight: 600; }
+  .info .ok   { color: var(--insert);  font-weight: 600; }
+  .info .warn { color: var(--fail);    font-weight: 600; }
+  .info .prb  { color: var(--probe);   font-weight: 600; }
+
+  /* Formula display */
+  .formula {
+    width: 100%;
+    background: #f0f4fa;
+    border: 1px solid #c8d8ee;
+    border-radius: 4px;
+    padding: 7px 10px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #1a5ca8;
+    text-align: center;
+    letter-spacing: 0.04em;
+    min-height: 30px;
+    transition: background 0.2s;
+  }
+  .formula .num  { color: #c0392b; font-weight: 700; }
+  .formula .slot-result { color: #2a7a4b; font-weight: 700; }
+  .formula .cycle-result { color: #c0392b; font-weight: 700; }
+
+  /* Probe sequence display */
+  .probe-seq {
+    width: 100%;
+    font-size: 0.6rem;
+    color: var(--muted);
+    text-align: center;
+    letter-spacing: 0.04em;
+    min-height: 16px;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  button {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 9px 20px;
+    border-radius: 4px;
+    border: 1.5px solid;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  #btn-next {
+    background: #1a5ca8;
+    border-color: #1a5ca8;
+    color: #fff;
+  }
+  #btn-next:hover:not(:disabled) { background: #1450a0; }
+  #btn-next:disabled { opacity: 0.35; cursor: default; }
+  #btn-reset {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--muted);
+  }
+  #btn-reset:hover { border-color: var(--text); color: var(--text); }
+
+  .step-counter {
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+  }
+  .leg { display: flex; align-items: center; gap: 5px; font-size: 0.62rem; color: var(--muted); }
+  .leg-box { width: 11px; height: 11px; border-radius: 2px; border: 1.5px solid; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<h1>Quadratic Probing <span>&</span> Table Size</h1>
+<p class="subtitle">Why prime table sizes guarantee probe coverage</p>
+
+<div class="panels">
+  <!-- PRIME panel: N=11 -->
+  <div class="panel">
+    <div class="panel-title prime">Prime  ·  N = 11</div>
+    <p class="panel-sub">All slots reachable</p>
+    <div class="formula" id="formula-prime">( x mod N + i² ) mod N</div>
+    <div class="tbl-wrap">
+      <div class="idx-col" id="idx-prime"></div>
+      <div class="tbl" id="tbl-prime"></div>
+    </div>
+    <div class="probe-seq" id="seq-prime">—</div>
+    <div class="info" id="info-prime">Waiting…</div>
+  </div>
+
+  <!-- NON-PRIME panel: N=12 -->
+  <div class="panel">
+    <div class="panel-title nonprime">Non-Prime  ·  N = 12</div>
+    <p class="panel-sub">Probes cycle — slots missed!</p>
+    <div class="formula" id="formula-nonprime">( x mod N + i² ) mod N</div>
+    <div class="tbl-wrap">
+      <div class="idx-col" id="idx-nonprime"></div>
+      <div class="tbl" id="tbl-nonprime"></div>
+    </div>
+    <div class="probe-seq" id="seq-nonprime">—</div>
+    <div class="info" id="info-nonprime">Waiting…</div>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="leg"><div class="leg-box" style="background:var(--occupied);border-color:#bbb;"></div>Occupied</div>
+  <div class="leg"><div class="leg-box" style="background:rgba(240,165,0,0.15);border-color:#f0a500;"></div>Probing</div>
+  <div class="leg"><div class="leg-box" style="background:rgba(42,122,75,0.15);border-color:#2a7a4b;"></div>Inserted</div>
+  <div class="leg"><div class="leg-box" style="background:rgba(192,57,43,0.12);border-color:#c0392b;"></div>Cycle / Fail</div>
+</div>
+
+<div class="controls">
+  <button id="btn-reset">Reset</button>
+  <button id="btn-next">Next →</button>
+  <span class="step-counter" id="step-ctr"></span>
+</div>
+
+
+<script>
+const PRIME      = 11;
+const NONPRIME   = 12;
+const HOME       = 4;
+const PREFILL    = [0, 2, 7];
+const FILL_ORDER = [4, 5, 8, 1];
+
+let primeTable = [];
+let npTable    = [];
+let phase      = 'fill';
+let fillStep   = 0;
+let probeStep  = 0;
+let pDone      = false;   // N=11 inserted successfully
+let npCycleSeen = false;  // N=12 first repeat found
+
+// Track every slot visited during probe phase for trail rendering
+let pProbed  = [];  // ordered list
+let npProbed = [];  // ordered list
+
+function probeSlot(home, i, N) { return (home + i * i) % N; }
+
+function buildDOM() {
+  ['prime','nonprime'].forEach(id => {
+    const N = id === 'prime' ? PRIME : NONPRIME;
+    document.getElementById('idx-' + id).innerHTML = '';
+    document.getElementById('tbl-' + id).innerHTML = '';
+    for (let i = 0; i < N; i++) {
+      const idx = document.createElement('div');
+      idx.className = 'idx-cell'; idx.textContent = i;
+      document.getElementById('idx-' + id).appendChild(idx);
+      const s = document.createElement('div');
+      s.className = 'slot'; s.id = `slot-${id}-${i}`;
+      document.getElementById('tbl-' + id).appendChild(s);
+    }
+  });
+}
+
+function paintTable(id, N, table, currentSlot, probed, isRepeat, isInsert, currentVal) {
+  const lastVisit = {};
+  probed.forEach((s, idx) => { lastVisit[s] = idx; });
+
+  for (let i = 0; i < N; i++) {
+    const el = document.getElementById(`slot-${id}-${i}`);
+    el.className = 'slot';
+    el.textContent = '';
+
+    if (table[i] !== null) { el.classList.add('occupied'); el.textContent = table[i]; }
+
+    // Trail: probed before this step
+    if (lastVisit[i] !== undefined && i !== currentSlot) {
+      el.className = (id === 'nonprime' && npCycleSeen) ? 'slot cycle-trail' : 'slot trail';
+      el.textContent = table[i] !== null ? table[i] : '';
+    }
+
+    // Current slot
+    if (i === currentSlot) {
+      el.className = isInsert ? 'slot inserting' : isRepeat ? 'slot failed' : 'slot probing';
+      el.textContent = isInsert ? currentVal : (table[i] !== null ? table[i] : '');
+    }
+  }
+}
+
+function setInfo(id, html) { document.getElementById('info-' + id).innerHTML = html; }
+function setSeq(id, txt)   { document.getElementById('seq-'  + id).textContent = txt; }
+function setCtr(txt)       { document.getElementById('step-ctr').textContent = txt; }
+function setFormula(id, h) { document.getElementById('formula-' + id).innerHTML = h; }
+
+function seqStr(arr) {
+  const tail = arr.length > 9 ? ['…', ...arr.slice(-8)] : arr;
+  return tail.join(' → ');
+}
+
+function reset() {
+  primeTable = Array(PRIME).fill(null);
+  npTable    = Array(NONPRIME).fill(null);
+  PREFILL.forEach(s => { primeTable[s] = '·'; npTable[s] = '·'; });
+  phase = 'fill'; fillStep = 0; probeStep = 0;
+  pDone = false; npCycleSeen = false;
+  pProbed = []; npProbed = [];
+  buildDOM();
+  // paint clean
+  ['prime','nonprime'].forEach(id => {
+    const N = id === 'prime' ? PRIME : NONPRIME;
+    const t = id === 'prime' ? primeTable : npTable;
+    paintTable(id, N, t, -1, [], false, false);
+  });
+  setInfo('prime',    'Press <strong>Next</strong> to begin.');
+  setInfo('nonprime', 'Press <strong>Next</strong> to begin.');
+  setSeq('prime', '—'); setSeq('nonprime', '—');
+  setFormula('prime',    '( x mod N + i² ) mod N');
+  setFormula('nonprime', '( x mod N + i² ) mod N');
+  setCtr('');
+  document.getElementById('btn-next').disabled = false;
+  document.getElementById('btn-next').textContent = 'Next →';
+}
+
+function next() {
+  if (phase === 'fill') {
+    const slot = FILL_ORDER[fillStep];
+    primeTable[slot] = slot;
+    npTable[slot]    = slot;
+    paintTable('prime',    PRIME,    primeTable, slot, [], false, true, slot);
+    paintTable('nonprime', NONPRIME, npTable,    slot, [], false, true, slot);
+    setFormula('prime',    `Insert ${slot} → ( ${slot} mod 11 + 0² ) mod 11 = <span class="slot-result">${slot}</span>`);
+    setFormula('nonprime', `Insert ${slot} → ( ${slot} mod 12 + 0² ) mod 12 = <span class="slot-result">${slot}</span>`);
+    setInfo('prime',    `Inserting key into slot <strong>${slot}</strong>.`);
+    setInfo('nonprime', `Inserting key into slot <strong>${slot}</strong>.`);
+    setSeq('prime', `Slot ${slot} filled.`); setSeq('nonprime', `Slot ${slot} filled.`);
+    setCtr(`Fill ${fillStep+1} / ${FILL_ORDER.length}`);
+    fillStep++;
+    if (fillStep >= FILL_ORDER.length) { phase = 'probe'; probeStep = 0; }
+    return;
+  }
+
+  // ── Probe phase — no upper bound ──
+  const i      = probeStep;
+  const pSlot  = probeSlot(HOME, i, PRIME);
+  const npSlot = probeSlot(HOME, i, NONPRIME);
+
+  // Has this slot been visited before in this probe attempt?
+  const npRepeat = npProbed.includes(npSlot);
+  const pRepeat  = pProbed.includes(pSlot);
+
+  // ── N=11 side ──
+  let pInsert = false;
+  if (pDone) {
+    setFormula('prime', `Insert 136 → <span class="slot-result">✓ complete</span>`);
+    setInfo('prime', `<span class="ok">✓ Inserted</span> at a previous step.`);
+    paintTable('prime', PRIME, primeTable, -1, pProbed, false, false);
+  } else {
+    setFormula('prime', `Insert 136 → ( 136 mod 11 + <span class="num">${i}</span>² ) mod 11 = <span class="slot-result">${pSlot}</span>`);
+    pProbed.push(pSlot);
+    if (!primeTable[pSlot] && primeTable[pSlot] !== 0) {
+      primeTable[pSlot] = 136;
+      pDone   = true;
+      pInsert = true;
+      setInfo('prime', `<span class="ok">✓ Inserted</span> at slot <strong>${pSlot}</strong> after ${i+1} probe${i?'s':''}.`);
+      setSeq('prime', seqStr(pProbed) + ' ✓');
+    } else {
+      setInfo('prime', `Probe i=${i}: slot <strong>${pSlot}</strong> occupied. Try next…`);
+      setSeq('prime', seqStr(pProbed) + ' →…');
+    }
+    paintTable('prime', PRIME, primeTable, pSlot, pProbed, false, pInsert, 136);
+  }
+
+  // ── N=12 side ──
+  let npInsert = false;
+  if (npRepeat) npCycleSeen = true;
+
+  if (npCycleSeen) {
+    setFormula('nonprime', `Insert 136 → ( 136 mod 12 + <span class="num">${i}</span>² ) mod 12 = <span class="cycle-result">${npSlot} ↺ repeat!</span>`);
+    npProbed.push(npSlot);
+    const distinct = new Set(npProbed).size;
+    setInfo('nonprime', `<span class="warn">↺ Cycling!</span> i=${i}: slot <strong>${npSlot}</strong> — only <strong>${distinct}</strong> distinct slots reachable. Stuck forever.`);
+    setSeq('nonprime', seqStr(npProbed.map((s,j) => j===npProbed.length-1 ? `[${s}↺]` : s)));
+    paintTable('nonprime', NONPRIME, npTable, npSlot, npProbed, true, false, 136);
+  } else if (!npTable[npSlot] && npTable[npSlot] !== 0) {
+    npProbed.push(npSlot);
+    npTable[npSlot] = 136;
+    npInsert = true;
+    setFormula('nonprime', `Insert 136 → ( 136 mod 12 + <span class="num">${i}</span>² ) mod 12 = <span class="slot-result">${npSlot}</span>`);
+    setInfo('nonprime', `<span class="ok">✓ Inserted</span> at slot <strong>${npSlot}</strong> after ${i+1} probe${i?'s':''}.`);
+    setSeq('nonprime', seqStr(npProbed) + ' ✓');
+    paintTable('nonprime', NONPRIME, npTable, npSlot, npProbed, false, true, 136);
+  } else {
+    npProbed.push(npSlot);
+    setFormula('nonprime', `Insert 136 → ( 136 mod 12 + <span class="num">${i}</span>² ) mod 12 = <span class="slot-result">${npSlot}</span>`);
+    setInfo('nonprime', `Probe i=${i}: slot <strong>${npSlot}</strong> occupied. Try next…`);
+    setSeq('nonprime', seqStr(npProbed) + ' →…');
+    paintTable('nonprime', NONPRIME, npTable, npSlot, npProbed, false, false, 136);
+  }
+
+  setCtr(`Probe i = ${i}`);
+  probeStep++;
+}
+
+document.getElementById('btn-next').addEventListener('click', next);
+document.getElementById('btn-reset').addEventListener('click', reset);
+reset();
+</script>
+</body>
+</html>

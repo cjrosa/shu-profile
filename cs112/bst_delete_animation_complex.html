@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BST Delete 30</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+
+:root {
+  --bg: #f5f5f0;
+  --surface: #ffffff;
+  --border: #e0dfd8;
+  --text: #1a1a1a;
+  --muted: #888;
+  --accent: #d97706;
+  --blue: #2563eb;
+  --green: #16a34a;
+  --red: #dc2626;
+  --purple: #7c3aed;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  font-family: 'DM Mono', monospace;
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 40px;
+}
+
+h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #111;
+  margin-bottom: 3px;
+  text-align: center;
+}
+.subtitle {
+  font-size: 0.68rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 860px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.canvas-wrap { background: var(--bg); border-bottom: 1px solid var(--border); }
+canvas { display: block; width: 100%; }
+
+.step-panel {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  min-height: 60px;
+}
+.step-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 3px;
+}
+.step-desc {
+  font-size: 0.73rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.step-desc .hi    { color: var(--accent);  font-weight: 500; }
+.step-desc .del   { color: var(--red);     font-weight: 500; }
+.step-desc .succ  { color: var(--green);   font-weight: 500; }
+.step-desc .path  { color: var(--blue);    font-weight: 500; }
+
+.step-dots {
+  display: flex;
+  gap: 6px;
+  padding: 8px 18px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+.dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--border); transition: all 0.25s;
+}
+.dot.done   { background: var(--green); }
+.dot.active { background: var(--accent); transform: scale(1.3); }
+.step-counter { font-size: 0.68rem; color: var(--muted); margin-left: 6px; }
+
+.controls {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 18px; flex-wrap: wrap;
+}
+.status { flex: 1; min-width: 160px; font-size: 0.73rem; color: var(--muted); }
+.status .hi { color: var(--accent); font-weight: 500; }
+
+button {
+  font-family: 'DM Mono', monospace; font-size: 0.72rem;
+  padding: 7px 14px; border-radius: 7px;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); cursor: pointer; transition: all 0.15s;
+}
+button:hover { border-color: var(--accent); color: var(--accent); }
+button:disabled { opacity: 0.35; cursor: default; }
+button.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 500; }
+button.primary:hover { background: #b45309; border-color: #b45309; }
+
+.speed-wrap { display: flex; align-items: center; gap: 6px; font-size: 0.68rem; color: var(--muted); }
+input[type=range] {
+  -webkit-appearance: none; width: 68px; height: 3px;
+  border-radius: 2px; background: var(--border); outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 13px; height: 13px;
+  border-radius: 50%; background: var(--accent); cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<h1>BST Deletion: remove 30</h1>
+<p class="subtitle">Case 3 — node has two children</p>
+
+<div class="container">
+  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
+
+  <div class="step-panel">
+    <div class="step-title" id="stepTitle">Ready</div>
+    <div class="step-desc"  id="stepDesc">Press Next to begin.</div>
+  </div>
+
+  <div class="step-dots" id="stepDots"></div>
+
+  <div class="controls">
+    <div class="status" id="status">Press <span class="hi">Next</span> to begin.</div>
+    <div class="speed-wrap">Speed <input type="range" id="spd" min="1" max="5" value="3"></div>
+    <button id="btnReset">Reset</button>
+    <button id="btnNext" class="primary">▶ Next</button>
+    <button id="btnAuto">Auto Play</button>
+  </div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────
+   TREE STRUCTURE (before deletion)
+   40 → left:30, right:65
+   30 → left:25, right:35
+   25 → left:10, right:26
+   26 → right:29
+   29 → left:28
+   35 → left:33
+   33 → left:null, right:34
+   65 → left:50
+───────────────────────────────────────────── */
+
+const CANVAS_H = 380;
+const R = 20;
+
+// Node positions — set in resizeLayout
+let pos = {};
+
+function resizeLayout(W) {
+  const cx = W / 2;
+  pos = {
+    40: { x: cx,         y: 34  },
+    30: { x: cx - 170,   y: 100 },
+    65: { x: cx + 170,   y: 100 },
+    25: { x: cx - 260,   y: 176 },
+    35: { x: cx - 80,    y: 176 },
+    50: { x: cx + 120,   y: 176 },
+    10: { x: cx - 320,   y: 252 },
+    26: { x: cx - 200,   y: 252 },
+    33: { x: cx - 80,    y: 252 },
+    29: { x: cx - 160,   y: 318 },
+    34: { x: cx - 20,    y: 318 },
+    28: { x: cx - 200,   y: 360 },
+  };
+}
+
+// Edges: [parent, child]
+const EDGES_INITIAL = [
+  [40,30],[40,65],
+  [30,25],[30,35],
+  [25,10],[25,26],
+  [26,29],
+  [29,28],
+  [35,33],
+  [33,34],
+  [65,50],
+];
+
+// After deletion of 30: 33 takes its place, 33's right child (34) moves up
+// New edges: 40→33, 33→25, 33→35, 35→34 (33 is removed, 34 becomes left of 35)
+const EDGES_FINAL = [
+  [40,33],[40,65],
+  [33,25],[33,35],
+  [25,10],[25,26],
+  [26,29],
+  [29,28],
+  [35,34],
+  [65,50],
+];
+
+/* ─────────────────────────────────────────────
+   ANIMATION STEPS
+───────────────────────────────────────────── */
+const STEPS = [
+  {
+    title: 'Start: delete 30',
+    desc: 'Search from root <span class="path">40</span> for node <span class="del">30</span>.',
+    nodeColors: { 40: 'search' },
+    edges: EDGES_INITIAL,
+  },
+  {
+    title: 'Found node 30',
+    desc: '<span class="del">30</span> has two children (<span class="path">25</span> and <span class="path">35</span>). This is Case 3 — we need the in-order successor.',
+    nodeColors: { 40: 'visited', 30: 'target' },
+    edges: EDGES_INITIAL,
+  },
+  {
+    title: 'Find in-order successor',
+    desc: 'Go right to <span class="path">35</span>, then find the minimum by going left as far as possible.',
+    nodeColors: { 40: 'visited', 30: 'target', 35: 'search', 33: 'search' },
+    edges: EDGES_INITIAL,
+  },
+  {
+    title: 'Successor found: 33',
+    desc: '<span class="succ">33</span> is the smallest value in the right subtree — it is the in-order successor of <span class="del">30</span>.',
+    nodeColors: { 40: 'visited', 30: 'target', 35: 'visited', 33: 'successor' },
+    edges: EDGES_INITIAL,
+  },
+  {
+    title: 'Copy successor value',
+    desc: 'Copy <span class="succ">33</span>\'s value into node <span class="del">30</span>\'s position. The node previously holding 30 now holds <span class="succ">33</span>.',
+    nodeColors: { 40: 'visited', 30: 'successor', 35: 'visited', 33: 'dimmed' },
+    edges: EDGES_INITIAL,
+    relabel: { 30: '33*' },
+  },
+  {
+    title: 'Unlink original successor',
+    desc: 'Remove the original <span class="succ">33</span> node from the right subtree. Its right child <span class="path">34</span> is promoted up.',
+    nodeColors: { 40: 'visited', 30: 'successor', 35: 'visited', 34: 'search' },
+    edges: EDGES_INITIAL,
+    relabel: { 30: '33' },
+    hideNode: 33,
+  },
+  {
+    title: 'Tree restored',
+    desc: 'Deletion complete. Node <span class="succ">33</span> now sits where <span class="del">30</span> was. BST property is preserved.',
+    nodeColors: { 40: 'placed', 33: 'placed', 25: 'placed', 35: 'placed', 34: 'placed', 65: 'placed', 50: 'placed', 10: 'placed', 26: 'placed', 29: 'placed', 28: 'placed' },
+    edges: EDGES_FINAL,
+    relabelFinal: true,
+  },
+];
+
+/* ─────────────────────────────────────────────
+   CANVAS & DRAW
+───────────────────────────────────────────── */
+const cv  = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+
+function resizeCanvas() {
+  cv.width  = cv.parentElement.offsetWidth || 600;
+  cv.height = CANVAS_H;
+  resizeLayout(cv.width);
+}
+
+function drawStep(stepIdx) {
+  const step = STEPS[stepIdx];
+  ctx.clearRect(0, 0, cv.width, cv.height);
+
+  const edges    = step.edges    || EDGES_INITIAL;
+  const colors   = step.nodeColors || {};
+  const relabel  = step.relabel  || {};
+  const hideNode = step.hideNode;
+  const finalLbl = step.relabelFinal;
+
+  // Collect all nodes present
+  const allNodes = new Set();
+  edges.forEach(([p,c]) => { allNodes.add(p); allNodes.add(c); });
+  // Also add any from initial pos that aren't in edges (isolated)
+  Object.keys(pos).forEach(k => allNodes.add(parseInt(k)));
+
+  // Draw edges
+  edges.forEach(([p, c]) => {
+    if (hideNode && (p === hideNode || c === hideNode)) return;
+    // In final step, node 33 is at pos[30]
+    const p1 = (finalLbl && p === 33) ? pos[30] : pos[p];
+    const p2 = (finalLbl && c === 33) ? pos[30] : pos[c];
+    if (!p1 || !p2) return;
+    const dx = p2.x-p1.x, dy = p2.y-p1.y;
+    const len = Math.sqrt(dx*dx+dy*dy);
+    const ex = p1.x+(dx/len)*R, ey = p1.y+(dy/len)*R;
+    const tx = p2.x-(dx/len)*R, ty = p2.y-(dy/len)*R;
+
+    ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(tx, ty);
+    ctx.strokeStyle = 'rgba(190,188,180,0.8)'; ctx.lineWidth = 1.2; ctx.stroke();
+    // Arrowhead
+    ctx.save();
+    ctx.translate(tx, ty); ctx.rotate(Math.atan2(dy, dx));
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-7,-3.5); ctx.lineTo(-7,3.5); ctx.closePath();
+    ctx.fillStyle = 'rgba(190,188,180,0.8)'; ctx.fill();
+    ctx.restore();
+  });
+
+  // Draw nodes
+  allNodes.forEach(v => {
+    if (hideNode && v === hideNode) return;
+    // In final step, node 33 moves to 30's position; node 30 is hidden
+    let label = String(v);
+    if (relabel[v]) label = relabel[v];
+    if (finalLbl && v === 30) return; // 30 is gone in final
+
+    // For final step: draw node 33 at pos[30] (it has replaced 30)
+    let drawPos = pos[v];
+    if (finalLbl && v === 33) drawPos = pos[30];
+    if (!drawPos) return;
+
+    const st = colors[v] || 'idle';
+    let fill, stroke, text, glow, lw;
+    switch (st) {
+      case 'search':
+        fill='rgba(37,99,235,0.10)'; stroke='#2563eb'; text='#1d4ed8'; glow='rgba(37,99,235,0.3)'; lw=2; break;
+      case 'target':
+        fill='rgba(220,38,38,0.12)'; stroke='#dc2626'; text='#991b1b'; glow='rgba(220,38,38,0.35)'; lw=2.5; break;
+      case 'successor':
+        fill='rgba(22,163,74,0.14)'; stroke='#16a34a'; text='#14532d'; glow='rgba(22,163,74,0.4)'; lw=2.5; break;
+      case 'visited':
+        fill='rgba(37,99,235,0.07)'; stroke='#93c5fd'; text='#3b82f6'; glow=null; lw=1.2; break;
+      case 'dimmed':
+        fill='rgba(200,200,190,0.2)'; stroke='#ddd'; text='#bbb'; glow=null; lw=1; break;
+      case 'placed':
+        fill='rgba(22,163,74,0.09)'; stroke='#16a34a'; text='#14532d'; glow=null; lw=1.2; break;
+      default:
+        fill='#fff'; stroke='#c8c8c0'; text='#333'; glow=null; lw=1.2;
+    }
+
+    if (glow) { ctx.shadowColor=glow; ctx.shadowBlur=12; }
+    ctx.beginPath(); ctx.arc(drawPos.x, drawPos.y, R, 0, Math.PI*2);
+    ctx.fillStyle=fill; ctx.fill();
+    ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.stroke();
+    ctx.shadowBlur=0;
+
+    ctx.font='500 12px "DM Mono",monospace';
+    ctx.fillStyle=text; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(label, drawPos.x, drawPos.y);
+  });
+}
+
+/* ─────────────────────────────────────────────
+   STEP ENGINE
+───────────────────────────────────────────── */
+let stepIdx = 0;
+let autoTmr = null;
+
+function spd() { return 900 - (parseInt(document.getElementById('spd').value)-1)*180; }
+
+function renderStep() {
+  const step = STEPS[stepIdx];
+  document.getElementById('stepTitle').textContent = step.title;
+  document.getElementById('stepDesc').innerHTML  = step.desc;
+  drawStep(stepIdx);
+  renderDots();
+}
+
+function renderDots() {
+  const el = document.getElementById('stepDots');
+  el.innerHTML = '';
+  STEPS.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i < stepIdx ? ' done' : i === stepIdx ? ' active' : '');
+    el.appendChild(d);
+  });
+  const ctr = document.createElement('span');
+  ctr.className = 'step-counter';
+  ctr.textContent = `${stepIdx + 1} / ${STEPS.length}`;
+  el.appendChild(ctr);
+}
+
+function advance() {
+  if (stepIdx >= STEPS.length - 1) return;
+  stepIdx++;
+  renderStep();
+  if (stepIdx === STEPS.length - 1) {
+    document.getElementById('btnNext').disabled = true;
+    document.getElementById('btnAuto').disabled = true;
+    stopAuto();
+  }
+}
+
+function reset() {
+  stopAuto();
+  stepIdx = 0;
+  document.getElementById('btnNext').disabled = false;
+  document.getElementById('btnAuto').disabled = false;
+  renderStep();
+}
+
+function stopAuto() {
+  clearInterval(autoTmr); autoTmr = null;
+  document.getElementById('btnAuto').textContent = 'Auto Play';
+}
+
+document.getElementById('btnNext').addEventListener('click', () => { stopAuto(); advance(); });
+document.getElementById('btnReset').addEventListener('click', reset);
+
+document.getElementById('btnAuto').addEventListener('click', () => {
+  if (autoTmr) { stopAuto(); return; }
+  document.getElementById('btnAuto').textContent = '⏸ Pause';
+  autoTmr = setInterval(() => {
+    if (stepIdx >= STEPS.length - 1) { stopAuto(); return; }
+    advance();
+  }, spd());
+});
+
+window.addEventListener('resize', () => { resizeCanvas(); drawStep(stepIdx); });
+
+setTimeout(() => { resizeCanvas(); renderStep(); }, 60);
+</script>
+</body>
+</html>
