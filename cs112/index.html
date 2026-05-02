@@ -671,6 +671,7 @@
   </div>
 </div>
 
+<script src="../assets/js/components/markdown-renderer.js"></script>
 <script>
 const PROXY_URL = 'https://red-union-6b9e.crosa.workers.dev';
 
@@ -693,7 +694,45 @@ const TOOLS = [
   { name:'Graph Algorithm Visualizer', file:'graph_viz.html',               cat:'Graphs', desc:'graph BFS DFS traversal shortest path weighted edges', keywords:['graph','bfs','dfs','breadth first','depth first','shortest path','weighted','edge','vertex','node','adjacency'] },
 ];
 
+const VIEWER_COURSE = 'CS112';
+const VIEWER_LABEL = 'Data Structures';
+const VIEWER_BACK = 'cs112/index.html';
+const VIEWER_TOOL_PREFIX = 'cs112';
+
 let aiHistory = [], currentDrawerSize = 'default', cachedDrawerHTML = '', cachedQuestion = '';
+const LAST_RESULT_STORAGE_KEY = 'cs112.aiLastResult.v1';
+
+function loadLastResultCache() {
+  try {
+    const raw = sessionStorage.getItem(LAST_RESULT_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    cachedDrawerHTML = typeof parsed.html === 'string' ? parsed.html : '';
+    cachedQuestion = typeof parsed.question === 'string' ? parsed.question : '';
+  } catch (_) {
+    cachedDrawerHTML = '';
+    cachedQuestion = '';
+  }
+}
+
+function saveLastResultCache() {
+  try {
+    sessionStorage.setItem(LAST_RESULT_STORAGE_KEY, JSON.stringify({
+      html: cachedDrawerHTML,
+      question: cachedQuestion
+    }));
+  } catch (_) {
+    // Ignore storage failures (private mode/quota).
+  }
+}
+
+function syncLastResultButton() {
+  const btn = document.getElementById('btn-last-result');
+  if (!btn) return;
+  btn.style.display = cachedDrawerHTML ? 'inline-flex' : 'none';
+}
+
+loadLastResultCache();
 
 function recommendTool(q, a) {
   const text = (q + ' ' + a).toLowerCase();
@@ -706,7 +745,9 @@ function recommendTool(q, a) {
 }
 
 function renderToolCard(tool) {
-  return `<a class="ai-tool-rec" href="${tool.file}">
+  const toolPath = tool.file.includes('/') ? tool.file : `${VIEWER_TOOL_PREFIX}/${tool.file}`;
+  const href = `../viewer.html?tool=${encodeURIComponent(toolPath)}&course=${encodeURIComponent(VIEWER_COURSE)}&label=${encodeURIComponent(VIEWER_LABEL)}&name=${encodeURIComponent(tool.name)}&back=${encodeURIComponent(VIEWER_BACK)}`;
+  return `<a class="ai-tool-rec" href="${href}">
     <div class="ai-tool-rec-header">
       <span class="ai-tool-rec-badge">Recommended Tool</span>
       <span class="ai-tool-rec-layer">${tool.cat}</span>
@@ -736,7 +777,7 @@ Rules:
 - Be beginner-friendly. This is a 100-level course.
 - Use Python examples where helpful.
 - Be concise: 2-4 short paragraphs maximum.
-- Plain prose only &mdash; no markdown headers or bullet points.
+- You may use markdown when helpful: headings, bold, italics, links, inline code, fenced code blocks, and simple lists.
 - If outside CS112 scope, politely redirect.
 - End with a single line starting "TOOL:" naming the most relevant tool from this list, or "TOOL:none":
   BST Insert Animation, Insert Order Effect, BST Search, BST Delete (Simple), BST Delete (Two Children), BST Violations, Tree Traversals, Level-Order Traversal, AVL Rotations, Heap Build & Insert, Reheap Up & Down, Heap Array Indexing, Hash Table Chaining, Linear Probing & Clustering, Quadratic Probing, Graph Algorithm Visualizer`;
@@ -756,13 +797,23 @@ Rules:
 
 function parseResponse(raw) {
   const lines = raw.split('\n');
-  const toolLine = lines.findLast(l => l.trim().startsWith('TOOL:'));
-  const toolName = toolLine ? toolLine.replace('TOOL:', '').trim() : null;
-  const answer = lines.filter(l => !l.trim().startsWith('TOOL:')).join('\n').trim();
-  const tool = toolName && toolName !== 'none'
-    ? TOOLS.find(t => t.name.toLowerCase() === toolName.toLowerCase()) || recommendTool(answer, answer)
+  const toolLineRegex = /^\s*(?:[-*+]\s+|\d+\.\s+|>\s+)?(?:\*\*|__)?tool\s*:\s*(.+?)(?:\*\*|__)?\s*$/i;
+  const toolLine = [...lines].reverse().find(l => toolLineRegex.test(l));
+  const toolMatch = toolLine ? toolLine.match(toolLineRegex) : null;
+  const rawToolName = toolMatch ? toolMatch[1].trim() : null;
+  const normalizedToolName = (rawToolName || '')
+    .replace(/^["'`*_\s]+|["'`*_.\s]+$/g, '')
+    .toLowerCase();
+  const answer = lines.filter(l => !toolLineRegex.test(l)).join('\n').trim();
+
+  const tool = normalizedToolName && normalizedToolName !== 'none'
+    ? TOOLS.find(t => t.name.toLowerCase() === normalizedToolName)
+      || TOOLS.find(t => t.name.toLowerCase().includes(normalizedToolName) || normalizedToolName.includes(t.name.toLowerCase()))
+      || null
     : null;
-  return { answer, tool };
+
+  const recommendedTool = tool || recommendTool(rawToolName || '', answer);
+  return { answer, tool: recommendedTool };
 }
 
 async function handleSearch() {
@@ -777,11 +828,12 @@ async function handleSearch() {
     const raw = await callClaude(aiHistory);
     const { answer, tool } = parseResponse(raw);
     aiHistory.push({ role: 'assistant', content: raw });
-    loadingDiv.innerHTML = `<div class="ai-answer-text">${answer.split('\n\n').map(p => p ? '<p>'+p+'</p>' : '').join('')}</div>`;
+    loadingDiv.innerHTML = `<div class="ai-answer-text">${SHUMarkdown.renderAssistantMarkdown(answer)}</div>`;
     if (tool) appendMessage(renderToolCard(tool), '');
     cachedDrawerHTML = document.getElementById('ai-drawer-body').innerHTML;
     cachedQuestion = q;
-    document.getElementById('btn-last-result').style.display = 'inline-flex';
+    saveLastResultCache();
+    syncLastResultButton();
   } catch(e) {
     loadingDiv.innerHTML = '<div class="ai-answer-text" style="color:var(--teal)">Error: ' + e.message + '</div>';
   }
@@ -800,10 +852,12 @@ async function sendFollowUp() {
     const raw = await callClaude(aiHistory);
     const { answer, tool } = parseResponse(raw);
     aiHistory.push({ role: 'assistant', content: raw });
-    loadingDiv.innerHTML = `<div class="ai-answer-text">${answer.split('\n\n').map(p => p ? '<p>'+p+'</p>' : '').join('')}</div>`;
+    loadingDiv.innerHTML = `<div class="ai-answer-text">${SHUMarkdown.renderAssistantMarkdown(answer)}</div>`;
     if (tool) appendMessage(renderToolCard(tool), '');
     cachedDrawerHTML = document.getElementById('ai-drawer-body').innerHTML;
     cachedQuestion = aiHistory[0]?.content || cachedQuestion;
+    saveLastResultCache();
+    syncLastResultButton();
   } catch(e) {
     loadingDiv.innerHTML = '<div class="ai-answer-text" style="color:var(--teal)">Error: ' + e.message + '</div>';
   }
@@ -867,6 +921,7 @@ function toggleCat(id) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  syncLastResultButton();
   const inp = document.getElementById('ai-search-input');
   if (inp) inp.addEventListener('keydown', function(e) { if (e.key === 'Enter') handleSearch(); });
 });

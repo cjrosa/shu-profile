@@ -577,6 +577,7 @@
   </div>
 </div>
 
+<script src="../assets/js/components/markdown-renderer.js"></script>
 <script>
 // -- Proxy URL -------------------------------------------------
 const PROXY_URL = 'https://red-union-6b9e.crosa.workers.dev';
@@ -606,11 +607,49 @@ const TOOLS = [
     keywords:['arp','mac','mac address','mac table','mac learning','switch','frame','flooding','broadcast','vlan','lan','link layer','ethernet','layer 2'] },
 ];
 
+const VIEWER_COURSE = 'CS339';
+const VIEWER_LABEL = 'Computer Networks';
+const VIEWER_BACK = 'cs339/index.html';
+const VIEWER_TOOL_PREFIX = 'cs339';
+
 // -- Conversation history + result cache ----------------------
 let aiHistory = [];
 let currentDrawerSize = 'default';
 let cachedDrawerHTML = '';
 let cachedQuestion = '';
+const LAST_RESULT_STORAGE_KEY = 'cs339.aiLastResult.v1';
+
+function loadLastResultCache() {
+  try {
+    const raw = sessionStorage.getItem(LAST_RESULT_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    cachedDrawerHTML = typeof parsed.html === 'string' ? parsed.html : '';
+    cachedQuestion = typeof parsed.question === 'string' ? parsed.question : '';
+  } catch (_) {
+    cachedDrawerHTML = '';
+    cachedQuestion = '';
+  }
+}
+
+function saveLastResultCache() {
+  try {
+    sessionStorage.setItem(LAST_RESULT_STORAGE_KEY, JSON.stringify({
+      html: cachedDrawerHTML,
+      question: cachedQuestion
+    }));
+  } catch (_) {
+    // Ignore storage failures (private mode/quota).
+  }
+}
+
+function syncLastResultButton() {
+  const btn = document.getElementById('btn-last-result');
+  if (!btn) return;
+  btn.style.display = cachedDrawerHTML ? 'inline-flex' : 'none';
+}
+
+loadLastResultCache();
 
 // -- Recommend tool from question + answer --------------------
 function recommendTool(question, answer) {
@@ -625,7 +664,9 @@ function recommendTool(question, answer) {
 
 // -- Render tool recommendation card --------------------------
 function renderToolCard(tool) {
-  return `<a class="ai-tool-rec" href="${tool.file}">
+  const toolPath = tool.file.includes('/') ? tool.file : `${VIEWER_TOOL_PREFIX}/${tool.file}`;
+  const href = `../viewer.html?tool=${encodeURIComponent(toolPath)}&course=${encodeURIComponent(VIEWER_COURSE)}&label=${encodeURIComponent(VIEWER_LABEL)}&name=${encodeURIComponent(tool.name)}&back=${encodeURIComponent(VIEWER_BACK)}`;
+  return `<a class="ai-tool-rec" href="${href}">
     <div class="ai-tool-rec-header">
       <span class="ai-tool-rec-badge">Recommended Tool</span>
       <span class="ai-tool-rec-layer">${tool.layer}</span>
@@ -660,7 +701,7 @@ Rules:
 - Be concise but complete. 2-4 short paragraphs maximum.
 - Use clear, student-friendly language. Define acronyms on first use.
 - If the question is outside networking/CS339 scope, politely redirect.
-- Format with short paragraphs. Do not use markdown headers or bullet points &mdash; use plain prose only.
+- You may use markdown when helpful: headings, bold, italics, links, inline code, fenced code blocks, and simple lists.
 - End your answer with a single line starting with "TOOL:" naming the single most relevant tool from this list if applicable, or "TOOL:none" if no tool applies:
   TCP Full Visualizer, CIDR Teaching Tool, Subnet Topology Builder, Router Visualizer, Routing Algorithm Visualizer, Graph Algorithm Visualizer, Link Layer Visualizer`;
 
@@ -686,13 +727,23 @@ Rules:
 // -- Parse answer + tool hint from Claude response ------------
 function parseResponse(raw) {
   const lines = raw.split('\n');
-  const toolLine = lines.findLast(l => l.trim().startsWith('TOOL:'));
-  const toolName = toolLine ? toolLine.replace('TOOL:', '').trim() : null;
-  const answer = lines.filter(l => !l.trim().startsWith('TOOL:')).join('\n').trim();
-  const tool = toolName && toolName !== 'none'
-    ? TOOLS.find(t => t.name.toLowerCase() === toolName.toLowerCase()) || recommendTool(answer, answer)
+  const toolLineRegex = /^\s*(?:[-*+]\s+|\d+\.\s+|>\s+)?(?:\*\*|__)?tool\s*:\s*(.+?)(?:\*\*|__)?\s*$/i;
+  const toolLine = [...lines].reverse().find(l => toolLineRegex.test(l));
+  const toolMatch = toolLine ? toolLine.match(toolLineRegex) : null;
+  const rawToolName = toolMatch ? toolMatch[1].trim() : null;
+  const normalizedToolName = (rawToolName || '')
+    .replace(/^["'`*_\s]+|["'`*_.\s]+$/g, '')
+    .toLowerCase();
+  const answer = lines.filter(l => !toolLineRegex.test(l)).join('\n').trim();
+
+  const tool = normalizedToolName && normalizedToolName !== 'none'
+    ? TOOLS.find(t => t.name.toLowerCase() === normalizedToolName)
+      || TOOLS.find(t => t.name.toLowerCase().includes(normalizedToolName) || normalizedToolName.includes(t.name.toLowerCase()))
+      || null
     : null;
-  return { answer, tool };
+
+  const recommendedTool = tool || recommendTool(rawToolName || '', answer);
+  return { answer, tool: recommendedTool };
 }
 
 // -- Main search handler ---------------------------------------
@@ -726,7 +777,7 @@ async function handleSearch() {
     aiHistory.push({ role: 'assistant', content: raw });
 
     // Replace loading with answer
-    loadingDiv.innerHTML = `<div class="ai-answer-text">${answer.split('\n\n').map(p => p ? '<p>'+p+'</p>' : '').join('')}</div>`;
+    loadingDiv.innerHTML = `<div class="ai-answer-text">${SHUMarkdown.renderAssistantMarkdown(answer)}</div>`;
 
     // Tool recommendation
     if (tool) {
@@ -735,7 +786,8 @@ async function handleSearch() {
     // Cache the result
     cachedDrawerHTML = document.getElementById('ai-drawer-body').innerHTML;
     cachedQuestion = q;
-    document.getElementById('btn-last-result').style.display = 'inline-flex';
+    saveLastResultCache();
+    syncLastResultButton();
   } catch(e) {
     loadingDiv.innerHTML = '<div class="ai-answer-text" style="color:var(--red)">Error: ' + e.message + '</div>';
     console.error('Claude API error:', e);
@@ -766,11 +818,13 @@ async function sendFollowUp() {
     const raw = await callClaude(aiHistory);
     const { answer, tool } = parseResponse(raw);
     aiHistory.push({ role: 'assistant', content: raw });
-    loadingDiv.innerHTML = `<div class="ai-answer-text">${answer.split('\n\n').map(p => p ? '<p>'+p+'</p>' : '').join('')}</div>`;
+    loadingDiv.innerHTML = `<div class="ai-answer-text">${SHUMarkdown.renderAssistantMarkdown(answer)}</div>`;
     if (tool) appendMessage(renderToolCard(tool), '');
     // Cache updated conversation
     cachedDrawerHTML = document.getElementById('ai-drawer-body').innerHTML;
     cachedQuestion = aiHistory[0]?.content || cachedQuestion;
+    saveLastResultCache();
+    syncLastResultButton();
   } catch(e) {
     loadingDiv.innerHTML = '<div class="ai-answer-text" style="color:var(--red)">Error: ' + e.message + '</div>';
     console.error('Claude API error:', e);
@@ -835,6 +889,7 @@ function setInputsDisabled(val) {
 
 // -- Enter key on search input ---------------------------------
 document.addEventListener('DOMContentLoaded', function() {
+  syncLastResultButton();
   var inp = document.getElementById('ai-search-input');
   if (inp) inp.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') handleSearch();
