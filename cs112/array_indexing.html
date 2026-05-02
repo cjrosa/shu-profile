@@ -1,0 +1,223 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+#wrap{background:#fff;padding:16px;font-family:var(--font-sans,sans-serif)}
+.cell{cursor:pointer;transition:transform .1s}
+.cell:hover{transform:scale(1.05)}
+#fbox{font-size:13px;min-height:90px;padding:10px 14px;border:0.5px solid #ccc;border-radius:8px;margin-top:10px;line-height:1.9;background:#fff;color:#222}
+.frow{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin:1px 0}
+.flabel{font-size:11px;color:#aaa;min-width:48px}
+.fmono{font-family:var(--font-mono,monospace)}
+.fbase{padding:9px 14px;background:#F1EFE8;border-radius:6px;margin-bottom:7px}
+.fbase-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.fbase-label{font-size:11px;font-weight:500;color:#888;letter-spacing:.04em;text-transform:uppercase}
+.fbase-formulas{font-family:var(--font-mono,monospace);font-size:13px;color:#444;display:flex;gap:20px;flex-wrap:wrap}
+hr.fdiv{border:none;border-top:0.5px solid #eee;margin:4px 0}
+#topbar{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.tbtn{padding:5px 12px;border:0.5px solid #888;border-radius:5px;background:#fff;font-size:12px;cursor:pointer;color:#444}
+.tbtn:hover{background:#f5f5f5}
+.tbtn:disabled{opacity:.35;cursor:default}
+.tog-wrap{display:flex;align-items:center;gap:6px;font-size:12px;color:#444;cursor:pointer;user-select:none}
+.tog-track{position:relative;width:30px;height:17px;background:#ccc;border-radius:9px;transition:background .15s;flex-shrink:0}
+.tog-track.on{background:#185FA5}
+.tog-thumb{position:absolute;top:2px;left:2px;width:13px;height:13px;background:#fff;border-radius:50%;transition:transform .15s}
+.tog-track.on .tog-thumb{transform:translateX(13px)}
+</style>
+
+<div id="wrap">
+  <div id="topbar">
+    <button class="tbtn" id="clear-btn" onclick="clearSel()" disabled>Clear selection</button>
+    <div class="tog-wrap" onclick="toggleLines()">
+      <div class="tog-track" id="tog-track"><div class="tog-thumb"></div></div>
+      <span>Show tree → array lines</span>
+    </div>
+  </div>
+  <svg id="vis" width="100%" viewBox="0 0 680 320"></svg>
+  <div id="fbox">
+    <div class="fbase">
+      <div class="fbase-inner">
+        <span class="fbase-label">Indexing formulas</span>
+        <div class="fbase-formulas">
+          <span>parent(n) = floor( (n − 1) / 2 )</span>
+          <span>left(n) = 2n + 1</span>
+          <span>right(n) = 2n + 2</span>
+        </div>
+      </div>
+    </div>
+    <span style="color:#aaa;font-size:13px">Click any cell or tree node to see the formulas solved.</span>
+  </div>
+</div>
+
+<script>
+const NS='http://www.w3.org/2000/svg';
+const svg=document.getElementById('vis');
+function se(tag,a){const e=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(a))e.setAttribute(k,v);return e;}
+
+const N=9;
+const vals=['A','B','C','D','E','F','G','H','I'];
+const COL={
+  def:  {fill:'#F1EFE8',stroke:'#888780',text:'#2C2C2A',sw:'0.5'},
+  sel:  {fill:'#E6F1FB',stroke:'#185FA5',text:'#042C53',sw:'2'},
+  par:  {fill:'#FAEEDA',stroke:'#854F0B',text:'#412402',sw:'2'},
+  child:{fill:'#E1F5EE',stroke:'#0F6E56',text:'#085041',sw:'2'},
+};
+
+const VW=680, treeTopY=20, depthGap=62, nodeR=20;
+function treePos(i){
+  const d=Math.floor(Math.log2(i+1)),p=i+1-Math.pow(2,d),c=Math.pow(2,d);
+  return{x:30+(VW-60)*(p+.5)/c, y:treeTopY+d*depthGap};
+}
+const CW=56,GAP=4;
+const startX=(VW-N*(CW+GAP)+GAP)/2;
+const arrY=treeTopY+3*depthGap+nodeR+28;
+const arrH=52, arcBase=arrY+arrH+6;
+const LANE_PAR=arcBase+16, LANE_LEFT=arcBase+38, LANE_RIGHT=arcBase+60;
+function cx(i){return startX+i*(CW+GAP)+CW/2;}
+
+let selected=-1, showLines=false;
+
+function parentOf(n){return n===0?-1:Math.floor((n-1)/2);}
+function leftOf(n) {const l=2*n+1;return l<N?l:-1;}
+function rightOf(n){const r=2*n+2;return r<N?r:-1;}
+
+function nodeColor(i){
+  const p=selected>=0?parentOf(selected):-1;
+  const l=selected>=0?leftOf(selected):-1;
+  const r=selected>=0?rightOf(selected):-1;
+  if(i===selected) return COL.sel;
+  if(selected>=0&&i===p) return COL.par;
+  if(selected>=0&&(i===l||i===r)) return COL.child;
+  return COL.def;
+}
+
+function addMarker(defs,id,color){
+  const mk=se('marker',{id,viewBox:'0 0 10 10',refX:'8',refY:'5',markerWidth:'5',markerHeight:'5',orient:'auto-start-reverse'});
+  mk.appendChild(se('path',{d:'M2 1L8 5L2 9',fill:'none',stroke:color,'stroke-width':'1.5','stroke-linecap':'round','stroke-linejoin':'round'}));
+  defs.appendChild(mk);
+}
+
+function draw(){
+  while(svg.firstChild)svg.removeChild(svg.firstChild);
+  const p=selected>=0?parentOf(selected):-1;
+  const l=selected>=0?leftOf(selected):-1;
+  const r=selected>=0?rightOf(selected):-1;
+  let svgH=arcBase+10;
+  if(selected>0) svgH=Math.max(svgH,LANE_PAR+18);
+  if(l>=0)       svgH=Math.max(svgH,LANE_LEFT+18);
+  if(r>=0)       svgH=Math.max(svgH,LANE_RIGHT+18);
+  svg.setAttribute('viewBox',`0 0 ${VW} ${svgH}`);
+
+  const defs=se('defs',{});
+  addMarker(defs,'arr-par','#854F0B');
+  addMarker(defs,'arr-left','#0F6E56');
+  addMarker(defs,'arr-right','#0F6E56');
+  addMarker(defs,'arr-tree','#B4B2A9');
+  svg.appendChild(defs);
+
+  // tree edges
+  for(let i=1;i<N;i++){
+    const pi=Math.floor((i-1)/2);
+    const pp=treePos(pi),cp=treePos(i);
+    const eSel=selected>=0&&((i===selected&&pi===p)||(pi===selected&&(i===l||i===r)));
+    const eCol=eSel?(i===l||i===r?'#0F6E56':'#854F0B'):'#B4B2A9';
+    svg.appendChild(se('line',{x1:pp.x,y1:pp.y+nodeR+1,x2:cp.x,y2:cp.y-nodeR-1,
+      stroke:eCol,'stroke-width':eSel?'2':'1','marker-end':'url(#arr-tree)'}));
+  }
+
+  // tree nodes
+  for(let i=0;i<N;i++){
+    const{x,y}=treePos(i);
+    const col=nodeColor(i);
+    const g=se('g',{class:'cell'});g.onclick=()=>select(i);
+    g.appendChild(se('circle',{cx:x,cy:y,r:nodeR,fill:col.fill,stroke:col.stroke,'stroke-width':col.sw}));
+    const tv=se('text',{x,y,'text-anchor':'middle','dominant-baseline':'central','font-size':'14','font-weight':'500',fill:col.text,'font-family':'var(--font-sans,sans-serif)'});
+    tv.textContent=vals[i];g.appendChild(tv);
+    const ti=se('text',{x,y:y+nodeR+11,'text-anchor':'middle','font-size':'9',fill:'#bbb','font-family':'var(--font-mono,monospace)'});
+    ti.textContent=i;g.appendChild(ti);
+    svg.appendChild(g);
+  }
+
+  // array arcs
+  function drawArc(sx,dx,lane,color,mid,label){
+    svg.appendChild(se('line',{x1:sx,y1:arcBase,x2:sx,y2:lane,stroke:color,'stroke-width':'1.5'}));
+    svg.appendChild(se('line',{x1:sx,y1:lane,x2:dx,y2:lane,stroke:color,'stroke-width':'1.5'}));
+    svg.appendChild(se('line',{x1:dx,y1:lane,x2:dx,y2:arcBase,stroke:color,'stroke-width':'1.5','marker-end':`url(#${mid})`}));
+    const lbl=se('text',{x:(sx+dx)/2,y:lane-4,'text-anchor':'middle','font-size':'10',fill:color,'font-family':'var(--font-mono,monospace)'});
+    lbl.textContent=label;svg.appendChild(lbl);
+  }
+  if(selected>0) drawArc(cx(selected),cx(p), LANE_PAR,  '#854F0B','arr-par',  `parent(${selected})`);
+  if(l>=0)       drawArc(cx(selected),cx(l), LANE_LEFT, '#0F6E56','arr-left',  `left(${selected})`);
+  if(r>=0)       drawArc(cx(selected),cx(r), LANE_RIGHT,'#0F6E56','arr-right', `right(${selected})`);
+
+  // array cells
+  for(let i=0;i<N;i++){
+    const x=startX+i*(CW+GAP);
+    const col=nodeColor(i);
+    const g=se('g',{class:'cell'});g.onclick=()=>select(i);
+    g.appendChild(se('rect',{x,y:arrY,width:CW,height:arrH,rx:'6',fill:col.fill,stroke:col.stroke,'stroke-width':col.sw}));
+    const tv=se('text',{x:x+CW/2,y:arrY+19,'text-anchor':'middle','dominant-baseline':'central','font-size':'17','font-weight':'500',fill:col.text,'font-family':'var(--font-sans,sans-serif)'});
+    tv.textContent=vals[i];g.appendChild(tv);
+    const ti=se('text',{x:x+CW/2,y:arrY+41,'text-anchor':'middle','dominant-baseline':'central','font-size':'10',fill:'#aaa','font-family':'var(--font-mono,monospace)'});
+    ti.textContent=i;g.appendChild(ti);
+    svg.appendChild(g);
+  }
+
+  // dashed verticals — only when toggle on AND something is selected
+  if(showLines && selected>=0){
+    [selected,...(p>=0?[p]:[]),...(l>=0?[l]:[]),...(r>=0?[r]:[])].forEach(i=>{
+      const tp=treePos(i);
+      const col=nodeColor(i);
+      svg.appendChild(se('line',{x1:tp.x,y1:tp.y+nodeR+1,x2:cx(i),y2:arrY-2,
+        stroke:col.stroke,'stroke-width':'0.5','stroke-dasharray':'4 3',opacity:'0.5'}));
+    });
+  }
+}
+
+function fRow(label,content){
+  return`<div class="frow"><span class="flabel">${label}</span><span class="fmono">${content}</span></div>`;
+}
+
+function updateFormula(){
+  const box=document.getElementById('fbox');
+  const base=`<div class="fbase"><div class="fbase-inner"><span class="fbase-label">Indexing formulas</span><div class="fbase-formulas"><span>parent(n) = floor( (n − 1) / 2 )</span><span>left(n) = 2n + 1</span><span>right(n) = 2n + 2</span></div></div></div>`;
+  if(selected<0){
+    box.innerHTML=base+`<span style="color:#aaa;font-size:13px">Click any cell or tree node to see the formulas solved.</span>`;
+    return;
+  }
+  const n=selected,p=parentOf(n),l=leftOf(n),r=rightOf(n);
+  let rows='';
+  if(n===0){
+    rows+=fRow('parent','array[0] — root, no parent');
+  } else {
+    rows+=fRow('parent',
+      `parent(${n}) = floor( (${n} − 1) / 2 ) = floor( ${n-1} / 2 ) = `
+      +`<span style="color:#854F0B;font-weight:500">${p}</span>`
+      +`  →  array[${p}] = <span style="color:#854F0B;font-weight:500">${vals[p]}</span>`);
+  }
+  rows+='<hr class="fdiv">';
+  rows+=fRow('left', l>=0
+    ?`left(${n}) = 2 × ${n} + 1 = <span style="color:#0F6E56;font-weight:500">${l}</span>  →  array[${l}] = <span style="color:#0F6E56;font-weight:500">${vals[l]}</span>`
+    :`left(${n}) = 2 × ${n} + 1 = <span style="color:#aaa">${2*n+1}  (none)</span>`);
+  rows+=fRow('right', r>=0
+    ?`right(${n}) = 2 × ${n} + 2 = <span style="color:#0F6E56;font-weight:500">${r}</span>  →  array[${r}] = <span style="color:#0F6E56;font-weight:500">${vals[r]}</span>`
+    :`right(${n}) = 2 × ${n} + 2 = <span style="color:#aaa">${2*n+2}  (none)</span>`);
+  box.innerHTML=base+rows;
+}
+
+function select(i){
+  selected=i===selected?-1:i;
+  document.getElementById('clear-btn').disabled=selected<0;
+  draw();updateFormula();
+}
+function clearSel(){
+  selected=-1;
+  document.getElementById('clear-btn').disabled=true;
+  draw();updateFormula();
+}
+function toggleLines(){
+  showLines=!showLines;
+  document.getElementById('tog-track').classList.toggle('on',showLines);
+  draw();
+}
+
+draw();updateFormula();
+</script>

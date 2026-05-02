@@ -1,0 +1,17 @@
+/* ── Footer ── */
+.footer {
+  text-align: center; padding: 24px 40px;
+  font-family: -apple-system, sans-serif; font-size: 11px;
+  color: var(--text3); border-top: 1px solid var(--border);
+}
+
+/* ── Responsive (course pages) ── */
+@media (max-width: 640px) {
+  .hero { padding: 16px 20px; }
+  .hero-inner { flex-direction: column; align-items: flex-start; gap: 14px; }
+  .main { padding: 24px 16px 48px; }
+  .tools-grid { grid-template-columns: 1fr; }
+  .cat-icon { width: 42px; }
+  .course-banner { padding: 16px 20px; }
+  .course-banner-inner { flex-direction: column; gap: 14px; }
+}

@@ -1,0 +1,52 @@
+html { scroll-behavior: smooth; }
+
+:root {
+  /* Brand reds — constant across all pages */
+  --red:     #CE1141;
+  --red-m:   #A50D33;
+  --red-l:   #FAE6EC;
+
+  /* Course accent — each course page overrides these */
+  --teal:    #0F6E56;
+  --teal-l:  #E1F5EE;
+  --teal-m:  #5DCAA5;
+
+  /* Extended palette — shared across all courses */
+  --purple:  #5B2D8E;
+  --purple-l: #F0E8FA;
+  --purple-m: #8B5CF6;
+  --amber:   #854F0B;
+  --amber-l: #FAEEDA;
+  --amber-m: #EF9F27;
+  --slate:   #6B7685;
+  --slate-l: #ECEEF1;
+
+  /* Neutrals — constant across all pages */
+  --navy:    #1A0009;
+  --text:    #1a1a18;
+  --text2:   #5a5955;
+  --text3:   #9e9d98;
+  --bg:      #ffffff;
+  --bg2:     #f4f5f7;
+  --border:  rgba(0,0,0,0.09);
+  --border2: rgba(0,0,0,0.15);
+  --accordion-separator-width: 2px;
+  --accordion-body-padding: 10px 20px 20px;
+  --accordion-grid-top-padding: 16px;
+  --r:       12px;
+  --shadow:  0 2px 12px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-h: 0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.08);
+
+  /* Typography utilities */
+  --sys-font-ui: -apple-system, sans-serif;
+  --sys-label-size: 10px;
+  --sys-subtitle-size: 11px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Georgia', 'Times New Roman', serif;
+  min-height: 100vh;
+  line-height: 1.6;
+}

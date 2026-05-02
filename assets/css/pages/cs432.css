@@ -1,0 +1,60 @@
+:root {
+  /* CS432 — course accent (blue) matches index.html badge */
+  --teal:    #1A5CA8;
+  --teal-l:  #E0ECFB;
+  --teal-m:  #4A84CC;
+  --bg2:     #ffffff;
+}
+
+/* Certification banner (Phase 6 consolidation) */
+.cert-banner {
+  background: linear-gradient(135deg, #0D3B75 0%, #1A5CA8 100%);
+  border-radius: 12px;
+  padding: 28px 32px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.cert-icon-box {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cert-title {
+  font-family: -apple-system, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.cert-desc {
+  font-family: -apple-system, sans-serif;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.65;
+}
+
+.cert-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 0.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  padding: 4px 12px;
+  margin-top: 10px;
+  font-family: -apple-system, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}

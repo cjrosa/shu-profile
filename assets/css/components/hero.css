@@ -1,0 +1,54 @@
+/* ── Hero header (course pages) ── */
+.hero {
+  background: #ffffff;
+  border-bottom: 1px solid var(--border2);
+  padding: 20px 40px;
+  position: relative;
+}
+.hero-inner {
+  position: relative; z-index: 1;
+  max-width: 960px; margin: 0 auto;
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 24px;
+}
+.hero-left { display: flex; flex-direction: column; gap: 4px; }
+
+.hero-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: -apple-system, sans-serif; font-size: 10px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+  color: var(--teal); text-decoration: none; margin-bottom: 4px;
+  transition: color .15s;
+}
+.hero-back:hover { color: var(--teal-m); }
+
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: -apple-system, sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--teal); margin-bottom: 2px;
+}
+.hero-badge-dot {
+  width: 5px; height: 5px; border-radius: 50%; background: var(--teal-m);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%      { opacity:.6; transform:scale(.85); }
+}
+
+.hero-title {
+  font-size: clamp(20px, 2.8vw, 28px);
+  font-weight: 400; color: var(--navy); line-height: 1.2; letter-spacing: -.01em;
+  margin-bottom: 6px;
+}
+.hero-title em { font-style: italic; color: var(--teal); }
+
+.hero-course {
+  font-family: -apple-system, sans-serif; font-size: 11px; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--text3);
+  margin-bottom: 6px;
+}
+
+/* suppress unused hero variants */
+.hero-divider, .hero-desc { display: none; }

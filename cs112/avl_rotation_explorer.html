@@ -1,0 +1,739 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans, sans-serif); background: #ffffff; padding: 12px; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+.controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; flex-shrink: 0; }
+.type-toggle { display: flex; border: 0.5px solid #D3D1C7; border-radius: 8px; overflow: hidden; }
+.type-btn { padding: 6px 14px; font-size: 13px; cursor: pointer; background: #F1EFE8; color: #5F5E5A; border: none; transition: background .15s; }
+.type-btn.active { background: #185FA5; color: #fff; }
+.btn { padding: 6px 14px; border-radius: 8px; font-size: 13px; border: 0.5px solid #D3D1C7; cursor: pointer; background: #F1EFE8; color: #2C2C2A; }
+.btn:hover { background: #E8E5DC; }
+.btn.primary { background: #185FA5; color: #fff; border-color: #185FA5; }
+.btn.primary:hover { background: #0C447C; }
+.btn:disabled { opacity: 0.35; cursor: default; }
+.status-box { display: flex; align-items: center; gap: 10px; min-height: 32px; margin-bottom: 10px; padding: 6px 12px; border-radius: 8px; border: 1px solid #D3D1C7; background: #F1EFE8; flex-shrink: 0; }
+.status-badge { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+.status-text { font-size: 12px; color: #5F5E5A; font-family: monospace; flex: 1; min-width: 0; }
+.step-counter { font-size: 11px; color: #888780; font-family: monospace; white-space: nowrap; }
+.svg-wrapper { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+#tree-svg { width: 100%; height: 100%; display: block; background: #ffffff; }
+</style>
+
+<div class="controls">
+  <div class="type-toggle">
+    <button class="type-btn active" onclick="setMode('ll')">LL</button>
+    <button class="type-btn" onclick="setMode('rr')">RR</button>
+    <button class="type-btn" onclick="setMode('lr')">LR</button>
+    <button class="type-btn" onclick="setMode('rl')">RL</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button class="btn" id="prev-btn" onclick="stepDir(-1)" disabled>&#8592; Prev</button>
+    <button class="btn" id="next-btn" onclick="stepDir(1)">Next &#8594;</button>
+  </div>
+  <button class="btn" id="auto-btn" onclick="toggleAuto()">Auto</button>
+  <button class="btn primary" onclick="reset()">&#8635; New values</button>
+</div>
+
+<div class="status-box" id="status-box">
+  <span class="status-badge" id="status-badge" style="background:#E6F1FB;color:#0C447C;">Ready</span>
+  <span class="status-text" id="status-text">Select a rotation type above.</span>
+  <span class="step-counter" id="step-counter"></span>
+</div>
+
+<div class="svg-wrapper">
+  <svg id="tree-svg" viewBox="0 0 640 300" preserveAspectRatio="xMidYMid meet"></svg>
+</div>
+
+<script>
+const NR=22;
+const COL={
+  normal:     {fill:'#F1EFE8',stroke:'#B4B2A9',text:'#2C2C2A'},
+  highlight:  {fill:'#FAEEDA',stroke:'#EF9F27',text:'#633806'},
+  violation:  {fill:'#FCEBEB',stroke:'#E24B4A',text:'#791F1F'},
+  moving:     {fill:'#FBEAF0',stroke:'#D4537E',text:'#72243E'},
+  settled:    {fill:'#E1F5EE',stroke:'#1D9E75',text:'#085041'},
+  root:       {fill:'#E6F1FB',stroke:'#378ADD',text:'#0C447C'},
+  sub:        {fill:'#F1EFE8',stroke:'#D3D1C7',text:'#888780'},
+  innerChild: {fill:'#F3EBFC',stroke:'#9B59C4',text:'#4A1870'},
+  reparent:   {fill:'#FFF4E0',stroke:'#EF9F27',text:'#633806'},
+};
+
+let mode='ll', idx=0, timer=null, busy=false;
+// current node values, regenerated on reset
+let V={};
+
+function ri(lo,hi){return Math.floor(Math.random()*(hi-lo+1))+lo;}
+
+// Generate values satisfying BST ordering for each rotation type.
+// Spread values across 10–99 with enough gaps to be readable.
+function genValues(m){
+  if(m==='ll'){
+    // need: T1 < Y < T3 < Z < T4
+    const Y=ri(20,45), Z=ri(Y+8,70);
+    return {Z,Y};
+  }
+  if(m==='rr'){
+    // need: T1 < Z < T2 < Y < T4
+    const Z=ri(20,45), Y=ri(Z+8,70);
+    return {Z,Y};
+  }
+  if(m==='lr'){
+    // need: T1 < Y < T2 < X < T3 < Z < T4
+    const Y=ri(15,30), X=ri(Y+5,55), Z=ri(X+5,80);
+    return {Z,Y,X};
+  }
+  if(m==='rl'){
+    // need: T1 < Z < T2 < X < T3 < Y < T4
+    const Z=ri(15,30), X=ri(Z+5,55), Y=ri(X+5,80);
+    return {Z,Y,X};
+  }
+}
+
+function reset(){
+  V=genValues(mode);
+  idx=0;
+  if(timer){clearInterval(timer);timer=null;document.getElementById('auto-btn').textContent='Auto';}
+  showStep();
+}
+
+function ei(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+function lerp(a,b,t){return a+(b-a)*t;}
+function lp(a,b,t){return{x:lerp(a.x,b.x,t),y:lerp(a.y,b.y,t)};}
+
+const DEFS=`<defs>
+<marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L9 5L2 9" fill="none" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L9 5L2 9" fill="none" stroke="#D4537E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L9 5L2 9" fill="none" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>`;
+
+function nc(x,y,val,col){
+  const f=x.toFixed(1),g=y.toFixed(1);
+  return `<circle cx="${f}" cy="${g}" r="${NR}" fill="${col.fill}" stroke="${col.stroke}" stroke-width="1.5"/>` +
+    `<text x="${f}" y="${g}" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="500" fill="${col.text}" font-family="sans-serif">${val}</text>`;
+}
+
+function bfPill(x,y,val,ok){
+  const c=ok?'#0F6E56':'#A32D2D',bg=ok?'#E1F5EE':'#FCEBEB',bd=ok?'#1D9E75':'#E24B4A';
+  return `<rect x="${(x-22).toFixed(1)}" y="${(y+NR+2).toFixed(1)}" width="44" height="15" rx="4" fill="${bg}" stroke="${bd}" stroke-width="0.5"/>` +
+    `<text x="${x.toFixed(1)}" y="${(y+NR+9.5).toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="500" fill="${c}" font-family="sans-serif">BF = ${val}</text>`;
+}
+
+function tr(x,y,col,lbl){
+  const hw=22,h=36;
+  return `<polygon points="${x.toFixed(1)},${y.toFixed(1)} ${(x-hw).toFixed(1)},${(y+h).toFixed(1)} ${(x+hw).toFixed(1)},${(y+h).toFixed(1)}" fill="${col.fill}" stroke="${col.stroke}" stroke-width="1"/>` +
+    `<text x="${x.toFixed(1)}" y="${(y+h/2+4).toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="500" fill="${col.text}" font-family="sans-serif">${lbl||'…'}</text>`;
+}
+
+function en(x1,y1,x2,y2,col,dash,opa){
+  const dx=x2-x1,dy=y2-y1,d=Math.sqrt(dx*dx+dy*dy),ox=dx/d*NR,oy=dy/d*NR;
+  return `<line x1="${(x1+ox).toFixed(1)}" y1="${(y1+oy).toFixed(1)}" x2="${(x2-ox).toFixed(1)}" y2="${(y2-oy).toFixed(1)}" stroke="${col||'#B4B2A9'}" stroke-width="1.5" ${dash?'stroke-dasharray="5 3"':''} opacity="${opa??1}"/>`;
+}
+function et(x1,y1,x2,y2,col,dash,opa){
+  const dx=x2-x1,dy=y2-y1,d=Math.sqrt(dx*dx+dy*dy),ox=dx/d*NR,oy=dy/d*NR;
+  return `<line x1="${(x1+ox).toFixed(1)}" y1="${(y1+oy).toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col||'#B4B2A9'}" stroke-width="1.5" ${dash?'stroke-dasharray="5 3"':''} opacity="${opa??1}"/>`;
+}
+function arc(ax,ay,bx,by){
+  const mx=(ax+bx)/2,my=Math.min(ay,by)-50;
+  return `<path d="M${ax.toFixed(1)},${ay.toFixed(1)} Q${mx.toFixed(1)},${my.toFixed(1)} ${bx.toFixed(1)},${by.toFixed(1)}" fill="none" stroke="#EF9F27" stroke-width="2" stroke-dasharray="6 3" opacity="0.9" marker-end="url(#ao)"/>`;
+}
+function rotLbl(x,y,txt){
+  return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" font-size="11" font-weight="500" fill="#BA7517" font-family="sans-serif">${txt}</text>`;
+}
+
+// ── Positions ─────────────────────────────────────────────────────────────────
+const POS={
+  ll:{
+    b:{Z:{x:320,y:50},Y:{x:185,y:145},T1:{x:105,y:235},T3:{x:265,y:235},T4:{x:455,y:145}},
+    a:{Y:{x:320,y:50},T1:{x:185,y:145},Z:{x:455,y:145},T3:{x:385,y:235},T4:{x:525,y:235}},
+  },
+  rr:{
+    b:{Z:{x:320,y:50},T1:{x:185,y:145},Y:{x:455,y:145},T2:{x:375,y:235},T4:{x:535,y:235}},
+    a:{Y:{x:320,y:50},Z:{x:185,y:145},T4:{x:455,y:145},T1:{x:105,y:235},T2:{x:255,y:235}},
+  },
+  lr:{
+    b:{Z:{x:320,y:45},Y:{x:175,y:140},X:{x:265,y:230},T1:{x:95,y:230},T2:{x:200,y:315},T3:{x:330,y:315},T4:{x:455,y:140}},
+    m:{Z:{x:320,y:45},X:{x:175,y:140},Y:{x:115,y:230},T1:{x:55,y:315},T2:{x:175,y:315},T3:{x:270,y:230},T4:{x:455,y:140}},
+    a:{X:{x:320,y:45},Y:{x:175,y:140},Z:{x:455,y:140},T1:{x:95,y:230},T2:{x:255,y:230},T3:{x:375,y:230},T4:{x:535,y:230}},
+  },
+  rl:{
+    b:{Z:{x:320,y:45},T1:{x:185,y:140},Y:{x:465,y:140},X:{x:375,y:230},T2:{x:310,y:315},T3:{x:440,y:315},T4:{x:555,y:230}},
+    m:{Z:{x:320,y:45},T1:{x:185,y:140},X:{x:465,y:140},T2:{x:370,y:230},Y:{x:525,y:230},T3:{x:465,y:315},T4:{x:585,y:315}},
+    a:{X:{x:320,y:45},Z:{x:185,y:140},Y:{x:455,y:140},T1:{x:105,y:230},T2:{x:265,y:230},T3:{x:375,y:230},T4:{x:535,y:230}},
+  },
+};
+
+// ── Step builders ─────────────────────────────────────────────────────────────
+
+function buildLL(){
+  const {Z:Zv,Y:Yv}=V;
+  const {b,a}=POS.ll;
+  return [
+    {
+      badge:{bg:'#E6F1FB',tc:'#0C447C',label:'Before'},
+      text:`Insert into T1 causes left-heavy imbalance. ${Zv} has BF = +2 — left subtree (via ${Yv}→T1) is 2 levels taller than T4.`,
+      counter:'step 1 of 5', h:310,
+      draw(){
+        let h=DEFS;
+        h+=et(b.Z.x,b.Z.y,b.T4.x,b.T4.y); h+=en(b.Z.x,b.Z.y,b.Y.x,b.Y.y);
+        h+=et(b.Y.x,b.Y.y,b.T1.x,b.T1.y); h+=et(b.Y.x,b.Y.y,b.T3.x,b.T3.y);
+        h+=tr(b.T1.x,b.T1.y,{fill:'#FAEEDA',stroke:'#EF9F27',text:'#633806'},'T1');
+        h+=tr(b.T3.x,b.T3.y,COL.sub,'T3'); h+=tr(b.T4.x,b.T4.y,COL.sub,'T4');
+        h+=nc(b.Z.x,b.Z.y,Zv,COL.violation); h+=bfPill(b.Z.x,b.Z.y,'+2',false);
+        h+=nc(b.Y.x,b.Y.y,Yv,COL.highlight); h+=bfPill(b.Y.x,b.Y.y,'+1',true);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#FAEEDA',tc:'#633806',label:'Fix: right rotate at '+Zv},
+      text:`Left-Left case: ${Zv}'s left subtree is too tall on the left side (T1). ${Zv} rotates right — descends, ${Yv} rises to root.`,
+      counter:'step 2 of 5', h:310,
+      draw(){
+        let h=DEFS;
+        h+=et(b.Z.x,b.Z.y,b.T4.x,b.T4.y); h+=en(b.Z.x,b.Z.y,b.Y.x,b.Y.y);
+        h+=et(b.Y.x,b.Y.y,b.T1.x,b.T1.y); h+=et(b.Y.x,b.Y.y,b.T3.x,b.T3.y);
+        h+=tr(b.T1.x,b.T1.y,{fill:'#FAEEDA',stroke:'#EF9F27',text:'#633806'},'T1');
+        h+=tr(b.T3.x,b.T3.y,COL.sub,'T3'); h+=tr(b.T4.x,b.T4.y,COL.sub,'T4');
+        h+=arc(b.Z.x,b.Z.y,a.Z.x,a.Z.y);
+        h+=rotLbl(320,16,Zv+' rotates right ↻');
+        h+=nc(b.Z.x,b.Z.y,Zv,COL.violation); h+=bfPill(b.Z.x,b.Z.y,'+2',false);
+        h+=nc(b.Y.x,b.Y.y,Yv,COL.highlight); h+=bfPill(b.Y.x,b.Y.y,'+1',true);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#FAEEDA',tc:'#633806',label:'Re-parent T3'},
+      text:`T3 detaches from ${Yv}'s right and re-attaches to ${Zv}'s left. T3 values are between ${Yv} and ${Zv}, so BST order holds.`,
+      counter:'step 3 of 5', h:310,
+      draw(){
+        let h=DEFS;
+        // Zv and Yv still in before positions; dashed edge from Z to T3 destination
+        h+=et(b.Z.x,b.Z.y,b.T4.x,b.T4.y); h+=en(b.Z.x,b.Z.y,b.Y.x,b.Y.y);
+        h+=et(b.Y.x,b.Y.y,b.T1.x,b.T1.y);
+        // old edge gone — show dashed from Z to T3 new home
+        h+=et(b.Z.x,b.Z.y,b.T3.x,b.T3.y,'#EF9F27',true);
+        h+=tr(b.T1.x,b.T1.y,COL.sub,'T1');
+        h+=tr(b.T3.x,b.T3.y,COL.reparent,'T3');
+        h+=tr(b.T4.x,b.T4.y,COL.sub,'T4');
+        h+=rotLbl(b.T3.x,b.T3.y-46,'detaching from '+Yv+' → attaching to '+Zv);
+        h+=nc(b.Z.x,b.Z.y,Zv,COL.violation); h+=bfPill(b.Z.x,b.Z.y,'+2',false);
+        h+=nc(b.Y.x,b.Y.y,Yv,COL.highlight); h+=bfPill(b.Y.x,b.Y.y,'+1',true);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#FBEAF0',tc:'#72243E',label:'Rotating…'},
+      text:`${Yv} rises to root. ${Zv} drops to ${Yv}'s right. T3 slides into place as ${Zv}'s left child.`,
+      counter:'step 4 of 5', h:310, anim:true,
+      draw(t){
+        const Z=lp(b.Z,a.Z,t),Y=lp(b.Y,a.Y,t),T3=lp(b.T3,a.T3,t);
+        const T1=a.T1,T4=a.T4;
+        let h=DEFS;
+        h+=et(Y.x,Y.y,T1.x,T1.y); h+=en(Y.x,Y.y,Z.x,Z.y,'#D4537E',true,0.6);
+        h+=et(Z.x,Z.y,T3.x,T3.y); h+=et(Z.x,Z.y,T4.x,T4.y);
+        h+=tr(T1.x,T1.y,COL.sub,'T1'); h+=tr(T3.x,T3.y,COL.reparent,'T3'); h+=tr(T4.x,T4.y,COL.sub,'T4');
+        h+=nc(Z.x,Z.y,Zv,COL.moving); h+=nc(Y.x,Y.y,Yv,COL.moving);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#E1F5EE',tc:'#085041',label:'Balanced'},
+      text:`${Yv} is the new root. ${Zv} is ${Yv}'s right child with T3 and T4. T1 stays ${Yv}'s left. All BF = 0.`,
+      counter:'step 5 of 5', h:310,
+      draw(){
+        let h=DEFS;
+        h+=et(a.Y.x,a.Y.y,a.T1.x,a.T1.y,'#1D9E75'); h+=en(a.Y.x,a.Y.y,a.Z.x,a.Z.y,'#1D9E75');
+        h+=et(a.Z.x,a.Z.y,a.T3.x,a.T3.y,'#1D9E75'); h+=et(a.Z.x,a.Z.y,a.T4.x,a.T4.y,'#1D9E75');
+        h+=tr(a.T1.x,a.T1.y,COL.settled,'T1'); h+=tr(a.T3.x,a.T3.y,COL.settled,'T3'); h+=tr(a.T4.x,a.T4.y,COL.settled,'T4');
+        h+=nc(a.Y.x,a.Y.y,Yv,COL.root); h+=bfPill(a.Y.x,a.Y.y,'0',true);
+        h+=nc(a.Z.x,a.Z.y,Zv,COL.settled); h+=bfPill(a.Z.x,a.Z.y,'0',true);
+        return h;
+      }
+    }
+  ];
+}
+
+function buildRR(){
+  const {Z:Zv,Y:Yv}=V;
+  const {b,a}=POS.rr;
+  return [
+    {
+      badge:{bg:'#E6F1FB',tc:'#0C447C',label:'Before'},
+      text:`Insert into T4 causes right-heavy imbalance. ${Zv} has BF = −2 — right subtree (via ${Yv}→T4) is 2 levels taller than T1.`,
+      counter:'step 1 of 5', h:310,
+      draw(){
+        let h=DEFS;
+        h+=et(b.Z.x,b.Z.y,b.T1.x,b.T1.y); h+=en(b.Z.x,b.Z.y,b.Y.x,b.Y.y);
+        h+=et(b.Y.x,b.Y.y,b.T2.x,b.T2.y); h+=et(b.Y.x,b.Y.y,b.T4.x,b.T4.y);
+        h+=tr(b.T1.x,b.T1.y,COL.sub,'T1'); h+=tr(b.T2.x,b.T2.y,COL.sub,'T2');
+        h+=tr(b.T4.x,b.T4.y,{fill:'#FAEEDA',stroke:'#EF9F27',text:'#633806'},'T4');
+        h+=nc(b.Z.x,b.Z.y,Zv,COL.violation); h+=bfPill(b.Z.x,b.Z.y,'−2',false);
+        h+=nc(b.Y.x,b.Y.y,Yv,COL.highlight); h+=bfPill(b.Y.x,b.Y.y,'−1',true);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#FAEEDA',tc:'#633806',label:'Fix: left rotate at '+Zv},
+      text:`Right-Right case: ${Zv}'s right subtree is too tall on the right side (T4). ${Zv} rotates left — descends, ${Yv} rises to root.`,
+      counter:'step 2 of 5', h:310,
+      draw(){
+        let h=DEFS;
+        h+=et(b.Z.x,b.Z.y,b.T1.x,b.T1.y); h+=en(b.Z.x,b.Z.y,b.Y.x,b.Y.y);
+        h+=et(b.Y.x,b.Y.y,b.T2.x,b.T2.y); h+=et(b.Y.x,b.Y.y,b.T4.x,b.T4.y);
+        h+=tr(b.T1.x,b.T1.y,COL.sub,'T1'); h+=tr(b.T2.x,b.T2.y,COL.sub,'T2');
+        h+=tr(b.T4.x,b.T4.y,{fill:'#FAEEDA',stroke:'#EF9F27',text:'#633806'},'T4');
+        h+=arc(b.Z.x,b.Z.y,a.Z.x,a.Z.y);
+        h+=rotLbl(320,16,Zv+' rotates left ↺');
+        h+=nc(b.Z.x,b.Z.y,Zv,COL.violation); h+=bfPill(b.Z.x,b.Z.y,'−2',false);
+        h+=nc(b.Y.x,b.Y.y,Yv,COL.highlight); h+=bfPill(b.Y.x,b.Y.y,'−1',true);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#FAEEDA',tc:'#633806',label:'Re-parent T2'},
+      text:`T2 detaches from ${Yv}'s left and re-attaches to ${Zv}'s right. T2 values are between ${Zv} and ${Yv}, so BST order holds.`,
+      counter:'step 3 of 5', h:310,
+      draw(){
+        let h=DEFS;
+        h+=et(b.Z.x,b.Z.y,b.T1.x,b.T1.y); h+=en(b.Z.x,b.Z.y,b.Y.x,b.Y.y);
+        h+=et(b.Y.x,b.Y.y,b.T4.x,b.T4.y);
+        // old Y→T2 edge gone; dashed Z→T2 shows new home
+        h+=et(b.Z.x,b.Z.y,b.T2.x,b.T2.y,'#EF9F27',true);
+        h+=tr(b.T1.x,b.T1.y,COL.sub,'T1');
+        h+=tr(b.T2.x,b.T2.y,COL.reparent,'T2');
+        h+=tr(b.T4.x,b.T4.y,{fill:'#FAEEDA',stroke:'#EF9F27',text:'#633806'},'T4');
+        h+=rotLbl(b.T2.x,b.T2.y-46,'detaching from '+Yv+' → attaching to '+Zv);
+        h+=nc(b.Z.x,b.Z.y,Zv,COL.violation); h+=bfPill(b.Z.x,b.Z.y,'−2',false);
+        h+=nc(b.Y.x,b.Y.y,Yv,COL.highlight); h+=bfPill(b.Y.x,b.Y.y,'−1',true);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#FBEAF0',tc:'#72243E',label:'Rotating…'},
+      text:`${Yv} rises to root. ${Zv} drops to ${Yv}'s left. T2 slides into place as ${Zv}'s right child.`,
+      counter:'step 4 of 5', h:310, anim:true,
+      draw(t){
+        const Z=lp(b.Z,a.Z,t),Y=lp(b.Y,a.Y,t),T2=lp(b.T2,a.T2,t);
+        const T1=a.T1,T4=a.T4;
+        let h=DEFS;
+        h+=et(Y.x,Y.y,T4.x,T4.y); h+=en(Y.x,Y.y,Z.x,Z.y,'#D4537E',true,0.6);
+        h+=et(Z.x,Z.y,T1.x,T1.y); h+=et(Z.x,Z.y,T2.x,T2.y);
+        h+=tr(T1.x,T1.y,COL.sub,'T1'); h+=tr(T2.x,T2.y,COL.reparent,'T2'); h+=tr(T4.x,T4.y,COL.sub,'T4');
+        h+=nc(Z.x,Z.y,Zv,COL.moving); h+=nc(Y.x,Y.y,Yv,COL.moving);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#E1F5EE',tc:'#085041',label:'Balanced'},
+      text:`${Yv} is the new root. ${Zv} is ${Yv}'s left child with T1 and T2. T4 stays ${Yv}'s right. All BF = 0.`,
+      counter:'step 5 of 5', h:310,
+      draw(){
+        let h=DEFS;
+        h+=en(a.Y.x,a.Y.y,a.Z.x,a.Z.y,'#1D9E75'); h+=et(a.Y.x,a.Y.y,a.T4.x,a.T4.y,'#1D9E75');
+        h+=et(a.Z.x,a.Z.y,a.T1.x,a.T1.y,'#1D9E75'); h+=et(a.Z.x,a.Z.y,a.T2.x,a.T2.y,'#1D9E75');
+        h+=tr(a.T1.x,a.T1.y,COL.settled,'T1'); h+=tr(a.T2.x,a.T2.y,COL.settled,'T2'); h+=tr(a.T4.x,a.T4.y,COL.settled,'T4');
+        h+=nc(a.Y.x,a.Y.y,Yv,COL.root); h+=bfPill(a.Y.x,a.Y.y,'0',true);
+        h+=nc(a.Z.x,a.Z.y,Zv,COL.settled); h+=bfPill(a.Z.x,a.Z.y,'0',true);
+        return h;
+      }
+    }
+  ];
+}
+
+function buildLR(){
+  const {Z:Zv,Y:Yv,X:Xv}=V;
+  const {b,m,a}=POS.lr;
+  return [
+    {
+      badge:{bg:'#E6F1FB',tc:'#0C447C',label:'Before'},
+      text:`${Zv} has BF = +2 (left-heavy). Path goes ${Zv}→${Yv}→${Xv} — a left-right zigzag. ${Xv} is ${Yv}'s right (inner) child. Two rotations needed.`,
+      counter:'step 1 of 8', h:370,
+      draw(){
+        let h=DEFS;
+        h+=en(b.Z.x,b.Z.y,b.Y.x,b.Y.y); h+=et(b.Z.x,b.Z.y,b.T4.x,b.T4.y);
+        h+=et(b.Y.x,b.Y.y,b.T1.x,b.T1.y); h+=en(b.Y.x,b.Y.y,b.X.x,b.X.y);
+        h+=et(b.X.x,b.X.y,b.T2.x,b.T2.y); h+=et(b.X.x,b.X.y,b.T3.x,b.T3.y);
+        h+=tr(b.T1.x,b.T1.y,COL.sub,'T1'); h+=tr(b.T4.x,b.T4.y,COL.sub,'T4');
+        h+=tr(b.T2.x,b.T2.y,COL.sub,'T2'); h+=tr(b.T3.x,b.T3.y,COL.sub,'T3');
+        h+=nc(b.Z.x,b.Z.y,Zv,COL.violation); h+=bfPill(b.Z.x,b.Z.y,'+2',false);
+        h+=nc(b.Y.x,b.Y.y,Yv,COL.highlight); h+=bfPill(b.Y.x,b.Y.y,'−1',true);
+        h+=nc(b.X.x,b.X.y,Xv,COL.innerChild);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#FAEEDA',tc:'#633806',label:'Fix step 1: left rotate at '+Yv},
+      text:`${Xv} (inner child) is on ${Yv}'s right — must straighten the zigzag first. ${Yv} rotates left so ${Xv} can rise in its place.`,
+      counter:'step 2 of 8', h:370,
+      draw(){
+        let h=DEFS;
+        h+=en(b.Z.x,b.Z.y,b.Y.x,b.Y.y); h+=et(b.Z.x,b.Z.y,b.T4.x,b.T4.y);
+        h+=et(b.Y.x,b.Y.y,b.T1.x,b.T1.y); h+=en(b.Y.x,b.Y.y,b.X.x,b.X.y);
+        h+=et(b.X.x,b.X.y,b.T2.x,b.T2.y); h+=et(b.X.x,b.X.y,b.T3.x,b.T3.y);
+        h+=tr(b.T1.x,b.T1.y,COL.sub,'T1'); h+=tr(b.T4.x,b.T4.y,COL.sub,'T4');
+        h+=tr(b.T2.x,b.T2.y,COL.sub,'T2'); h+=tr(b.T3.x,b.T3.y,COL.sub,'T3');
+        h+=arc(b.Y.x,b.Y.y,m.Y.x,m.Y.y);
+        h+=rotLbl(b.Y.x-38,b.Y.y-28,Yv+' rotates left ↺');
+        h+=nc(b.Z.x,b.Z.y,Zv,COL.violation); h+=bfPill(b.Z.x,b.Z.y,'+2',false);
+        h+=nc(b.Y.x,b.Y.y,Yv,COL.highlight);
+        h+=nc(b.X.x,b.X.y,Xv,COL.innerChild);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#FAEEDA',tc:'#633806',label:'Re-parent T2'},
+      text:`T2 detaches from ${Xv}'s left and re-attaches to ${Yv}'s right. T2 values are between ${Yv} and ${Xv}, so BST order holds.`,
+      counter:'step 3 of 8', h:370,
+      draw(){
+        let h=DEFS;
+        h+=en(b.Z.x,b.Z.y,b.Y.x,b.Y.y); h+=et(b.Z.x,b.Z.y,b.T4.x,b.T4.y);
+        h+=et(b.Y.x,b.Y.y,b.T1.x,b.T1.y);
+        h+=et(b.X.x,b.X.y,b.T3.x,b.T3.y);
+        // dashed Y→T2 shows new home
+        h+=et(b.Y.x,b.Y.y,b.T2.x,b.T2.y,'#EF9F27',true);
+        h+=tr(b.T1.x,b.T1.y,COL.sub,'T1'); h+=tr(b.T4.x,b.T4.y,COL.sub,'T4');
+        h+=tr(b.T2.x,b.T2.y,COL.reparent,'T2'); h+=tr(b.T3.x,b.T3.y,COL.sub,'T3');
+        h+=rotLbl(b.T2.x+12,b.T2.y-46,'detaching from '+Xv+' → attaching to '+Yv);
+        h+=nc(b.Z.x,b.Z.y,Zv,COL.violation); h+=bfPill(b.Z.x,b.Z.y,'+2',false);
+        h+=nc(b.Y.x,b.Y.y,Yv,COL.highlight);
+        h+=nc(b.X.x,b.X.y,Xv,COL.innerChild);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#FBEAF0',tc:'#72243E',label:'Rotating '+Yv+'…'},
+      text:`${Xv} rises to ${Yv}'s old position. ${Yv} drops left. T2 slides into place as ${Yv}'s right child.`,
+      counter:'step 4 of 8', h:370, anim:true,
+      draw(t){
+        const Z=b.Z,T4=b.T4;
+        const Y=lp(b.Y,m.Y,t),X=lp(b.X,m.X,t);
+        const T1=lp(b.T1,m.T1,t),T2=lp(b.T2,m.T2,t),T3=lp(b.T3,m.T3,t);
+        let h=DEFS;
+        h+=et(Z.x,Z.y,T4.x,T4.y);
+        h+=en(Z.x,Z.y,X.x,X.y,'#D4537E',true,0.6);
+        h+=en(X.x,X.y,Y.x,Y.y,'#D4537E',true,0.6);
+        h+=et(X.x,X.y,T3.x,T3.y);
+        h+=et(Y.x,Y.y,T1.x,T1.y); h+=et(Y.x,Y.y,T2.x,T2.y);
+        h+=tr(T1.x,T1.y,COL.sub,'T1'); h+=tr(T2.x,T2.y,COL.reparent,'T2');
+        h+=tr(T3.x,T3.y,COL.sub,'T3'); h+=tr(T4.x,T4.y,COL.sub,'T4');
+        h+=nc(Z.x,Z.y,Zv,COL.violation);
+        h+=nc(X.x,X.y,Xv,COL.moving); h+=nc(Y.x,Y.y,Yv,COL.moving);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#FAEEDA',tc:'#633806',label:'Fix step 2: right rotate at '+Zv},
+      text:`Path is now left-left: ${Zv}→${Xv}→${Yv}. ${Zv} still has BF = +2 — rotate ${Zv} right. ${Xv} rises to root.`,
+      counter:'step 5 of 8', h:370,
+      draw(){
+        let h=DEFS;
+        h+=en(m.Z.x,m.Z.y,m.X.x,m.X.y); h+=et(m.Z.x,m.Z.y,m.T4.x,m.T4.y);
+        h+=en(m.X.x,m.X.y,m.Y.x,m.Y.y); h+=et(m.X.x,m.X.y,m.T3.x,m.T3.y);
+        h+=et(m.Y.x,m.Y.y,m.T1.x,m.T1.y); h+=et(m.Y.x,m.Y.y,m.T2.x,m.T2.y);
+        h+=tr(m.T1.x,m.T1.y,COL.sub,'T1'); h+=tr(m.T2.x,m.T2.y,COL.sub,'T2');
+        h+=tr(m.T3.x,m.T3.y,COL.sub,'T3'); h+=tr(m.T4.x,m.T4.y,COL.sub,'T4');
+        h+=arc(m.Z.x,m.Z.y,a.Z.x,a.Z.y);
+        h+=rotLbl(m.Z.x+20,m.Z.y-28,Zv+' rotates right ↻');
+        h+=nc(m.Z.x,m.Z.y,Zv,COL.violation); h+=bfPill(m.Z.x,m.Z.y,'+2',false);
+        h+=nc(m.X.x,m.X.y,Xv,COL.highlight);
+        h+=nc(m.Y.x,m.Y.y,Yv,COL.normal);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#FAEEDA',tc:'#633806',label:'Re-parent T3'},
+      text:`T3 detaches from ${Xv}'s right and re-attaches to ${Zv}'s left. T3 values are between ${Xv} and ${Zv}, so BST order holds.`,
+      counter:'step 6 of 8', h:370,
+      draw(){
+        let h=DEFS;
+        h+=en(m.Z.x,m.Z.y,m.X.x,m.X.y); h+=et(m.Z.x,m.Z.y,m.T4.x,m.T4.y);
+        h+=en(m.X.x,m.X.y,m.Y.x,m.Y.y);
+        h+=et(m.Y.x,m.Y.y,m.T1.x,m.T1.y); h+=et(m.Y.x,m.Y.y,m.T2.x,m.T2.y);
+        // dashed Z→T3 shows new home
+        h+=et(m.Z.x,m.Z.y,m.T3.x,m.T3.y,'#EF9F27',true);
+        h+=tr(m.T1.x,m.T1.y,COL.sub,'T1'); h+=tr(m.T2.x,m.T2.y,COL.sub,'T2');
+        h+=tr(m.T3.x,m.T3.y,COL.reparent,'T3'); h+=tr(m.T4.x,m.T4.y,COL.sub,'T4');
+        h+=rotLbl(m.T3.x,m.T3.y-46,'detaching from '+Xv+' → attaching to '+Zv);
+        h+=nc(m.Z.x,m.Z.y,Zv,COL.violation); h+=bfPill(m.Z.x,m.Z.y,'+2',false);
+        h+=nc(m.X.x,m.X.y,Xv,COL.highlight);
+        h+=nc(m.Y.x,m.Y.y,Yv,COL.normal);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#FBEAF0',tc:'#72243E',label:'Rotating '+Zv+'…'},
+      text:`${Xv} rises to root. ${Zv} drops right. T3 slides into place as ${Zv}'s left child.`,
+      counter:'step 7 of 8', h:370, anim:true,
+      draw(t){
+        const Z=lp(m.Z,a.Z,t),X=lp(m.X,a.X,t),Y=lp(m.Y,a.Y,t);
+        const T1=lp(m.T1,a.T1,t),T2=lp(m.T2,a.T2,t);
+        const T3=lp(m.T3,a.T3,t),T4=lp(m.T4,a.T4,t);
+        let h=DEFS;
+        h+=en(X.x,X.y,Y.x,Y.y,'#1D9E75',false,lerp(0.3,1,t));
+        h+=en(X.x,X.y,Z.x,Z.y,'#D4537E',true,0.6);
+        h+=et(Y.x,Y.y,T1.x,T1.y); h+=et(Y.x,Y.y,T2.x,T2.y);
+        h+=et(Z.x,Z.y,T3.x,T3.y); h+=et(Z.x,Z.y,T4.x,T4.y);
+        h+=tr(T1.x,T1.y,COL.sub,'T1'); h+=tr(T2.x,T2.y,COL.sub,'T2');
+        h+=tr(T3.x,T3.y,COL.reparent,'T3'); h+=tr(T4.x,T4.y,COL.sub,'T4');
+        h+=nc(X.x,X.y,Xv,COL.moving);
+        h+=nc(Y.x,Y.y,Yv,COL.moving);
+        h+=nc(Z.x,Z.y,Zv,COL.moving);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#E1F5EE',tc:'#085041',label:'Balanced'},
+      text:`${Xv} is the new root. ${Yv} left (with T1, T2), ${Zv} right (with T3, T4). BST order: ${Yv} < ${Xv} < ${Zv}. All BF = 0.`,
+      counter:'step 8 of 8', h:370,
+      draw(){
+        let h=DEFS;
+        h+=en(a.X.x,a.X.y,a.Y.x,a.Y.y,'#1D9E75'); h+=en(a.X.x,a.X.y,a.Z.x,a.Z.y,'#1D9E75');
+        h+=et(a.Y.x,a.Y.y,a.T1.x,a.T1.y,'#1D9E75'); h+=et(a.Y.x,a.Y.y,a.T2.x,a.T2.y,'#1D9E75');
+        h+=et(a.Z.x,a.Z.y,a.T3.x,a.T3.y,'#1D9E75'); h+=et(a.Z.x,a.Z.y,a.T4.x,a.T4.y,'#1D9E75');
+        h+=tr(a.T1.x,a.T1.y,COL.settled,'T1'); h+=tr(a.T2.x,a.T2.y,COL.settled,'T2');
+        h+=tr(a.T3.x,a.T3.y,COL.settled,'T3'); h+=tr(a.T4.x,a.T4.y,COL.settled,'T4');
+        h+=nc(a.X.x,a.X.y,Xv,COL.root); h+=bfPill(a.X.x,a.X.y,'0',true);
+        h+=nc(a.Y.x,a.Y.y,Yv,COL.settled); h+=bfPill(a.Y.x,a.Y.y,'0',true);
+        h+=nc(a.Z.x,a.Z.y,Zv,COL.settled); h+=bfPill(a.Z.x,a.Z.y,'0',true);
+        return h;
+      }
+    }
+  ];
+}
+
+function buildRL(){
+  const {Z:Zv,Y:Yv,X:Xv}=V;
+  const {b,m,a}=POS.rl;
+  return [
+    {
+      badge:{bg:'#E6F1FB',tc:'#0C447C',label:'Before'},
+      text:`${Zv} has BF = −2 (right-heavy). Path goes ${Zv}→${Yv}→${Xv} — a right-left zigzag. ${Xv} is ${Yv}'s left (inner) child. Mirror of LR.`,
+      counter:'step 1 of 8', h:370,
+      draw(){
+        let h=DEFS;
+        h+=et(b.Z.x,b.Z.y,b.T1.x,b.T1.y); h+=en(b.Z.x,b.Z.y,b.Y.x,b.Y.y);
+        h+=en(b.Y.x,b.Y.y,b.X.x,b.X.y); h+=et(b.Y.x,b.Y.y,b.T4.x,b.T4.y);
+        h+=et(b.X.x,b.X.y,b.T2.x,b.T2.y); h+=et(b.X.x,b.X.y,b.T3.x,b.T3.y);
+        h+=tr(b.T1.x,b.T1.y,COL.sub,'T1'); h+=tr(b.T4.x,b.T4.y,COL.sub,'T4');
+        h+=tr(b.T2.x,b.T2.y,COL.sub,'T2'); h+=tr(b.T3.x,b.T3.y,COL.sub,'T3');
+        h+=nc(b.Z.x,b.Z.y,Zv,COL.violation); h+=bfPill(b.Z.x,b.Z.y,'−2',false);
+        h+=nc(b.Y.x,b.Y.y,Yv,COL.highlight); h+=bfPill(b.Y.x,b.Y.y,'+1',true);
+        h+=nc(b.X.x,b.X.y,Xv,COL.innerChild);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#FAEEDA',tc:'#633806',label:'Fix step 1: right rotate at '+Yv},
+      text:`${Xv} (inner child) is on ${Yv}'s left — must straighten the zigzag first. ${Yv} rotates right so ${Xv} can rise in its place.`,
+      counter:'step 2 of 8', h:370,
+      draw(){
+        let h=DEFS;
+        h+=et(b.Z.x,b.Z.y,b.T1.x,b.T1.y); h+=en(b.Z.x,b.Z.y,b.Y.x,b.Y.y);
+        h+=en(b.Y.x,b.Y.y,b.X.x,b.X.y); h+=et(b.Y.x,b.Y.y,b.T4.x,b.T4.y);
+        h+=et(b.X.x,b.X.y,b.T2.x,b.T2.y); h+=et(b.X.x,b.X.y,b.T3.x,b.T3.y);
+        h+=tr(b.T1.x,b.T1.y,COL.sub,'T1'); h+=tr(b.T4.x,b.T4.y,COL.sub,'T4');
+        h+=tr(b.T2.x,b.T2.y,COL.sub,'T2'); h+=tr(b.T3.x,b.T3.y,COL.sub,'T3');
+        h+=arc(b.Y.x,b.Y.y,m.Y.x,m.Y.y);
+        h+=rotLbl(b.Y.x+42,b.Y.y-28,Yv+' rotates right ↻');
+        h+=nc(b.Z.x,b.Z.y,Zv,COL.violation); h+=bfPill(b.Z.x,b.Z.y,'−2',false);
+        h+=nc(b.Y.x,b.Y.y,Yv,COL.highlight);
+        h+=nc(b.X.x,b.X.y,Xv,COL.innerChild);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#FAEEDA',tc:'#633806',label:'Re-parent T3'},
+      text:`T3 detaches from ${Xv}'s right and re-attaches to ${Yv}'s left. T3 values are between ${Xv} and ${Yv}, so BST order holds.`,
+      counter:'step 3 of 8', h:370,
+      draw(){
+        let h=DEFS;
+        h+=et(b.Z.x,b.Z.y,b.T1.x,b.T1.y); h+=en(b.Z.x,b.Z.y,b.Y.x,b.Y.y);
+        h+=et(b.Y.x,b.Y.y,b.T4.x,b.T4.y);
+        h+=et(b.X.x,b.X.y,b.T2.x,b.T2.y);
+        // dashed Y→T3 shows new home
+        h+=et(b.Y.x,b.Y.y,b.T3.x,b.T3.y,'#EF9F27',true);
+        h+=tr(b.T1.x,b.T1.y,COL.sub,'T1'); h+=tr(b.T4.x,b.T4.y,COL.sub,'T4');
+        h+=tr(b.T2.x,b.T2.y,COL.sub,'T2'); h+=tr(b.T3.x,b.T3.y,COL.reparent,'T3');
+        h+=rotLbl(b.T3.x-10,b.T3.y-46,'detaching from '+Xv+' → attaching to '+Yv);
+        h+=nc(b.Z.x,b.Z.y,Zv,COL.violation); h+=bfPill(b.Z.x,b.Z.y,'−2',false);
+        h+=nc(b.Y.x,b.Y.y,Yv,COL.highlight);
+        h+=nc(b.X.x,b.X.y,Xv,COL.innerChild);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#FBEAF0',tc:'#72243E',label:'Rotating '+Yv+'…'},
+      text:`${Xv} rises to ${Yv}'s old position. ${Yv} drops right. T3 slides into place as ${Yv}'s left child.`,
+      counter:'step 4 of 8', h:370, anim:true,
+      draw(t){
+        const Z=b.Z,T1=b.T1;
+        const Y=lp(b.Y,m.Y,t),X=lp(b.X,m.X,t);
+        const T2=lp(b.T2,m.T2,t),T3=lp(b.T3,m.T3,t),T4=lp(b.T4,m.T4,t);
+        let h=DEFS;
+        h+=et(Z.x,Z.y,T1.x,T1.y);
+        h+=en(Z.x,Z.y,X.x,X.y,'#D4537E',true,0.6);
+        h+=et(X.x,X.y,T2.x,T2.y);
+        h+=en(X.x,X.y,Y.x,Y.y,'#D4537E',true,0.6);
+        h+=et(Y.x,Y.y,T3.x,T3.y); h+=et(Y.x,Y.y,T4.x,T4.y);
+        h+=tr(T1.x,T1.y,COL.sub,'T1'); h+=tr(T2.x,T2.y,COL.sub,'T2');
+        h+=tr(T3.x,T3.y,COL.reparent,'T3'); h+=tr(T4.x,T4.y,COL.sub,'T4');
+        h+=nc(Z.x,Z.y,Zv,COL.violation);
+        h+=nc(X.x,X.y,Xv,COL.moving); h+=nc(Y.x,Y.y,Yv,COL.moving);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#FAEEDA',tc:'#633806',label:'Fix step 2: left rotate at '+Zv},
+      text:`Path is now right-right: ${Zv}→${Xv}→${Yv}. ${Zv} still has BF = −2 — rotate ${Zv} left. ${Xv} rises to root.`,
+      counter:'step 5 of 8', h:370,
+      draw(){
+        let h=DEFS;
+        h+=et(m.Z.x,m.Z.y,m.T1.x,m.T1.y); h+=en(m.Z.x,m.Z.y,m.X.x,m.X.y);
+        h+=et(m.X.x,m.X.y,m.T2.x,m.T2.y); h+=en(m.X.x,m.X.y,m.Y.x,m.Y.y);
+        h+=et(m.Y.x,m.Y.y,m.T3.x,m.T3.y); h+=et(m.Y.x,m.Y.y,m.T4.x,m.T4.y);
+        h+=tr(m.T1.x,m.T1.y,COL.sub,'T1'); h+=tr(m.T2.x,m.T2.y,COL.sub,'T2');
+        h+=tr(m.T3.x,m.T3.y,COL.sub,'T3'); h+=tr(m.T4.x,m.T4.y,COL.sub,'T4');
+        h+=arc(m.Z.x,m.Z.y,a.Z.x,a.Z.y);
+        h+=rotLbl(m.Z.x-18,m.Z.y-28,Zv+' rotates left ↺');
+        h+=nc(m.Z.x,m.Z.y,Zv,COL.violation); h+=bfPill(m.Z.x,m.Z.y,'−2',false);
+        h+=nc(m.X.x,m.X.y,Xv,COL.highlight);
+        h+=nc(m.Y.x,m.Y.y,Yv,COL.normal);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#FAEEDA',tc:'#633806',label:'Re-parent T2'},
+      text:`T2 detaches from ${Xv}'s left and re-attaches to ${Zv}'s right. T2 values are between ${Zv} and ${Xv}, so BST order holds.`,
+      counter:'step 6 of 8', h:370,
+      draw(){
+        let h=DEFS;
+        h+=et(m.Z.x,m.Z.y,m.T1.x,m.T1.y); h+=en(m.Z.x,m.Z.y,m.X.x,m.X.y);
+        h+=en(m.X.x,m.X.y,m.Y.x,m.Y.y);
+        h+=et(m.Y.x,m.Y.y,m.T3.x,m.T3.y); h+=et(m.Y.x,m.Y.y,m.T4.x,m.T4.y);
+        // dashed Z→T2 shows new home
+        h+=et(m.Z.x,m.Z.y,m.T2.x,m.T2.y,'#EF9F27',true);
+        h+=tr(m.T1.x,m.T1.y,COL.sub,'T1'); h+=tr(m.T2.x,m.T2.y,COL.reparent,'T2');
+        h+=tr(m.T3.x,m.T3.y,COL.sub,'T3'); h+=tr(m.T4.x,m.T4.y,COL.sub,'T4');
+        h+=rotLbl(m.T2.x,m.T2.y-46,'detaching from '+Xv+' → attaching to '+Zv);
+        h+=nc(m.Z.x,m.Z.y,Zv,COL.violation); h+=bfPill(m.Z.x,m.Z.y,'−2',false);
+        h+=nc(m.X.x,m.X.y,Xv,COL.highlight);
+        h+=nc(m.Y.x,m.Y.y,Yv,COL.normal);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#FBEAF0',tc:'#72243E',label:'Rotating '+Zv+'…'},
+      text:`${Xv} rises to root. ${Zv} drops left. T2 slides into place as ${Zv}'s right child.`,
+      counter:'step 7 of 8', h:370, anim:true,
+      draw(t){
+        const Z=lp(m.Z,a.Z,t),X=lp(m.X,a.X,t),Y=lp(m.Y,a.Y,t);
+        const T1=lp(m.T1,a.T1,t),T2=lp(m.T2,a.T2,t);
+        const T3=lp(m.T3,a.T3,t),T4=lp(m.T4,a.T4,t);
+        let h=DEFS;
+        h+=en(X.x,X.y,Z.x,Z.y,'#D4537E',true,0.6);
+        h+=en(X.x,X.y,Y.x,Y.y,'#1D9E75',false,lerp(0.3,1,t));
+        h+=et(Z.x,Z.y,T1.x,T1.y); h+=et(Z.x,Z.y,T2.x,T2.y);
+        h+=et(Y.x,Y.y,T3.x,T3.y); h+=et(Y.x,Y.y,T4.x,T4.y);
+        h+=tr(T1.x,T1.y,COL.sub,'T1'); h+=tr(T2.x,T2.y,COL.reparent,'T2');
+        h+=tr(T3.x,T3.y,COL.sub,'T3'); h+=tr(T4.x,T4.y,COL.sub,'T4');
+        h+=nc(Z.x,Z.y,Zv,COL.moving);
+        h+=nc(X.x,X.y,Xv,COL.moving);
+        h+=nc(Y.x,Y.y,Yv,COL.moving);
+        return h;
+      }
+    },
+    {
+      badge:{bg:'#E1F5EE',tc:'#085041',label:'Balanced'},
+      text:`${Xv} is the new root. ${Zv} left (with T1, T2), ${Yv} right (with T3, T4). BST order: ${Zv} < ${Xv} < ${Yv}. All BF = 0.`,
+      counter:'step 8 of 8', h:370,
+      draw(){
+        let h=DEFS;
+        h+=en(a.X.x,a.X.y,a.Z.x,a.Z.y,'#1D9E75'); h+=en(a.X.x,a.X.y,a.Y.x,a.Y.y,'#1D9E75');
+        h+=et(a.Z.x,a.Z.y,a.T1.x,a.T1.y,'#1D9E75'); h+=et(a.Z.x,a.Z.y,a.T2.x,a.T2.y,'#1D9E75');
+        h+=et(a.Y.x,a.Y.y,a.T3.x,a.T3.y,'#1D9E75'); h+=et(a.Y.x,a.Y.y,a.T4.x,a.T4.y,'#1D9E75');
+        h+=tr(a.T1.x,a.T1.y,COL.settled,'T1'); h+=tr(a.T2.x,a.T2.y,COL.settled,'T2');
+        h+=tr(a.T3.x,a.T3.y,COL.settled,'T3'); h+=tr(a.T4.x,a.T4.y,COL.settled,'T4');
+        h+=nc(a.X.x,a.X.y,Xv,COL.root); h+=bfPill(a.X.x,a.X.y,'0',true);
+        h+=nc(a.Z.x,a.Z.y,Zv,COL.settled); h+=bfPill(a.Z.x,a.Z.y,'0',true);
+        h+=nc(a.Y.x,a.Y.y,Yv,COL.settled); h+=bfPill(a.Y.x,a.Y.y,'0',true);
+        return h;
+      }
+    }
+  ];
+}
+
+const BUILDERS={ll:buildLL,rr:buildRR,lr:buildLR,rl:buildRL};
+let STEPS=[];
+
+function setStatus(s){
+  const badge=document.getElementById('status-badge');
+  document.getElementById('status-text').textContent=s.text;
+  document.getElementById('step-counter').textContent=s.counter||'';
+  badge.style.cssText=`background:${s.badge.bg};color:${s.badge.tc}`;
+  badge.textContent=s.badge.label;
+  const bc={Before:'#378ADD',Balanced:'#1D9E75'};
+  document.getElementById('status-box').style.borderColor=bc[s.badge.label]||'#EF9F27';
+}
+
+function setBtn(){
+  document.getElementById('next-btn').disabled=busy||(idx>=STEPS.length-1);
+  document.getElementById('prev-btn').disabled=busy||idx===0;
+}
+
+function drawFrame(t){
+  const s=STEPS[idx];
+  const svg=document.getElementById('tree-svg');
+  svg.setAttribute('viewBox',`0 0 640 ${s.h||300}`);
+  svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+  svg.innerHTML=s.draw(t??1);
+}
+
+function showStep(){
+  const s=STEPS[idx];
+  setStatus(s);
+  if(s.anim){
+    drawFrame(0); busy=true; setBtn();
+    const dur=700,t0=performance.now();
+    (function frame(now){
+      const raw=Math.min((now-t0)/dur,1);
+      drawFrame(ei(raw));
+      raw<1?requestAnimationFrame(frame):(busy=false,drawFrame(1),setBtn());
+    })(t0);
+  } else { drawFrame(1); setBtn(); }
+}
+
+function stepDir(d){
+  if(busy)return;
+  idx=Math.max(0,Math.min(STEPS.length-1,idx+d));
+  showStep();
+}
+
+function toggleAuto(){
+  if(timer){clearInterval(timer);timer=null;document.getElementById('auto-btn').textContent='Auto';return;}
+  if(idx>=STEPS.length-1) idx=0;
+  document.getElementById('auto-btn').textContent='Pause';
+  timer=setInterval(()=>{
+    if(busy)return;
+    if(idx>=STEPS.length-1){clearInterval(timer);timer=null;document.getElementById('auto-btn').textContent='Auto';return;}
+    stepDir(1);
+  },1600);
+}
+
+function setMode(m){
+  if(timer){clearInterval(timer);timer=null;document.getElementById('auto-btn').textContent='Auto';}
+  mode=m; idx=0;
+  document.querySelectorAll('.type-btn').forEach((b,i)=>b.classList.toggle('active',['ll','rr','lr','rl'][i]===m));
+  V=genValues(mode);
+  STEPS=BUILDERS[mode]();
+  showStep();
+}
+
+function reset(){
+  if(timer){clearInterval(timer);timer=null;document.getElementById('auto-btn').textContent='Auto';}
+  idx=0;
+  V=genValues(mode);
+  STEPS=BUILDERS[mode]();
+  showStep();
+}
+
+setMode('ll');
+</script>

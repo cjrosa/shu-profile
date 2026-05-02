@@ -1,0 +1,2267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Graph Algorithm Visualizer</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='8' cy='8' r='4' fill='%23185FA5'/><circle cx='24' cy='8' r='4' fill='%23185FA5'/><circle cx='8' cy='24' r='4' fill='%23185FA5'/><circle cx='24' cy='24' r='4' fill='%23185FA5'/><circle cx='16' cy='16' r='4' fill='%230C447C'/><line x1='8' y1='8' x2='16' y2='16' stroke='%23185FA5' stroke-width='2'/><line x1='24' y1='8' x2='16' y2='16' stroke='%23185FA5' stroke-width='2'/><line x1='8' y1='24' x2='16' y2='16' stroke='%23185FA5' stroke-width='2'/><line x1='24' y1='24' x2='16' y2='16' stroke='%23185FA5' stroke-width='2'/><line x1='8' y1='8' x2='24' y2='8' stroke='%23185FA5' stroke-width='2'/><line x1='8' y1='24' x2='24' y2='24' stroke='%23185FA5' stroke-width='2'/></svg>">
+<style>
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f4f3ef; min-height: 100vh; display: flex; flex-direction:column; align-items: center; justify-content: flex-start; padding: 24px 16px; gap:0; }
+
+/* ── Card ── */
+.card { background: #ffffff; border: 0.5px solid #dddbd2; border-radius: 12px; padding: 18px; width: 100%; max-width: 780px; }
+
+/* ── Tabs ── */
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px; }
+.tab { font-size: 12px; padding: 5px 13px; border-radius: 6px; border: 0.5px solid #ccc; background: #fff; color: #888; cursor: pointer; transition: all .15s; user-select: none; }
+.tab:hover { background: #f5f4f0; }
+.tab.active { background: #E6F1FB; color: #0C447C; border-color: #85B7EB; font-weight: 500; }
+
+/* ── Subtabs ── */
+.subtabs { display: flex; gap: 4px; }
+.subtab { font-size: 11px; padding: 3px 10px; border-radius: 6px; border: 0.5px solid #ccc; background: #fff; color: #888; cursor: pointer; transition: all .15s; user-select: none; }
+.subtab:hover { background: #f5f4f0; }
+.subtab.active { background: #E1F5EE; color: #085041; border-color: #5DCAA5; font-weight: 500; }
+
+/* ── Direction toggle ── */
+.dir-toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #666; }
+.toggle-wrap { display: flex; border: 0.5px solid #ccc; border-radius: 6px; overflow: hidden; }
+.toggle-opt { font-size: 11px; padding: 3px 10px; background: #fff; color: #888; cursor: pointer; transition: all .15s; user-select: none; }
+.toggle-opt:hover { background: #f5f4f0; }
+.toggle-opt.active { background: #EEEDFE; color: #3C3489; font-weight: 500; }
+.toggle-opt + .toggle-opt { border-left: 0.5px solid #ccc; }
+
+/* ── Main layout ── */
+.main { display: flex; gap: 12px; align-items: stretch; }
+.graph-wrap { flex: 1; background: #fff; border: 0.5px solid #dddbd2; border-radius: 8px; overflow: hidden; min-width: 0; }
+.graph-wrap svg { display: block; cursor: default; }
+.sidebar { width: 158px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+
+/* ── Panels ── */
+.panel { background: #fff; border: 0.5px solid #dddbd2; border-radius: 8px; padding: 10px; }
+.panel-label { font-size: 10px; color: #999; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+.panel-empty { font-size: 11px; color: #bbb; font-style: italic; }
+.token-row { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.token { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; font-size: 11px; font-weight: 500; border: 0.5px solid transparent; flex-shrink: 0; }
+.tk-q  { background: #FAEEDA; color: #633806; border-color: #EF9F27; }
+.tk-v  { background: #EAF3DE; color: #27500A; border-color: #97C459; }
+.tk-t  { background: #E6F1FB; color: #0C447C; border-color: #85B7EB; }
+.tk-m  { background: #E1F5EE; color: #085041; border-color: #5DCAA5; }
+.tk-found { background: #FCEBEB; color: #791F1F; border-color: #E24B4A; }
+.arr-sep { font-size: 11px; color: #bbb; }
+.mono { font-family: 'SFMono-Regular', 'Consolas', monospace; font-size: 11px; }
+
+/* ── Status bar ── */
+.status-bar { font-size: 12px; color: #444; background: #F8F7F3; border-radius: 6px; padding: 7px 11px; margin-top: 10px; min-height: 34px; line-height: 1.6; border: 0.5px solid #e8e6de; }
+.status-bar.selecting { color: #533AB5; }
+.status-bar.ready    { color: #0F6E56; }
+.status-bar.found    { color: #791F1F; }
+.status-bar.done     { color: #0C447C; }
+
+/* ── Controls ── */
+.controls { display: flex; gap: 6px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+.btn { font-size: 12px; padding: 5px 13px; border-radius: 6px; border: 0.5px solid #ccc; background: #fff; color: #333; cursor: pointer; transition: all .15s; }
+.btn:hover:not(:disabled) { background: #f5f4f0; }
+.btn:disabled { opacity: .35; cursor: default; }
+.btn.primary { background: #E6F1FB; color: #0C447C; border-color: #85B7EB; }
+.btn.primary:hover:not(:disabled) { background: #d4e9f7; }
+.step-ctr { font-size: 11px; color: #aaa; margin-left: 4px; }
+
+/* ── Legend ── */
+.legend { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.leg { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #666; }
+.leg-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid; flex-shrink: 0; }
+
+/* ── MST edge list ── */
+.mst-edge { font-size: 11px; color: #085041; padding: 1px 0; }
+.mst-total { font-size: 11px; color: #444; margin-top: 5px; padding-top: 5px; border-top: 0.5px solid #e0ddd4; }
+
+/* ── Dist table ── */
+.dist-row-item { display: flex; justify-content: space-between; font-size: 11px; padding: 1px 0; }
+.dist-row-item.settled { color: #085041; font-weight: 500; }
+.dist-row-item.updated { color: #633806; }
+.dist-row-item.unseen  { color: #bbb; }
+
+/* ── Pulse animations ── */
+@keyframes edge-pulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
+@keyframes token-pulse { 0%,100%{transform:scale(1);outline:2px solid transparent;outline-offset:2px} 50%{transform:scale(1.2);outline:2px solid #EF9F27;outline-offset:2px} }
+@keyframes cycle-flash { 0%,100%{opacity:1} 25%{opacity:0.15} 50%{opacity:1} 75%{opacity:0.15} }
+@keyframes cycle-token-flash { 0%,100%{background:#FCEBEB;border-color:#E24B4A;color:#791F1F;transform:scale(1)} 50%{background:#E24B4A;border-color:#A32D2D;color:#fff;transform:scale(1.15)} }
+@keyframes candidate-pulse { 0%{r:23;opacity:0.9} 50%{r:30;opacity:0.3} 100%{r:23;opacity:0.9} }
+@keyframes candidate-winner { 0%{r:25;opacity:1} 50%{r:32;opacity:0.5} 100%{r:27;opacity:1} }
+@keyframes mst-node-pulse { 0%,100%{opacity:1} 40%{opacity:0.25} }
+.edge-pulse { animation: edge-pulse 0.7s ease-in-out 3; }
+.token-next { animation: token-pulse 0.7s ease-in-out 3; }
+.cycle-flash { animation: cycle-flash 0.5s ease-in-out 3; }
+.cycle-token-flash { animation: cycle-token-flash 0.5s ease-in-out 3; }
+
+/* ── Header ── */
+.app-header { width:100%; max-width:780px; display:flex; align-items:center; justify-content:space-between; padding:0 0 12px 0; }
+.header-left { display:flex; align-items:center; gap:10px; }
+.header-icon { width:32px; height:32px; flex-shrink:0; }
+.header-title { font-size:15px; font-weight:500; color:#2C2C2A; }
+.hr { display:flex; align-items:center; gap:6px; font-size:11px; color:#888780; }
+.hla { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:4px; text-decoration:none; transition:opacity .15s; }
+.hla:hover { opacity:0.75; }
+.brd { border:0.5px solid #dddbd2; color:#444441; }
+.fil { background:#0A66C2; color:#fff; border-radius:4px; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-left">
+    <svg class="header-icon" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="16" cy="6"  r="4" fill="#E6F1FB" stroke="#185FA5" stroke-width="1.5"/>
+      <circle cx="6"  cy="22" r="4" fill="#E6F1FB" stroke="#185FA5" stroke-width="1.5"/>
+      <circle cx="26" cy="22" r="4" fill="#E6F1FB" stroke="#185FA5" stroke-width="1.5"/>
+      <circle cx="16" cy="17" r="3.5" fill="#B5D4F4" stroke="#185FA5" stroke-width="1.5"/>
+      <line x1="16" y1="10" x2="16" y2="13.5" stroke="#185FA5" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="9"  y1="20" x2="13" y2="18"   stroke="#185FA5" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="23" y1="20" x2="19" y2="18"   stroke="#185FA5" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="8"  y1="22" x2="22" y2="22"   stroke="#185FA5" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <span class="header-title">Graph Algorithm Visualizer</span>
+  </div>
+  <div class="hr">
+    Developed by Professor Chris Rosa &mdash; CS112 Data Structures, Sacred Heart University
+    <a href="/cdn-cgi/l/email-protection#2f5d405c4e4c181a1f19196f5c4e4c5d4a4b474a4e5d5b014a4b5a" class="hla brd" title="Email">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="14" height="10" rx="2"/><path d="M1 5l7 5 7-5"/></svg>
+    </a>
+    <a href="https://linkedin.com/in/chris-rosa-3192326" target="_blank" class="hla fil">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="white"><path d="M2.5 1A1.5 1.5 0 1 0 2.5 4 1.5 1.5 0 0 0 2.5 1zM1 5.5h3V15H1zM6 5.5h2.9v1.3h.04C9.36 5.9 10.5 5.3 12 5.3c3.1 0 3.7 2 3.7 4.7V15h-3v-4.4c0-1.1 0-2.4-1.5-2.4s-1.7 1.2-1.7 2.4V15H6z"/></svg>
+    </a>
+  </div>
+</header>
+
+<div class="card">
+
+  <!-- ── Tabs ── -->
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-tab="search">Search</div>
+    <div class="tab" data-tab="topo">Topo sort</div>
+    <div class="tab" data-tab="span">Spanning tree</div>
+    <div class="tab" data-tab="dijk">Dijkstra's</div>
+  </div>
+
+  <!-- ── Subtabs + dir-toggle + neighbor order on same row ── -->
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:10px;flex-wrap:wrap">
+    <div class="subtabs" id="subtabs" style="display:flex;margin-bottom:0">
+      <div class="subtab active" data-sub="dfs">DFS</div>
+      <div class="subtab" data-sub="bfs">BFS</div>
+    </div>
+    <div class="dir-toggle" id="dir-toggle" style="display:flex;margin-bottom:0">
+      <span>Graph type:</span>
+      <div class="toggle-wrap">
+        <div class="toggle-opt active" data-dir="undirected">Undirected</div>
+        <div class="toggle-opt" data-dir="directed">Directed</div>
+      </div>
+    </div>
+    <div class="dir-toggle" id="order-toggle" style="display:flex;margin-bottom:0">
+      <span>Neighbor order:</span>
+      <div class="toggle-wrap">
+        <div class="toggle-opt active" data-order="rtl">Right→Left</div>
+        <div class="toggle-opt" data-order="ltr">Left→Right</div>
+      </div>
+    </div>
+    <div class="dir-toggle" id="visit-toggle" style="display:none;margin-bottom:0">
+      <span>Visit on:</span>
+      <div class="toggle-wrap">
+        <div class="toggle-opt active" data-visit="dequeue">Dequeue</div>
+        <div class="toggle-opt" data-visit="enqueue">Enqueue</div>
+      </div>
+    </div>
+    <!-- Topo sort: new graph + sources slider + edges toggle -->
+    <div id="topo-controls" style="display:none;align-items:center;gap:10px;margin-bottom:0">
+      <button class="btn" onclick="newDAG()">New graph</button>
+      <span style="font-size:12px;color:#666">Sources:</span>
+      <input type="range" id="sources-slider" min="1" max="3" value="2" step="1"
+        style="width:70px" oninput="sourcesCount=+this.value;document.getElementById('sources-val').textContent=this.value;newDAG()"/>
+      <span id="sources-val" style="font-size:12px;font-weight:500;color:#2C2C2A;min-width:10px">2</span>
+      <div class="dir-toggle" style="margin-bottom:0">
+        <span style="font-size:12px;color:#666">Edges:</span>
+        <div class="toggle-wrap">
+          <div class="toggle-opt" data-density="few" onclick="setEdgeDensity('few')">Few</div>
+          <div class="toggle-opt active" data-density="many" onclick="setEdgeDensity('many')">Many</div>
+        </div>
+      </div>
+    </div>
+    <!-- Span: new graph (randomize weights) -->
+    <div id="span-controls" style="display:none;align-items:center;gap:10px;margin-bottom:0">
+      <button class="btn" onclick="newWeightedGraph()">New graph</button>
+    </div>
+    <!-- Dijk: new graph (randomize weights + directions) -->
+    <div id="dijk-controls" style="display:none;align-items:center;gap:10px;margin-bottom:0">
+      <button class="btn" onclick="newDijkstraGraph()">New graph</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="graph-wrap">
+      <svg id="svg" width="100%" viewBox="0 0 360 280"></svg>
+    </div>
+    <div class="sidebar" id="sidebar"></div>
+  </div>
+
+  <div class="status-bar" id="status"></div>
+
+  <div class="controls">
+    <button class="btn" id="btn-prev" onclick="stepBack()" disabled>Prev</button>
+    <button class="btn primary" id="btn-next" onclick="stepForward()" disabled>Next</button>
+    <button class="btn" onclick="doReset()">Reset</button>
+    <button class="btn" id="btn-skip-target" onclick="skipDijkTarget()" style="display:none">Skip target</button>
+    <span class="step-ctr" id="step-ctr"></span>
+  </div>
+
+  <div class="legend" id="legend"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// SECTION 1: GRAPH DATA
+// Each graph: nodes {id:[x,y]}, edges [[a,b]] or [[a,b,w]]
+// ═══════════════════════════════════════════════════
+const GRAPHS = {
+
+  // Undirected cyclic — DFS/BFS undirected
+  undirected: {
+    nodes: { A:[80,50], B:[240,50], C:[320,145], D:[240,240], E:[80,240], F:[28,145], G:[168,145] },
+    edges: [
+      ['A','B'], ['A','F'], ['B','C'], ['B','G'],
+      ['C','D'], ['D','E'], ['D','G'], ['E','F'],
+      ['E','G'], ['F','G']
+    ]
+  },
+
+  // Directed cyclic — DFS/BFS directed
+  directed: {
+    nodes: { A:[80,50], B:[240,50], C:[320,145], D:[240,240], E:[80,240], F:[28,145], G:[168,145] },
+    edges: [
+      ['A','B'], ['A','F'], ['B','C'], ['B','G'],
+      ['C','D'], ['D','E'], ['G','D'], ['E','F'],
+      ['G','E'], ['F','A']
+    ]
+  },
+
+  // DAG — topo sort
+  dag: {
+    nodes: { A:[55,45], B:[180,45], C:[305,45], D:[55,150], E:[180,150], F:[305,150], G:[180,245] },
+    edges: [
+      ['A','D'], ['A','E'], ['B','E'], ['B','F'],
+      ['C','F'], ['D','G'], ['E','G'], ['F','G']
+    ]
+  },
+
+  // Weighted undirected — Prim's, Kruskal's, Dijkstra's undirected
+  weighted_u: {
+    nodes: { A:[65,55], B:[195,35], C:[318,100], D:[295,220], E:[155,240], F:[42,175], G:[175,140] },
+    edges: [
+      ['A','B',4], ['A','F',2], ['B','G',5], ['B','C',8],
+      ['C','D',3], ['D','G',6], ['D','E',7], ['E','F',9],
+      ['E','G',4], ['F','G',3]
+    ]
+  },
+
+  // Weighted directed — Dijkstra's directed
+  weighted_d: {
+    nodes: { A:[65,55], B:[195,35], C:[318,100], D:[295,220], E:[155,240], F:[42,175], G:[175,140] },
+    edges: [
+      ['A','B',4], ['A','F',2], ['B','G',5], ['B','C',8],
+      ['C','D',3], ['D','E',7], ['G','D',6], ['E','F',9],
+      ['G','E',4], ['F','G',3]
+    ]
+  }
+};
+
+// ── Random DAG generator ──────────────────────────
+// Nodes are placed in tiers matching topological order.
+// Edges only go forward (top→bottom), minimising crossings.
+const DAG_NODES = ['A','B','C','D','E','F','G'];
+
+let dagSources = new Set();
+
+function generateDAG(numSources) {
+  const N = DAG_NODES.length; // 7
+
+  // 1. Shuffle nodes into a random topo order
+  const order = [...DAG_NODES].sort(() => Math.random() - 0.5);
+
+  // 2. Assign tiers: sources → tier 0, sinks → tier 2, rest → tier 1
+  //    Tier boundaries: first numSources = tier 0, last 1-2 = tier 2, rest = tier 1
+  const numSinks = Math.floor(Math.random() * 2) + 1; // 1 or 2 sinks
+  const tierOf = {};
+  order.forEach((n, i) => {
+    if (i < numSources)              tierOf[n] = 0;
+    else if (i >= N - numSinks)      tierOf[n] = 2;
+    else                             tierOf[n] = 1;
+  });
+
+  dagSources = new Set(order.slice(0, numSources));
+
+  // 3. Position nodes by tier — spread evenly across 360px wide safe area
+  const nodes = {};
+  const tierY   = { 0: 50,  1: 155, 2: 255 };
+  const tierNodes = { 0: [], 1: [], 2: [] };
+  DAG_NODES.forEach(n => tierNodes[tierOf[n]].push(n));
+
+  // Sort each tier by node name for consistent x ordering
+  [0,1,2].forEach(t => {
+    tierNodes[t].sort();
+    const count = tierNodes[t].length;
+    tierNodes[t].forEach((n, i) => {
+      const xStep = 300 / Math.max(count, 1);
+      const xStart = 30 + xStep * 0.5;
+      nodes[n] = [Math.round(xStart + i * xStep), tierY[t]];
+    });
+  });
+
+  // 4. Enumerate all valid forward edges — any (i→j) where i comes before j in topo order
+  //    This includes same-tier forward edges, maximising the available pool
+  const allValid = [];
+  for (let i = 0; i < N; i++) {
+    for (let j = i + 1; j < N; j++) {
+      const from = order[i], to = order[j];
+      if (dagSources.has(to)) continue; // sources never have incoming
+      allValid.push([from, to]);
+    }
+  }
+  // Shuffle valid edges
+  allValid.sort(() => Math.random() - 0.5);
+
+  // 5. Pick edges up to target count, guaranteeing coverage constraints
+  const edges = [];
+  const inDegE = {};
+  const outDegE = {};
+  DAG_NODES.forEach(n => { inDegE[n] = 0; outDegE[n] = 0; });
+
+  // Helper to add an edge only if not already present
+  function addEdge(a, b) {
+    if (!edges.find(e => e[0]===a && e[1]===b)) {
+      edges.push([a, b]);
+      inDegE[b]++; outDegE[a]++;
+      return true;
+    }
+    return false;
+  }
+
+  // First pass: ensure every non-source has ≥1 incoming, every non-sink has ≥1 outgoing
+  // Use allValid (already shuffled) so picks are random
+  const nonSources = DAG_NODES.filter(n => !dagSources.has(n));
+  const nonSinks   = DAG_NODES.filter(n => tierOf[n] < 2);
+
+  for (const n of nonSources) {
+    if (inDegE[n] === 0) {
+      const cands = allValid.filter(([a, b]) => b === n);
+      if (cands.length) addEdge(cands[0][0], cands[0][1]);
+    }
+  }
+  for (const n of nonSinks) {
+    if (outDegE[n] === 0) {
+      const cands = allValid.filter(([a, b]) => a === n);
+      if (cands.length) addEdge(cands[0][0], cands[0][1]);
+    }
+  }
+
+  // Coverage minimum — never go below this
+  const minEdges = edges.length;
+  // Map density label to a target, clamped to valid range
+  const densityTarget = edgeDensity === 'few' ? 6 : 11;
+  const target = Math.min(Math.max(densityTarget, minEdges), allValid.length);
+
+  // Second pass: fill up to target from remaining valid edges (already shuffled)
+  for (const [a, b] of allValid) {
+    if (edges.length >= target) break;
+    addEdge(a, b);
+  }
+
+  // If coverage produced more than edgesCount, trim back down to target by removing
+  // edges that are not the sole incoming or outgoing for either endpoint
+  while (edges.length > target) {
+    let removed = false;
+    for (let i = edges.length - 1; i >= 0; i--) {
+      const [a, b] = edges[i];
+      if (inDegE[b] > 1 && outDegE[a] > 1) {
+        inDegE[b]--; outDegE[a]--;
+        edges.splice(i, 1);
+        removed = true;
+        break;
+      }
+    }
+    if (!removed) break; // can't trim further without breaking coverage
+  }
+
+  GRAPHS.dag = { nodes, edges };
+}
+// ═══════════════════════════════════════════════════
+const TAB_CFG = {
+  search:  { needsStart: true,  needsTarget: true,  hasDir: true,  hasSub: true  },
+  topo:    { needsStart: false, needsTarget: false, hasDir: false, hasSub: true  },
+  span:    { needsStart: false, needsTarget: false, hasDir: false, hasSub: true  },
+  dijk:    { needsStart: true,  needsTarget: false, hasDir: true,  hasSub: false }
+};
+
+// Which graph preset to use given tab + subtab + direction
+function graphKey(tab, sub, dir) {
+  if (tab === 'topo')   return 'dag';
+  if (tab === 'span')   return 'weighted_u';
+  if (tab === 'dijk')   return dir === 'directed' ? 'weighted_d' : 'weighted_u';
+  // search (dfs/bfs)
+  return dir === 'directed' ? 'directed' : 'undirected';
+}
+
+// ═══════════════════════════════════════════════════
+// SECTION 3: STATE
+// ═══════════════════════════════════════════════════
+let activeTab  = 'search';
+let activeSub  = 'dfs';
+let activeDir  = 'undirected';
+let activeOrder = 'rtl';
+let activeVisit = 'dequeue';
+let sourcesCount = 2;
+let edgeDensity  = 'many'; // 'few' = 6-7 edges, 'many' = 10-12 edges
+let selPhase   = 'start';   // 'start' | 'target' | 'ready' | 'stepping' | 'done'
+let startNode  = null;
+let targetNode = null;
+let steps      = [];
+let stepIndex  = 0;
+
+// ═══════════════════════════════════════════════════
+// SECTION 4: ALGORITHM ENGINES
+// Each returns an array of step objects.
+// Step shape: { nodeStates:{}, edgeStates:{}, msg, msgClass, sidebar }
+// nodeStates: {id: 'unvisited'|'frontier'|'processing'|'visited'|'mst'|'topo'|'found'|'start'|'target'}
+// edgeStates: {'A-B': 'tree'|'active'|'rejected'|'mst'}
+// ═══════════════════════════════════════════════════
+
+function buildAdj(edges, directed) {
+  const adj = {};
+  edges.forEach(e => { adj[e[0]] = adj[e[0]]||[]; adj[e[1]] = adj[e[1]]||[]; });
+  edges.forEach(([a,b]) => {
+    adj[a].push(b);
+    if (!directed) adj[b].push(a);
+  });
+  return adj;
+}
+
+function ekey(a,b) { return `${a}-${b}`; }
+function ekey2(a,b) { return `${a}-${b}`; } // for undirected lookup both ways
+
+// ── DFS ──────────────────────────────────────────
+// Iterative DFS with explicit stack so sidebar is accurate at every step.
+// Step types:
+//   'pop'     — node just popped off stack (flash before visiting)
+//   'visit'   — node marked visited
+//   'edge-explore' — edge highlighted amber (phase 1)
+//   'edge-tree'    — edge confirmed green (phase 2)
+//   'edge-back'    — back/cross edge rejected
+//   'push'    — neighbor pushed onto stack
+//   'found'   — target reached
+function runDFS(graph, startId, targetId, directed) {
+  const steps = [];
+  const visited = new Set();
+  const onStack = new Set([startId]);
+  const prev = {};  // prev[node] = node we came from
+  const adj = buildAdj(graph.edges, directed);
+  const ns = {};
+  Object.keys(graph.nodes).forEach(n => ns[n] = 'unvisited');
+  ns[startId] = 'start';
+  if (targetId) ns[targetId] = 'target';
+  const es = {};
+
+  const stack = [{ node: startId, parent: null }];
+  ns[startId] = 'frontier';
+
+  function snap(msg, msgClass='', extraPop=null, path=null, pendingEdges=null, pulseHead=false) {
+    steps.push({
+      nodeStates: {...ns},
+      edgeStates: {...es},
+      msg, msgClass,
+      frontier: stack.map(e => e.node),
+      visited: [...visited],
+      popNode: extraPop,
+      path, pendingEdges, pulseHead
+    });
+  }
+
+  snap(`Start: ${startId} pushed onto stack. Target: ${targetId}.`, 'ready');
+
+  while (stack.length) {
+    const { node: v, parent } = stack[stack.length - 1];
+
+    if (visited.has(v)) {
+      stack.pop();
+      onStack.delete(v);
+      continue;
+    }
+
+    stack.pop();
+    onStack.delete(v);
+    ns[v] = 'current';
+    snap(`Pop ${v} from stack`, '', v);
+
+    // Record where we came from (first time only)
+    if (parent !== null && prev[v] === undefined) {
+      prev[v] = parent;
+    }
+
+    // Phase: traverse parent edge amber → green
+    if (parent !== null) {
+      const k = ekey(parent, v);
+      const kr = ekey(v, parent);
+      es[k] = 'active'; es[kr] = 'active';
+      snap(`Traverse edge ${parent}→${v} (exploring)`, '');
+      es[k] = 'tree'; es[kr] = 'tree';
+    }
+
+    visited.add(v);
+
+    if (v === targetId) {
+      ns[v] = 'found';
+      // Reconstruct path
+      const path = [];
+      let cur = v;
+      while (cur !== undefined) { path.unshift(cur); cur = prev[cur]; }
+      snap(`Found target ${v}! Path: ${path.join(' → ')}`, 'found', null, path);
+      break;
+    }
+
+    const gkey = graphKey(activeTab, activeSub, activeDir);
+    const gNodes = GRAPHS[gkey].nodes;
+    const rawNeighbors = [...(adj[v] || [])];
+    // Sort by x-coordinate for true spatial left→right ordering
+    rawNeighbors.sort((a, b) => (gNodes[a]?.[0]||0) - (gNodes[b]?.[0]||0));
+    // RTL: push right-first so left ends up on top; LTR: push left-first so right ends up on top
+    const neighbors = activeOrder === 'rtl'
+      ? [...rawNeighbors].reverse()  // push rightmost first → leftmost on top
+      : [...rawNeighbors];           // push leftmost first → rightmost on top
+
+    ns[v] = 'visited';
+    const dfsPending = neighbors
+      .filter(w => !visited.has(w) && !onStack.has(w))
+      .map(w => ekey(v, w));
+    snap(`Visit ${v} — push neighbors not visited or on stack`, '', null, null, dfsPending, false);
+    const pushable = neighbors.filter(w => !visited.has(w) && !onStack.has(w));
+    for (let i = 0; i < neighbors.length; i++) {
+      const w = neighbors[i];
+      if (!visited.has(w) && !onStack.has(w)) {
+        stack.push({ node: w, parent: v });
+        onStack.add(w);
+        ns[w] = w === targetId ? 'target' : 'frontier';
+        const isLast = i === neighbors.length - 1 || neighbors.slice(i+1).every(x => visited.has(x) || onStack.has(x));
+        snap(`Push ${w} onto stack (neighbor of ${v})`, '', null, null, null, isLast && stack.length > 0);
+      } else if (visited.has(w)) {
+        const k = ekey(v, w); const kr = ekey(w, v);
+        if (!es[k] && !es[kr]) {
+          es[k] = 'active';
+          snap(`Edge ${v}→${w}: ${w} already visited — back edge (phase 1)`, '');
+          es[k] = 'rejected';
+          snap(`Edge ${v}→${w}: confirmed back edge — rejected`, '');
+        }
+      }
+    }
+  }
+
+  if (!steps.some(s => s.msgClass === 'found')) {
+    snap(`Traversal complete. Target ${targetId} not reachable.`, 'done');
+  }
+  return steps;
+}
+
+// ── BFS ──────────────────────────────────────────
+// Supports two visit modes controlled by activeVisit:
+//   'dequeue' — mark visited on dequeue, duplicates allowed in queue
+//   'enqueue' — mark visited on enqueue, no duplicates in queue
+function runBFS(graph, startId, targetId, directed) {
+  const steps = [];
+  const visited = new Set();
+  const prev = {};
+  const adj = buildAdj(graph.edges, directed);
+  const ns = {};
+  Object.keys(graph.nodes).forEach(n => ns[n] = 'unvisited');
+  ns[startId] = 'start';
+  if (targetId) ns[targetId] = 'target';
+  const es = {};
+  const queue = [startId];
+  const onEnqueue = activeVisit === 'enqueue';
+
+  // Mark start visited immediately in enqueue mode
+  if (onEnqueue) {
+    visited.add(startId);
+    ns[startId] = 'start'; // keep 'start' color but checkmark will show via visited set
+  }
+
+  function snap(msg, msgClass='', path=null, pendingEdges=null, pulseHead=false) {
+    steps.push({ nodeStates:{...ns}, edgeStates:{...es}, msg, msgClass,
+      frontier: [...queue], visited: [...visited], path, pendingEdges, pulseHead });
+  }
+
+  const modeLabel = onEnqueue ? 'Visit on enqueue' : 'Visit on dequeue';
+  snap(`Start: ${startId} enqueued. Target: ${targetId}. [${modeLabel}]`, 'ready');
+
+  while (queue.length) {
+    const v = queue.shift();
+
+    if (onEnqueue) {
+      // ── ENQUEUE MODE ──
+      ns[v] = 'current';
+      if (v === targetId) {
+        ns[v] = 'found';
+        const path = [];
+        let cur = v;
+        while (cur !== undefined) { path.unshift(cur); cur = prev[cur]; }
+        snap(`Dequeue ${v} — found target! Path: ${path.join(' → ')}`, 'found', path);
+        break;
+      }
+      snap(`Dequeue ${v} — already marked visited on enqueue`, '', null,
+        (adj[v]||[]).filter(w => !visited.has(w)).map(w => ekey(v,w)), false);
+      ns[v] = 'visited';
+
+      const enqNeighbors = adj[v]||[];
+      for (let i = 0; i < enqNeighbors.length; i++) {
+        const w = enqNeighbors[i];
+        const k = ekey(v,w);
+        if (visited.has(w)) {
+          es[k] = 'active';
+          snap(`Neighbor ${w} — already visited, skip`, '');
+          es[k] = 'rejected';
+        } else {
+          visited.add(w);
+          queue.push(w);
+          es[k] = 'active';
+          if (prev[w] === undefined) prev[w] = v;
+          if (w === targetId) ns[w] = 'target';
+          else ns[w] = 'visited';
+          const isLast = enqNeighbors.slice(i+1).every(x => visited.has(x));
+          snap(`Enqueue ${w} — mark visited + enqueue via ${v}→${w}`, '', null, null, isLast && queue.length > 0);
+          es[k] = 'tree';
+        }
+      }
+    } else {
+      // ── DEQUEUE MODE ──
+      // Check visited on dequeue — duplicates may exist in queue
+      if (visited.has(v)) {
+        ns[v] = 'current';
+        snap(`Dequeue ${v} — already visited, skip`, '');
+        ns[v] = 'visited';
+        continue;
+      }
+      visited.add(v);
+      ns[v] = 'current';
+
+      if (v === targetId) {
+        ns[v] = 'found';
+        const path = [];
+        let cur = v;
+        while (cur !== undefined) { path.unshift(cur); cur = prev[cur]; }
+        snap(`Dequeue ${v} — found target! Path: ${path.join(' → ')}`, 'found', path);
+        break;
+      }
+
+      snap(`Dequeue ${v} — mark visited`, '', null,
+        (adj[v]||[]).filter(w => !visited.has(w)).map(w => ekey(v,w)), false);
+      ns[v] = 'visited';
+
+      const bfsNeighbors = adj[v]||[];
+      for (let i = 0; i < bfsNeighbors.length; i++) {
+        const w = bfsNeighbors[i];
+        queue.push(w);
+        const k = ekey(v,w);
+        es[k] = 'active';
+        if (!visited.has(w) && prev[w] === undefined) {
+          prev[w] = v;
+          if (w === targetId) ns[w] = 'target';
+          else ns[w] = 'frontier';
+        }
+        const isLast = i === bfsNeighbors.length - 1;
+        snap(`Enqueue ${w} — discovered via ${v}→${w}`, '', null, null, isLast && queue.length > 0);
+      }
+    }
+  }
+
+  if (!steps.some(s=>s.msgClass==='found'))
+    steps.push({...steps[steps.length-1], msg:`Traversal complete. Target ${targetId} not reachable.`, msgClass:'done'});
+  return steps;
+}
+
+// ── TOPO SORT — DFS post-order ────────────────────
+function runTopo(graph) {
+  const steps = [];
+  const visited = new Set();
+  const result = [];
+  const callStack = [];   // tracks current recursion stack
+  const adj = buildAdj(graph.edges, true);
+  const ns = {};
+  Object.keys(graph.nodes).forEach(n => ns[n] = dagSources.has(n) ? 'source' : 'unvisited');
+  const es = {};
+
+  function snap(msg, msgClass='') {
+    steps.push({ nodeStates:{...ns}, edgeStates:{...es}, msg, msgClass,
+      topoResult:[...result], callStack:[...callStack] });
+  }
+
+  snap('Topo sort — DFS post-order. Press Next to begin.', 'ready');
+
+  function dfs(v) {
+    visited.add(v);
+    callStack.push(v);
+    ns[v] = 'processing';
+    snap(`Push ${v} onto recursion stack`, '');
+    for (const w of (adj[v]||[])) {
+      const k = ekey(v,w);
+      if (!visited.has(w)) {
+        es[k] = 'active';
+        snap(`Follow edge ${v}→${w}`, '');
+        dfs(w);
+        es[k] = 'tree';
+      } else {
+        es[k] = es[k] || 'rejected';
+      }
+    }
+    callStack.pop();
+    result.unshift(v);
+    ns[v] = 'removed';
+    snap(`${v} finished — pop stack, prepend to output`, '');
+  }
+
+  // Start from in-degree 0 nodes first, then mop up any remaining unvisited
+  const startOrder = [
+    ...Object.keys(graph.nodes).filter(n =>  dagSources.has(n)),
+    ...Object.keys(graph.nodes).filter(n => !dagSources.has(n))
+  ];
+  startOrder.forEach(n => { if (!visited.has(n)) dfs(n); });
+  snap(`Topo sort complete: ${result.join(' → ')}`, 'done');
+  return steps;
+}
+
+// ── KAHN'S ALGORITHM ────────────────────────────
+function runKahn(graph) {
+  const steps = [];
+  const nodes = Object.keys(graph.nodes);
+  const adj = buildAdj(graph.edges, true);
+  const ns = {};
+  nodes.forEach(n => ns[n] = dagSources.has(n) ? 'source' : 'unvisited');
+  const es = {};
+  const result = [];
+
+  // Compute initial in-degrees
+  const inDeg = {};
+  nodes.forEach(n => inDeg[n] = 0);
+  graph.edges.forEach(([a, b]) => { inDeg[b]++; });
+
+  function snap(msg, msgClass='') {
+    steps.push({ nodeStates:{...ns}, edgeStates:{...es}, msg, msgClass,
+      topoResult:[...result], inDegrees:{...inDeg} });
+  }
+
+  // Initial zero in-degree ready set
+  const queue = nodes.filter(n => inDeg[n] === 0).sort();
+  queue.forEach(n => ns[n] = 'frontier');
+
+  snap(`Kahn\'s: compute in-degrees. Ready set: [${queue.join(', ')}]`, 'ready');
+
+  while (queue.length) {
+    const v = queue.shift();
+    ns[v] = 'current';
+    snap(`Process ${v} (in-degree = 0) — add to output`, '');
+
+    result.push(v);
+    ns[v] = 'removed';
+    snap(`${v} removed — append to topo order`, '');
+
+    // Decrement neighbors
+    const neighbors = [...(adj[v]||[])].sort();
+    for (const w of neighbors) {
+      const k = ekey(v, w);
+      es[k] = 'active';
+      inDeg[w]--;
+      snap(`Decrement in-degree of ${w}: now ${inDeg[w]}`, '');
+      es[k] = 'tree';
+      if (inDeg[w] === 0) {
+        queue.push(w);
+        queue.sort();
+        ns[w] = 'frontier';
+        snap(`${w} in-degree = 0 — add to ready set`, '');
+      }
+    }
+  }
+
+  if (result.length === nodes.length) {
+    snap(`Kahn's complete: ${result.join(' → ')}`, 'done');
+  } else {
+    snap(`Cycle detected — topological sort not possible`, 'done');
+  }
+  return steps;
+}
+
+// ── PRIM'S ───────────────────────────────────────
+function runPrim(graph, startId) {
+  const steps = [];
+  const inMST = new Set([startId]);
+  const mstEdges = [];
+  const ns = {};
+  Object.keys(graph.nodes).forEach(n => ns[n] = 'unvisited');
+  ns[startId] = 'mst';
+  const es = {};
+  let total = 0;
+
+  function getCandidates() {
+    const cands = [];
+    graph.edges.forEach(([a,b,w]) => {
+      const aIn = inMST.has(a), bIn = inMST.has(b);
+      if ((aIn && !bIn) || (!aIn && bIn)) cands.push([a,b,w]);
+    });
+    return cands.sort((x,y) => x[2]-y[2]);
+  }
+
+  function snap(msg, msgClass='', pulseNodes=null) {
+    steps.push({ nodeStates:{...ns}, edgeStates:{...es}, msg, msgClass,
+      mstEdges:[...mstEdges], mstTotal:total,
+      candidates: getCandidates(), pulseNodes });
+  }
+
+  // Show all initial crossing edges from start node in one step
+  graph.edges.forEach(([a,b,w]) => {
+    if (a===startId || b===startId) {
+      es[ekey(a,b)]='frontier'; es[ekey(b,a)]='frontier';
+    }
+  });
+  snap(`Start node: ${startId}. Scanning neighbors — ${getCandidates().length} crossing edges found.`, 'ready');
+
+  const nodeCount = Object.keys(graph.nodes).length;
+  while (inMST.size < nodeCount) {
+    const cands = getCandidates();
+    if (!cands.length) break;
+
+    const [a,b,w] = cands[0];
+    const newNode = inMST.has(a) ? b : a;
+    const k1=ekey(a,b), k2=ekey(b,a);
+
+    // Highlight the minimum
+    es[k1]='active'; es[k2]='active';
+    snap(`Minimum crossing edge: ${a}–${b} (w=${w}) — add to MST`, '');
+
+    // Add new node to MST
+    inMST.add(newNode);
+    es[k1]='mst'; es[k2]='mst';
+    ns[newNode]='mst';
+    total+=w;
+    mstEdges.push([a,b,w]);
+
+    // Clear edges no longer crossing AND mark them excluded (both endpoints now in MST)
+    const newlyExcluded = [];
+    const excludedEndpoints = new Set();
+    graph.edges.forEach(([ea,eb,ew]) => {
+      if (inMST.has(ea) && inMST.has(eb)) {
+        const ek1=ekey(ea,eb), ek2=ekey(eb,ea);
+        if (es[ek1]==='frontier') {
+          es[ek1]='rejected'; es[ek2]='rejected';
+          newlyExcluded.push(`${ea}–${eb}`);
+          excludedEndpoints.add(ea); excludedEndpoints.add(eb);
+        }
+      }
+    });
+
+    // Flash excluded edges red for one step, then settle to 'excluded' (faded dashed)
+    if (newlyExcluded.length) {
+      snap(`Edges [${newlyExcluded.join(', ')}] — both endpoints now in MST, permanently excluded`, '', [...excludedEndpoints]);
+      // Downgrade from rejected flash → excluded (permanent dim)
+      graph.edges.forEach(([ea,eb]) => {
+        const ek1=ekey(ea,eb), ek2=ekey(eb,ea);
+        if (es[ek1]==='rejected' && inMST.has(ea) && inMST.has(eb) && es[ek1]!=='mst') {
+          es[ek1]='excluded'; es[ek2]='excluded';
+        }
+      });
+    }
+
+    // Reveal all new crossing edges from newNode BEFORE snapping
+    let newCrossing = [];
+    graph.edges.forEach(([ea,eb,ew]) => {
+      const eaIn = inMST.has(ea), ebIn = inMST.has(eb);
+      if ((eaIn && !ebIn) || (!eaIn && ebIn)) {
+        const ek1=ekey(ea,eb), ek2=ekey(eb,ea);
+        if (es[ek1]!=='frontier' && es[ek1]!=='mst' && es[ek2]!=='mst') {
+          es[ek1]='frontier'; es[ek2]='frontier';
+          newCrossing.push(`${ea}–${eb}(${ew})`);
+        }
+      }
+    });
+
+    snap(`Added ${a}–${b} (w=${w}) to MST. Total: ${total}${newCrossing.length ? ` — new crossing edges: [${newCrossing.join(', ')}]` : ''}`, '');
+  }
+  snap(`Prim's complete — ${nodeCount-1} edges for ${nodeCount} nodes (n−1 = ${nodeCount}−1). MST total weight: ${total}`, 'done');
+  return steps;
+}
+
+// ── KRUSKAL'S ────────────────────────────────────
+function runKruskal(graph) {
+  const ns = {};
+  Object.keys(graph.nodes).forEach(n => ns[n] = 'unvisited');
+  const es = {};
+  const mstEdges = [];
+  let total = 0;
+
+  // Union-Find
+  const parent = {};
+  const rank = {};
+  Object.keys(graph.nodes).forEach(n => { parent[n]=n; rank[n]=0; });
+  function find(x) { if (parent[x]!==x) parent[x]=find(parent[x]); return parent[x]; }
+  function union(a,b) {
+    const ra=find(a), rb=find(b);
+    if (ra===rb) return false;
+    if (rank[ra]<rank[rb]) parent[ra]=rb;
+    else if (rank[ra]>rank[rb]) parent[rb]=ra;
+    else { parent[rb]=ra; rank[ra]++; }
+    return true;
+  }
+
+  const sorted = [...graph.edges].sort((a,b)=>a[2]-b[2]);
+  const nodes = Object.keys(graph.nodes);
+
+  function getComponents() {
+    const rootMap = {};
+    nodes.forEach(n => { const r=find(n); if (!rootMap[r]) rootMap[r]=[]; rootMap[r].push(n); });
+    return rootMap;
+  }
+
+  function snapComponents() {
+    const rootMap = getComponents();
+    const compInfo = {};
+    nodes.forEach(n => {
+      const r = find(n);
+      const members = [...rootMap[r]].sort();
+      const isConnected = members.length > 1;
+      compInfo[n] = {
+        root: r,
+        fill:   isConnected ? '#E1F5EE' : '#ffffff',
+        stroke: isConnected ? '#0F6E56' : '#B4B2A9',
+        text:   isConnected ? '#04342C' : '#444441',
+        members
+      };
+    });
+    return compInfo;
+  }
+
+  function snap(msg, msgClass='', cycleNodes=null) {
+    steps.push({ nodeStates:{...ns}, edgeStates:{...es}, msg, msgClass,
+      mstEdges:[...mstEdges], mstTotal:total, sortedEdges:sorted,
+      components: snapComponents(), cycleNodes });
+  }
+
+  snap(`Kruskal's: edges sorted by weight. Each node starts in its own component.`, 'ready');
+
+  for (const [a,b,w] of sorted) {
+    const k1=ekey(a,b), k2=ekey(b,a);
+    const ra=find(a), rb=find(b);
+    const wouldCycle = ra===rb;
+    es[k1]='active'; es[k2]='active';
+    snap(`Consider ${a}–${b} (w=${w}): ${wouldCycle ? `same component — would create cycle` : `different components — safe to add`}`, '');
+    if (!wouldCycle) {
+      union(a,b);
+      es[k1]='mst'; es[k2]='mst';
+      ns[a]='mst'; ns[b]='mst';
+      total+=w;
+      mstEdges.push([a,b,w]);
+      snap(`Accept ${a}–${b} (w=${w}) — components merged. Total: ${total}`, '');
+    } else {
+      es[k1]='rejected'; es[k2]='rejected';
+      const cycleMembers = snapComponents()[a].members;
+      snap(`Reject ${a}–${b} — ${a} and ${b} already in same component [${cycleMembers.join(', ')}]`, '', [a, b]);
+    }
+  }
+  const n = nodes.length;
+  snap(`Kruskal's complete — ${n-1} edges for ${n} nodes (n−1 = ${n}−1). MST total weight: ${total}`, 'done');
+  return steps;
+}
+
+// ── DIJKSTRA'S ───────────────────────────────────
+function runDijkstra(graph, startId, directed, targetId) {
+  const steps = [];
+  const nodeIds = Object.keys(graph.nodes);
+  const dist = {};
+  const prev = {};  // prev[node] = node we came from on shortest path
+  const settled = new Set();
+  const discovered = new Set([startId]);
+  const adj = {};
+  nodeIds.forEach(n => { dist[n]=Infinity; adj[n]=[]; });
+  dist[startId]=0;
+  graph.edges.forEach(([a,b,w]) => {
+    adj[a].push([b,w]);
+    if (!directed) adj[b].push([a,w]);
+  });
+
+  const ns = {};
+  nodeIds.forEach(n => ns[n]='unvisited');
+  ns[startId]='start';
+  if (targetId) ns[targetId]='target';
+  const es = {};
+
+  function pickNext() {
+    let u=null;
+    discovered.forEach(n => { if (!settled.has(n) && (u===null||dist[n]<dist[u])) u=n; });
+    return u;
+  }
+
+  function buildPath(toNode) {
+    const path = [];
+    let cur = toNode;
+    while (cur !== undefined) { path.unshift(cur); cur = prev[cur]; }
+    return path.length > 1 ? path : null;
+  }
+
+  function snap(msg, msgClass='', nextPick=null, candidateNodes=null, path=null) {
+    steps.push({ nodeStates:{...ns}, edgeStates:{...es}, msg, msgClass,
+      dist:{...dist}, settled:[...settled], discovered:[...discovered],
+      nextNode: nextPick, candidateNodes, path });
+  }
+
+  const targetStr = targetId ? ` Target: ${targetId}.` : ' No target — finding all shortest paths.';
+  snap(`Start: ${startId} — d[${startId}]=0, all others = ∞.${targetStr} Press Next to begin.`, 'ready', startId);
+
+  for (let i=0; i<nodeIds.length; i++) {
+    let u=null;
+    discovered.forEach(n => { if (!settled.has(n) && (u===null||dist[n]<dist[u])) u=n; });
+    if (!u) break;
+
+    const pqList = [...discovered].filter(n => !settled.has(n))
+      .sort((a,b) => dist[a]-dist[b]);
+    const rivalStr = pqList.length > 1
+      ? ` — queue: [${pqList.map(n=>`${n}=${dist[n]}`).join(', ')}]`
+      : '';
+    snap(`Select ${u}: d[${u}]=${dist[u]} is smallest in queue${rivalStr}`, '', u);
+
+    settled.add(u);
+    ns[u] = u===startId ? 'start' : 'visited';
+
+    // ── Early exit: target just settled — its distance is now optimal ──
+    if (targetId && u === targetId) {
+      ns[u] = 'found';
+      const path = buildPath(u);
+      const pathStr = path ? path.join(' → ') : `${startId} → ${u}`;
+      snap(`Settle ${u} — d[${u}]=${dist[u]} is now permanent. Target reached! Shortest path: ${pathStr} (cost=${dist[u]}).`, 'found', null, null, path);
+      break;
+    }
+
+    const toRelax = adj[u].filter(([v]) => !settled.has(v));
+    toRelax.forEach(([v]) => { es[ekey(u,v)] = 'pending'; });
+    snap(`Settle ${u} — d[${u}]=${dist[u]} is now permanent. Will relax ${toRelax.length} edge${toRelax.length!==1?'s':''}.`, '', pickNext());
+
+    for (const [v,w] of adj[u]) {
+      if (!settled.has(v)) {
+        const k = ekey(u,v);
+        es[k]='active';
+        const candidate = dist[u]+w;
+        const current = dist[v]===Infinity ? '∞' : dist[v];
+        snap(`Relax ${u}→${v} (w=${w}): d[${u}]+${w} = ${candidate} vs current d[${v}]=${current}`, '', pickNext());
+        if (candidate < dist[v]) {
+          dist[v]=candidate;
+          prev[v]=u;  // record best predecessor
+          discovered.add(v);
+          es[k]='tree';
+          snap(`Improvement! d[${v}] updated: ${current} → ${candidate} — added/updated in queue`, '', pickNext());
+        } else {
+          es[k]='rejected';
+          snap(`No improvement — d[${v}]=${current} ≤ ${candidate}, keep ${current}`, '', pickNext());
+        }
+      }
+    }
+
+    const next = pickNext();
+    const candidates = [...discovered].filter(n => !settled.has(n)).sort((a,b) => dist[a]-dist[b]);
+    if (candidates.length > 0) {
+      const candStr = candidates.map(n => `${n}=${dist[n]}`).join(', ');
+      snap(
+        `All edges from ${u} relaxed. Candidates: [${candStr}] — lowest is ${next} (d=${dist[next]}), press Next to dequeue.`,
+        '', next, candidates
+      );
+    }
+  }
+
+  if (!steps.some(s => s.msgClass==='found')) {
+    if (targetId) {
+      snap(`Dijkstra\'s complete — target ${targetId} not reachable from ${startId}.`, 'done', null);
+    } else {
+      snap('Dijkstra\'s complete — all reachable nodes settled.', 'done', null);
+    }
+  }
+  return steps;
+}
+
+// ═══════════════════════════════════════════════════
+// SECTION 5: SELECTION PHASE LOGIC
+// ═══════════════════════════════════════════════════
+function getSelPhaseLabel() {
+  const cfg = TAB_CFG[activeTab];
+  const sub = activeTab==='span' ? activeSub : null;
+  const needsStart = cfg.needsStart || (activeTab==='span' && sub==='prim');
+  const needsTarget = cfg.needsTarget;
+
+  if (!needsStart && !needsTarget) return null; // auto-ready
+  if (!startNode) return 'start';
+  // Dijkstra: after start picked, enter optional target phase
+  if (activeTab==='dijk' && !targetNode) return 'dijk-target';
+  if (needsTarget && !targetNode) return 'target';
+  return 'ready';
+}
+
+function updateSelPhase() {
+  const phase = getSelPhaseLabel();
+  selPhase = phase === null ? 'ready' : phase;
+  // Show/hide Skip target button
+  const skipBtn = document.getElementById('btn-skip-target');
+  if (skipBtn) skipBtn.style.display = selPhase==='dijk-target' ? '' : 'none';
+  updateStatus();
+  updateNextBtn();
+}
+
+function updateStatus() {
+  const el = document.getElementById('status');
+  if (selPhase==='start') {
+    el.textContent='Click a node to set the start node.';
+    el.className='status-bar selecting';
+  } else if (selPhase==='dijk-target') {
+    el.textContent=`Start: ${startNode}. Click a node to set a target, or click "Skip target" to find all shortest paths.`;
+    el.className='status-bar selecting';
+  } else if (selPhase==='target') {
+    el.textContent=`Start: ${startNode}. Now click a node to set the search target.`;
+    el.className='status-bar selecting';
+  } else if (selPhase==='ready') {
+    const cfg = TAB_CFG[activeTab];
+    const needsTarget = cfg.needsTarget;
+    let msg = '';
+    if (startNode && needsTarget && targetNode) msg=`Start: ${startNode} · Target: ${targetNode} · Press Next to begin.`;
+    else if (startNode && activeTab==='dijk' && targetNode) msg=`Start: ${startNode} · Target: ${targetNode} · Press Next to begin.`;
+    else if (startNode && activeTab==='dijk') msg=`Start: ${startNode} · No target — will find all shortest paths. Press Next to begin.`;
+    else if (startNode) msg=`Start: ${startNode} · Press Next to begin.`;
+    else msg='Press Next to begin.';
+    el.textContent=msg;
+    el.className='status-bar ready';
+  } else if (selPhase==='stepping') {
+    const s = steps[stepIndex-1];
+    if (s) { el.textContent=s.msg; el.className=`status-bar ${s.msgClass||''}`; }
+  } else if (selPhase==='done') {
+    const s = steps[stepIndex-1];
+    if (s) { el.textContent=s.msg; el.className=`status-bar done`; }
+  }
+}
+
+function updateNextBtn() {
+  const next = document.getElementById('btn-next');
+  const prev = document.getElementById('btn-prev');
+  if (selPhase==='start'||selPhase==='target'||selPhase==='dijk-target') {
+    next.disabled=true;
+  } else if (selPhase==='ready') {
+    next.disabled=false;
+  } else {
+    next.disabled = stepIndex>=steps.length;
+  }
+  prev.disabled = stepIndex<=0 || selPhase==='start'||selPhase==='target'||selPhase==='dijk-target'||selPhase==='ready';
+}
+
+// ═══════════════════════════════════════════════════
+// SECTION 6: STEP EXECUTION
+// ═══════════════════════════════════════════════════
+function buildSteps() {
+  const gkey = graphKey(activeTab, activeSub, activeDir);
+  const g = GRAPHS[gkey];
+  const directed = activeTab==='search' ? activeDir==='directed'
+                 : activeTab==='dijk'   ? activeDir==='directed'
+                 : activeTab==='topo'   ? true : false;
+
+  if (activeTab==='search' && activeSub==='dfs') return runDFS(g, startNode, targetNode, directed);
+  if (activeTab==='search' && activeSub==='bfs') return runBFS(g, startNode, targetNode, directed);
+  if (activeTab==='topo' && activeSub==='dfs')   return runTopo(g);
+  if (activeTab==='topo' && activeSub==='kahn')  return runKahn(g);
+  if (activeTab==='span' && activeSub==='prim')    return runPrim(g, startNode);
+  if (activeTab==='span' && activeSub==='kruskal') return runKruskal(g);
+  if (activeTab==='dijk') return runDijkstra(g, startNode, directed, targetNode||null);
+  return [];
+}
+
+function stepForward() {
+  if (selPhase==='ready') {
+    steps = buildSteps();
+    stepIndex = 0;
+    selPhase = 'stepping';
+  }
+  if (stepIndex < steps.length) {
+    stepIndex++;
+    if (stepIndex===steps.length) selPhase='done';
+    renderAll(true);
+  }
+  updateNextBtn();
+  document.getElementById('step-ctr').textContent =
+    steps.length ? `Step ${stepIndex} / ${steps.length}` : '';
+}
+
+function stepBack() {
+  if (stepIndex > 1) {
+    stepIndex--;
+    selPhase='stepping';
+    renderAll(false);
+  } else if (stepIndex===1) {
+    stepIndex=0;
+    selPhase='ready';
+    renderGraph(false);
+    updateStatus();
+  }
+  updateNextBtn();
+  document.getElementById('step-ctr').textContent =
+    stepIndex ? `Step ${stepIndex} / ${steps.length}` : '';
+}
+
+// ═══════════════════════════════════════════════════
+// SECTION 7: RENDERING
+// ═══════════════════════════════════════════════════
+
+// Node visual style lookup
+function nodeStyle(state) {
+  const M = {
+    unvisited:  { fill:'#ffffff', stroke:'#B4B2A9', text:'#444441' },
+    source:     { fill:'#E1F5EE', stroke:'#0F6E56', text:'#04342C' },
+    start:      { fill:'#EEEDFE', stroke:'#534AB7', text:'#26215C' },
+    target:     { fill:'#FBEAF0', stroke:'#993556', text:'#4B1528' },
+    frontier:   { fill:'#FAEEDA', stroke:'#BA7517', text:'#633806' },
+    processing: { fill:'#FAEEDA', stroke:'#BA7517', text:'#633806' },
+    current:    { fill:'#FAC775', stroke:'#BA7517', text:'#633806' },
+    popping:    { fill:'#F5C4B3', stroke:'#D85A30', text:'#4A1B0C' },
+    visited:    { fill:'#EAF3DE', stroke:'#3B6D11', text:'#173404' },
+    mst:        { fill:'#E1F5EE', stroke:'#0F6E56', text:'#04342C' },
+    topo:       { fill:'#E6F1FB', stroke:'#185FA5', text:'#042C53' },
+    removed:    { fill:'#F1EFE8', stroke:'#888780', text:'#888780' },
+    found:      { fill:'#FCEBEB', stroke:'#A32D2D', text:'#501313' }
+  };
+  return M[state] || M.unvisited;
+}
+
+function edgeStrokeColor(state) {
+  if (state==='tree')     return '#3B6D11';
+  if (state==='mst')      return '#0F6E56';
+  if (state==='active')   return '#BA7517';
+  if (state==='pending')  return '#BA7517';
+  if (state==='frontier') return '#EF9F27';
+  if (state==='rejected') return '#E24B4A';
+  if (state==='excluded') return '#C8C6BE';
+  return '#D3D1C7';
+}
+function edgeStrokeWidth(state) {
+  if (state==='mst'||state==='tree') return 2.5;
+  if (state==='active')   return 2;
+  if (state==='pending')  return 1.5;
+  if (state==='frontier') return 2;
+  if (state==='excluded') return 1;
+  return 1;
+}
+
+// ── ANIMATION UTILITIES ──────────────────────────
+// animEdgeSweep: draws a travelling dot along an edge using stroke-dashoffset
+// animNodeFly:   ghost circle flies from node position toward the sidebar
+let animTimeout = null;
+
+function animEdgeSweep(svgEl, x1, y1, x2, y2, color) {
+  const dx=x2-x1, dy=y2-y1;
+  const len = Math.sqrt(dx*dx+dy*dy);
+  const id = 'anim-sweep-' + Date.now();
+
+  // Overlay path that sweeps from 0 to full length
+  const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('id', id);
+  path.setAttribute('d', `M${x1.toFixed(1)},${y1.toFixed(1)} L${x2.toFixed(1)},${y2.toFixed(1)}`);
+  path.setAttribute('fill','none');
+  path.setAttribute('stroke', color);
+  path.setAttribute('stroke-width','3');
+  path.setAttribute('stroke-linecap','round');
+  path.setAttribute('opacity','0.85');
+  // Start with full dasharray, offset = length (invisible), animate to 0 (fully visible)
+  const L = len.toFixed(1);
+  path.setAttribute('stroke-dasharray', L);
+  path.setAttribute('stroke-dashoffset', L);
+  svgEl.appendChild(path);
+
+  // Use WAAPI for smooth animation
+  path.animate(
+    [{ strokeDashoffset: len }, { strokeDashoffset: 0 }],
+    { duration: 520, easing: 'cubic-bezier(0.4,0,0.2,1)', fill: 'forwards' }
+  );
+  // Fade out after sweep completes
+  setTimeout(() => {
+    path.animate([{ opacity:0.85 },{ opacity:0 }], { duration:200, fill:'forwards' });
+    setTimeout(() => { try { svgEl.removeChild(path); } catch(e){} }, 220);
+  }, 540);
+}
+
+function animNodeFly(svgEl, fromX, fromY, color, label) {
+  // Ghost circle flies from node toward right edge (sidebar direction)
+  const toX = 355; // right edge of 360-wide viewBox
+  const toY = fromY;
+
+  const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+  const circ = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  circ.setAttribute('cx', fromX); circ.setAttribute('cy', fromY);
+  circ.setAttribute('r','14');
+  circ.setAttribute('fill', color); circ.setAttribute('stroke','#fff');
+  circ.setAttribute('stroke-width','1.5'); circ.setAttribute('opacity','0.9');
+
+  const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+  txt.setAttribute('x', fromX); txt.setAttribute('y', fromY);
+  txt.setAttribute('text-anchor','middle'); txt.setAttribute('dominant-baseline','central');
+  txt.setAttribute('font-size','11'); txt.setAttribute('font-weight','500');
+  txt.setAttribute('fill','#633806');
+  txt.setAttribute('font-family','-apple-system,sans-serif');
+  txt.textContent = label;
+
+  g.appendChild(circ); g.appendChild(txt);
+  svgEl.appendChild(g);
+
+  const dx = toX - fromX;
+  const dy = toY - fromY;
+
+  g.animate(
+    [
+      { transform: `translate(0,0)`, opacity: 0.9 },
+      { transform: `translate(${dx*0.6}px,${dy*0.6}px)`, opacity: 0.9 },
+      { transform: `translate(${dx}px,${dy}px)`, opacity: 0 }
+    ],
+    { duration: 480, easing: 'cubic-bezier(0.4,0,0.6,1)', fill: 'forwards' }
+  );
+  setTimeout(() => { try { svgEl.removeChild(g); } catch(e){} }, 500);
+}
+
+function renderGraph(animate) {
+  const gkey = graphKey(activeTab, activeSub, activeDir);
+  const g = GRAPHS[gkey];
+  const isDirected = activeTab==='topo' || activeDir==='directed';
+  const step = steps[stepIndex-1];
+  const prevStep = steps[stepIndex-2];
+  const ns = step ? step.nodeStates : buildInitialNodeStates(g);
+  const es = step ? step.edgeStates : {};
+  const svg = document.getElementById('svg');
+
+  let html = `<defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1.5L8 5L2 8.5" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arr-tree" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1.5L8 5L2 8.5" fill="none" stroke="#3B6D11" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arr-mst" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1.5L8 5L2 8.5" fill="none" stroke="#0F6E56" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arr-active" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1.5L8 5L2 8.5" fill="none" stroke="#BA7517" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arr-rej" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1.5L8 5L2 8.5" fill="none" stroke="#E24B4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arr-path" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1.5L8 5L2 8.5" fill="none" stroke="#185FA5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>`;
+
+  const NODE_R = 18;
+
+  // ── Determine active edge for sweep animation ──
+  // An 'active' edge that just appeared this step (wasn't active last step)
+  let sweepEdge = null;
+  if (animate && step && (true)) {
+    const prevEs = prevStep ? prevStep.edgeStates : {};
+    for (const [k, state] of Object.entries(es)) {
+      if (state === 'active' && prevEs[k] !== 'active') {
+        const [a, b] = k.split('-');
+        if (g.nodes[a] && g.nodes[b]) { sweepEdge = [a, b]; break; }
+      }
+    }
+  }
+
+  // ── Determine node being pushed (for fly animation) ──
+  // A node that just transitioned to 'frontier' (on stack/queue) this step
+  let flyNode = null;
+  if (animate && step && activeTab==='search') {
+    const prevNs = prevStep ? prevStep.nodeStates : {};
+    for (const [id, state] of Object.entries(ns)) {
+      if (state==='frontier' && prevNs[id]!=='frontier') {
+        flyNode = id; break;
+      }
+    }
+  }
+
+  // ── Build path lookup for found state ──
+  const pathNodes = new Set();
+  const pathEdges = new Set();
+  const foundPath = step && step.path;
+  if (foundPath && foundPath.length > 1) {
+    foundPath.forEach(n => pathNodes.add(n));
+    for (let i = 0; i < foundPath.length - 1; i++) {
+      pathEdges.add(ekey(foundPath[i], foundPath[i+1]));
+      pathEdges.add(ekey(foundPath[i+1], foundPath[i])); // undirected
+    }
+  }
+  const haspath = pathNodes.size > 0;
+
+  // ── Build pending edges set for pulse animation ──
+  const pendingSet = new Set(step && step.pendingEdges ? step.pendingEdges : []);
+
+  // Draw edges
+  g.edges.forEach(edge => {
+    const [a, b, w] = edge;
+    const [x1,y1] = g.nodes[a];
+    const [x2,y2] = g.nodes[b];
+    const k1=ekey(a,b), k2=ekey(b,a);
+    const state = es[k1]||es[k2]||'default';
+
+    const dx=x2-x1, dy=y2-y1, len=Math.sqrt(dx*dx+dy*dy);
+    const ux=dx/len, uy=dy/len;
+    const pad = NODE_R + 2;
+    const lx1=x1+ux*pad, ly1=y1+uy*pad;
+    const lx2=x2-ux*pad, ly2=y2-uy*pad;
+
+    const onPath = haspath && (pathEdges.has(k1) || pathEdges.has(k2));
+    const isPending = !haspath && (pendingSet.has(k1) || pendingSet.has(k2));
+
+    // Kahn's: dim edges whose source node has been removed
+    const kahnSourceRemoved = activeTab==='topo' && activeSub==='kahn'
+      && step && step.nodeStates[a] === 'removed';
+
+    let sc, sw, opacity='1';
+    if (kahnSourceRemoved) {
+      sc='#D3D1C7'; sw=1; opacity='0.2';
+    } else if (onPath) {
+      sc='#185FA5'; sw=3;
+    } else if (haspath) {
+      sc='#D3D1C7'; sw=1; opacity='0.3';
+    } else if (isPending) {
+      sc='#EF9F27'; sw=2.5;
+    } else {
+      sc = edgeStrokeColor(state);
+      sw = edgeStrokeWidth(state);
+    }
+
+    let markerAttr = '';
+    if (isDirected) {
+      const mId = onPath ? 'arr-path' : state==='tree'?'arr-tree':state==='mst'?'arr-mst':state==='active'?'arr-active':state==='rejected'?'arr-rej':'arr';
+      markerAttr = `marker-end="url(#${mId})"`;
+    }
+
+    // For DAG (topo): route edges to avoid passing over unrelated nodes.
+    // 1. Start with a small fan offset based on source edge index (avoids edge stacking)
+    // 2. Then check all unrelated nodes — if midpoint control passes within NODE_R+8px,
+    //    push the control point perpendicularly away until clear.
+    let edgeHtml;
+    if (activeTab === 'topo') {
+      const px = -uy, py = ux; // perpendicular unit vector
+
+      // Base fan offset — spread edges from same source symmetrically
+      const sameSource = g.edges.filter(e => e[0] === a);
+      const edgeIdx = sameSource.indexOf(edge);
+      const totalFromSrc = sameSource.length;
+      let offsetMag = totalFromSrc > 1 ? (edgeIdx - (totalFromSrc-1)/2) * 14 : 0;
+
+      // Candidate control point
+      let cx = (x1+x2)/2 + px*offsetMag;
+      let cy = (y1+y2)/2 + py*offsetMag;
+
+      // Check every unrelated node — push control point away if too close
+      const AVOID_R = NODE_R + 10;
+      Object.entries(g.nodes).forEach(([id, [nx, ny]]) => {
+        if (id === a || id === b) return;
+        // Distance from node center to current control point
+        const dcx = cx - nx, dcy = cy - ny;
+        const dc = Math.sqrt(dcx*dcx + dcy*dcy);
+        if (dc < AVOID_R) {
+          // Also check distance from node to the line segment
+          // Project node onto edge line
+          const t = Math.max(0, Math.min(1, ((nx-x1)*dx + (ny-y1)*dy) / (len*len)));
+          const projX = x1 + t*dx, projY = y1 + t*dy;
+          const distToLine = Math.sqrt((nx-projX)**2 + (ny-projY)**2);
+          if (distToLine < AVOID_R) {
+            // Determine which side to push: push away from node
+            const side = (px*(nx-(x1+x2)/2) + py*(ny-(y1+y2)/2)) > 0 ? -1 : 1;
+            offsetMag += side * (AVOID_R - distToLine + 8);
+            cx = (x1+x2)/2 + px*offsetMag;
+            cy = (y1+y2)/2 + py*offsetMag;
+          }
+        }
+      });
+
+      // Recompute padded endpoints with final control point direction
+      const pulseClass = isPending ? ' class="edge-pulse"' : '';
+      edgeHtml = `<path d="M${lx1.toFixed(1)},${ly1.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${lx2.toFixed(1)},${ly2.toFixed(1)}"
+        fill="none" stroke="${sc}" stroke-width="${sw}" opacity="${opacity}" ${markerAttr}${pulseClass}/>`;
+    } else {
+      const pulseClass = isPending ? ' class="edge-pulse"' : '';
+      const dashAttr = state==='frontier' ? ' stroke-dasharray="6 3"'
+                     : state==='pending'  ? ' stroke-dasharray="5 4"'
+                     : state==='excluded' ? ' stroke-dasharray="3 4" opacity="0.35"'
+                     : '';
+      edgeHtml = `<line x1="${lx1.toFixed(1)}" y1="${ly1.toFixed(1)}" x2="${lx2.toFixed(1)}" y2="${ly2.toFixed(1)}"
+        stroke="${sc}" stroke-width="${sw}" opacity="${opacity}" ${markerAttr}${pulseClass}${dashAttr}/>`;
+    }
+    html += edgeHtml;
+
+    if (w !== undefined) {
+      const mx=(x1+x2)/2, my=(y1+y2)/2;
+      html += `<rect x="${(mx-8).toFixed(1)}" y="${(my-8).toFixed(1)}" width="16" height="15" rx="3"
+        fill="#fff" stroke="#dddbd2" stroke-width="0.5" opacity="${haspath&&!onPath?'0.3':'1'}"/>`;
+      html += `<text x="${mx.toFixed(1)}" y="${(my+3).toFixed(1)}" text-anchor="middle"
+        font-size="10" fill="#555" font-family="-apple-system,sans-serif" opacity="${haspath&&!onPath?'0.3':'1'}">${w}</text>`;
+    }
+  });
+
+  // Cycle flash set for Kruskal's rejection
+  const cycleSet = new Set(step && step.cycleNodes ? step.cycleNodes : []);
+
+  // Prim's MST pulse — nodes to animate after innerHTML set
+  const primPulseNodes = [];
+
+  // Draw nodes
+  Object.entries(g.nodes).forEach(([id,[x,y]]) => {
+    const state = ns[id]||'unvisited';
+    const isClickable = canClickNode(id);
+    const cursor = isClickable ? 'pointer' : 'default';
+    const onPath = haspath && pathNodes.has(id);
+    const muted = haspath && !onPath;
+
+    // Kahn's: dim removed nodes — they're "deleted" from the graph
+    const kahnRemoved = activeTab==='topo' && activeSub==='kahn' && state==='removed';
+
+    // Path node style — onPath always wins over found/visited state
+    let fill, stroke, textFill, opacity='1';
+    if (kahnRemoved) opacity = '0.25';
+    if (onPath) {
+      fill = '#B5D4F4'; stroke = '#185FA5'; textFill = '#042C53';
+    } else if (muted) {
+      fill = '#F5F4F0'; stroke = '#D3D1C7'; textFill = '#B4B2A9'; opacity = '0.45';
+    } else if (kahnRemoved) {
+      fill = '#F1EFE8'; stroke = '#B4B2A9'; textFill = '#888780';
+    } else if (activeSub==='kruskal' && step && step.components && step.components[id]) {
+      const comp = step.components[id];
+      fill = comp.fill; stroke = comp.stroke; textFill = comp.text;
+    } else {
+      const c = nodeStyle(state);
+      fill = c.fill; stroke = c.stroke; textFill = c.text;
+    }
+
+    // Outer rings
+    if (!haspath) {
+      if (id === startNode)
+        html += `<circle cx="${x}" cy="${y}" r="${NODE_R+4}" fill="none" stroke="#534AB7" stroke-width="1" stroke-dasharray="3 2" opacity="0.6"/>`;
+      if (state==='target')
+        html += `<circle cx="${x}" cy="${y}" r="${NODE_R+4}" fill="none" stroke="#993556" stroke-width="1" stroke-dasharray="3 2" opacity="0.6"/>`;
+      if (state==='current') {
+        html += `<circle cx="${x}" cy="${y}" r="${NODE_R+5}" fill="none" stroke="#BA7517" stroke-width="2" opacity="0.7"/>`;
+      }
+      if (state==='found')
+        html += `<circle cx="${x}" cy="${y}" r="${NODE_R+4}" fill="none" stroke="#A32D2D" stroke-width="1.5" opacity="0.7"/>`;
+    } else if (onPath && state==='found') {
+      // Double burst ring on found node
+      html += `<circle cx="${x}" cy="${y}" r="${NODE_R+8}" fill="none" stroke="#185FA5" stroke-width="1" opacity="0.3"/>`;
+      html += `<circle cx="${x}" cy="${y}" r="${NODE_R+4}" fill="none" stroke="#185FA5" stroke-width="2"/>`;
+    } else if (onPath && foundPath && id === foundPath[0]) {
+      // Start node on path — dashed blue ring
+      html += `<circle cx="${x}" cy="${y}" r="${NODE_R+4}" fill="none" stroke="#185FA5" stroke-width="1" stroke-dasharray="3 2" opacity="0.8"/>`;
+    }
+
+    const cycleClass = cycleSet.has(id) ? ' class="cycle-flash"' : '';
+    const primPulse = (activeTab==='span' && activeSub==='prim' && step && step.pulseNodes && step.pulseNodes.includes(id));
+    if (primPulse) primPulseNodes.push(id);
+    html += `<circle cx="${x}" cy="${y}" r="${NODE_R}" fill="${fill}" stroke="${stroke}" stroke-width="${onPath?2:state==='current'?2.5:1.5}"
+      opacity="${opacity}" style="cursor:${cursor}" id="node-${id}"${cycleClass} onclick="nodeClick('${id}')"/>`;
+    html += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central"
+      font-size="${state==='current'?15:13}" font-weight="500" fill="${textFill}" font-family="-apple-system,sans-serif"
+      opacity="${opacity}" style="cursor:${cursor};pointer-events:none">${id}</text>`;
+
+    // Checkmark badge — visited/found in Search, MST nodes in Prim's
+    if ((activeTab==='search') && (state==='visited'||state==='found') && !muted) {
+      const bx=x+11, by=y+11;
+      const badgeColor = onPath ? '#185FA5' : '#3B6D11';
+      html += `<circle cx="${bx}" cy="${by}" r="7" fill="${badgeColor}" stroke="#fff" stroke-width="1.5" style="pointer-events:none"/>`;
+      html += `<path d="M${bx-3},${by} L${bx-0.5},${by+3} L${bx+4},${by-3}" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"/>`;
+    }
+
+    // Checkmark badge — nodes in MST (Prim's only)
+    if (activeTab==='span' && activeSub==='prim' && state==='mst') {
+      const bx=x+11, by=y+11;
+      html += `<circle cx="${bx}" cy="${by}" r="7" fill="#0F6E56" stroke="#fff" stroke-width="1.5" style="pointer-events:none"/>`;
+      html += `<path d="M${bx-3},${by} L${bx-0.5},${by+3} L${bx+4},${by-3}" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"/>`;
+    }
+
+    // Topo DFS: checkmark badge — "added to output"
+    if (activeTab==='topo' && activeSub==='dfs' && state==='removed') {
+      const bx=x+11, by=y+11;
+      html += `<circle cx="${bx}" cy="${by}" r="7" fill="#888780" stroke="#fff" stroke-width="1.5" style="pointer-events:none"/>`;
+      html += `<path d="M${bx-3},${by} L${bx-0.5},${by+3} L${bx+4},${by-3}" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"/>`;
+    }
+
+    // Topo Kahn's: X badge — "removed from graph"
+    if (activeTab==='topo' && activeSub==='kahn' && state==='removed') {
+      const bx=x+11, by=y+11;
+      html += `<circle cx="${bx}" cy="${by}" r="7" fill="#888780" stroke="#fff" stroke-width="1.5" opacity="0.8" style="pointer-events:none"/>`;
+      html += `<path d="M${bx-3},${by-3} L${bx+3},${by+3}" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" style="pointer-events:none"/>`;
+      html += `<path d="M${bx+3},${by-3} L${bx-3},${by+3}" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" style="pointer-events:none"/>`;
+    }
+
+    if (activeTab==='dijk' && step && step.dist) {
+      const dv = step.dist[id]===Infinity ? '∞' : step.dist[id];
+      html += `<text x="${x}" y="${y+28}" text-anchor="middle" font-size="9" fill="#888"
+        font-family="-apple-system,sans-serif">${dv}</text>`;
+    }
+
+    // Lock badge — settled nodes in Dijkstra's
+    if (activeTab==='dijk' && step && step.settled && step.settled.includes(id)) {
+      const bx=x+11, by=y+11;
+      html += `<circle cx="${bx}" cy="${by}" r="7" fill="#085041" stroke="#fff" stroke-width="1.5" style="pointer-events:none"/>`;
+      // Shackle arc
+      html += `<path d="M${bx-2.5},${by+0.5} V${by-1.5} a2.5,2.5 0 0 1 5,0 V${by+0.5}" fill="none" stroke="#E1F5EE" stroke-width="1.3" stroke-linecap="round" style="pointer-events:none"/>`;
+      // Body rect
+      html += `<rect x="${bx-3}" y="${by+0.5}" width="6" height="4.5" rx="1" fill="#E1F5EE" style="pointer-events:none"/>`;
+    }
+
+    // "Next to be settled" dashed amber ring — Dijkstra's only
+    if (activeTab==='dijk' && step && step.nextNode === id && !step.settled.includes(id)) {
+      html += `<circle cx="${x}" cy="${y}" r="${NODE_R+5}" fill="none" stroke="#BA7517" stroke-width="1.5" stroke-dasharray="4 2" opacity="0.8"/>`;
+    }
+
+    // Candidate pulse rings — survey step after all edges of a node are relaxed
+    if (activeTab==='dijk' && step && step.candidateNodes) {
+      const isWinner = step.nextNode === id;
+      const isCandidate = step.candidateNodes.includes(id);
+      if (isWinner) {
+        // Winner gets a solid bold ring + animated expanding ring
+        html += `<circle cx="${x}" cy="${y}" r="${NODE_R+6}" fill="none" stroke="#BA7517" stroke-width="2.5" opacity="1"/>`;
+        html += `<circle cx="${x}" cy="${y}" r="${NODE_R+6}" fill="none" stroke="#EF9F27" stroke-width="1.5"
+          style="animation:candidate-winner 0.8s ease-in-out 3" opacity="0.9"/>`;
+      } else if (isCandidate) {
+        // Non-winner candidates get a softer pulsing ring
+        html += `<circle cx="${x}" cy="${y}" r="${NODE_R+5}" fill="none" stroke="#EF9F27" stroke-width="1"
+          style="animation:candidate-pulse 0.8s ease-in-out 3" opacity="0.6"/>`;
+      }
+    }
+  });
+
+  svg.innerHTML = html;
+
+  // ── Prim's MST node pulse — always fire when pulseNodes present ──
+  if (primPulseNodes.length) {
+    primPulseNodes.forEach(id => {
+      const el = svg.querySelector(`#node-${id}`);
+      if (el) {
+        el.animate(
+          [{ opacity: 1 }, { opacity: 0.15 }, { opacity: 1 }, { opacity: 0.15 }, { opacity: 1 }],
+          { duration: 800, easing: 'ease-in-out' }
+        );
+      }
+    });
+  }
+
+  // ── Fire animations after DOM is set ──
+  if (animate) {
+    if (sweepEdge) {
+      const [a, b] = sweepEdge;
+      const [x1,y1] = g.nodes[a];
+      const [x2,y2] = g.nodes[b];
+      const dx=x2-x1, dy=y2-y1, len=Math.sqrt(dx*dx+dy*dy);
+      const ux=dx/len, uy=dy/len;
+      const pad = NODE_R + 2;
+      // Determine sweep direction: for directed use a→b, for undirected use edge order
+      animEdgeSweep(svg, x1+ux*pad, y1+uy*pad, x2-ux*pad, y2-uy*pad, '#BA7517');
+    }
+    if (flyNode) {
+      const [fx, fy] = g.nodes[flyNode];
+      animNodeFly(svg, fx, fy, '#FAEEDA', flyNode);
+    }
+  }
+}
+
+function buildInitialNodeStates(g) {
+  const ns = {};
+  Object.keys(g.nodes).forEach(n => {
+    ns[n] = (activeTab === 'topo' && dagSources.has(n)) ? 'source' : 'unvisited';
+  });
+  if (startNode)  ns[startNode]='start';
+  if (targetNode) ns[targetNode]='target';
+  return ns;
+}
+
+function canClickNode(id) {
+  if (selPhase==='start')  return true;
+  if (selPhase==='target') return id !== startNode;
+  if (selPhase==='dijk-target') return id !== startNode;
+  return false;
+}
+
+function renderSidebar() {
+  const step = steps[stepIndex-1];
+  const el = document.getElementById('sidebar');
+  const cycleSet = new Set(step && step.cycleNodes ? step.cycleNodes : []);
+  let html = '';
+
+  if (activeTab==='search') {
+    const label = activeSub==='dfs' ? 'Stack' : 'Queue';
+    const frontier = step ? (step.frontier||[]) : [];
+    html += `<div class="panel" style="flex:1">`;
+    html += `<div class="panel-label">${label}</div>`;
+    if (!frontier.length) {
+      html += `<span class="panel-empty">empty</span>`;
+    } else {
+      const display = activeSub==='dfs' ? [...frontier].reverse() : [...frontier];
+      const pulseHead = step && step.pulseHead;
+      display.forEach((n, i) => {
+        const isTop = i===0;
+        html += `<div style="display:flex;align-items:center;gap:6px;padding:4px 2px;
+          ${isTop ? 'border-bottom:0.5px solid #e8e6de;margin-bottom:4px;padding-bottom:6px;' : ''}">`;
+        html += `<span class="token tk-q${isTop && pulseHead ? ' token-next' : ''}">${n}</span>`;
+        if (isTop) html += `<span style="font-size:10px;color:#BA7517;font-weight:500">${activeSub==='dfs'?'← top':'← front'}</span>`;
+        html += `</div>`;
+      });
+    }
+    html += `</div>`;
+  }
+
+  if (activeTab==='topo') {
+    const result = step ? (step.topoResult||[]) : [];
+
+    // Recursion stack — DFS only
+    if (activeSub==='dfs') {
+      const callStack = step ? (step.callStack||[]) : [];
+      html+=`<div class="panel"><div class="panel-label">Recursion stack</div>`;
+      if (!callStack.length) {
+        html+=`<span class="panel-empty">empty</span>`;
+      } else {
+        // Show top of stack first (last pushed = top)
+        const display = [...callStack].reverse();
+        display.forEach((n, i) => {
+          const isTop = i===0;
+          html+=`<div style="display:flex;align-items:center;gap:6px;padding:4px 2px;
+            ${isTop?'border-bottom:0.5px solid #e8e6de;margin-bottom:4px;padding-bottom:6px;':''}">`;
+          html+=`<span class="token tk-q">${n}</span>`;
+          if (isTop) html+=`<span style="font-size:10px;color:#BA7517;font-weight:500">← top</span>`;
+          html+=`</div>`;
+        });
+      }
+      html+=`</div>`;
+    }
+
+    // Output order — both DFS and Kahn's
+    html+=`<div class="panel"><div class="panel-label">Output order</div>`;
+    if (!result.length) html+=`<span class="panel-empty">none yet</span>`;
+    else {
+      html+=`<div class="token-row">`;
+      result.forEach((n,i) => {
+        html+=`<span class="token tk-t">${n}</span>`;
+        if (i<result.length-1) html+=`<span class="arr-sep">→</span>`;
+      });
+      html+=`</div>`;
+    }
+    html+=`</div>`;
+
+    // In-degree table — Kahn's only
+    if (activeSub==='kahn') {
+      const inDeg = step ? step.inDegrees : null;
+      const gkey = graphKey(activeTab, activeSub, activeDir);
+      const gNodes = Object.keys(GRAPHS[gkey].nodes);
+      html+=`<div class="panel"><div class="panel-label">In-degrees</div>`;
+      if (inDeg) {
+        gNodes.forEach(n => {
+          const removed = (step.nodeStates[n]==='removed');
+          const zero = inDeg[n]===0 && !removed;
+          html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;font-size:11px;">`;
+          html+=`<span style="font-weight:500;color:${removed?'#B4B2A9':'#2C2C2A'};${removed?'text-decoration:line-through':''}">${n}</span>`;
+          html+=`<span class="token" style="width:20px;height:20px;font-size:10px;background:${removed?'#F1EFE8':zero?'#EAF3DE':'#E6F1FB'};color:${removed?'#B4B2A9':zero?'#27500A':'#0C447C'};border:0.5px solid ${removed?'#D3D1C7':zero?'#97C459':'#85B7EB'}">${removed?'✕':inDeg[n]}</span>`;
+          html+=`</div>`;
+        });
+      }
+      html+=`</div>`;
+
+      // Zero in-degree ready set
+      const frontier = step ? Object.keys(step.nodeStates).filter(n => step.nodeStates[n]==='frontier').sort() : [];
+      html+=`<div class="panel"><div class="panel-label">Ready (in-degree = 0)</div>`;
+      if (!frontier.length) html+=`<span class="panel-empty">empty</span>`;
+      else {
+        html+=`<div class="token-row">`;
+        frontier.forEach(n => html+=`<span class="token tk-v">${n}</span>`);
+        html+=`</div>`;
+        html+=`<div style="font-size:10px;color:#888780;margin-top:6px;font-style:italic">processing order does not matter</div>`;
+      }
+      html+=`</div>`;
+    }
+  }
+
+  if (activeTab==='span') {
+    const mstE  = step ? (step.mstEdges||[]) : [];
+    const tot   = step ? (step.mstTotal||0) : 0;
+    const es_   = step ? step.edgeStates : {};
+
+    if (activeSub==='kruskal' && step && step.sortedEdges) {
+      // Components panel
+      const comps = step.components || {};
+      const rootMap = {};
+      Object.entries(comps).forEach(([n, info]) => {
+        if (!rootMap[info.root]) rootMap[info.root] = info;
+      });
+      const compList = Object.values(rootMap).sort((a,b) => a.root.localeCompare(b.root));
+      html+=`<div class="panel"><div class="panel-label">Components</div>`;
+      compList.forEach(comp => {
+        const isSingleton = comp.members.length === 1;
+        if (isSingleton) {
+          const isFlash = cycleSet.has(comp.members[0]);
+          html+=`<div style="display:inline-flex;margin:2px 2px 0 0">`;
+          html+=`<span class="token${isFlash?' cycle-token-flash':''}" style="width:22px;height:22px;font-size:11px;background:${comp.fill};color:${comp.text};border:1.5px solid ${comp.stroke}">${comp.members[0]}</span>`;
+          html+=`</div>`;
+        } else {
+          const hasFlash = comp.members.some(m => cycleSet.has(m));
+          html+=`<div style="display:flex;align-items:center;gap:3px;padding:3px 0;flex-wrap:wrap">`;
+          comp.members.forEach(m => {
+            const isFlash = cycleSet.has(m);
+            html+=`<span class="token${isFlash?' cycle-token-flash':''}" style="width:22px;height:22px;font-size:11px;background:${comp.fill};color:${comp.text};border:1.5px solid ${comp.stroke}">${m}</span>`;
+          });
+          html+=`</div>`;
+        }
+      });
+      html+=`</div>`;
+      // Unified sorted edge list — shows all edges with accept/reject/active/pending state
+      const mstSet = new Set(mstE.map(([a,b]) => ekey(a,b)));
+      html+=`<div class="panel" style="flex:1;overflow-y:auto"><div class="panel-label">Edges by weight</div>`;
+      step.sortedEdges.forEach(([a,b,w]) => {
+        const k1=ekey(a,b), k2=ekey(b,a);
+        const estate = es_[k1]||es_[k2]||'';
+        const accepted = estate==='mst';
+        const rejected = estate==='rejected';
+        const active   = estate==='active';
+        let bg='', color='#444441', extra='';
+        if (accepted) { bg='#EAF3DE'; color='#27500A'; extra='font-weight:500'; }
+        else if (rejected) { bg='#FCEBEB'; color='#A32D2D'; extra='text-decoration:line-through'; }
+        else if (active)   { bg='#FAEEDA'; color='#633806'; }
+        else               { color='#B4B2A9'; }
+        html+=`<div class="mono" style="display:flex;justify-content:space-between;align-items:center;
+          padding:3px 4px;border-radius:4px;font-size:11px;background:${bg};color:${color};${extra};margin-bottom:2px">`;
+        html+=`<span>${a}–${b}</span>`;
+        if (rejected) {
+          html+=`<span style="margin-left:auto;font-size:12px;font-weight:700;color:#E24B4A">✕</span>`;
+        } else {
+          html+=`<span style="margin-left:8px">w=${w}</span>`;
+          if (accepted) html+=`<span style="margin-left:6px;font-size:10px">✓ MST</span>`;
+        }
+        html+=`</div>`;
+      });
+      if (tot > 0) html+=`<div class="mst-total mono" style="margin-top:6px">Total: ${tot}</div>`;
+      html+=`</div>`;
+    } else {
+      // Prim's — candidates panel + accepted edge list
+      const cands = step ? (step.candidates||[]) : [];
+      html+=`<div class="panel"><div class="panel-label">Crossing edges</div>`;
+      if (!cands.length) {
+        html+=`<span class="panel-empty">none yet</span>`;
+      } else {
+        const minW = cands[0][2];
+        cands.forEach(([a,b,w]) => {
+          const isMin = w===minW;
+          html+=`<div class="mono" style="display:flex;justify-content:space-between;align-items:center;
+            padding:3px 4px;border-radius:4px;font-size:11px;margin-bottom:2px;
+            background:${isMin?'#FAEEDA':'transparent'};color:${isMin?'#633806':'#888780'}">`;
+          html+=`<span>${a}–${b}</span>`;
+          html+=`<span>w=${w}${isMin?' ← min':''}</span>`;
+          html+=`</div>`;
+        });
+      }
+      html+=`</div>`;
+      html+=`<div class="panel" id="prim-mst-panel"><div class="panel-label">MST edges</div>`;
+      if (!mstE.length) html+=`<span class="panel-empty">none yet</span>`;
+      else {
+        const pulseSet = new Set(step && step.pulseNodes ? step.pulseNodes : []);
+        mstE.forEach(([a,b,w]) => {
+          // Pulse any MST edge row where BOTH endpoints are in the excluded set
+          const isPulse = pulseSet.has(a) && pulseSet.has(b);
+          html+=`<div class="mst-edge mono" id="mst-edge-${a}-${b}"
+            style="border-radius:3px;padding:1px 3px;transition:background .1s">${a}–${b} (${w})</div>`;
+        });
+        html+=`<div class="mst-total mono">Total: ${tot}</div>`;
+      }
+      html+=`</div>`;
+    }
+  }
+
+  if (activeTab==='dijk') {
+    const gkey = graphKey(activeTab, activeSub, activeDir);
+    const g = GRAPHS[gkey];
+    const dist = step ? step.dist : null;
+    const settled = step ? new Set(step.settled) : new Set();
+    const discovered = step ? new Set(step.discovered) : new Set();
+    const nextNode = step ? step.nextNode : null;
+    const nodeIds = Object.keys(g.nodes);
+
+    // ── Priority Queue panel ──
+    // Only nodes that have been DISCOVERED (d < ∞, reached via relaxation) enter the PQ.
+    // Undiscovered nodes (d=∞) are NOT in the queue — they haven't been reached yet.
+    const pqEntries = nodeIds
+      .filter(n => discovered.has(n) && !settled.has(n))
+      .map(n => ({ n, d: dist ? dist[n] : Infinity }))
+      .sort((a,b) => a.d - b.d);
+
+    const undiscovered = nodeIds.filter(n => !discovered.has(n) && !settled.has(n));
+
+    html+=`<div class="panel"><div class="panel-label">Priority queue</div>`;
+    if (!pqEntries.length && !undiscovered.length) {
+      html+=`<span class="panel-empty">empty</span>`;
+    } else if (!pqEntries.length) {
+      html+=`<span class="panel-empty">empty — relax an edge to add nodes</span>`;
+    } else {
+      const isSurveyStep = !!(step && step.candidateNodes);
+      pqEntries.forEach(({n, d}) => {
+        const isNext = n === nextNode;
+        const isCandidate = isSurveyStep && step.candidateNodes.includes(n);
+        const dStr = d===Infinity ? '∞' : d;
+        // On survey step: winner = bold amber, others = light amber; otherwise normal
+        const bg    = isNext && isSurveyStep ? '#FAEEDA' : isCandidate ? '#FEF6E8' : isNext ? '#FAEEDA' : 'transparent';
+        const color = isNext ? '#633806' : isCandidate ? '#854F0B' : '#2C2C2A';
+        const weight = isNext ? '600' : '400';
+        html+=`<div style="display:flex;justify-content:space-between;align-items:center;
+          padding:3px 5px;border-radius:5px;font-size:11px;font-family:monospace;
+          background:${bg};color:${color};font-weight:${weight};margin-bottom:2px;
+          ${isNext && isSurveyStep ? 'border:1px solid #EF9F27;' : ''}">`;
+        html+=`<span>${n}</span>`;
+        html+=`<span style="display:flex;align-items:center;gap:4px">`;
+        html+=`<span>d = ${dStr}</span>`;
+        if (isNext && isSurveyStep) html+=`<span style="font-size:9px;color:#BA7517;font-weight:700">← dequeue</span>`;
+        else if (isNext) html+=`<span style="font-size:9px;color:#BA7517;font-weight:700">← next</span>`;
+        html+=`</span></div>`;
+      });
+    }
+    // Show undiscovered nodes dimly below a divider — visually separate from the real PQ
+    if (undiscovered.length) {
+      if (pqEntries.length) html+=`<div style="border-top:0.5px solid #e8e6de;margin:4px 0"></div>`;
+      html+=`<div style="font-size:9px;color:#bbb;margin-bottom:3px;letter-spacing:.03em">NOT YET REACHED</div>`;
+      undiscovered.forEach(n => {
+        html+=`<div style="display:flex;justify-content:space-between;padding:2px 5px;font-size:11px;font-family:monospace;color:#C8C6BE">`;
+        html+=`<span>${n}</span><span>d = ∞</span></div>`;
+      });
+    }
+    html+=`</div>`;
+
+    // ── Settled distances panel ──
+    const settledEntries = nodeIds.filter(n => settled.has(n));
+    html+=`<div class="panel" style="flex:1"><div class="panel-label">Settled (permanent)</div>`;
+    if (!settledEntries.length) {
+      html+=`<span class="panel-empty">none yet</span>`;
+    } else {
+      settledEntries.forEach(n => {
+        const dv = dist ? (dist[n]===Infinity?'∞':dist[n]) : '∞';
+        html+=`<div style="display:flex;justify-content:space-between;align-items:center;
+          padding:3px 5px;border-radius:5px;font-size:11px;font-family:monospace;
+          background:#E1F5EE;color:#085041;font-weight:500;margin-bottom:2px">`;
+        html+=`<span style="display:flex;align-items:center;gap:4px">`;
+        html+=`<svg width="9" height="10" viewBox="0 0 9 10" fill="none" style="flex-shrink:0">
+          <rect x="1.5" y="4" width="6" height="5.5" rx="1" fill="#085041"/>
+          <path d="M2.5 4V2.8a2 2 0 0 1 4 0V4" stroke="#085041" stroke-width="1.3" fill="none"/>
+          <circle cx="4.5" cy="6.8" r="1" fill="#E1F5EE"/>
+        </svg>`;
+        html+=`<span>${n}</span></span>`;
+        html+=`<span>d = ${dv}</span>`;
+        html+=`</div>`;
+      });
+    }
+    html+=`</div>`;
+  }
+
+  el.innerHTML = html;
+
+  // ── Prim's: pulse MST edge sidebar rows containing either excluded endpoint ──
+  if (activeTab==='span' && activeSub==='prim' && step && step.pulseNodes && step.pulseNodes.length) {
+    const pulseSet = new Set(step.pulseNodes);
+    const mstE = step.mstEdges || [];
+    mstE.forEach(([a,b]) => {
+      if (pulseSet.has(a) || pulseSet.has(b)) {
+        const row = el.querySelector(`#mst-edge-${a}-${b}`);
+        if (row) {
+          row.animate(
+            [
+              { background: '#E1F5EE', color: '#085041' },
+              { background: '#FCEBEB', color: '#A32D2D' },
+              { background: '#E1F5EE', color: '#085041' },
+              { background: '#FCEBEB', color: '#A32D2D' },
+              { background: '#E1F5EE', color: '#085041' }
+            ],
+            { duration: 800, easing: 'ease-in-out', fill: 'forwards' }
+          );
+        }
+      }
+    });
+  }
+}
+
+function renderLegend() {
+  const items = [
+    { fill:'#ffffff', border:'#B4B2A9', label:'unvisited' },
+    { fill:'#EEEDFE', border:'#534AB7', label:'start' },
+  ];
+  if (TAB_CFG[activeTab].needsTarget || (activeTab==='dijk' && targetNode))
+    items.push({ fill:'#FBEAF0', border:'#993556', label:'target' });
+  if (activeTab==='search')
+    items.push({ fill:'#FAEEDA', border:'#BA7517', label: activeSub==='dfs' ? 'on stack' : 'in queue' });
+  else if (activeTab==='topo' && activeSub==='dfs')
+    items.push({ fill:'#FAEEDA', border:'#BA7517', label:'processing' });
+  else if (activeTab==='topo' && activeSub==='kahn')
+    items.push({ fill:'#EAF3DE', border:'#3B6D11', label:'zero in-degree' });
+  if (activeTab==='topo')
+    items.push({ fill:'#E1F5EE', border:'#0F6E56', label:'source (in-degree 0)' });
+  if (activeTab==='search')
+    items.push({ fill:'#EF9F27', border:'#854F0B', label:'current (being processed)' });
+  if (activeTab==='topo')
+    items.push({ fill:'#EF9F27', border:'#854F0B', label:'current (being processed)' });
+  if (activeTab==='search')
+    items.push({ fill:'#EAF3DE', border:'#3B6D11', label:'visited ✓' });
+  else if (activeTab!=='span' && activeTab!=='topo')
+    items.push({ fill:'#EAF3DE', border:'#3B6D11', label:'visited' });
+  if (activeTab==='topo' && activeSub==='dfs')
+    items.push({ fill:'#F1EFE8', border:'#888780', label:'added to output ✓' });
+  if (activeTab==='topo' && activeSub==='kahn')
+    items.push({ fill:'#F1EFE8', border:'#888780', label:'removed from graph ✕' });
+  if (activeTab==='span'||activeTab==='dijk')
+    items.push({ fill:'#E1F5EE', border:'#0F6E56', label: activeTab==='span'?'in MST':'settled 🔒 (permanent)' });
+  if (activeTab==='search')
+    items.push({ fill:'#FCEBEB', border:'#A32D2D', label:'found' });
+  if (activeTab==='dijk' && targetNode)
+    items.push({ fill:'#FCEBEB', border:'#A32D2D', label:'target reached' });
+
+  let html='';
+  items.forEach(i => {
+    html+=`<div class="leg"><span class="leg-dot" style="background:${i.fill};border-color:${i.border}"></span>${i.label}</div>`;
+  });
+  document.getElementById('legend').innerHTML=html;
+}
+
+function renderAll(animate=false) {
+  renderGraph(animate);
+  renderSidebar();
+  updateStatus();
+  updateNextBtn();
+}
+
+// ═══════════════════════════════════════════════════
+// SECTION 8: INTERACTION HANDLERS
+// ═══════════════════════════════════════════════════
+function nodeClick(id) {
+  if (selPhase==='start') {
+    startNode=id;
+    updateSelPhase();
+    renderGraph();
+  } else if (selPhase==='target') {
+    if (id===startNode) return;
+    targetNode=id;
+    updateSelPhase();
+    renderGraph();
+  } else if (selPhase==='dijk-target') {
+    if (id===startNode) return;
+    targetNode=id;
+    selPhase='ready';
+    const skipBtn = document.getElementById('btn-skip-target');
+    if (skipBtn) skipBtn.style.display='none';
+    updateStatus();
+    updateNextBtn();
+    renderGraph();
+  }
+}
+
+function skipDijkTarget() {
+  targetNode=null;
+  selPhase='ready';
+  const skipBtn = document.getElementById('btn-skip-target');
+  if (skipBtn) skipBtn.style.display='none';
+  updateStatus();
+  updateNextBtn();
+  renderGraph();
+}
+
+function newWeightedGraph() {
+  // Keep same nodes and topology, randomize weights 1-12
+  const baseEdges = [
+    ['A','B'], ['A','F'], ['B','G'], ['B','C'],
+    ['C','D'], ['D','G'], ['D','E'], ['E','F'],
+    ['E','G'], ['F','G']
+  ];
+  const newEdges = baseEdges.map(([a,b]) => [a, b, Math.floor(Math.random()*12)+1]);
+  // Ensure no duplicate weights for clarity
+  const seen = new Set();
+  newEdges.forEach(e => {
+    while (seen.has(e[2])) e[2] = e[2] % 12 + 1;
+    seen.add(e[2]);
+  });
+  GRAPHS.weighted_u = { nodes: GRAPHS.weighted_u.nodes, edges: newEdges };
+  // Directed version uses same edges with some reversed
+  const dirEdges = [
+    ['A','B',newEdges[0][2]], ['A','F',newEdges[1][2]], ['B','G',newEdges[2][2]], ['B','C',newEdges[3][2]],
+    ['C','D',newEdges[4][2]], ['D','E',newEdges[6][2]], ['G','D',newEdges[5][2]], ['E','F',newEdges[7][2]],
+    ['G','E',newEdges[8][2]], ['F','G',newEdges[9][2]]
+  ];
+  GRAPHS.weighted_d = { nodes: GRAPHS.weighted_d.nodes, edges: dirEdges };
+  doReset();
+}
+
+function newDijkstraGraph() {
+  // Same 7 nodes, same 10 base pairs — randomize both weight AND direction of each edge.
+  // To keep the graph useful (reachable from any start), we use a base undirected
+  // spanning tree and then randomly orient all edges, guaranteeing connectivity isn't
+  // broken structurally (Dijkstra's handles unreachable nodes gracefully anyway).
+  const basePairs = [
+    ['A','B'], ['A','F'], ['B','G'], ['B','C'],
+    ['C','D'], ['D','G'], ['D','E'], ['E','F'],
+    ['E','G'], ['F','G']
+  ];
+
+  // Random unique weights 1–15
+  const weights = [];
+  const used = new Set();
+  while (weights.length < basePairs.length) {
+    const w = Math.floor(Math.random() * 15) + 1;
+    if (!used.has(w)) { used.add(w); weights.push(w); }
+  }
+
+  // Random direction for each edge — flip ~half of them
+  const newEdgesU = basePairs.map(([a,b], i) => [a, b, weights[i]]);
+  const newEdgesD = basePairs.map(([a,b], i) => {
+    const flip = Math.random() < 0.5;
+    return flip ? [b, a, weights[i]] : [a, b, weights[i]];
+  });
+
+  GRAPHS.weighted_u = { nodes: GRAPHS.weighted_u.nodes, edges: newEdgesU };
+  GRAPHS.weighted_d = { nodes: GRAPHS.weighted_d.nodes, edges: newEdgesD };
+  doReset();
+}
+
+function setEdgeDensity(d) {
+  edgeDensity = d;
+  document.querySelectorAll('#topo-controls [data-density]').forEach(el =>
+    el.classList.toggle('active', el.dataset.density === d));
+  newDAG();
+}
+
+function newDAG() {
+  generateDAG(sourcesCount);
+  doReset();
+}
+
+function doReset() {
+  startNode=null; targetNode=null;
+  steps=[]; stepIndex=0; selPhase='start';
+  document.getElementById('step-ctr').textContent='';
+  updateSelPhase();
+  renderGraph(false);
+  renderSidebar();
+  renderLegend();
+}
+
+// Tab click
+document.getElementById('tabs').addEventListener('click', e => {
+  const t = e.target.dataset.tab;
+  if (!t||t===activeTab) return;
+  activeTab=t;
+  // Set default subtab per tab
+  if (t==='search') activeSub='dfs';
+  else if (t==='topo') activeSub='dfs';
+  else if (t==='span') activeSub='prim';
+  document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('active', el.dataset.tab===t));
+  // Show/hide subtabs and set correct options
+  const subtabsEl = document.getElementById('subtabs');
+  const dirEl = document.getElementById('dir-toggle');
+  const rowEl = subtabsEl.closest('div[style*="align-items:center"]');
+  if (t==='search') {
+    subtabsEl.style.display='flex';
+    subtabsEl.innerHTML=`<div class="subtab active" data-sub="dfs">DFS</div><div class="subtab" data-sub="bfs">BFS</div>`;
+    dirEl.style.display='flex';
+    document.getElementById('order-toggle').style.display='flex';
+    document.getElementById('visit-toggle').style.display='none';
+    document.getElementById('topo-controls').style.display='none'; document.getElementById('span-controls').style.display='none'; document.getElementById('dijk-controls').style.display='none';
+    if (rowEl) rowEl.style.display='flex';
+  } else if (t==='span') {
+    subtabsEl.style.display='flex';
+    subtabsEl.innerHTML=`<div class="subtab active" data-sub="prim">Prim's</div><div class="subtab" data-sub="kruskal">Kruskal's</div>`;
+    dirEl.style.display='none';
+    activeDir='undirected';
+    document.getElementById('order-toggle').style.display='none';
+    document.getElementById('visit-toggle').style.display='none';
+    document.getElementById('topo-controls').style.display='none'; document.getElementById('span-controls').style.display='none'; document.getElementById('dijk-controls').style.display='none';
+    document.getElementById('span-controls').style.display='flex';
+    if (rowEl) rowEl.style.display='flex';
+  } else if (t==='topo') {
+    subtabsEl.style.display='flex';
+    subtabsEl.innerHTML=`<div class="subtab active" data-sub="dfs">DFS</div><div class="subtab" data-sub="kahn">Kahn's</div>`;
+    dirEl.style.display='none';
+    activeDir='undirected';
+    document.getElementById('order-toggle').style.display='none';
+    document.getElementById('visit-toggle').style.display='none';
+    document.getElementById('topo-controls').style.display='flex'; document.getElementById('span-controls').style.display='none'; document.getElementById('dijk-controls').style.display='none';
+    if (rowEl) rowEl.style.display='flex';
+  } else if (t==='dijk') {
+    subtabsEl.style.display='none';
+    dirEl.style.display='flex';
+    document.getElementById('order-toggle').style.display='none';
+    document.getElementById('visit-toggle').style.display='none';
+    document.getElementById('topo-controls').style.display='none'; document.getElementById('span-controls').style.display='none';
+    document.getElementById('dijk-controls').style.display='flex';
+    if (rowEl) rowEl.style.display='flex';
+  } else {
+    activeDir='undirected';
+    document.getElementById('order-toggle').style.display='none';
+    document.getElementById('visit-toggle').style.display='none';
+    document.getElementById('topo-controls').style.display='none'; document.getElementById('span-controls').style.display='none'; document.getElementById('dijk-controls').style.display='none';
+    if (rowEl) rowEl.style.display='none';
+  }
+  doReset();
+});
+
+// Subtab click (delegated — subtabs are rebuilt on tab switch)
+document.getElementById('subtabs').addEventListener('click', e => {
+  const s = e.target.dataset.sub;
+  if (!s||s===activeSub) return;
+  activeSub=s;
+  document.querySelectorAll('.subtab').forEach(el=>el.classList.toggle('active', el.dataset.sub===s));
+  if (activeTab==='search') {
+    document.getElementById('order-toggle').style.display = s==='dfs' ? 'flex' : 'none';
+    document.getElementById('visit-toggle').style.display = s==='bfs' ? 'flex' : 'none';
+  }
+  doReset();
+});
+
+// Visit mode toggle click (BFS only)
+document.getElementById('visit-toggle').addEventListener('click', e => {
+  const v = e.target.dataset.visit;
+  if (!v || v === activeVisit) return;
+  activeVisit = v;
+  document.querySelectorAll('#visit-toggle .toggle-opt').forEach(el => el.classList.toggle('active', el.dataset.visit === v));
+  doReset();
+});
+
+// Order toggle click (DFS only)
+document.getElementById('order-toggle').addEventListener('click', e => {
+  const o = e.target.dataset.order;
+  if (!o || o === activeOrder) return;
+  activeOrder = o;
+  document.querySelectorAll('#order-toggle .toggle-opt').forEach(el => el.classList.toggle('active', el.dataset.order === o));
+  doReset();
+});
+
+// Direction toggle click
+document.getElementById('dir-toggle').addEventListener('click', e => {
+  const d = e.target.dataset.dir;
+  if (!d||d===activeDir) return;
+  activeDir=d;
+  document.querySelectorAll('.toggle-opt').forEach(el=>el.classList.toggle('active', el.dataset.dir===d));
+  doReset();
+});
+
+// ═══════════════════════════════════════════════════
+// SECTION 9: INIT
+// ═══════════════════════════════════════════════════
+// Generate initial random DAG
+generateDAG(sourcesCount);
+// Initial tab is 'search' DFS — show subtabs + dir-toggle + order-toggle
+document.getElementById('subtabs').style.display = 'flex';
+document.getElementById('dir-toggle').style.display = 'flex';
+document.getElementById('order-toggle').style.display = 'flex';
+document.getElementById('topo-controls').style.display = 'none'; document.getElementById('span-controls').style.display = 'none'; document.getElementById('dijk-controls').style.display = 'none';
+const _initRow = document.getElementById('subtabs').closest('div[style*="align-items:center"]');
+if (_initRow) _initRow.style.display = 'flex';
+doReset();
+</script>
+</body>
+</html>

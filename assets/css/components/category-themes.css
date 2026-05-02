@@ -1,0 +1,61 @@
+/* ── Category accordion color themes ── */
+/* Used by CS112, CS339, and CS432 index pages */
+
+/* Foundations — Gray/tan theme */
+.cat-accordion.foundations .cat-header-inner { background: transparent; box-shadow: inset 0 calc(-1 * var(--accordion-separator-width)) 0 0 #B8AFA6; }
+.cat-accordion.foundations .cat-icon { background: #7A6F66; color: white; }
+.cat-accordion.foundations .cat-name { color: #3D3530; }
+.cat-accordion.foundations .cat-tagline { color: #7A6F66; }
+.cat-accordion.foundations .cat-tool-count { background: #EEE9E4; color: #7A6F66; }
+.cat-accordion.foundations .cat-chevron svg { stroke: #7A6F66; }
+.cat-accordion.foundations { background: #FFFFFF; }
+
+/* Trees — Primary course accent color (overridden per course) */
+.cat-accordion.trees .cat-header-inner { background: transparent; box-shadow: inset 0 calc(-1 * var(--accordion-separator-width)) 0 0 var(--teal-m); }
+.cat-accordion.trees .cat-icon { background: var(--teal); color: white; }
+.cat-accordion.trees .cat-name { color: var(--teal); }
+.cat-accordion.trees .cat-tagline { color: var(--teal); }
+.cat-accordion.trees .cat-tool-count { background: var(--teal-l); color: var(--teal); }
+.cat-accordion.trees .cat-chevron svg { stroke: var(--teal); }
+.cat-accordion.trees { background: #FFFFFF; }
+.cat-accordion.trees .tool-card { border: 0.5px solid #B2E8D4; }
+
+/* Heaps — Amber theme */
+.cat-accordion.heaps .cat-header-inner { background: transparent; box-shadow: inset 0 calc(-1 * var(--accordion-separator-width)) 0 0 var(--amber-m); }
+.cat-accordion.heaps .cat-icon { background: var(--amber); color: white; }
+.cat-accordion.heaps .cat-name { color: var(--amber); }
+.cat-accordion.heaps .cat-tagline { color: var(--amber); }
+.cat-accordion.heaps .cat-tool-count { background: var(--amber-l); color: var(--amber); }
+.cat-accordion.heaps .cat-chevron svg { stroke: var(--amber-m); }
+.cat-accordion.heaps { background: #FFFFFF; }
+.cat-accordion.heaps .tool-card { border: 0.5px solid #F0DAAE; }
+
+/* Hash Tables — Red theme */
+.cat-accordion.hashtables .cat-header-inner { background: transparent; box-shadow: inset 0 calc(-1 * var(--accordion-separator-width)) 0 0 var(--red); }
+.cat-accordion.hashtables .cat-icon { background: var(--red); color: white; }
+.cat-accordion.hashtables .cat-name { color: var(--red); }
+.cat-accordion.hashtables .cat-tagline { color: var(--red-m); }
+.cat-accordion.hashtables .cat-tool-count { background: var(--red-l); color: var(--red); }
+.cat-accordion.hashtables .cat-chevron svg { stroke: var(--red); }
+.cat-accordion.hashtables { background: #FFFFFF; }
+.cat-accordion.hashtables .tool-card { border: 0.5px solid #F2C0CC; }
+
+/* Graphs — Purple theme */
+.cat-accordion.graphs .cat-header-inner { background: transparent; box-shadow: inset 0 calc(-1 * var(--accordion-separator-width)) 0 0 var(--purple-m); }
+.cat-accordion.graphs .cat-icon { background: var(--purple); color: white; }
+.cat-accordion.graphs .cat-name { color: var(--purple); }
+.cat-accordion.graphs .cat-tagline { color: var(--purple); }
+.cat-accordion.graphs .cat-tool-count { background: var(--purple-l); color: var(--purple); }
+.cat-accordion.graphs .cat-chevron svg { stroke: var(--purple-m); }
+.cat-accordion.graphs { background: #FFFFFF; }
+.cat-accordion.graphs .tool-card { border: 0.5px solid #DDD0F5; }
+
+/* Arrays — Blue theme (uses hardcoded values; can be customized per course) */
+.cat-accordion.arrays .cat-header-inner { background: transparent; box-shadow: inset 0 calc(-1 * var(--accordion-separator-width)) 0 0 #5B8EC4; }
+.cat-accordion.arrays .cat-icon { background: #2C5F8A; color: white; }
+.cat-accordion.arrays .cat-name { color: #2C5F8A; }
+.cat-accordion.arrays .cat-tagline { color: #5B8EC4; }
+.cat-accordion.arrays .cat-tool-count { background: #EEF4FC; color: #2C5F8A; }
+.cat-accordion.arrays .cat-chevron svg { stroke: #5B8EC4; }
+.cat-accordion.arrays { background: #FFFFFF; }
+.cat-accordion.arrays .tool-card { border: 0.5px solid #BDD4EC; }

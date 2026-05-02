@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hash Table Chaining Animation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Syne:wght@700;800&display=swap');
+
+  :root {
+    --bg:      #f4f2ed;
+    --surface: #ffffff;
+    --border:  #222;
+    --text:    #1a1a22;
+    --muted:   #888490;
+    --accent:  #1a5ca8;
+    --green:   #2a7a4b;
+    --red:     #c0392b;
+    --orange:  #d4780a;
+    --slot-w:  72px;
+    --slot-h:  38px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    font-family: 'DM Mono', monospace;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 100vh; padding: 32px 20px; gap: 16px;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.15rem; font-weight: 800;
+    letter-spacing: 0.04em; color: var(--text);
+  }
+  h1 em { color: var(--accent); font-style: normal; }
+
+  .card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    box-shadow: 5px 5px 0 var(--border);
+    padding: 24px 28px 20px;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 20px;
+    width: 100%; max-width: 820px;
+  }
+
+  /* ── Step description ── */
+  .step-box {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    padding: 10px 16px;
+    min-height: 44px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .step-num {
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    letter-spacing: 0.08em;
+  }
+  .step-text {
+    font-size: 0.7rem;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .step-text .key   { color: var(--accent); font-weight: 600; }
+  .step-text .idx   { color: var(--orange); font-weight: 600; }
+  .step-text .val   { color: var(--green);  font-weight: 600; }
+  .step-text .del   { color: var(--red);    font-weight: 600; }
+
+  /* ── Formula strip ── */
+  .formula {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-align: center;
+    letter-spacing: 0.04em;
+    min-height: 20px;
+  }
+  .formula .fval { color: var(--accent); font-weight: 600; }
+  .formula .feq  { color: var(--orange); font-weight: 600; }
+
+  /* ── Main viz area ── */
+  .viz {
+    width: 100%;
+    display: flex;
+    gap: 0;
+    align-items: flex-start;
+  }
+
+  /* Index column */
+  .index-col {
+    display: flex; flex-direction: column;
+    flex-shrink: 0;
+  }
+  .index-cell {
+    height: var(--slot-h);
+    width: 28px;
+    display: flex; align-items: center; justify-content: flex-end;
+    font-size: 9px; color: var(--muted);
+    padding-right: 6px;
+  }
+
+  /* Table column */
+  .table-col {
+    display: flex; flex-direction: column;
+    flex-shrink: 0;
+  }
+  .slot {
+    width: var(--slot-w);
+    height: var(--slot-h);
+    border: 1.5px solid #ccc;
+    border-bottom: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 500;
+    background: #fff;
+    color: var(--muted);
+    transition: background 0.25s, border-color 0.25s;
+    position: relative;
+  }
+  .slot:first-child { border-top: 2px solid var(--border); }
+  .slot:last-child  { border-bottom: 2px solid var(--border); }
+  .slot.active   { background: #fff3e0; border-color: var(--orange); border-width: 2px; color: var(--orange); }
+  .slot.inserted { background: #e8f4ee; border-color: var(--green);  border-width: 2px; color: var(--green); }
+  .slot.deleted  { background: #fdecea; border-color: var(--red);    border-width: 2px; color: var(--red); }
+  .table-col .slot { border-left: 2px solid var(--border); border-right: 2px solid var(--border); }
+
+  /* Chain area */
+  .chain-area {
+    flex: 1;
+    display: flex; flex-direction: column;
+  }
+  .chain-row {
+    height: var(--slot-h);
+    display: flex; align-items: center;
+    padding-left: 0;
+    gap: 0;
+    overflow: visible;
+  }
+
+  /* Node */
+  .node {
+    display: flex; align-items: center;
+    animation: nodeIn 0.3s ease both;
+  }
+  @keyframes nodeIn {
+    from { opacity: 0; transform: translateX(-12px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .node.removing {
+    animation: nodeOut 0.35s ease forwards;
+  }
+  @keyframes nodeOut {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(12px); }
+  }
+
+  .node-box {
+    height: 28px;
+    min-width: 72px;
+    padding: 0 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    background: #eeeaf4;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .node-box.new-node    { background: #e8f4ee; border-color: var(--green); color: var(--green); }
+  .node-box.found-node  { background: #e8f0fb; border-color: var(--accent); color: var(--accent); }
+  .node-box.delete-node { background: #fdecea; border-color: var(--red); color: var(--red); }
+
+  /* Arrow between nodes */
+  .arrow {
+    display: flex; align-items: center;
+    padding: 0 4px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* null terminator */
+  .null-marker {
+    font-size: 10px;
+    color: var(--muted);
+    padding-left: 6px;
+    font-style: italic;
+  }
+
+  /* connector from slot to chain */
+  .connector {
+    width: 20px; height: 28px;
+    display: flex; align-items: center;
+    flex-shrink: 0;
+  }
+  .connector svg { display: block; }
+
+  /* ── Controls ── */
+  .controls {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center;
+  }
+  button {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem; font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 8px 18px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: background 0.15s;
+  }
+  button:hover:not(:disabled) { background: var(--bg); }
+  button:disabled { opacity: 0.35; cursor: default; }
+  button.primary {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+  }
+  button.primary:hover:not(:disabled) { background: #154d8f; }
+
+  .progress {
+    font-size: 0.6rem; color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── Legend ── */
+  .legend {
+    display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+  }
+  .leg { display: flex; align-items: center; gap: 5px; font-size: 0.6rem; color: var(--muted); }
+  .leg-box { width: 13px; height: 13px; border-radius: 2px; border: 1.5px solid; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<h1>Hash Table — <em>Chaining</em></h1>
+
+<div class="card">
+
+  <div class="step-box">
+    <span class="step-num" id="stepNum">STEP 0</span>
+    <span class="step-text" id="stepText">Press <strong>Next</strong> to begin inserting records.</span>
+  </div>
+
+  <div class="formula" id="formula">&nbsp;</div>
+
+  <div class="viz">
+    <div class="index-col" id="indexCol"></div>
+    <div class="table-col" id="tableCol"></div>
+    <div class="chain-area" id="chainArea"></div>
+  </div>
+
+  <div class="controls">
+    <button id="btnPrev" disabled onclick="prev()">◀ Prev</button>
+    <button class="primary" id="btnNext" onclick="next()">Next ▶</button>
+    <button onclick="reset()">↺ Reset</button>
+    <span class="progress" id="progress">0 / 0</span>
+  </div>
+
+  <div class="legend">
+    <div class="leg"><div class="leg-box" style="background:#fff3e0;border-color:#d4780a;"></div>Active slot</div>
+    <div class="leg"><div class="leg-box" style="background:#e8f4ee;border-color:#2a7a4b;"></div>Inserted</div>
+    <div class="leg"><div class="leg-box" style="background:#e8f0fb;border-color:#1a5ca8;"></div>Found</div>
+    <div class="leg"><div class="leg-box" style="background:#fdecea;border-color:#c0392b;"></div>Deleted</div>
+    <div class="leg"><div class="leg-box" style="background:#eeeaf4;border-color:#222;"></div>Existing node</div>
+  </div>
+
+</div>
+
+<script>
+const M = 10;
+
+// ── Hash matching the Python template ──────────────────────────────────────
+function hashPerson(name) {
+  let total = 0;
+  for (const c of name) total += c.charCodeAt(0);
+  return total % M;
+}
+
+// ── Steps ──────────────────────────────────────────────────────────────────
+// type: 'insert' | 'find' | 'delete' | 'info'
+const STEPS = [
+  { type:'info',   text:'We have a hash table with <span class="key">M = 10</span> slots (indices 0–9). Each slot holds a linked list — initially all empty.' },
+  { type:'insert', name:'Alice',   age:30 },
+  { type:'insert', name:'Bob',     age:25 },
+  { type:'insert', name:'Charlie', age:35 },
+  { type:'insert', name:'Chris',   age:30 },
+  { type:'insert', name:'David',   age:40 },
+  { type:'insert', name:'David',   age:50 },
+  { type:'insert', name:'Bob',     age:28 },
+  { type:'info',   text:'All 7 records inserted. Notice that indices <span class="idx">5</span> and <span class="idx">8</span> have chains — those are collisions handled by chaining.' },
+  { type:'find',   name:'Bob',     age:25,  expect:true  },
+  { type:'find',   name:'Alice',   age:99,  expect:false },
+  { type:'delete', name:'Alice',   age:30 },
+  { type:'find',   name:'Alice',   age:30,  expect:false },
+  { type:'info',   text:'Done! Chaining handles collisions gracefully — each slot grows as needed, and deletions are clean splices.' },
+];
+
+// ── State ──────────────────────────────────────────────────────────────────
+let stepIdx = 0;
+// chains[i] = array of {name, age} in order (head first)
+let chains = Array.from({length: M}, () => []);
+let activeSlot = null;
+let highlightNodes = {}; // slot -> set of node indices to highlight
+let deleteNodes   = {}; // slot -> set of node indices to mark deleted
+
+// ── DOM ────────────────────────────────────────────────────────────────────
+function buildTable() {
+  const indexCol  = document.getElementById('indexCol');
+  const tableCol  = document.getElementById('tableCol');
+  const chainArea = document.getElementById('chainArea');
+  indexCol.innerHTML = '';
+  tableCol.innerHTML = '';
+  chainArea.innerHTML = '';
+
+  for (let i = 0; i < M; i++) {
+    // index label
+    const ic = document.createElement('div');
+    ic.className = 'index-cell';
+    ic.textContent = i;
+    indexCol.appendChild(ic);
+
+    // slot
+    const slot = document.createElement('div');
+    slot.className = 'slot';
+    slot.id = `slot-${i}`;
+    slot.textContent = '→';
+    tableCol.appendChild(slot);
+
+    // chain row
+    const row = document.createElement('div');
+    row.className = 'chain-row';
+    row.id = `chain-${i}`;
+    chainArea.appendChild(row);
+  }
+}
+
+function renderChains() {
+  for (let i = 0; i < M; i++) {
+    const row  = document.getElementById(`chain-${i}`);
+    const slot = document.getElementById(`slot-${i}`);
+    row.innerHTML = '';
+
+    const chain = chains[i];
+    const isActive  = activeSlot === i;
+    const highlights = highlightNodes[i] || new Set();
+    const deletes    = deleteNodes[i]    || new Set();
+
+    // Slot styling
+    slot.className = 'slot';
+    if (isActive) {
+      if (deletes.size > 0)   slot.className += ' deleted';
+      else if (highlights.size > 0) slot.className += ' active';
+      else slot.className += ' active';
+    } else if (chain.length > 0) {
+      slot.className += ' inserted';
+    }
+
+    // Connector arrow from slot into chain
+    const conn = document.createElement('div');
+    conn.className = 'connector';
+    conn.innerHTML = `<svg width="20" height="28"><line x1="0" y1="14" x2="16" y2="14" stroke="#bbb" stroke-width="1.5"/><polygon points="13,10 20,14 13,18" fill="#bbb"/></svg>`;
+    row.appendChild(conn);
+
+    if (chain.length === 0) {
+      const nm = document.createElement('span');
+      nm.className = 'null-marker';
+      nm.textContent = 'None';
+      row.appendChild(nm);
+    } else {
+      chain.forEach((person, j) => {
+        const nodeWrap = document.createElement('div');
+        nodeWrap.className = 'node';
+
+        const box = document.createElement('div');
+        box.className = 'node-box';
+        box.textContent = `|${person.name}(${person.age})|`;
+
+        if (deletes.has(j))    box.className += ' delete-node';
+        else if (highlights.has(j)) box.className += ' found-node';
+        else if (isActive && j === 0 && highlights.size === 0 && deletes.size === 0)
+          box.className += ' new-node';
+
+        nodeWrap.appendChild(box);
+        row.appendChild(nodeWrap);
+
+        // Arrow to next
+        const arr = document.createElement('div');
+        arr.className = 'arrow';
+        arr.textContent = '→';
+        row.appendChild(arr);
+      });
+
+      const nm = document.createElement('span');
+      nm.className = 'null-marker';
+      nm.textContent = 'None';
+      row.appendChild(nm);
+    }
+  }
+}
+
+// ── Step logic ─────────────────────────────────────────────────────────────
+function applyStep(idx) {
+  const step = STEPS[idx];
+  activeSlot = null;
+  highlightNodes = {};
+  deleteNodes = {};
+
+  let text = '';
+  let formula = '&nbsp;';
+
+  if (step.type === 'info') {
+    text = step.text;
+
+  } else if (step.type === 'insert') {
+    const slot = hashPerson(step.name);
+    const ordSum = [...step.name].reduce((s, c) => s + c.charCodeAt(0), 0);
+    activeSlot = slot;
+    // prepend (matches Python insert which prepends)
+    chains[slot].unshift({ name: step.name, age: step.age });
+    text = `Insert <span class="val">|${step.name}(${step.age})|</span> → hash("<span class="key">${step.name}</span>") = ${ordSum} % ${M} = <span class="idx">${slot}</span> → prepend to chain at index <span class="idx">${slot}</span>.`;
+    formula = `ord sum("<span class="fval">${step.name}</span>") = <span class="fval">${ordSum}</span> &nbsp;%&nbsp; ${M} &nbsp;= &nbsp;<span class="feq">${slot}</span>`;
+
+  } else if (step.type === 'find') {
+    const slot = hashPerson(step.name);
+    const ordSum = [...step.name].reduce((s, c) => s + c.charCodeAt(0), 0);
+    activeSlot = slot;
+    const found = chains[slot].findIndex(p => p.name === step.name && p.age === step.age);
+    if (found >= 0) {
+      highlightNodes[slot] = new Set([found]);
+      text = `Find <span class="key">|${step.name}(${step.age})|</span> → hash = <span class="idx">${slot}</span> → scan chain → <span class="val">found at position ${found}</span>.`;
+    } else {
+      text = `Find <span class="key">|${step.name}(${step.age})|</span> → hash = <span class="idx">${slot}</span> → scan chain → <span class="del">not found</span>. Return None.`;
+    }
+    formula = `ord sum("<span class="fval">${step.name}</span>") = <span class="fval">${ordSum}</span> &nbsp;%&nbsp; ${M} &nbsp;= &nbsp;<span class="feq">${slot}</span>`;
+
+  } else if (step.type === 'delete') {
+    const slot = hashPerson(step.name);
+    const ordSum = [...step.name].reduce((s, c) => s + c.charCodeAt(0), 0);
+    activeSlot = slot;
+    const found = chains[slot].findIndex(p => p.name === step.name && p.age === step.age);
+    if (found >= 0) {
+      deleteNodes[slot] = new Set([found]);
+      text = `Delete <span class="del">|${step.name}(${step.age})|</span> → hash = <span class="idx">${slot}</span> → found at position ${found} → splice out of chain.`;
+      formula = `ord sum("<span class="fval">${step.name}</span>") = <span class="fval">${ordSum}</span> &nbsp;%&nbsp; ${M} &nbsp;= &nbsp;<span class="feq">${slot}</span>`;
+      // We remove after a brief delay so the red highlight is visible
+      setTimeout(() => {
+        chains[slot].splice(found, 1);
+        deleteNodes = {};
+        renderChains();
+      }, 600);
+    }
+  }
+
+  document.getElementById('stepNum').textContent  = `STEP ${idx}`;
+  document.getElementById('stepText').innerHTML   = text;
+  document.getElementById('formula').innerHTML    = formula;
+  document.getElementById('progress').textContent = `${idx} / ${STEPS.length - 1}`;
+  renderChains();
+}
+
+function next() {
+  if (stepIdx < STEPS.length - 1) {
+    stepIdx++;
+    applyStep(stepIdx);
+  }
+  document.getElementById('btnPrev').disabled = stepIdx === 0;
+  document.getElementById('btnNext').disabled = stepIdx === STEPS.length - 1;
+}
+
+function prev() {
+  // Rebuild state from scratch up to stepIdx-1
+  chains = Array.from({length: M}, () => []);
+  stepIdx = Math.max(0, stepIdx - 1);
+  // replay all insert/delete up to stepIdx
+  for (let i = 1; i <= stepIdx; i++) {
+    const s = STEPS[i];
+    if (s.type === 'insert') {
+      chains[hashPerson(s.name)].unshift({ name: s.name, age: s.age });
+    } else if (s.type === 'delete') {
+      const slot = hashPerson(s.name);
+      const idx = chains[slot].findIndex(p => p.name === s.name && p.age === s.age);
+      if (idx >= 0) chains[slot].splice(idx, 1);
+    }
+  }
+  applyStep(stepIdx);
+  document.getElementById('btnPrev').disabled = stepIdx === 0;
+  document.getElementById('btnNext').disabled = stepIdx === STEPS.length - 1;
+}
+
+function reset() {
+  chains = Array.from({length: M}, () => []);
+  stepIdx = 0;
+  activeSlot = null;
+  highlightNodes = {};
+  deleteNodes = {};
+  document.getElementById('stepNum').textContent  = 'STEP 0';
+  document.getElementById('stepText').innerHTML   = 'Press <strong>Next</strong> to begin inserting records.';
+  document.getElementById('formula').innerHTML    = '&nbsp;';
+  document.getElementById('progress').textContent = `0 / ${STEPS.length - 1}`;
+  document.getElementById('btnPrev').disabled = true;
+  document.getElementById('btnNext').disabled = false;
+  renderChains();
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+buildTable();
+renderChains();
+document.getElementById('progress').textContent = `0 / ${STEPS.length - 1}`;
+</script>
+</body>
+</html>

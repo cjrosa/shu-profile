@@ -1,0 +1,83 @@
+/* ── Unified Button Styles ── */
+
+/* Base semi-transparent white button (sticky banner, hero section) */
+.btn-icon-light {
+  height: 28px; padding: 0 11px; border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.15);
+  color: white; font-family: -apple-system, sans-serif;
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 5px;
+  transition: background .15s, color .15s, border-color .15s;
+  white-space: nowrap;
+}
+.btn-icon-light:hover { background: rgba(255,255,255,0.28); }
+
+/* Smaller icon button variant (hero profile links) */
+.btn-icon-light.sm {
+  width: 30px; height: 30px; padding: 0;
+  justify-content: center; border-radius: 7px;
+  border: 1px solid rgba(255,255,255,0.45);
+  font-size: 11px;
+}
+
+/* LinkedIn button variant */
+.btn-icon-light.li { 
+  background: rgba(10,102,194,0.55); 
+  border-color: rgba(10,102,194,0.7); 
+  color: white;
+}
+.btn-icon-light.li:hover { 
+  background: rgba(10,102,194,0.7); 
+}
+
+/* Neutral border button (prof card links) */
+.btn-icon-neutral {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 6px;
+  border: 1px solid var(--border2);
+  color: var(--text2); text-decoration: none; 
+  background: white; cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.btn-icon-neutral:hover { 
+  background: var(--teal-l); 
+  color: var(--teal); 
+  border-color: var(--teal);
+}
+.btn-icon-neutral.li { 
+  background: #0A66C2; 
+  border-color: #0A66C2; 
+  color: white;
+}
+.btn-icon-neutral.li:hover { 
+  background: #0855a8;
+}
+
+/* ── Unified Badge Styles ── */
+
+/* Base badge for tags/labels */
+.badge {
+  font-family: -apple-system, sans-serif;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 20px;
+}
+
+/* Teal badge (default for AI recommendations) */
+.badge-teal {
+  background: var(--teal-l);
+  color: var(--teal);
+}
+
+/* Neutral badge (placeholder tags) */
+.badge-neutral {
+  background: #ECEEF1;
+  color: #6B7685;
+}
+
+/* Tool tag variant */
+.badge-tool {
+  font-size: 9px; font-weight: 600;
+  letter-spacing: .06em; padding: 2px 7px;
+}

@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS112 Data Structures &middot; Teaching Tools</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230F6E56'/%3E%3Ccircle cx='16' cy='8' r='4' fill='white' opacity='.9'/%3E%3Ccircle cx='8' cy='22' r='3.5' fill='white' opacity='.9'/%3E%3Ccircle cx='24' cy='22' r='3.5' fill='white' opacity='.9'/%3E%3Cline x1='16' y1='12' x2='8' y2='18.5' stroke='white' stroke-width='1.5'/%3E%3Cline x1='16' y1='12' x2='24' y2='18.5' stroke='white' stroke-width='1.5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/css/reset.css">
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="../assets/css/components/hero.css">
+<link rel="stylesheet" href="../assets/css/components/prof-card.css">
+<link rel="stylesheet" href="../assets/css/components/buttons-badges.css">
+<link rel="stylesheet" href="../assets/css/components/course-banner.css">
+<link rel="stylesheet" href="../assets/css/components/search.css">
+<link rel="stylesheet" href="../assets/css/components/cards.css">
+<link rel="stylesheet" href="../assets/css/components/accordion.css">
+<link rel="stylesheet" href="../assets/css/components/category-themes.css">
+<link rel="stylesheet" href="../assets/css/components/drawers.css">
+<link rel="stylesheet" href="../assets/css/components/footer.css">
+<link rel="stylesheet" href="../assets/css/pages/cs112.css">
+<link rel="stylesheet" href="../assets/css/components/glass-theme.css">
+</head>
+<body>
+
+<!-- Header -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <a href="../index.html" class="hero-back">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="14" y1="8" x2="2" y2="8"/><polyline points="8,2 2,8 8,14"/></svg>
+        All Courses
+      </a>
+      <div class="hero-course">CS112 &nbsp;&mdash;&nbsp; Data Structures</div>
+      <h1 class="hero-title">Interactive <em>Data Structures</em> Teaching Tools</h1>
+    </div>
+    <div class="prof-card">
+      <div class="prof-avatar"><img src="../assets/profile-photo.jpg" alt="Professor Chris Rosa"></div>
+      <div class="prof-info">
+        <div class="prof-name">Professor Chris Rosa</div>
+        <div class="prof-meta">CS112 &nbsp;&middot;&nbsp; Sacred Heart University</div>
+      </div>
+      <div class="prof-links">
+        <a href="mailto:rosac75066@sacredheart.edu" class="btn-icon-neutral" title="Email">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="14" height="10" rx="2"/><path d="M1 5l7 5 7-5"/></svg>
+        </a>
+        <a href="https://linkedin.com/in/chris-rosa-3192326" target="_blank" class="btn-icon-neutral li" title="LinkedIn">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="white"><path d="M2.5 1A1.5 1.5 0 1 0 2.5 4 1.5 1.5 0 0 0 2.5 1zM1 5.5h3V15H1zM6 5.5h2.9v1.3h.04C9.36 5.9 10.5 5.3 12 5.3c3.1 0 3.7 2 3.7 4.7V15h-3v-4.4c0-1.1 0-2.4-1.5-2.4s-1.7 1.2-1.7 2.4V15H6z"/></svg>
+        </a>
+        <button onclick="openInstDrawer()" class="btn-icon-neutral" title="About the Instructor" style="cursor:pointer;background:white;">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5" r="2.5"/><path d="M3 14c0-3 2-5 5-5s5 2 5 5"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Course banner -->
+<div class="course-banner">
+  <div class="course-banner-inner">
+    <div class="course-banner-left">
+      <div class="course-desc-label">Course Description &nbsp;&middot;&nbsp; <a href="https://sacredheart.smartcatalogiq.com/en/2023-2024/2023-2024-undergraduate-catalog/courses/cs-computer-science-and-information-technology/100/cs-112" target="_blank">Undergraduate Catalog</a></div>
+      <p class="course-desc-text">A continuation of CS 111 using Python to implement multidimensional arrays, stacks, queues, linked lists, and binary trees. Also introduces recursion, pointers, and classes.</p>
+    </div>
+    <div class="course-meta-pills">
+      <div class="course-pill">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><polyline points="8,4 8,8 11,10"/></svg>
+        3 Credits
+      </div>
+      <div class="course-pill">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h12v10H2z"/><line x1="8" y1="3" x2="8" y2="13"/></svg>
+        Prereq: CS-111
+      </div>
+      <div class="course-pill">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2l2 4 5 .7-3.5 3.5.8 5L8 13l-4.3 2.2.8-5L1 6.7 6 6z"/></svg>
+        Python
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="main">
+
+  <!-- Search -->
+  <div class="search-bar-wrap">
+    <div class="search-bar-inner">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.5" cy="6.5" r="4.5"/><line x1="10.5" y1="10.5" x2="14" y2="14"/></svg>
+      <input id="ai-search-input" class="search-input" type="text" placeholder='Ask a question about data structures &mdash; e.g. "how does AVL rotation work?"' autocomplete="off" />
+      <button id="ai-search-btn" class="search-btn" onclick="handleSearch()">
+        Ask
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg>
+      </button>
+    </div>
+    <div class="search-hint-row">
+      <span class="search-hint">Powered by Claude &nbsp;&middot;&nbsp; answers scoped to CS112 topics &nbsp;&middot;&nbsp; recommends tools when relevant</span>
+      <button id="btn-last-result" class="search-last-btn" onclick="openAiDrawer(null)" style="display:none">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4h14M1 8h10M1 12h6"/></svg>
+        Last result
+      </button>
+    </div>
+  </div>
+
+  <div class="section-label">Data Structures &amp; Concepts</div>
+
+  <div class="ds-stack">
+
+    <!-- Foundations -->
+    
+    <div class="cat-accordion foundations" id="acc-foundations">
+      <button class="cat-header" onclick="toggleCat('acc-foundations')" aria-expanded="false">
+        <div class="cat-header-inner">
+          <div class="cat-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="1.5" width="16" height="7" rx="1.5"/>
+              <rect x="3" y="13.5" width="16" height="7" rx="1.5"/>
+              <line x1="11" y1="8.5" x2="11" y2="11.5"/>
+              <polyline points="8,11 11,13.5 14,11"/>
+            </svg>
+          </div>
+          <div class="cat-title-area">
+            <div class="cat-name">Foundations</div>
+            <div class="cat-tagline">Python Classes &middot; OOP &middot; __init__ &middot; Instance Variables &middot; Inheritance</div>
+            <span class="cat-tool-count">Coming Soon</span>
+          </div>
+          <div class="cat-chevron">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg>
+          </div>
+        </div>
+      </button>
+      <div class="cat-body">
+        <div class="tools-grid">
+        <div class="placeholder-card" style="grid-column:1/-1">
+          <div class="placeholder-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A95A3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <div>
+            <div class="placeholder-title">Python Classes &amp; OOP &mdash; Coming Soon</div>
+            <div class="placeholder-desc">Understanding Python classes is foundational before implementing any data structure. This tool will cover <code>__init__</code>, instance variables, methods, inheritance, and <code>__str__</code> &mdash; all used throughout this course when building BSTs, heaps, linked lists and more.</div>
+            <div class="placeholder-topics">
+              <span class="placeholder-tag">__init__</span>
+              <span class="placeholder-tag">Instance Variables</span>
+              <span class="placeholder-tag">Methods</span>
+              <span class="placeholder-tag">self</span>
+              <span class="placeholder-tag">Inheritance</span>
+              <span class="placeholder-tag">__str__ / __repr__</span>
+              <span class="placeholder-tag">Encapsulation</span>
+            </div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- Trees -->
+    
+    <div class="cat-accordion trees open" id="acc-trees">
+      <button class="cat-header" onclick="toggleCat('acc-trees')" aria-expanded="true">
+        <div class="cat-header-inner">
+          <div class="cat-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="3.5" r="2.5"/>
+              <circle cx="5" cy="11.5" r="2.5"/>
+              <circle cx="17" cy="11.5" r="2.5"/>
+              <circle cx="2.5" cy="19" r="2"/>
+              <circle cx="8" cy="19" r="2"/>
+              <line x1="9" y1="5.5" x2="7" y2="9.5"/>
+              <line x1="13" y1="5.5" x2="15" y2="9.5"/>
+              <line x1="3.5" y1="13.5" x2="3" y2="17"/>
+              <line x1="6.5" y1="13.5" x2="7" y2="17"/>
+            </svg>
+          </div>
+          <div class="cat-title-area">
+            <div class="cat-name">Trees &amp; BSTs</div>
+            <div class="cat-tagline">Binary Search Trees &middot; AVL &middot; Insertion &middot; Deletion &middot; Search &middot; Traversal</div>
+            <span class="cat-tool-count">9 Tools</span>
+          </div>
+          <div class="cat-chevron">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg>
+          </div>
+        </div>
+      </button>
+      <div class="cat-body">
+        <div class="tools-grid">
+          <a class="tool-card" href="../viewer.html?tool=cs112/bst_insert_animation.html&course=CS112&label=Data%20Structures&name=BST%20Insert&back=cs112/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon" style="background:var(--teal-l)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+              </div>
+              <div>
+                <div class="tool-subtitle" style="color:var(--teal)">Insertion</div>
+                <div class="tool-title">BST Insert</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">Animate a single key insertion into a BST &mdash; trace the comparison path and watch the new node land in the correct position.</p>
+              <div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Step-by-step comparison at each node</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Visual path trace root to insertion point</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Highlights left/right decision at each level</div></div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta" style="color:var(--teal)">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag" style="background:var(--teal-l);color:var(--teal)">Interactive</span>
+            </div>
+          </a>
+          <a class="tool-card" href="../viewer.html?tool=cs112/bst_insert_order.html&course=CS112&label=Data%20Structures&name=Insert%20Order%20Effect&back=cs112/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon" style="background:var(--teal-l)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+              </div>
+              <div>
+                <div class="tool-subtitle" style="color:var(--teal)">Tree Shape</div>
+                <div class="tool-title">Insert Order Effect</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">Same 7 values, three different insertion orders. See how order determines tree height and balance &mdash; from perfectly balanced to fully degenerate.</p>
+              <div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Side-by-side balanced vs skewed comparison</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Animated sequential insertion</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Height and balance badge per tree</div></div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta" style="color:var(--teal)">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag" style="background:var(--teal-l);color:var(--teal)">Interactive</span>
+            </div>
+          </a>
+          <a class="tool-card" href="../viewer.html?tool=cs112/bst_search.html&course=CS112&label=Data%20Structures&name=BST%20Search&back=cs112/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon" style="background:var(--teal-l)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+              </div>
+              <div>
+                <div class="tool-subtitle" style="color:var(--teal)">Search</div>
+                <div class="tool-title">BST Search</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">Interactive BST search &mdash; enter a value and watch the algorithm traverse the tree, highlighting comparisons and the search path in real time.</p>
+              <div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Animated node-by-node comparison</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Highlights search path</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Shows found / not found outcome</div></div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta" style="color:var(--teal)">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag" style="background:var(--teal-l);color:var(--teal)">Interactive</span>
+            </div>
+          </a>
+          <a class="tool-card" href="../viewer.html?tool=cs112/bst_delete_animation.html&course=CS112&label=Data%20Structures&name=BST%20Delete%20%28Simple%29&back=cs112/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon" style="background:var(--teal-l)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+              </div>
+              <div>
+                <div class="tool-subtitle" style="color:var(--teal)">Deletion &middot; Cases 1 &amp; 2</div>
+                <div class="tool-title">BST Delete (Simple)</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">Covers BST deletion for leaf nodes and nodes with one child &mdash; the two simpler cases before introducing successor-based deletion.</p>
+              <div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Case 1: leaf node removal</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Case 2: single-child node removal</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Step-by-step animated tree restructure</div></div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta" style="color:var(--teal)">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag" style="background:var(--teal-l);color:var(--teal)">Interactive</span>
+            </div>
+          </a>
+          <a class="tool-card" href="../viewer.html?tool=cs112/bst_delete_animation_complex.html&course=CS112&label=Data%20Structures&name=BST%20Delete%20%28Two%20Children%29&back=cs112/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon" style="background:var(--teal-l)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+              </div>
+              <div>
+                <div class="tool-subtitle" style="color:var(--teal)">Deletion &middot; Case 3</div>
+                <div class="tool-title">BST Delete (Two Children)</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">The hardest deletion case &mdash; node with two children. Demonstrates finding the in-order successor, copying its value, and unlinking it from the right subtree.</p>
+              <div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>In-order successor search animated</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Value copy and successor unlink</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>BST property verified after deletion</div></div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta" style="color:var(--teal)">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag" style="background:var(--teal-l);color:var(--teal)">Interactive</span>
+            </div>
+          </a>
+          <a class="tool-card" href="../viewer.html?tool=cs112/bst_violations.html&course=CS112&label=Data%20Structures&name=BST%20Violations&back=cs112/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon" style="background:var(--teal-l)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+              </div>
+              <div>
+                <div class="tool-subtitle" style="color:var(--teal)">Correctness</div>
+                <div class="tool-title">BST Violations</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">A deliberately broken BST with three violations. Step through each one &mdash; too many children, wrong subtree placement &mdash; and watch them get fixed.</p>
+              <div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Three distinct violations highlighted</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Animated node repositioning to fix each</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>BST rule reminder panel</div></div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta" style="color:var(--teal)">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag" style="background:var(--teal-l);color:var(--teal)">Interactive</span>
+            </div>
+          </a>
+          <a class="tool-card" href="../viewer.html?tool=cs112/traversal_animation_2_.html&course=CS112&label=Data%20Structures&name=Tree%20Traversals&back=cs112/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon" style="background:var(--teal-l)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+              </div>
+              <div>
+                <div class="tool-subtitle" style="color:var(--teal)">In / Pre / Post-order</div>
+                <div class="tool-title">Tree Traversals</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">Animate all three DFS traversal orders on the same tree. Switch between tabs and watch the visit sequence change with the order.</p>
+              <div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>In-order, pre-order, post-order tabs</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Live visit log with animated chips</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Auto-play and step-by-step modes</div></div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta" style="color:var(--teal)">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag" style="background:var(--teal-l);color:var(--teal)">Interactive</span>
+            </div>
+          </a>
+          <a class="tool-card" href="../viewer.html?tool=cs112/bst_level_order_deque.html&course=CS112&label=Data%20Structures&name=Level-Order%20Traversal&back=cs112/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon" style="background:var(--teal-l)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+              </div>
+              <div>
+                <div class="tool-subtitle" style="color:var(--teal)">BFS with Deque</div>
+                <div class="tool-title">Level-Order Traversal</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">Visualizes breadth-first level-order traversal using a deque, with side-by-side Python code showing how the algorithm maps to the animation.</p>
+              <div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>BFS queue state shown at each step</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Python code synchronized with animation</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Level-by-level node visit order</div></div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta" style="color:var(--teal)">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag" style="background:var(--teal-l);color:var(--teal)">Interactive</span>
+            </div>
+          </a>
+          <a class="tool-card" href="../viewer.html?tool=cs112/avl_rotation_explorer.html&course=CS112&label=Data%20Structures&name=AVL%20Rotations&back=cs112/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon" style="background:var(--teal-l)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+              </div>
+              <div>
+                <div class="tool-subtitle" style="color:var(--teal)">Self-Balancing Trees</div>
+                <div class="tool-title">AVL Rotations</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">Explore all four AVL rotation types &mdash; LL, RR, LR, RL. Each shows the imbalance condition, the rotation steps, and the resulting balanced tree.</p>
+              <div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>All four rotation cases (LL/RR/LR/RL)</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Before and after tree comparison</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal)"></div>Balance factor tracking per node</div></div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta" style="color:var(--teal)">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag" style="background:var(--teal-l);color:var(--teal)">Interactive</span>
+            </div>
+          </a></div>
+      </div>
+    </div>
+
+    <!-- Heaps -->
+    
+    <div class="cat-accordion heaps" id="acc-heaps">
+      <button class="cat-header" onclick="toggleCat('acc-heaps')" aria-expanded="false">
+        <div class="cat-header-inner">
+          <div class="cat-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="2.5" r="2"/>
+              <circle cx="5" cy="9.5" r="2"/>
+              <circle cx="17" cy="9.5" r="2"/>
+              <circle cx="2" cy="17.5" r="1.8"/>
+              <circle cx="8" cy="17.5" r="1.8"/>
+              <circle cx="14" cy="17.5" r="1.8"/>
+              <circle cx="20" cy="17.5" r="1.8"/>
+              <line x1="9.2" y1="4" x2="7" y2="7.8"/>
+              <line x1="12.8" y1="4" x2="15" y2="7.8"/>
+              <line x1="3.5" y1="11.2" x2="2.5" y2="15.7"/>
+              <line x1="6.5" y1="11.2" x2="7.5" y2="15.7"/>
+              <line x1="15.5" y1="11.2" x2="14.5" y2="15.7"/>
+              <line x1="18.5" y1="11.2" x2="19.5" y2="15.7"/>
+            </svg>
+          </div>
+          <div class="cat-title-area">
+            <div class="cat-name">Heaps</div>
+            <div class="cat-tagline">Max Heap &middot; Min Heap &middot; Sift-Up &middot; Sift-Down &middot; Array Representation</div>
+            <span class="cat-tool-count">3 Tools</span>
+          </div>
+          <div class="cat-chevron">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg>
+          </div>
+        </div>
+      </button>
+      <div class="cat-body">
+        <div class="tools-grid">
+          <a class="tool-card" href="../viewer.html?tool=cs112/heap_full_animation.html&course=CS112&label=Data%20Structures&name=Heap%20Build%20%26%20Insert&back=cs112/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon" style="background:var(--amber-l)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+              </div>
+              <div>
+                <div class="tool-subtitle" style="color:var(--amber)">Max &amp; Min Heap</div>
+                <div class="tool-title">Heap Build &amp; Insert</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">Build a heap from a random array or insert individual values. Toggle between max and min heap and watch sift-up percolation after each insert.</p>
+              <div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--amber)"></div>Max heap and min heap modes</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--amber)"></div>Configurable node count slider</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--amber)"></div>Sift-up animation after each insert</div></div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta" style="color:var(--amber)">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag" style="background:var(--amber-l);color:var(--amber)">Interactive</span>
+            </div>
+          </a>
+          <a class="tool-card" href="../viewer.html?tool=cs112/reheap_array.html&course=CS112&label=Data%20Structures&name=Reheap%20Up%20%26%20Down&back=cs112/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon" style="background:var(--amber-l)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+              </div>
+              <div>
+                <div class="tool-subtitle" style="color:var(--amber)">Heap Repair</div>
+                <div class="tool-title">Reheap Up &amp; Down</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">Isolates the two fundamental heap repair operations. Reheap-up restores the heap after an insert; reheap-down restores it after removing the root.</p>
+              <div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--amber)"></div>Reheap-up: new node percolates to correct position</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--amber)"></div>Reheap-down: root replacement sifts down</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--amber)"></div>Dual array + tree visualization</div></div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta" style="color:var(--amber)">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag" style="background:var(--amber-l);color:var(--amber)">Interactive</span>
+            </div>
+          </a>
+          <a class="tool-card" href="../viewer.html?tool=cs112/array_indexing.html&course=CS112&label=Data%20Structures&name=Array%20Indexing&back=cs112/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon" style="background:var(--amber-l)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+              </div>
+              <div>
+                <div class="tool-subtitle" style="color:var(--amber)">Array Representation</div>
+                <div class="tool-title">Heap Array Indexing</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">The same heap shown as both a tree and a flat array. Click any node or cell to see the parent/left/right index formulas solved live.</p>
+              <div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--amber)"></div>Tree and array views synchronized</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--amber)"></div>parent(n), left(n), right(n) formulas solved on click</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--amber)"></div>Toggle tree-to-array connecting lines</div></div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta" style="color:var(--amber)">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag" style="background:var(--amber-l);color:var(--amber)">Interactive</span>
+            </div>
+          </a></div>
+      </div>
+    </div>
+
+    <!-- Hash Tables -->
+    
+    <div class="cat-accordion hashtables" id="acc-hashtables">
+      <button class="cat-header" onclick="toggleCat('acc-hashtables')" aria-expanded="false">
+        <div class="cat-header-inner">
+          <div class="cat-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="10" y="1" width="11" height="4" rx="1"/>
+              <rect x="10" y="6.5" width="11" height="4" rx="1"/>
+              <rect x="10" y="12" width="11" height="4" rx="1"/>
+              <rect x="10" y="17.5" width="11" height="4" rx="1"/>
+              <line x1="1" y1="8.5" x2="9" y2="8.5"/>
+              <polyline points="7,6.8 9,8.5 7,10.2"/>
+            </svg>
+          </div>
+          <div class="cat-title-area">
+            <div class="cat-name">Hash Tables</div>
+            <div class="cat-tagline">Chaining &middot; Linear Probing &middot; Quadratic Probing &middot; Clustering &middot; Collision</div>
+            <span class="cat-tool-count">3 Tools</span>
+          </div>
+          <div class="cat-chevron">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg>
+          </div>
+        </div>
+      </button>
+      <div class="cat-body">
+        <div class="tools-grid">
+          <a class="tool-card" href="../viewer.html?tool=cs112/chaining_animation.html&course=CS112&label=Data%20Structures&name=Hash%20Table%20Chaining&back=cs112/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon" style="background:var(--red-l)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+              </div>
+              <div>
+                <div class="tool-subtitle" style="color:var(--red)">Collision Resolution</div>
+                <div class="tool-title">Hash Table Chaining</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">Animate separate chaining &mdash; each bucket holds a linked list. Watch keys hash to slots and chains grow as collisions occur.</p>
+              <div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--red)"></div>Animated key insertion with hash calculation</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--red)"></div>Chain growth visualization per bucket</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--red)"></div>Load factor display</div></div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta" style="color:var(--red)">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag" style="background:var(--red-l);color:var(--red)">Interactive</span>
+            </div>
+          </a>
+          <a class="tool-card" href="../viewer.html?tool=cs112/linear_probing_clustering.html&course=CS112&label=Data%20Structures&name=Linear%20Probing%20%26%20Clustering&back=cs112/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon" style="background:var(--red-l)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+              </div>
+              <div>
+                <div class="tool-subtitle" style="color:var(--red)">Open Addressing</div>
+                <div class="tool-title">Linear Probing &amp; Clustering</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">Watch primary clustering emerge as keys pile into contiguous runs. Each insertion shows probe count and highlights the growing cluster.</p>
+              <div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--red)"></div>Step-by-step probe sequence animation</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--red)"></div>Cluster highlight after each insertion</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--red)"></div>Probe count badge per slot</div></div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta" style="color:var(--red)">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag" style="background:var(--red-l);color:var(--red)">Interactive</span>
+            </div>
+          </a>
+          <a class="tool-card" href="../viewer.html?tool=cs112/quadratic_prime_animation.html&course=CS112&label=Data%20Structures&name=Quadratic%20Probing&back=cs112/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon" style="background:var(--red-l)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+              </div>
+              <div>
+                <div class="tool-subtitle" style="color:var(--red)">Prime vs Non-Prime Table Size</div>
+                <div class="tool-title">Quadratic Probing</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">Demonstrates why prime table sizes matter in quadratic probing &mdash; compare successful vs cycling probe sequences side by side.</p>
+              <div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--red)"></div>Prime vs non-prime table comparison</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--red)"></div>Probe sequence animation per insertion</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--red)"></div>Cycle detection and infinite loop demonstration</div></div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta" style="color:var(--red)">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag" style="background:var(--red-l);color:var(--red)">Interactive</span>
+            </div>
+          </a></div>
+      </div>
+    </div>
+
+    <!-- Graphs -->
+    
+    <div class="cat-accordion graphs" id="acc-graphs">
+      <button class="cat-header" onclick="toggleCat('acc-graphs')" aria-expanded="false">
+        <div class="cat-header-inner">
+          <div class="cat-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="3" r="2.5"/>
+              <circle cx="3" cy="15" r="2.5"/>
+              <circle cx="19" cy="15" r="2.5"/>
+              <circle cx="11" cy="20" r="2"/>
+              <line x1="9" y1="5" x2="5" y2="13"/>
+              <line x1="13" y1="5" x2="17" y2="13"/>
+              <line x1="5.5" y1="15" x2="16.5" y2="15"/>
+              <line x1="4.5" y1="17" x2="9.5" y2="19.5"/>
+              <line x1="17.5" y1="17" x2="12.5" y2="19.5"/>
+              <line x1="9" y1="5" x2="17" y2="13"/>
+            </svg>
+          </div>
+          <div class="cat-title-area">
+            <div class="cat-name">Graphs</div>
+            <div class="cat-tagline">BFS &middot; DFS &middot; Weighted Edges &middot; Shortest Path &middot; Traversal</div>
+            <span class="cat-tool-count">1 Tool</span>
+          </div>
+          <div class="cat-chevron">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg>
+          </div>
+        </div>
+      </button>
+      <div class="cat-body">
+        <div class="tools-grid">
+          <a class="tool-card" href="../viewer.html?tool=cs112/graph_viz.html&course=CS112&label=Data%20Structures&name=Graph%20Algorithm%20Visualizer&back=cs112/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon" style="background:var(--purple-l)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+              </div>
+              <div>
+                <div class="tool-subtitle" style="color:var(--purple)">Traversal &amp; Shortest Path</div>
+                <div class="tool-title">Graph Algorithm Visualizer</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">Build arbitrary graphs, apply BFS/DFS traversal, and visualize shortest-path algorithms. Drag-and-drop node and edge construction.</p>
+              <div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--purple)"></div>Drag-and-drop topology construction</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--purple)"></div>BFS and DFS traversal animation</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--purple)"></div>Weighted edge shortest-path highlight</div></div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta" style="color:var(--purple)">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag" style="background:var(--purple-l);color:var(--purple)">Interactive</span>
+            </div>
+          </a></div>
+      </div>
+    </div>
+
+    <!-- Arrays -->
+    
+    <div class="cat-accordion arrays" id="acc-arrays">
+      <button class="cat-header" onclick="toggleCat('acc-arrays')" aria-expanded="false">
+        <div class="cat-header-inner">
+          <div class="cat-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="6" width="5.5" height="10" rx="0.5"/>
+              <rect x="8" y="6" width="5.5" height="10" rx="0.5"/>
+              <rect x="15" y="6" width="5.5" height="10" rx="0.5"/>
+              <line x1="1" y1="11" x2="20.5" y2="11"/>
+            </svg>
+          </div>
+          <div class="cat-title-area">
+            <div class="cat-name">Arrays</div>
+            <div class="cat-tagline">Index Arithmetic &middot; Heap-Array Mapping &middot; Parent / Child Formulas</div>
+            <span class="cat-tool-count">1 Tool</span>
+          </div>
+          <div class="cat-chevron">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg>
+          </div>
+        </div>
+      </button>
+      <div class="cat-body">
+        <div class="tools-grid">
+          <a class="tool-card" href="../viewer.html?tool=cs112/array_indexing.html&course=CS112&label=Data%20Structures&name=Array%20Indexing&back=cs112/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon" style="background:#EEF4FC">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2C5F8A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+              </div>
+              <div>
+                <div class="tool-subtitle" style="color:#2C5F8A">Index Arithmetic</div>
+                <div class="tool-title">Array Indexing</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">Explore how a complete binary tree maps to a flat array. The parent/child index formulas become concrete when you click any element.</p>
+              <div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:#2C5F8A"></div>32-bit index visualization</div><div class="tool-feature"><div class="tool-feature-dot" style="background:#2C5F8A"></div>parent(n), left(n), right(n) live calculation</div><div class="tool-feature"><div class="tool-feature-dot" style="background:#2C5F8A"></div>Toggle tree-to-array connection lines</div></div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta" style="color:#2C5F8A">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag" style="background:#EEF4FC;color:#2C5F8A">Interactive</span>
+            </div>
+          </a></div>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<footer class="footer">
+  CS112 Data Structures &nbsp;&middot;&nbsp; Sacred Heart University &nbsp;&middot;&nbsp; Professor Chris Rosa
+</footer>
+
+<!-- AI Drawer -->
+<div class="drawer-overlay" id="ai-drawer-overlay" onclick="closeAiDrawer()" style="z-index:101;"></div>
+<div class="ai-drawer" id="ai-drawer">
+  <div class="ai-drawer-header">
+    <div class="ai-drawer-label">
+      <span class="ai-drawer-label-text">CS112 Assistant</span>
+      <span class="ai-drawer-question" id="ai-drawer-question-preview"></span>
+    </div>
+    <div class="ai-drawer-controls">
+      <button class="ai-ctrl-btn" id="btn-expand" onclick="setDrawerSize('expanded')" title="Expand">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="10,2 14,2 14,6"/><polyline points="6,14 2,14 2,10"/><line x1="14" y1="2" x2="9" y2="7"/><line x1="2" y1="14" x2="7" y2="9"/></svg>
+      </button>
+      <button class="ai-ctrl-btn" id="btn-full" onclick="setDrawerSize('fullscreen')" title="Full screen">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 2,2 6,2"/><polyline points="10,2 14,2 14,6"/><polyline points="14,10 14,14 10,14"/><polyline points="6,14 2,14 2,10"/></svg>
+      </button>
+      <button class="ai-ctrl-btn" onclick="closeAiDrawer()" title="Close">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="ai-drawer-body" id="ai-drawer-body"></div>
+  <div class="ai-followup-wrap">
+    <input id="ai-followup-input" class="ai-followup-input" type="text" placeholder="Ask a follow-up question&hellip;" onkeydown="if(event.key==='Enter')sendFollowUp()" />
+    <button class="ai-followup-btn" id="ai-followup-btn" onclick="sendFollowUp()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+const PROXY_URL = 'https://red-union-6b9e.crosa.workers.dev';
+
+const TOOLS = [
+  { name:'BST Insert Animation',   file:'bst_insert_animation.html',        cat:'Trees', desc:'BST insertion, comparison path, left right decision', keywords:['bst','insert','insertion','binary search tree','add node','place'] },
+  { name:'Insert Order Effect',    file:'bst_insert_order.html',            cat:'Trees', desc:'Insertion order, tree shape, balanced vs degenerate', keywords:['insert order','balanced','degenerate','skewed','tree shape','height'] },
+  { name:'BST Search',             file:'bst_search.html',                  cat:'Trees', desc:'BST search, traversal, comparison, found not found', keywords:['search','find','lookup','bst search','contains'] },
+  { name:'BST Delete (Simple)',    file:'bst_delete_animation.html',        cat:'Trees', desc:'BST deletion leaf node single child case 1 case 2', keywords:['delete','deletion','remove','leaf','one child','case 1','case 2'] },
+  { name:'BST Delete (Two Children)', file:'bst_delete_animation_complex.html', cat:'Trees', desc:'BST deletion two children in-order successor case 3', keywords:['delete','two children','successor','in-order successor','case 3','in order'] },
+  { name:'BST Violations',         file:'bst_violations.html',              cat:'Trees', desc:'BST violations wrong placement too many children fix', keywords:['violation','invalid bst','broken','wrong','fix','property'] },
+  { name:'Tree Traversals',        file:'traversal_animation_2_.html',      cat:'Trees', desc:'in-order pre-order post-order DFS traversal visit', keywords:['traversal','inorder','preorder','postorder','in-order','pre-order','post-order','visit','dfs'] },
+  { name:'Level-Order Traversal',  file:'bst_level_order_deque.html',       cat:'Trees', desc:'BFS level order traversal deque queue breadth first', keywords:['level order','bfs','breadth first','deque','queue','level'] },
+  { name:'AVL Rotations',          file:'avl_rotation_explorer.html',       cat:'Trees', desc:'AVL tree rotations LL RR LR RL self-balancing balance factor', keywords:['avl','rotation','ll','rr','lr','rl','balance factor','self-balancing','rebalance'] },
+  { name:'Heap Build & Insert',    file:'heap_full_animation.html',         cat:'Heaps', desc:'max heap min heap build insert sift-up percolate', keywords:['heap','max heap','min heap','build heap','insert heap','sift up','percolate up'] },
+  { name:'Reheap Up & Down',       file:'reheap_array.html',                cat:'Heaps', desc:'reheap up down sift repair percolate heap property', keywords:['reheap','sift down','percolate down','reheap up','reheap down','heap repair'] },
+  { name:'Heap Array Indexing',    file:'array_indexing.html',              cat:'Heaps', desc:'heap array indexing parent child formula index arithmetic', keywords:['array indexing','heap array','parent formula','left child','right child','index','2n+1','2n+2'] },
+  { name:'Hash Table Chaining',    file:'chaining_animation.html',          cat:'Hash',  desc:'hash table chaining separate chaining linked list collision', keywords:['chaining','separate chaining','hash table','collision','bucket','linked list','load factor'] },
+  { name:'Linear Probing & Clustering', file:'linear_probing_clustering.html', cat:'Hash', desc:'linear probing clustering primary cluster open addressing', keywords:['linear probing','clustering','primary cluster','open addressing','probe','collision','hash'] },
+  { name:'Quadratic Probing',      file:'quadratic_prime_animation.html',   cat:'Hash',  desc:'quadratic probing prime table size cycle open addressing', keywords:['quadratic probing','prime','table size','probe sequence','cycle','hash'] },
+  { name:'Graph Algorithm Visualizer', file:'graph_viz.html',               cat:'Graphs', desc:'graph BFS DFS traversal shortest path weighted edges', keywords:['graph','bfs','dfs','breadth first','depth first','shortest path','weighted','edge','vertex','node','adjacency'] },
+];
+
+let aiHistory = [], currentDrawerSize = 'default', cachedDrawerHTML = '', cachedQuestion = '';
+
+function recommendTool(q, a) {
+  const text = (q + ' ' + a).toLowerCase();
+  let best = null, bestScore = 0;
+  for (const t of TOOLS) {
+    const score = t.keywords.filter(k => text.includes(k)).length;
+    if (score > bestScore) { bestScore = score; best = t; }
+  }
+  return bestScore >= 1 ? best : null;
+}
+
+function renderToolCard(tool) {
+  return `<a class="ai-tool-rec" href="${tool.file}">
+    <div class="ai-tool-rec-header">
+      <span class="ai-tool-rec-badge">Recommended Tool</span>
+      <span class="ai-tool-rec-layer">${tool.cat}</span>
+    </div>
+    <div class="ai-tool-rec-body">
+      <div class="ai-tool-rec-name">${tool.name}</div>
+      <div class="ai-tool-rec-desc">${tool.desc}</div>
+    </div>
+    <div class="ai-tool-rec-footer">
+      <span class="ai-tool-rec-cta">Open tool <svg class="ai-tool-rec-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+    </div>
+  </a>`;
+}
+
+function appendMessage(html, cls) {
+  const body = document.getElementById('ai-drawer-body');
+  const div = document.createElement('div');
+  div.className = cls; div.innerHTML = html;
+  body.appendChild(div); body.scrollTop = body.scrollHeight;
+  return div;
+}
+
+async function callClaude(messages) {
+  const SYSTEM = `You are a concise, friendly teaching assistant for CS112 Data Structures at Sacred Heart University. The course uses Python.
+Answer questions about: arrays, linked lists, stacks, queues, binary trees, binary search trees (BST), AVL trees and rotations, heaps (max/min, sift-up/down, array representation), hash tables (chaining, linear probing, quadratic probing, clustering), graphs (BFS, DFS, weighted), recursion, Big-O complexity, and Python classes/OOP.
+Rules:
+- Be beginner-friendly. This is a 100-level course.
+- Use Python examples where helpful.
+- Be concise: 2-4 short paragraphs maximum.
+- Plain prose only &mdash; no markdown headers or bullet points.
+- If outside CS112 scope, politely redirect.
+- End with a single line starting "TOOL:" naming the most relevant tool from this list, or "TOOL:none":
+  BST Insert Animation, Insert Order Effect, BST Search, BST Delete (Simple), BST Delete (Two Children), BST Violations, Tree Traversals, Level-Order Traversal, AVL Rotations, Heap Build & Insert, Reheap Up & Down, Heap Array Indexing, Hash Table Chaining, Linear Probing & Clustering, Quadratic Probing, Graph Algorithm Visualizer`;
+
+  const response = await fetch(PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 1000, system: SYSTEM, messages })
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error('HTTP ' + response.status + ': ' + (err.error?.message || JSON.stringify(err)));
+  }
+  const data = await response.json();
+  return data.content[0].text;
+}
+
+function parseResponse(raw) {
+  const lines = raw.split('\n');
+  const toolLine = lines.findLast(l => l.trim().startsWith('TOOL:'));
+  const toolName = toolLine ? toolLine.replace('TOOL:', '').trim() : null;
+  const answer = lines.filter(l => !l.trim().startsWith('TOOL:')).join('\n').trim();
+  const tool = toolName && toolName !== 'none'
+    ? TOOLS.find(t => t.name.toLowerCase() === toolName.toLowerCase()) || recommendTool(answer, answer)
+    : null;
+  return { answer, tool };
+}
+
+async function handleSearch() {
+  const input = document.getElementById('ai-search-input');
+  const q = input.value.trim(); if (!q) return;
+  openAiDrawer(q); input.value = '';
+  aiHistory = [{ role: 'user', content: q }];
+  appendMessage(q, 'ai-question-chip');
+  const loadingDiv = appendMessage('<div class="ai-loading"><div class="ai-loading-dots"><span></span><span></span><span></span></div><span>Thinking&hellip;</span></div>', 'ai-answer-block');
+  setInputsDisabled(true);
+  try {
+    const raw = await callClaude(aiHistory);
+    const { answer, tool } = parseResponse(raw);
+    aiHistory.push({ role: 'assistant', content: raw });
+    loadingDiv.innerHTML = `<div class="ai-answer-text">${answer.split('\n\n').map(p => p ? '<p>'+p+'</p>' : '').join('')}</div>`;
+    if (tool) appendMessage(renderToolCard(tool), '');
+    cachedDrawerHTML = document.getElementById('ai-drawer-body').innerHTML;
+    cachedQuestion = q;
+    document.getElementById('btn-last-result').style.display = 'inline-flex';
+  } catch(e) {
+    loadingDiv.innerHTML = '<div class="ai-answer-text" style="color:var(--teal)">Error: ' + e.message + '</div>';
+  }
+  setInputsDisabled(false);
+  document.getElementById('ai-followup-input').focus();
+}
+
+async function sendFollowUp() {
+  const input = document.getElementById('ai-followup-input');
+  const q = input.value.trim(); if (!q) return;
+  input.value = ''; aiHistory.push({ role: 'user', content: q });
+  appendMessage(q, 'ai-question-chip');
+  const loadingDiv = appendMessage('<div class="ai-loading"><div class="ai-loading-dots"><span></span><span></span><span></span></div><span>Thinking&hellip;</span></div>', 'ai-answer-block');
+  setInputsDisabled(true);
+  try {
+    const raw = await callClaude(aiHistory);
+    const { answer, tool } = parseResponse(raw);
+    aiHistory.push({ role: 'assistant', content: raw });
+    loadingDiv.innerHTML = `<div class="ai-answer-text">${answer.split('\n\n').map(p => p ? '<p>'+p+'</p>' : '').join('')}</div>`;
+    if (tool) appendMessage(renderToolCard(tool), '');
+    cachedDrawerHTML = document.getElementById('ai-drawer-body').innerHTML;
+    cachedQuestion = aiHistory[0]?.content || cachedQuestion;
+  } catch(e) {
+    loadingDiv.innerHTML = '<div class="ai-answer-text" style="color:var(--teal)">Error: ' + e.message + '</div>';
+  }
+  setInputsDisabled(false); input.focus();
+}
+
+function setDrawerSize(size) {
+  const d = document.getElementById('ai-drawer');
+  d.classList.remove('expanded','fullscreen');
+  if (size !== 'default') d.classList.add(size);
+  currentDrawerSize = size;
+  document.getElementById('btn-expand').classList.toggle('active', size==='expanded');
+  document.getElementById('btn-full').classList.toggle('active', size==='fullscreen');
+}
+
+function openAiDrawer(question) {
+  const body = document.getElementById('ai-drawer-body');
+  if (question) {
+    body.innerHTML = '';
+    document.getElementById('ai-drawer-question-preview').textContent = '"' + question + '"';
+  } else if (cachedDrawerHTML) {
+    body.innerHTML = cachedDrawerHTML;
+    document.getElementById('ai-drawer-question-preview').textContent = cachedQuestion ? '"' + cachedQuestion + '"' : '';
+    body.scrollTop = body.scrollHeight;
+  }
+  document.getElementById('ai-drawer').classList.add('open');
+  document.getElementById('ai-drawer-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAiDrawer() {
+  document.getElementById('ai-drawer').classList.remove('open');
+  document.getElementById('ai-drawer-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  setDrawerSize('default');
+}
+
+function setInputsDisabled(val) {
+  document.getElementById('ai-search-btn').disabled = val;
+  document.getElementById('ai-followup-btn').disabled = val;
+  document.getElementById('ai-followup-input').disabled = val;
+}
+
+function openInstDrawer() {
+  document.getElementById('instructor-drawer').classList.add('open');
+  document.getElementById('inst-drawer-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeInstDrawer() {
+  document.getElementById('instructor-drawer').classList.remove('open');
+  document.getElementById('inst-drawer-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function toggleCat(id) {
+  const el = document.getElementById(id);
+  const btn = el.querySelector('.cat-header');
+  const isOpen = el.classList.contains('open');
+  el.classList.toggle('open', !isOpen);
+  btn.setAttribute('aria-expanded', String(!isOpen));
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const inp = document.getElementById('ai-search-input');
+  if (inp) inp.addEventListener('keydown', function(e) { if (e.key === 'Enter') handleSearch(); });
+});
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeAiDrawer(); closeInstDrawer(); } });
+</script>
+
+<script src="../assets/js/components/instructor-drawer-loader.js"></script>
+</body>
+</html>

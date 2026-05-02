@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BST Delete</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600&family=Syne:wght@700;800&display=swap');
+:root{
+  --bg:#f4f2ed;--surface:#fff;--border:#222;
+  --text:#1a1a22;--muted:#888490;
+  --accent:#1a5ca8;--green:#2a7a4b;--red:#c0392b;--orange:#d4780a;--purple:#6b3fa0;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);font-family:'DM Mono',monospace;
+  display:flex;flex-direction:column;align-items:center;
+  min-height:100vh;padding:24px 16px;gap:12px;}
+h1{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;
+  letter-spacing:.04em;color:var(--text);}
+h1 em{color:var(--accent);font-style:normal;}
+
+.card{background:var(--surface);border:1.5px solid var(--border);
+  box-shadow:5px 5px 0 var(--border);
+  padding:18px 24px 16px;display:flex;flex-direction:column;
+  align-items:center;gap:12px;width:100%;max-width:680px;}
+
+/* case tabs */
+.cases{display:flex;gap:0;width:100%;}
+.case-tab{flex:1;text-align:center;padding:6px 4px;
+  font-size:.52rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);border:1.5px solid #ddd;border-right:none;cursor:pointer;
+  transition:background .15s,color .15s;}
+.case-tab:last-child{border-right:1.5px solid #ddd;}
+.case-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* step box */
+.step-box{width:100%;background:var(--bg);border:1px solid #ddd;
+  padding:8px 13px;min-height:52px;display:flex;align-items:center;gap:9px;}
+.step-badge{color:#fff;font-size:.53rem;font-weight:600;
+  padding:2px 8px;border-radius:2px;letter-spacing:.07em;flex-shrink:0;white-space:nowrap;}
+.step-msg{font-size:.65rem;color:var(--text);line-height:1.55;}
+
+/* svg tree */
+#treesvg{width:100%;max-width:560px;}
+
+/* node states via CSS — applied by JS setting data-state on circle/text */
+.node-circle{transition:fill .35s,stroke .35s,opacity .35s,stroke-width .35s;}
+.node-text{transition:fill .35s,opacity .35s;}
+
+/* controls */
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;}
+button{font-family:'DM Mono',monospace;font-size:.6rem;font-weight:600;
+  letter-spacing:.07em;padding:7px 14px;border:1.5px solid var(--border);
+  background:var(--surface);color:var(--text);cursor:pointer;text-transform:uppercase;}
+button:hover:not(:disabled){background:var(--bg);}
+button:disabled{opacity:.35;cursor:default;}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+button.primary:hover:not(:disabled){background:#154d8f;}
+.progress{font-size:.57rem;color:var(--muted);}
+
+/* legend */
+.legend{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+.leg{display:flex;align-items:center;gap:5px;font-size:.53rem;color:var(--muted);}
+.leg-dot{width:12px;height:12px;border-radius:50%;border:2px solid;}
+</style>
+</head>
+<body>
+<h1>BST Node Deletion — <em>Four Cases</em></h1>
+<div class="card">
+
+  <div class="cases">
+    <div class="case-tab active" id="tab0" onclick="loadCase(0)">Case 1 — Leaf</div>
+    <div class="case-tab"        id="tab1" onclick="loadCase(1)">Case 2 — One Child</div>
+    <div class="case-tab"        id="tab2" onclick="loadCase(2)">Case 3 — Two Children</div>
+    <div class="case-tab"        id="tab3" onclick="loadCase(3)">Case 4 — Successor Has Child</div>
+  </div>
+
+  <div class="step-box">
+    <span class="step-badge" id="badge" style="background:var(--accent)">READY</span>
+    <span class="step-msg"   id="msg">Select a case or press Next to begin.</span>
+  </div>
+
+  <svg id="treesvg" viewBox="0 0 560 360" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arr" markerWidth="6" markerHeight="7" refX="5" refY="3.5" orient="auto">
+        <polygon points="0 0,6 3.5,0 7" fill="#888"/>
+      </marker>
+    </defs>
+    <!-- edges and nodes rendered by JS -->
+  </svg>
+
+  <div class="controls">
+    <button id="btnPrev" disabled onclick="go(-1)">◀ Prev</button>
+    <button class="primary" id="btnNext" onclick="go(1)">Next ▶</button>
+    <button onclick="resetCase()">↺ Reset</button>
+    <span class="progress" id="prog"></span>
+  </div>
+
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:#e8f0fb;border-color:#1a5ca8;"></div>Normal</div>
+    <div class="leg"><div class="leg-dot" style="background:#fdecea;border-color:#c0392b;"></div>Delete target</div>
+    <div class="leg"><div class="leg-dot" style="background:#e8f4ee;border-color:#2a7a4b;"></div>Successor / replacement</div>
+    <div class="leg"><div class="leg-dot" style="background:#fff3e0;border-color:#d4780a;"></div>Highlighted path</div>
+  </div>
+</div>
+
+<script>
+// ── Tree geometry ─────────────────────────────────────────────────────────
+const R = 22;
+const NP = {
+  50:[280,50], 30:[168,140], 70:[392,140],
+  20:[101,230], 40:[235,230], 60:[325,230], 80:[459,230],
+  65:[364,320]
+};
+const ALL_EDGES = [[50,30],[50,70],[30,20],[30,40],[70,60],[70,80],[60,65]];
+
+// Case 4 uses a different tree: node 40 has a left child 35
+// so the in-order successor of 30 is 35 (not 40), and 35 has no children
+// Tree: same as base but 40 also has left child 35
+const NP4 = {
+  50:[280,50], 30:[168,140], 70:[392,140],
+  20:[101,230], 40:[235,230], 60:[325,230], 80:[459,230],
+  35:[168,320],  // left child of 40
+  65:[364,320]
+};
+const CASE4_EDGES = [[50,30],[50,70],[30,20],[30,40],[70,60],[70,80],[40,35],[60,65]];
+
+// Node color defaults
+const C_NORMAL = {fill:'#e8e6e0', stroke:'#555', textFill:'#1a1a22'};
+const C_TARGET = {fill:'#fdecea', stroke:'#c0392b', textFill:'#c0392b'};
+const C_SUCC   = {fill:'#e8f4ee', stroke:'#2a7a4b', textFill:'#2a7a4b'};
+const C_PATH   = {fill:'#fff3e0', stroke:'#d4780a', textFill:'#d4780a'};
+const C_GONE   = {fill:'#f6f6f6', stroke:'#ddd',    textFill:'#ccc', opacity:0};
+
+// ── SVG helpers ───────────────────────────────────────────────────────────
+const svg = document.getElementById('treesvg');
+
+function makeLine(id, x1,y1,x2,y2, col='#aaa', dash=''){
+  const el = document.createElementNS('http://www.w3.org/2000/svg','line');
+  el.setAttribute('id',id); el.setAttribute('x1',x1); el.setAttribute('y1',y1);
+  el.setAttribute('x2',x2); el.setAttribute('y2',y2);
+  el.setAttribute('stroke',col); el.setAttribute('stroke-width','1.5');
+  el.setAttribute('marker-end','url(#arr)');
+  if(dash) el.setAttribute('stroke-dasharray',dash);
+  return el;
+}
+function makeCircle(id,cx,cy,r,fill,stroke,sw=1.8){
+  const el = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  el.setAttribute('id',id); el.setAttribute('cx',cx); el.setAttribute('cy',cy);
+  el.setAttribute('r',r); el.setAttribute('fill',fill); el.setAttribute('stroke',stroke);
+  el.setAttribute('stroke-width',sw); el.className='node-circle'; return el;
+}
+function makeText(id,cx,cy,val,fill){
+  const el = document.createElementNS('http://www.w3.org/2000/svg','text');
+  el.setAttribute('id',id); el.setAttribute('x',cx); el.setAttribute('y',cy);
+  el.setAttribute('text-anchor','middle'); el.setAttribute('dominant-baseline','central');
+  el.setAttribute('font-family','DM Mono,monospace'); el.setAttribute('font-size','13');
+  el.setAttribute('font-weight','700'); el.setAttribute('fill',fill);
+  el.className='node-text'; el.textContent=val; return el;
+}
+
+function edgePts(pn, cn){
+  const [px,py]=NP[pn],[cx2,cy2]=NP[cn];
+  const dx=cx2-px, dy=cy2-py, d=Math.sqrt(dx*dx+dy*dy);
+  return [px+dx/d*(R+1), py+dy/d*(R+1), cx2-dx/d*(R+2), cy2-dy/d*(R+2)];
+}
+
+function buildTree(activeEdges, activeNodes){
+  // clear svg content (keep defs)
+  while(svg.children.length > 1) svg.removeChild(svg.lastChild);
+
+  // draw edges
+  activeEdges.forEach(([a,b])=>{
+    const [x1,y1,x2,y2] = edgePts(a,b);
+    svg.appendChild(makeLine(`e${a}_${b}`,x1,y1,x2,y2));
+  });
+
+  // draw nodes
+  activeNodes.forEach(({id,col})=>{
+    const [cx,cy] = NP[id];
+    const c = svg.appendChild(makeCircle(`c${id}`,cx,cy,R,col.fill,col.stroke));
+    if(col.opacity===0){c.style.opacity='0.15';}
+    svg.appendChild(makeText(`t${id}`,cx,cy,id,col.textFill));
+  });
+}
+
+function setNodeColor(id, col){
+  const c = document.getElementById(`c${id}`);
+  const t = document.getElementById(`t${id}`);
+  if(c){ c.setAttribute('fill',col.fill); c.setAttribute('stroke',col.stroke);
+    c.setAttribute('stroke-width', col===C_TARGET||col===C_SUCC ? '2.5' : '1.8');
+    c.style.opacity = col.opacity===0 ? '0.12' : '1'; }
+  if(t){ t.setAttribute('fill',col.textFill); t.style.opacity = col.opacity===0 ? '0' : '1'; }
+}
+function setEdgeVis(a,b,vis,col='#aaa',dash=''){
+  const e = document.getElementById(`e${a}_${b}`);
+  if(!e) return;
+  if(!vis){ e.style.opacity='0'; return; }
+  e.style.opacity='1'; e.setAttribute('stroke',col);
+  if(dash) e.setAttribute('stroke-dasharray',dash);
+}
+function addEdge(a,b,col='#2a7a4b',dash=''){
+  const [x1,y1,x2,y2]=edgePts(a,b);
+  const el = makeLine(`enew_${a}_${b}`,x1,y1,x2,y2,col,dash);
+  svg.insertBefore(el, svg.children[1]); // behind nodes
+}
+function removeNewEdge(a,b){
+  const el = document.getElementById(`enew_${a}_${b}`);
+  if(el) el.remove();
+}
+
+// ── Case definitions ──────────────────────────────────────────────────────
+// Each case: array of steps {badge, msg, fn}
+const CASES = [
+
+  // ── Case 1: Delete leaf node 20 ──────────────────────────────────────
+  [
+    {badge:'CASE 1', badgeColor:'#1a5ca8',
+     msg:'We want to delete node <strong>20</strong>. It has no children — it is a <strong>leaf node</strong>.',
+     fn:()=>{ setNodeColor(20,C_TARGET); }},
+    {badge:'STEP 1', badgeColor:'#1a5ca8',
+     msg:'Find node 20. Traverse from root: 50 → 30 → 20.',
+     fn:()=>{ setNodeColor(50,C_PATH); setNodeColor(30,C_PATH); }},
+    {badge:'STEP 2', badgeColor:'#1a5ca8',
+     msg:'Node 20 is a <strong>leaf</strong> — it has no left or right child.',
+     fn:()=>{ setNodeColor(50,C_NORMAL); setNodeColor(30,C_NORMAL); }},
+    {badge:'STEP 3', badgeColor:'#c0392b',
+     msg:'Simply <strong>remove</strong> node 20 and set parent\'s (30) left pointer to <code>null</code>.',
+     fn:()=>{ setEdgeVis(30,20,false); setNodeColor(20,C_GONE); }},
+    {badge:'DONE', badgeColor:'#2a7a4b',
+     msg:'✓ Leaf deletion complete. Node 30\'s left child is now <code>null</code>. Tree structure is unchanged otherwise.',
+     fn:()=>{}},
+  ],
+
+  // ── Case 2: Delete node 60 (one child: right=65) ─────────────────────
+  [
+    {badge:'CASE 2', badgeColor:'#1a5ca8',
+     msg:'We want to delete node <strong>60</strong>. It has exactly <strong>one child</strong> (right child: 65).',
+     fn:()=>{ setNodeColor(60,C_TARGET); }},
+    {badge:'STEP 1', badgeColor:'#1a5ca8',
+     msg:'Find node 60. Traverse: 50 → 70 → 60.',
+     fn:()=>{ setNodeColor(50,C_PATH); setNodeColor(70,C_PATH); }},
+    {badge:'STEP 2', badgeColor:'#1a5ca8',
+     msg:'Node 60 has one child: right child <strong>65</strong>. We will splice 60 out and link its parent directly to 65.',
+     fn:()=>{ setNodeColor(50,C_NORMAL); setNodeColor(70,C_NORMAL); setNodeColor(65,C_SUCC); }},
+    {badge:'STEP 3', badgeColor:'#c0392b',
+     msg:'Remove node 60. Disconnect edges: 70→60 and 60→65.',
+     fn:()=>{ setEdgeVis(70,60,false); setEdgeVis(60,65,false); setNodeColor(60,C_GONE); }},
+    {badge:'STEP 4', badgeColor:'#2a7a4b',
+     msg:'Connect parent <strong>70</strong> directly to <strong>65</strong>.',
+     fn:()=>{ addEdge(70,65,'#2a7a4b'); setNodeColor(65,C_NORMAL); }},
+    {badge:'DONE', badgeColor:'#2a7a4b',
+     msg:'✓ Single-child deletion complete. 70\'s left pointer now points to 65, bypassing the deleted node.',
+     fn:()=>{}},
+  ],
+
+  // ── Case 3: Delete node 30 (two children: left=20, right=40) ─────────
+  [
+    {badge:'CASE 3', badgeColor:'#1a5ca8',
+     msg:'We want to delete node <strong>30</strong>. It has <strong>two children</strong> (left: 20, right: 40).',
+     fn:()=>{ setNodeColor(30,C_TARGET); }},
+    {badge:'STEP 1', badgeColor:'#1a5ca8',
+     msg:'Find node 30. We cannot simply remove it — we must find its <strong>in-order successor</strong>: the smallest value in its right subtree.',
+     fn:()=>{ setNodeColor(50,C_PATH); }},
+    {badge:'STEP 2', badgeColor:'#d4780a',
+     msg:'Go to right child <strong>40</strong>, then follow left children as far as possible. Node 40 has no left child — so <strong>40 is the in-order successor</strong>.',
+     fn:()=>{ setNodeColor(50,C_NORMAL); setNodeColor(40,C_SUCC); }},
+    {badge:'STEP 3', badgeColor:'#c0392b',
+     msg:'Copy successor\'s value (<strong>40</strong>) into node 30. Node 30 now contains 40.',
+     fn:()=>{
+       const t=document.getElementById('t30');
+       if(t){t.textContent='40';t.setAttribute('fill','#2a7a4b');}
+       document.getElementById('c30').setAttribute('fill','#e8f4ee');
+       document.getElementById('c30').setAttribute('stroke','#2a7a4b');
+     }},
+    {badge:'STEP 4', badgeColor:'#c0392b',
+     msg:'Now delete the <strong>original node 40</strong> from the right subtree. Node 40 is a leaf — apply Case 1.',
+     fn:()=>{ setNodeColor(40,C_TARGET); }},
+    {badge:'STEP 5', badgeColor:'#c0392b',
+     msg:'Remove node 40 and set its parent\'s (30→40) pointer to <code>null</code>.',
+     fn:()=>{ setEdgeVis(30,40,false); setNodeColor(40,C_GONE); }},
+    {badge:'DONE', badgeColor:'#2a7a4b',
+     msg:'✓ Two-child deletion complete. Node 30 replaced by its in-order successor (40). BST property preserved.',
+     fn:()=>{}},
+  ],
+
+  // ── Case 4: Delete node 30 (two children), but successor 35 has a right child ─────
+  [
+    {badge:'CASE 4', badgeColor:'#1a5ca8',
+     msg:'Delete node <strong>30</strong> (two children). This time node 40 has a <strong>left child (35)</strong>, so the in-order successor is <strong>35</strong>, not 40.',
+     fn:()=>{ setNodeColor(30,C_TARGET); }},
+    {badge:'STEP 1', badgeColor:'#1a5ca8',
+     msg:'Find in-order successor: go to right child <strong>40</strong>, then follow left as far as possible. 40 has left child <strong>35</strong>, which has no left child — <strong>35 is the successor</strong>.',
+     fn:()=>{ setNodeColor(40,C_PATH); setNodeColor(35,C_SUCC); }},
+    {badge:'STEP 2', badgeColor:'#c0392b',
+     msg:'Copy successor value (<strong>35</strong>) into node 30. Node 30 now holds 35.',
+     fn:()=>{
+       const t=document.getElementById('t30');
+       if(t){t.textContent='35';t.setAttribute('fill','#2a7a4b');}
+       document.getElementById('c30').setAttribute('fill','#e8f4ee');
+       document.getElementById('c30').setAttribute('stroke','#2a7a4b');
+       setNodeColor(40,C_NORMAL);
+     }},
+    {badge:'STEP 3', badgeColor:'#c0392b',
+     msg:'Now delete the <strong>original node 35</strong>. Node 35 is a leaf — apply Case 1: disconnect 40→35.',
+     fn:()=>{ setNodeColor(35,C_TARGET); }},
+    {badge:'STEP 4', badgeColor:'#c0392b',
+     msg:'Remove node 35. Set parent (40)\'s left pointer to <code>null</code>.',
+     fn:()=>{ setEdgeVis(40,35,false); setNodeColor(35,C_GONE); }},
+    {badge:'DONE', badgeColor:'#2a7a4b',
+     msg:'✓ Node 30 replaced by in-order successor 35. The successor was found by traversing left from the right child (40). BST property preserved throughout.',
+     fn:()=>{}},
+  ],
+];
+
+// ── State ─────────────────────────────────────────────────────────────────
+let currentCase = 0;
+let currentStep = 0;
+
+function getBaseNodes(caseIdx){
+  // All nodes in normal state as starting point
+  return Object.keys(NP).map(id=>({id:parseInt(id), col:C_NORMAL}));
+}
+
+function initTree(){
+  if(currentCase === 3){
+    // temporarily extend NP with case4 nodes
+    Object.assign(NP, NP4);
+    buildTree(CASE4_EDGES, Object.keys(NP4).map(id=>({id:parseInt(id),col:C_NORMAL})));
+  } else {
+    // reset NP to base (remove 35 if it was added)
+    delete NP[35];
+    buildTree(ALL_EDGES, getBaseNodes(currentCase));
+  }
+}
+
+function resetCase(){
+  currentStep = 0;
+  initTree();
+  render();
+}
+
+function loadCase(idx){
+  currentCase = idx;
+  currentStep = 0;
+  // remove any added edges from previous case
+  ['enew_70_65','enew_30_40','enew_40_35'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.remove();
+  });
+  initTree();
+  render();
+  for(let i=0;i<4;i++){
+    const t=document.getElementById(`tab${i}`);
+    if(t) t.className='case-tab'+(i===idx?' active':'');
+  }
+}
+
+function go(dir){
+  const steps = CASES[currentCase];
+  if(dir>0 && currentStep < steps.length-1){
+    currentStep++;
+    steps[currentStep].fn();
+    render();
+  } else if(dir<0 && currentStep > 0){
+    currentStep--;
+    // replay from start to currentStep
+    initTree();
+    for(let i=1;i<=currentStep;i++) CASES[currentCase][i].fn();
+    render();
+  }
+}
+
+function render(){
+  const steps = CASES[currentCase];
+  const step  = steps[currentStep];
+  const badge = document.getElementById('badge');
+  badge.textContent = step.badge;
+  badge.style.background = step.badgeColor;
+  document.getElementById('msg').innerHTML = step.msg;
+  document.getElementById('prog').textContent = `${currentStep} / ${steps.length-1}`;
+  document.getElementById('btnPrev').disabled = currentStep===0;
+  document.getElementById('btnNext').disabled = currentStep===steps.length-1;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+initTree();
+render();
+</script>
+</body>
+</html>

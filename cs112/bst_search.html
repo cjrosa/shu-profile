@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BST Search</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+
+:root {
+  --bg: #f5f5f0;
+  --surface: #ffffff;
+  --border: #e0dfd8;
+  --text: #1a1a1a;
+  --muted: #888;
+  --accent: #d97706;
+  --blue: #2563eb;
+  --green: #16a34a;
+  --red: #dc2626;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  font-family: 'DM Mono', monospace;
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 40px;
+}
+
+h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #111;
+  margin-bottom: 3px;
+  text-align: center;
+}
+.subtitle {
+  font-size: 0.68rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+/* Search picker bar — above both panels */
+.search-bar {
+  width: 100%;
+  max-width: 920px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.search-label {
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.target-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.73rem;
+  width: 32px; height: 32px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.target-btn:hover { border-color: var(--blue); color: var(--blue); }
+.target-btn.selected { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+/* Controls bar — below both panels */
+.controls-bar {
+  width: 100%;
+  max-width: 920px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.status {
+  flex: 1; min-width: 180px;
+  font-size: 0.74rem; color: var(--muted);
+}
+.status .hi    { color: var(--accent); font-weight: 500; }
+
+button {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+button:hover { border-color: var(--accent); color: var(--accent); }
+button:disabled { opacity: 0.35; cursor: default; }
+button.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 500; }
+button.primary:hover { background: #b45309; border-color: #b45309; }
+
+.speed-wrap { display: flex; align-items: center; gap: 6px; font-size: 0.68rem; color: var(--muted); }
+input[type=range] {
+  -webkit-appearance: none; width: 68px; height: 3px;
+  border-radius: 2px; background: var(--border); outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 13px; height: 13px;
+  border-radius: 50%; background: var(--accent); cursor: pointer;
+}
+
+/* Side-by-side panels */
+.panels {
+  width: 100%;
+  max-width: 920px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-header {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.panel-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #111;
+}
+.panel-badge {
+  font-size: 0.62rem;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid;
+}
+.badge-balanced { color: var(--green); border-color: rgba(22,163,74,0.4); background: rgba(22,163,74,0.07); }
+.badge-skewed   { color: var(--red);   border-color: rgba(220,38,38,0.4);  background: rgba(220,38,38,0.06); }
+
+.canvas-wrap {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+canvas { display: block; width: 100%; }
+
+.step-log {
+  padding: 8px 14px;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+}
+.log-hint { font-size: 0.68rem; color: var(--muted); }
+.log-entry {
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+}
+.log-entry.visiting { border-color: var(--blue); color: var(--blue); background: rgba(37,99,235,0.07); }
+.log-entry.found    { border-color: var(--green); color: var(--green); background: rgba(22,163,74,0.08); }
+.log-entry.missed   { border-color: var(--red);   color: var(--red);   background: rgba(220,38,38,0.07); }
+
+.panel-status {
+  padding: 7px 14px;
+  font-size: 0.7rem;
+  color: var(--muted);
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+.panel-status .found { color: var(--green); font-weight: 500; }
+.panel-status .miss  { color: var(--red);   font-weight: 500; }
+.panel-status .hi    { color: var(--accent); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<h1>BST Search</h1>
+<p class="subtitle">Same values · same search · different tree shape</p>
+
+<!-- Search picker -->
+<div class="search-bar">
+  <span class="search-label">Search for:</span>
+  <div id="targetBtns" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+</div>
+
+<!-- Side-by-side panels -->
+<div class="panels">
+
+  <!-- Balanced panel -->
+  <div class="panel" id="panel-balanced">
+    <div class="panel-header">
+      <span class="panel-title">Balanced tree</span>
+      <span class="panel-badge badge-balanced">height 4</span>
+    </div>
+    <div class="canvas-wrap"><canvas id="cv-balanced"></canvas></div>
+    <div class="step-log" id="log-balanced"><span class="log-hint">Steps will appear here…</span></div>
+    <div class="panel-status" id="status-balanced">Select a value above.</div>
+  </div>
+
+  <!-- Degenerate panel -->
+  <div class="panel" id="panel-degenerate">
+    <div class="panel-header">
+      <span class="panel-title">Degenerate tree</span>
+      <span class="panel-badge badge-skewed">height 15</span>
+    </div>
+    <div class="canvas-wrap"><canvas id="cv-degenerate"></canvas></div>
+    <div class="step-log" id="log-degenerate"><span class="log-hint">Steps will appear here…</span></div>
+    <div class="panel-status" id="status-degenerate">Select a value above.</div>
+  </div>
+
+</div>
+
+<!-- Shared controls -->
+<div class="controls-bar">
+  <div class="status" id="statusMain">Select a value and press <span class="hi">Next</span>.</div>
+  <div class="speed-wrap">Speed <input type="range" id="spd" min="1" max="5" value="3"></div>
+  <button id="btnReset">Reset</button>
+  <button id="btnNext" class="primary">▶ Next</button>
+  <button id="btnAuto">Auto Play</button>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────
+   TREES
+───────────────────────────────────────────── */
+const BALANCED_ORDER   = [8, 4, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15];
+const DEGENERATE_ORDER = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+const SEARCH_VALUES    = [1, 3, 6, 9, 11, 14, 15, 7];
+
+class TNode {
+  constructor(v) { this.v = v; this.left = this.right = null; this.x = this.y = 0; }
+}
+
+function buildTree(vals) {
+  let root = null;
+  for (const v of vals) {
+    const n = new TNode(v);
+    if (!root) { root = n; continue; }
+    let c = root;
+    while (true) {
+      if (v < c.v) { if (!c.left)  { c.left  = n; break; } c = c.left; }
+      else         { if (!c.right) { c.right = n; break; } c = c.right; }
+    }
+  }
+  return root;
+}
+
+function searchPath(root, target) {
+  const path = [];
+  let c = root;
+  while (c) {
+    if (target === c.v) { path.push({ node: c, result: 'found' }); return path; }
+    path.push({ node: c, result: 'visit' });
+    c = target < c.v ? c.left : c.right;
+  }
+  path.push({ node: null, result: 'null' });
+  return path;
+}
+
+/* ─────────────────────────────────────────────
+   LAYOUT
+───────────────────────────────────────────── */
+const R = 13;
+
+function layoutBalanced(root, W, H) {
+  if (!root) return;
+  const io = [];
+  (function col(n) { if (!n) return; col(n.left); io.push(n); col(n.right); })(root);
+  const dep = new Map();
+  (function sd(n, d) { if (!n) return; dep.set(n, d); sd(n.left, d+1); sd(n.right, d+1); })(root, 0);
+  const maxD = Math.max(...dep.values());
+  const PAD_X = 20, PAD_TOP = 22, PAD_BOT = 18;
+  const lh = maxD > 0 ? Math.min((H - PAD_TOP - PAD_BOT) / maxD, 88) : H - PAD_TOP - PAD_BOT;
+  const nn = io.length;
+  io.forEach((nd, i) => {
+    nd.x = PAD_X + (i / Math.max(nn - 1, 1)) * (W - 2 * PAD_X);
+    nd.y = PAD_TOP + dep.get(nd) * lh;
+  });
+}
+
+function layoutDegenerate(root, W, H) {
+  // Diagonal top-left → bottom-right
+  const nodes = [];
+  (function walk(n) { if (!n) return; nodes.push(n); walk(n.right); })(root);
+  const n = nodes.length;
+  const PAD = R + 8;
+  const stepX = (W - 2 * PAD) / Math.max(n - 1, 1);
+  const stepY = (H - 2 * PAD) / Math.max(n - 1, 1);
+  nodes.forEach((nd, i) => { nd.x = PAD + i * stepX; nd.y = PAD + i * stepY; });
+}
+
+/* ─────────────────────────────────────────────
+   PER-PANEL STATE
+───────────────────────────────────────────── */
+const PANELS = {
+  balanced: {
+    id: 'balanced',
+    root: buildTree(BALANCED_ORDER),
+    layoutFn: layoutBalanced,
+    canvasH: 320,
+    cv: null, ctx: null,
+    nodeStates: new Map(), visitedEdges: new Set(),
+    currentNode: null, path: [], pathIdx: 0,
+    logEntries: [], done: false,
+  },
+  degenerate: {
+    id: 'degenerate',
+    root: buildTree(DEGENERATE_ORDER),
+    layoutFn: layoutDegenerate,
+    canvasH: 400,
+    cv: null, ctx: null,
+    nodeStates: new Map(), visitedEdges: new Set(),
+    currentNode: null, path: [], pathIdx: 0,
+    logEntries: [], done: false,
+  },
+};
+
+// Wire up canvases
+['balanced', 'degenerate'].forEach(id => {
+  const p = PANELS[id];
+  p.cv  = document.getElementById(`cv-${id}`);
+  p.ctx = p.cv.getContext('2d');
+});
+
+let target    = null;
+let autoTmr   = null;
+
+function spd() { return 900 - (parseInt(document.getElementById('spd').value) - 1) * 180; }
+
+/* ─────────────────────────────────────────────
+   CANVAS SIZING & DRAW
+───────────────────────────────────────────── */
+function resizePanels() {
+  Object.values(PANELS).forEach(p => {
+    p.cv.width  = p.cv.parentElement.offsetWidth || 400;
+    p.cv.height = p.canvasH;
+  });
+}
+
+function drawPanel(p) {
+  const W = p.cv.width, H = p.cv.height;
+  p.ctx.clearRect(0, 0, W, H);
+  p.layoutFn(p.root, W, H);
+  drawEdges(p);
+  drawNodes(p, p.root);
+}
+
+function drawEdges(p) {
+  (function walk(nd) {
+    if (!nd) return;
+    for (const side of ['left', 'right']) {
+      const ch = nd[side]; if (!ch) continue;
+      const hot = p.visitedEdges.has(nd.v + '->' + ch.v);
+      p.ctx.beginPath(); p.ctx.moveTo(nd.x, nd.y); p.ctx.lineTo(ch.x, ch.y);
+      p.ctx.strokeStyle = hot ? 'rgba(37,99,235,0.55)' : 'rgba(200,200,190,0.7)';
+      p.ctx.lineWidth   = hot ? 2 : 1.1;
+      p.ctx.stroke();
+      walk(ch);
+    }
+  })(p.root);
+}
+
+function drawNodes(p, nd) {
+  if (!nd) return;
+  drawNodes(p, nd.left); drawNodes(p, nd.right);
+
+  const st = p.nodeStates.get(nd) || 'idle';
+  const isCurrent = nd === p.currentNode;
+
+  let fill, stroke, text, glow, lw;
+  switch (st) {
+    case 'visiting':
+    case 'current':
+      fill='rgba(37,99,235,0.10)'; stroke='#2563eb'; text='#1d4ed8';
+      glow = isCurrent ? 'rgba(37,99,235,0.35)' : null; lw = 2; break;
+    case 'found':
+      fill='rgba(22,163,74,0.12)'; stroke='#16a34a'; text='#14532d';
+      glow='rgba(22,163,74,0.4)'; lw=2.2; break;
+    case 'eliminated':
+      fill='rgba(200,200,190,0.2)'; stroke='#ddd'; text='#bbb'; glow=null; lw=1; break;
+    default:
+      fill='#fff'; stroke='#c8c8c0'; text='#444'; glow=null; lw=1.1;
+  }
+
+  if (glow) { p.ctx.shadowColor = glow; p.ctx.shadowBlur = 10; }
+  p.ctx.beginPath(); p.ctx.arc(nd.x, nd.y, R, 0, Math.PI*2);
+  p.ctx.fillStyle = fill; p.ctx.fill();
+  p.ctx.strokeStyle = stroke; p.ctx.lineWidth = lw; p.ctx.stroke();
+  p.ctx.shadowBlur = 0;
+
+  p.ctx.font = '500 10px "DM Mono",monospace';
+  p.ctx.fillStyle = text; p.ctx.textAlign = 'center'; p.ctx.textBaseline = 'middle';
+  p.ctx.fillText(nd.v, nd.x, nd.y);
+}
+
+function drawAll() { Object.values(PANELS).forEach(drawPanel); }
+
+/* ─────────────────────────────────────────────
+   TARGET SELECTION
+───────────────────────────────────────────── */
+const btnWrap = document.getElementById('targetBtns');
+SEARCH_VALUES.forEach(v => {
+  const b = document.createElement('button');
+  b.className = 'target-btn';
+  b.textContent = v;
+  b.addEventListener('click', () => selectTarget(v));
+  btnWrap.appendChild(b);
+});
+
+function selectTarget(v) {
+  stopAuto();
+  target = v;
+
+  // Reset both panels
+  Object.values(PANELS).forEach(p => resetPanel(p));
+
+  // Build search paths for both trees
+  Object.values(PANELS).forEach(p => {
+    p.path    = searchPath(p.root, v);
+    p.pathIdx = 0;
+    p.done    = false;
+  });
+
+  // Highlight button
+  document.querySelectorAll('.target-btn').forEach(b => {
+    b.classList.toggle('selected', parseInt(b.textContent) === v);
+  });
+
+  document.getElementById('btnNext').disabled = false;
+  document.getElementById('btnAuto').disabled = false;
+  setMainStatus(`Searching for <span class="hi">${v}</span> — press Next.`);
+  setPanelStatus('balanced',   `Searching for <span class="hi">${v}</span>…`);
+  setPanelStatus('degenerate', `Searching for <span class="hi">${v}</span>…`);
+  drawAll();
+}
+
+/* ─────────────────────────────────────────────
+   STEP — advances both panels one step
+───────────────────────────────────────────── */
+function advance() {
+  if (target === null) return;
+  if (bothDone()) return;
+
+  Object.values(PANELS).forEach(p => {
+    if (p.done || p.pathIdx >= p.path.length) return;
+    advancePanel(p);
+    drawPanel(p);
+  });
+
+  if (bothDone()) {
+    stopAuto();
+    document.getElementById('btnNext').disabled = true;
+    document.getElementById('btnAuto').disabled = true;
+    setMainStatus('Search complete on both trees.');
+  }
+}
+
+function advancePanel(p) {
+  const step = p.path[p.pathIdx++];
+
+  if (step.result === 'null') {
+    p.currentNode = null;
+    p.done = true;
+    addLog(p.id, `${target} not found`, 'missed');
+    setPanelStatus(p.id, `<span class="miss">${target} not found</span> — reached NULL.`);
+    return;
+  }
+
+  const nd = step.node;
+  if (p.currentNode && p.currentNode !== nd) p.nodeStates.set(p.currentNode, 'visiting');
+
+  if (step.result === 'found') {
+    p.nodeStates.set(nd, 'found');
+    p.currentNode = null;
+    p.done = true;
+    markRemaining(p);
+    addLog(p.id, `= ${nd.v} ✓ found!`, 'found');
+    setPanelStatus(p.id, `<span class="found">${target} found</span> in ${p.pathIdx} step${p.pathIdx !== 1 ? 's' : ''}.`);
+    return;
+  }
+
+  p.nodeStates.set(nd, 'current');
+  p.currentNode = nd;
+
+  const op  = target < nd.v ? '<' : '>';
+  const dir = target < nd.v ? 'left' : 'right';
+  const nextStep = p.path[p.pathIdx];
+
+  if (nextStep && nextStep.node) {
+    p.visitedEdges.add(nd.v + '->' + nextStep.node.v);
+  }
+
+  addLog(p.id, `${target} ${op} ${nd.v} → ${dir}`, 'visiting');
+  setPanelStatus(p.id, `At <span class="hi">${nd.v}</span>: ${target} ${op} ${nd.v}, go ${dir}`);
+}
+
+function bothDone() { return Object.values(PANELS).every(p => p.done); }
+
+function markRemaining(p) {
+  (function walk(nd) {
+    if (!nd) return;
+    if (!p.nodeStates.has(nd)) p.nodeStates.set(nd, 'eliminated');
+    walk(nd.left); walk(nd.right);
+  })(p.root);
+}
+
+/* ─────────────────────────────────────────────
+   LOG & STATUS
+───────────────────────────────────────────── */
+function addLog(panelId, msg, cls) {
+  const p = PANELS[panelId];
+  p.logEntries.push({ msg, cls });
+  renderLog(panelId);
+}
+
+function renderLog(panelId) {
+  const p = PANELS[panelId];
+  const el = document.getElementById(`log-${panelId}`);
+  el.innerHTML = '';
+  p.logEntries.forEach(e => {
+    const s = document.createElement('span');
+    s.className = `log-entry ${e.cls}`;
+    s.textContent = e.msg;
+    el.appendChild(s);
+  });
+}
+
+function setPanelStatus(panelId, html) {
+  document.getElementById(`status-${panelId}`).innerHTML = html;
+}
+function setMainStatus(html) {
+  document.getElementById('statusMain').innerHTML = html;
+}
+
+/* ─────────────────────────────────────────────
+   RESET
+───────────────────────────────────────────── */
+function resetPanel(p) {
+  p.nodeStates.clear(); p.visitedEdges.clear();
+  p.currentNode = null; p.path = []; p.pathIdx = 0;
+  p.logEntries = []; p.done = false;
+  document.getElementById(`log-${p.id}`).innerHTML = '<span class="log-hint">Steps will appear here…</span>';
+  setPanelStatus(p.id, 'Select a value above.');
+}
+
+function resetAll() {
+  stopAuto();
+  target = null;
+  Object.values(PANELS).forEach(resetPanel);
+  document.querySelectorAll('.target-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('btnNext').disabled = false;
+  document.getElementById('btnAuto').disabled = false;
+  setMainStatus('Select a value and press <span class="hi">Next</span>.');
+  drawAll();
+}
+
+/* ─────────────────────────────────────────────
+   BUTTONS
+───────────────────────────────────────────── */
+function stopAuto() {
+  clearInterval(autoTmr); autoTmr = null;
+  document.getElementById('btnAuto').textContent = 'Auto Play';
+}
+
+document.getElementById('btnNext').addEventListener('click', () => { stopAuto(); advance(); });
+
+document.getElementById('btnAuto').addEventListener('click', () => {
+  if (target === null) return;
+  if (autoTmr) { stopAuto(); return; }
+  document.getElementById('btnAuto').textContent = '⏸ Pause';
+  autoTmr = setInterval(() => {
+    if (bothDone()) { stopAuto(); return; }
+    advance();
+  }, spd());
+});
+
+document.getElementById('btnReset').addEventListener('click', resetAll);
+
+window.addEventListener('resize', () => { resizePanels(); drawAll(); });
+
+/* ─────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────── */
+setTimeout(() => { resizePanels(); drawAll(); }, 60);
+</script>
+</body>
+</html>

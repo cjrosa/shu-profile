@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS339 Networks &middot; Teaching Tools</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230C447C'/%3E%3Ccircle cx='8' cy='16' r='4' fill='white' opacity='.9'/%3E%3Ccircle cx='24' cy='8' r='3.5' fill='white' opacity='.9'/%3E%3Ccircle cx='24' cy='24' r='3.5' fill='white' opacity='.9'/%3E%3Cline x1='12' y1='16' x2='20.5' y2='9.5' stroke='white' stroke-width='1.5'/%3E%3Cline x1='12' y1='16' x2='20.5' y2='22.5' stroke='white' stroke-width='1.5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/css/reset.css">
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="../assets/css/components/hero.css">
+<link rel="stylesheet" href="../assets/css/components/prof-card.css">
+<link rel="stylesheet" href="../assets/css/components/buttons-badges.css">
+<link rel="stylesheet" href="../assets/css/components/course-banner.css">
+<link rel="stylesheet" href="../assets/css/components/search.css">
+<link rel="stylesheet" href="../assets/css/components/cards.css">
+<link rel="stylesheet" href="../assets/css/components/accordion.css">
+<link rel="stylesheet" href="../assets/css/components/category-themes.css">
+<link rel="stylesheet" href="../assets/css/components/drawers.css">
+<link rel="stylesheet" href="../assets/css/components/footer.css">
+<link rel="stylesheet" href="../assets/css/pages/cs339.css">
+<link rel="stylesheet" href="../assets/css/components/glass-theme.css">
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <a href="../index.html" class="hero-back">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="14" y1="8" x2="2" y2="8"/><polyline points="8,2 2,8 8,14"/></svg>
+        All Courses
+      </a>
+      <h1 class="hero-title">Interactive <em>Networking</em> Teaching Tools</h1>
+      <div class="hero-course">CS339 &nbsp;&mdash;&nbsp; Computer Networks</div>
+      <div class="hero-badge">
+        <div class="hero-badge-dot"></div>
+        Sacred Heart University &nbsp;&middot;&nbsp; Computer Science
+      </div>
+    </div>
+    <div class="prof-card">
+      <div class="prof-avatar" style="background:none;overflow:hidden;padding:0;"><img src="../assets/profile-photo.jpg" style="width:100%;height:100%;object-fit:cover;object-position:center 15%;" alt="Professor Chris Rosa"></div>
+      <div class="prof-info">
+        <div class="prof-name">Professor Chris Rosa</div>
+        <div class="prof-meta">CS339 &nbsp;&middot;&nbsp; Sacred Heart University</div>
+      </div>
+      <div class="prof-links">
+        <a href="mailto:rosac75066@sacredheart.edu" class="btn-icon-neutral" title="Email">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="14" height="10" rx="2"/><path d="M1 5l7 5 7-5"/></svg>
+        </a>
+        <a href="https://linkedin.com/in/chris-rosa-3192326" target="_blank" class="btn-icon-neutral li" title="LinkedIn">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="white"><path d="M2.5 1A1.5 1.5 0 1 0 2.5 4 1.5 1.5 0 0 0 2.5 1zM1 5.5h3V15H1zM6 5.5h2.9v1.3h.04C9.36 5.9 10.5 5.3 12 5.3c3.1 0 3.7 2 3.7 4.7V15h-3v-4.4c0-1.1 0-2.4-1.5-2.4s-1.7 1.2-1.7 2.4V15H6z"/></svg>
+        </a>
+        <button onclick="openInstDrawer()" class="btn-icon-neutral" title="About the Instructor" style="cursor:pointer;background:white;">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5" r="2.5"/><path d="M3 14c0-3 2-5 5-5s5 2 5 5"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="course-banner">
+  <div class="course-banner-inner">
+    <div class="course-banner-left">
+      <div class="course-desc-label">Course Description &nbsp;&middot;&nbsp; <a href="https://sacredheart.smartcatalogiq.com/en/2024-2025/2024-2025-undergraduate-catalog/courses/cs-computer-science-and-information-technology/300/cs-339" target="_blank" class="catalog-link">Undergraduate Catalog</a></div>
+      <p class="course-desc-text">Students study networks and data communication concentrating on the Internet model. This is a laboratory-based course that includes projects implemented on both Unix and Windows machines. Topics such as the Internet protocol stack, hardware, routing, circuit-switching and packet-switching networks, multiplexing, error handling, and WiFi are among those studied. Students use packet sniffing tools to design and simulate networks.</p>
+    </div>
+    <div class="course-meta-pills">
+      <div class="course-pill">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><polyline points="8,4 8,8 11,10"/></svg>
+        3 Credits
+      </div>
+      <div class="course-pill">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h12v10H2z"/><line x1="8" y1="3" x2="8" y2="13"/></svg>
+        Prereq: <a href="../cs112/index.html" style="color:inherit;text-decoration:underline;">CS-112</a>
+      </div>
+      <div class="course-pill">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="2" width="14" height="12" rx="1"/><line x1="5" y1="6" x2="11" y2="6"/><line x1="5" y1="9" x2="9" y2="9"/></svg>
+        Lab-Based
+      </div>
+      <div class="course-pill">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="14" height="10" rx="1"/><polyline points="1,6 8,10 15,6"/></svg>
+        All Semesters
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="main">
+
+  <div class="search-bar-wrap">
+    <div class="search-bar-inner">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.5" cy="6.5" r="4.5"/><line x1="10.5" y1="10.5" x2="14" y2="14"/></svg>
+      <input id="ai-search-input" class="search-input" type="text" placeholder="Ask a question about networking &mdash; e.g. &quot;how does slow start work?&quot;" autocomplete="off" />
+      <button id="ai-search-btn" class="search-btn" onclick="handleSearch()">
+        Ask
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg>
+      </button>
+    </div>
+    <div class="search-hint-row">
+      <span class="search-hint">Powered by Claude &middot; answers scoped to CS339 topics &middot; recommends tools when relevant</span>
+      <button id="btn-last-result" class="search-last-btn" onclick="openAiDrawer(null)" style="display:none">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4h14M1 8h10M1 12h6"/></svg>
+        Last result
+      </button>
+    </div>
+  </div>
+
+  <div class="section-label">TCP / IP Stack &mdash; Interactive Tools</div>
+
+  <div class="ip-stack">
+
+    <!-- ------------------------------------------------------- -->
+    <!-- LAYER 5/7 &mdash; APPLICATION (PLACEHOLDER)                   -->
+    <!-- ------------------------------------------------------- -->
+    <div class="layer-accordion app" id="acc-app">
+      <button class="layer-header" onclick="toggleLayer('acc-app')" aria-expanded="false">
+        <div class="layer-header-inner">
+          <div class="layer-num">
+            <span class="lnum">5</span>
+            <span class="llbl">Layer</span>
+          </div>
+          <div class="layer-title-area">
+            <div class="layer-name">Application Layer</div>
+            <div class="layer-tagline">HTTP &middot; DNS &middot; SMTP &middot; FTP &middot; TLS &middot; Client-Server &amp; P2P Models</div>
+            <span class="layer-tool-count">Coming Soon</span>
+          </div>
+          <div class="layer-chevron">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg>
+          </div>
+        </div>
+      </button>
+      <div class="layer-body">
+        <div style="padding: 4px 0 8px;">
+          <div class="placeholder-card">
+            <div class="placeholder-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A95A3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <div class="placeholder-body">
+              <div class="placeholder-title">No interactive tools planned for this layer</div>
+              <div class="placeholder-desc">Application layer protocols are well-suited to lecture and discussion &mdash; the concepts of request/response, DNS resolution, and session management tend to land without requiring animated visualizations. These topics are covered in CS339 through lecture, Wireshark labs, and hands-on exercises.</div>
+              <div class="placeholder-topics">
+                <span class="placeholder-tag">HTTP / HTTPS</span>
+                <span class="placeholder-tag">DNS</span>
+                <span class="placeholder-tag">SMTP / IMAP</span>
+                <span class="placeholder-tag">FTP</span>
+                <span class="placeholder-tag">TLS Handshake</span>
+                <span class="placeholder-tag">Client-Server Model</span>
+                <span class="placeholder-tag">P2P Architecture</span>
+                <span class="placeholder-tag">CDNs</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ------------------------------------------------------- -->
+    <!-- LAYER 4 &mdash; TRANSPORT                                     -->
+    <!-- ------------------------------------------------------- -->
+    <div class="layer-accordion transport" id="acc-transport">
+      <button class="layer-header" onclick="toggleLayer('acc-transport')" aria-expanded="false">
+        <div class="layer-header-inner">
+          <div class="layer-num">
+            <span class="lnum">4</span>
+            <span class="llbl">Layer</span>
+          </div>
+          <div class="layer-title-area">
+            <div class="layer-name">Transport Layer</div>
+            <div class="layer-tagline">TCP &middot; Flow Control &middot; Congestion &middot; Seq/Ack &middot; SYN/FIN Handshakes</div>
+            <span class="layer-tool-count">1 Tool</span>
+          </div>
+          <div class="layer-chevron">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg>
+          </div>
+        </div>
+      </button>
+      <div class="layer-body">
+        <div class="tools-grid">
+
+          <!-- TCP Full Visualizer -->
+          <a class="tool-card" href="../viewer.html?tool=cs339/tcp_full_V3.html&course=CS339&label=Computer%20Networks&name=TCP%20Full%20Visualizer&back=cs339/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon purple">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5B2D8E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 7h18M3 12h18M3 17h18"/><rect x="1" y="3" width="22" height="18" rx="3"/>
+                </svg>
+              </div>
+              <div>
+                <div class="tool-subtitle purple">TCP Transport</div>
+                <div class="tool-title">TCP Full Visualizer</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">
+                End-to-end TCP simulation with sender/receiver buffers, sliding
+                window, congestion control phases, and live packet exchange.
+                Covers the complete connection lifecycle.
+              </p>
+              <div class="tool-features">
+                <div class="tool-feature"><div class="tool-feature-dot purple"></div>Three-way SYN handshake &amp; FIN teardown</div>
+                <div class="tool-feature"><div class="tool-feature-dot purple"></div>Seq / Ack number tracking in real time</div>
+                <div class="tool-feature"><div class="tool-feature-dot purple"></div>Flow control &mdash; rwnd, sender buffer drain</div>
+                <div class="tool-feature"><div class="tool-feature-dot purple"></div>Congestion control &mdash; slow start, AIMD, ssthresh</div>
+                <div class="tool-feature"><div class="tool-feature-dot purple"></div>Packet loss injection &amp; retransmit simulation</div>
+              </div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta purple">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag purple">Interactive</span>
+            </div>
+          </a>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ------------------------------------------------------- -->
+    <!-- LAYER 3 &mdash; NETWORK                                       -->
+    <!-- ------------------------------------------------------- -->
+    <div class="layer-accordion network" id="acc-network">
+      <button class="layer-header" onclick="toggleLayer('acc-network')" aria-expanded="false">
+        <div class="layer-header-inner">
+          <div class="layer-num">
+            <span class="lnum">3</span>
+            <span class="llbl">Layer</span>
+          </div>
+          <div class="layer-title-area">
+            <div class="layer-name">Network Layer</div>
+            <div class="layer-tagline">CIDR &middot; Subnetting &middot; Routing Tables &middot; LS / DV &middot; DHCP &middot; NAT</div>
+            <span class="layer-tool-count">5 Tools</span>
+          </div>
+          <div class="layer-chevron">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg>
+          </div>
+        </div>
+      </button>
+      <div class="layer-body">
+        <div class="tools-grid">
+
+          <!-- CIDR Teaching Tool -->
+          <a class="tool-card" href="../viewer.html?tool=cs339/cidr_viz.html&course=CS339&label=Computer%20Networks&name=CIDR%20Teaching%20Tool&back=cs339/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon blue">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CE1141" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="20" height="4" rx="1"/>
+                  <rect x="2" y="10" width="20" height="4" rx="1"/>
+                  <rect x="2" y="17" width="20" height="4" rx="1"/>
+                  <line x1="6" y1="3" x2="6" y2="7"/><line x1="10" y1="10" x2="10" y2="14"/>
+                </svg>
+              </div>
+              <div>
+                <div class="tool-subtitle blue">IP Addressing &amp; Subnetting</div>
+                <div class="tool-title">CIDR Teaching Tool</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">
+                Explore IP addresses at the bit level. Understand CIDR notation,
+                subnet masks, block sizes, and address allocation through live
+                interactive visualizations.
+              </p>
+              <div class="tool-features">
+                <div class="tool-feature"><div class="tool-feature-dot blue"></div>32-bit IP and mask display with decimal octets</div>
+                <div class="tool-feature"><div class="tool-feature-dot blue"></div>8 stat cards with step-by-step calc overlays</div>
+                <div class="tool-feature"><div class="tool-feature-dot blue"></div>Compare tab &mdash; same-subnet AND bit math</div>
+                <div class="tool-feature"><div class="tool-feature-dot blue"></div>Aggregation tab &mdash; route summarization</div>
+                <div class="tool-feature"><div class="tool-feature-dot blue"></div>12-step guided tour from first principles</div>
+              </div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta blue">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag blue">Interactive</span>
+            </div>
+          </a>
+
+          <!-- Subnet Topology Builder -->
+          <a class="tool-card" href="../viewer.html?tool=cs339/subnet_topology_builder.html&course=CS339&label=Computer%20Networks&name=Subnet%20Topology%20Builder&back=cs339/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon teal">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="5" cy="12" r="2.5"/>
+                  <circle cx="19" cy="5" r="2.5"/>
+                  <circle cx="19" cy="19" r="2.5"/>
+                  <line x1="7.5" y1="11" x2="16.5" y2="6.5"/>
+                  <line x1="7.5" y1="13" x2="16.5" y2="17.5"/>
+                </svg>
+              </div>
+              <div>
+                <div class="tool-subtitle teal">Network Design &amp; NAT</div>
+                <div class="tool-title">Subnet Topology Builder</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">
+                Build dynamic topologies with routers, subnets, and hosts.
+                Visualize packet routing, NAT / PAT translation tables, and
+                /30 point-to-point links on an interactive canvas.
+              </p>
+              <div class="tool-features">
+                <div class="tool-feature"><div class="tool-feature-dot teal"></div>Drag-and-drop topology canvas with auto-layout</div>
+                <div class="tool-feature"><div class="tool-feature-dot teal"></div>Animated packet simulation host-to-host</div>
+                <div class="tool-feature"><div class="tool-feature-dot teal"></div>NAT / PAT with live translation table</div>
+                <div class="tool-feature"><div class="tool-feature-dot teal"></div>Echo-back packet with port mapping</div>
+                <div class="tool-feature"><div class="tool-feature-dot teal"></div>Per-node bit display and calc overlays</div>
+              </div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta teal">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag teal">Interactive</span>
+            </div>
+          </a>
+
+          <!-- Router Interactive Visualizer -->
+          <a class="tool-card" href="../viewer.html?tool=cs339/router_viz.html&course=CS339&label=Computer%20Networks&name=Router%20Visualizer&back=cs339/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon blue">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CE1141" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="1" y="6" width="22" height="12" rx="2"/>
+                  <line x1="5" y1="10" x2="5" y2="14"/>
+                  <line x1="9" y1="10" x2="9" y2="14"/>
+                  <circle cx="17" cy="12" r="2"/>
+                  <line x1="19" y1="12" x2="21" y2="12"/>
+                </svg>
+              </div>
+              <div>
+                <div class="tool-subtitle blue">Forwarding &amp; Routing Tables</div>
+                <div class="tool-title">Router Visualizer</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">
+                Interactive router with live forwarding table lookups, longest-prefix
+                matching, and per-interface inspection. Trace how a datagram
+                is forwarded hop-by-hop.
+              </p>
+              <div class="tool-features">
+                <div class="tool-feature"><div class="tool-feature-dot blue"></div>Forwarding table with longest-prefix match</div>
+                <div class="tool-feature"><div class="tool-feature-dot blue"></div>Per-interface IP &amp; MAC inspection</div>
+                <div class="tool-feature"><div class="tool-feature-dot blue"></div>Live packet trace with TTL decrement</div>
+                <div class="tool-feature"><div class="tool-feature-dot blue"></div>Static route configuration walkthrough</div>
+              </div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta blue">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag blue">Interactive</span>
+            </div>
+          </a>
+
+          <!-- Network Routing Visualizer (LS/DV) -->
+          <a class="tool-card" href="../viewer.html?tool=cs339/routing_viz.html&course=CS339&label=Computer%20Networks&name=Routing%20Algorithm%20Visualizer&back=cs339/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon amber">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#854F0B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="5" cy="5" r="2"/><circle cx="19" cy="5" r="2"/>
+                  <circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/>
+                  <circle cx="12" cy="12" r="2"/>
+                  <line x1="7" y1="5" x2="10" y2="12"/><line x1="17" y1="5" x2="14" y2="12"/>
+                  <line x1="7" y1="19" x2="10" y2="12"/><line x1="17" y1="19" x2="14" y2="12"/>
+                  <line x1="7" y1="5" x2="17" y2="5"/>
+                </svg>
+              </div>
+              <div>
+                <div class="tool-subtitle amber">Link-State &amp; Distance Vector</div>
+                <div class="tool-title">Routing Algorithm Visualizer</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">
+                Step through Dijkstra (Link-State) and Bellman-Ford (Distance Vector)
+                algorithms on configurable network graphs. Watch routing tables
+                converge in real time.
+              </p>
+              <div class="tool-features">
+                <div class="tool-feature"><div class="tool-feature-dot amber"></div>Dijkstra LS &mdash; step-by-step shortest paths</div>
+                <div class="tool-feature"><div class="tool-feature-dot amber"></div>Bellman-Ford DV &mdash; iterative table updates</div>
+                <div class="tool-feature"><div class="tool-feature-dot amber"></div>Animated graph with cost labels</div>
+                <div class="tool-feature"><div class="tool-feature-dot amber"></div>Edit topology &amp; rerun convergence</div>
+              </div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta amber">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag amber">Algorithm</span>
+            </div>
+          </a>
+
+          <!-- Graph Algorithm Visualizer -->
+          <a class="tool-card" href="../viewer.html?tool=cs339/graph_viz.html&course=CS339&label=Computer%20Networks&name=Graph%20Algorithm%20Visualizer&back=cs339/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon blue">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CE1141" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/>
+                  <circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/>
+                  <circle cx="12" cy="12" r="2.5"/>
+                  <line x1="8.5" y1="6" x2="15.5" y2="6"/>
+                  <line x1="6" y1="8.5" x2="6" y2="15.5"/>
+                  <line x1="8" y1="8" x2="10.5" y2="10.5"/>
+                  <line x1="16" y1="8" x2="13.5" y2="10.5"/>
+                </svg>
+              </div>
+              <div>
+                <div class="tool-subtitle blue">Graph &amp; LS Topology</div>
+                <div class="tool-title">Graph Algorithm Visualizer</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">
+                General-purpose graph visualizer for exploring network topology
+                as a graph. Build arbitrary topologies, apply shortest-path
+                algorithms, and visualize the LS flooding model.
+              </p>
+              <div class="tool-features">
+                <div class="tool-feature"><div class="tool-feature-dot blue"></div>Drag-and-drop node &amp; edge construction</div>
+                <div class="tool-feature"><div class="tool-feature-dot blue"></div>Weighted edge cost simulation</div>
+                <div class="tool-feature"><div class="tool-feature-dot blue"></div>Shortest-path highlight &amp; traversal trace</div>
+                <div class="tool-feature"><div class="tool-feature-dot blue"></div>Supports LS flooding thought experiments</div>
+              </div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta blue">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag blue">Interactive</span>
+            </div>
+          </a>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ------------------------------------------------------- -->
+    <!-- LAYER 2 &mdash; LINK                                          -->
+    <!-- ------------------------------------------------------- -->
+    <div class="layer-accordion link" id="acc-link">
+      <button class="layer-header" onclick="toggleLayer('acc-link')" aria-expanded="false">
+        <div class="layer-header-inner">
+          <div class="layer-num">
+            <span class="lnum">2</span>
+            <span class="llbl">Layer</span>
+          </div>
+          <div class="layer-title-area">
+            <div class="layer-name">Link Layer</div>
+            <div class="layer-tagline">ARP &middot; MAC Learning &middot; Frame Flooding &middot; VLANs &middot; LAN Switching</div>
+            <span class="layer-tool-count">1 Tool</span>
+          </div>
+          <div class="layer-chevron">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg>
+          </div>
+        </div>
+      </button>
+      <div class="layer-body">
+        <div class="tools-grid">
+
+          <!-- Link Layer Visualizer -->
+          <a class="tool-card" href="../viewer.html?tool=cs339/linklayer_viz.html&course=CS339&label=Computer%20Networks&name=Link%20Layer%20Visualizer&back=cs339/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon teal">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="9" width="5" height="6" rx="1"/>
+                  <rect x="17" y="9" width="5" height="6" rx="1"/>
+                  <rect x="9" y="3" width="6" height="5" rx="1"/>
+                  <rect x="9" y="16" width="6" height="5" rx="1"/>
+                  <rect x="9" y="9.5" width="6" height="5" rx="1"/>
+                  <line x1="7" y1="12" x2="9" y2="12"/>
+                  <line x1="15" y1="12" x2="17" y2="12"/>
+                  <line x1="12" y1="8" x2="12" y2="9.5"/>
+                  <line x1="12" y1="14.5" x2="12" y2="16"/>
+                </svg>
+              </div>
+              <div>
+                <div class="tool-subtitle teal">LANs, ARP &amp; MAC Learning</div>
+                <div class="tool-title">Link Layer Visualizer</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">
+                Full LAN simulation covering switch MAC table learning, ARP
+                request/reply cycles, broadcast flooding, VLAN isolation, and
+                inter-subnet routing via a gateway. Step through each frame
+                hop with detailed inspection panels.
+              </p>
+              <div class="tool-features">
+                <div class="tool-feature"><div class="tool-feature-dot teal"></div>L2 MAC address learning &mdash; source observation on ingress</div>
+                <div class="tool-feature"><div class="tool-feature-dot teal"></div>ARP broadcast, unicast reply, cache population</div>
+                <div class="tool-feature"><div class="tool-feature-dot teal"></div>Unknown-destination flood with selective delivery</div>
+                <div class="tool-feature"><div class="tool-feature-dot teal"></div>VLAN enforcement &mdash; cross-VLAN drop demonstration</div>
+                <div class="tool-feature"><div class="tool-feature-dot teal"></div>Routed path &mdash; frame re-encapsulation at each hop</div>
+              </div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta teal">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag teal">Simulation</span>
+            </div>
+          </a>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ------------------------------------------------------- -->
+    <!-- LAYER 1 &mdash; PHYSICAL (PLACEHOLDER)                        -->
+    <!-- ------------------------------------------------------- -->
+    <div class="layer-accordion physical" id="acc-physical">
+      <button class="layer-header" onclick="toggleLayer('acc-physical')" aria-expanded="false">
+        <div class="layer-header-inner">
+          <div class="layer-num">
+            <span class="lnum">1</span>
+            <span class="llbl">Layer</span>
+          </div>
+          <div class="layer-title-area">
+            <div class="layer-name">Physical Layer</div>
+            <div class="layer-tagline">Signals &middot; Encoding &middot; Copper &middot; Fiber &middot; Wireless &middot; Bandwidth &middot; Attenuation</div>
+            <span class="layer-tool-count">Coming Soon</span>
+          </div>
+          <div class="layer-chevron">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg>
+          </div>
+        </div>
+      </button>
+      <div class="layer-body">
+        <div style="padding: 4px 0 8px;">
+          <div class="placeholder-card">
+            <div class="placeholder-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A95A3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h2m16 0h2M6 12a6 6 0 0 1 12 0"/><circle cx="12" cy="12" r="2"/><path d="M4 6l1.5 1.5M18.5 7.5 20 6M4 18l1.5-1.5M18.5 16.5 20 18"/></svg>
+            </div>
+            <div class="placeholder-body">
+              <div class="placeholder-title">No interactive tools planned for this layer</div>
+              <div class="placeholder-desc">Physical layer concepts &mdash; signal propagation, encoding schemes, and transmission media &mdash; are well served by lecture, diagrams, and lab exercises. CS339 covers these topics as foundational context before moving up the stack, where the interactive tools in this collection are focused.</div>
+              <div class="placeholder-topics">
+                <span class="placeholder-tag">Bit Transmission</span>
+                <span class="placeholder-tag">Signal Encoding</span>
+                <span class="placeholder-tag">Copper / Twisted Pair</span>
+                <span class="placeholder-tag">Fiber Optic</span>
+                <span class="placeholder-tag">Wireless / RF</span>
+                <span class="placeholder-tag">Bandwidth</span>
+                <span class="placeholder-tag">Attenuation</span>
+                <span class="placeholder-tag">Nyquist / Shannon</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.ip-stack -->
+
+</main>
+
+<footer class="footer">
+  CS339 Computer Networks &nbsp;&middot;&nbsp; Sacred Heart University &nbsp;&middot;&nbsp; Professor Chris Rosa
+</footer>
+
+<!-- -- Instructor Drawer -- -->
+<!-- Instructor Drawer -->
+<!-- -- AI Answer Drawer -- -->
+<div class="drawer-overlay" id="ai-drawer-overlay" onclick="closeAiDrawer()" style="z-index:101;"></div>
+<div class="ai-drawer" id="ai-drawer">
+  <div class="ai-drawer-header">
+    <div class="ai-drawer-label">
+      <span class="ai-drawer-label-text">CS339 Assistant</span>
+      <span class="ai-drawer-question" id="ai-drawer-question-preview"></span>
+    </div>
+    <div class="ai-drawer-controls">
+      <button class="ai-ctrl-btn" id="btn-expand" onclick="setDrawerSize('expanded')" title="Expand">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="10,2 14,2 14,6"/><polyline points="6,14 2,14 2,10"/><line x1="14" y1="2" x2="9" y2="7"/><line x1="2" y1="14" x2="7" y2="9"/></svg>
+      </button>
+      <button class="ai-ctrl-btn" id="btn-full" onclick="setDrawerSize('fullscreen')" title="Full screen">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 2,2 6,2"/><polyline points="10,2 14,2 14,6"/><polyline points="14,10 14,14 10,14"/><polyline points="6,14 2,14 2,10"/></svg>
+      </button>
+      <button class="ai-ctrl-btn" onclick="closeAiDrawer()" title="Close">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="ai-drawer-body" id="ai-drawer-body"></div>
+  <div class="ai-followup-wrap">
+    <input id="ai-followup-input" class="ai-followup-input" type="text" placeholder="Ask a follow-up question&hellip;" onkeydown="if(event.key==='Enter')sendFollowUp()" />
+    <button class="ai-followup-btn" id="ai-followup-btn" onclick="sendFollowUp()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+// -- Proxy URL -------------------------------------------------
+const PROXY_URL = 'https://red-union-6b9e.crosa.workers.dev';
+
+// -- Tool registry for recommendations ------------------------
+const TOOLS = [
+  { name:'TCP Full Visualizer', file:'tcp_full_V3.html', layer:'Transport &mdash; Layer 4',
+    desc:'SYN/FIN handshake, seq/ack, flow control, congestion control, slow start, AIMD, retransmit',
+    keywords:['tcp','syn','fin','ack','seq','sequence','acknowledgment','handshake','flow control','congestion','slow start','aimd','retransmit','sliding window','rwnd','cwnd','buffer','transport'] },
+  { name:'CIDR Teaching Tool', file:'cidr_viz.html', layer:'Network &mdash; Layer 3',
+    desc:'IP addressing, subnet masks, CIDR notation, block sizes, route aggregation, same-subnet check',
+    keywords:['cidr','subnet','subnetting','ip address','mask','prefix','block','network address','broadcast','aggregation','route summarization','/24','/16','/8','classless','addressing'] },
+  { name:'Subnet Topology Builder', file:'subnet_topology_builder.html', layer:'Network &mdash; Layer 3',
+    desc:'NAT, PAT, DHCP, routing between subnets, host-to-host packet simulation, translation table',
+    keywords:['nat','pat','dhcp','topology','subnet topology','network design','translation','private address','public address','port mapping','packet routing'] },
+  { name:'Router Visualizer', file:'router_viz.html', layer:'Network &mdash; Layer 3',
+    desc:'Forwarding tables, longest-prefix match, static routes, TTL, per-interface inspection',
+    keywords:['router','forwarding','routing table','longest prefix','prefix match','ttl','static route','datagram','hop','interface','next hop'] },
+  { name:'Routing Algorithm Visualizer', file:'routing_viz.html', layer:'Network &mdash; Layer 3',
+    desc:'Dijkstra link-state algorithm, Bellman-Ford distance vector, shortest path, convergence',
+    keywords:['dijkstra','bellman-ford','link state','distance vector','ls','dv','shortest path','convergence','routing algorithm','ospf','rip','topology'] },
+  { name:'Graph Algorithm Visualizer', file:'graph_viz.html', layer:'Network &mdash; Layer 3',
+    desc:'Network topology as a graph, weighted edges, shortest path traversal, LS flooding model',
+    keywords:['graph','topology graph','weighted','edge','node','flooding','link state flooding','spanning tree','path'] },
+  { name:'Link Layer Visualizer', file:'linklayer_viz.html', layer:'Link &mdash; Layer 2',
+    desc:'MAC learning, ARP request/reply, broadcast flooding, VLAN isolation, frame re-encapsulation',
+    keywords:['arp','mac','mac address','mac table','mac learning','switch','frame','flooding','broadcast','vlan','lan','link layer','ethernet','layer 2'] },
+];
+
+// -- Conversation history + result cache ----------------------
+let aiHistory = [];
+let currentDrawerSize = 'default';
+let cachedDrawerHTML = '';
+let cachedQuestion = '';
+
+// -- Recommend tool from question + answer --------------------
+function recommendTool(question, answer) {
+  const text = (question + ' ' + answer).toLowerCase();
+  let best = null, bestScore = 0;
+  for (const tool of TOOLS) {
+    let score = tool.keywords.filter(k => text.includes(k)).length;
+    if (score > bestScore) { bestScore = score; best = tool; }
+  }
+  return bestScore >= 1 ? best : null;
+}
+
+// -- Render tool recommendation card --------------------------
+function renderToolCard(tool) {
+  return `<a class="ai-tool-rec" href="${tool.file}">
+    <div class="ai-tool-rec-header">
+      <span class="ai-tool-rec-badge">Recommended Tool</span>
+      <span class="ai-tool-rec-layer">${tool.layer}</span>
+    </div>
+    <div class="ai-tool-rec-body">
+      <div class="ai-tool-rec-name">${tool.name}</div>
+      <div class="ai-tool-rec-desc">${tool.desc}</div>
+    </div>
+    <div class="ai-tool-rec-footer">
+      <span class="ai-tool-rec-cta">Open tool <svg class="ai-tool-rec-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+    </div>
+  </a>`;
+}
+
+// -- Append a message bubble to the drawer --------------------
+function appendMessage(html, className) {
+  const body = document.getElementById('ai-drawer-body');
+  const div = document.createElement('div');
+  div.className = className;
+  div.innerHTML = html;
+  body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+  return div;
+}
+
+// -- Call Claude API -------------------------------------------
+async function callClaude(messages) {
+  const SYSTEM = `You are a concise, expert teaching assistant for CS339 Computer Networks at Sacred Heart University. 
+Answer questions about networking topics covered in the course: TCP/IP stack, transport layer (TCP, flow control, congestion control, seq/ack numbers, SYN/FIN handshakes, sliding window, AIMD, slow start), network layer (IP addressing, CIDR, subnetting, routing tables, LS/DV algorithms, Dijkstra, Bellman-Ford, DHCP, NAT/PAT), and link layer (Ethernet, switches, MAC addresses, MAC learning, ARP, broadcast flooding, VLANs, frames).
+
+Rules:
+- Be concise but complete. 2-4 short paragraphs maximum.
+- Use clear, student-friendly language. Define acronyms on first use.
+- If the question is outside networking/CS339 scope, politely redirect.
+- Format with short paragraphs. Do not use markdown headers or bullet points &mdash; use plain prose only.
+- End your answer with a single line starting with "TOOL:" naming the single most relevant tool from this list if applicable, or "TOOL:none" if no tool applies:
+  TCP Full Visualizer, CIDR Teaching Tool, Subnet Topology Builder, Router Visualizer, Routing Algorithm Visualizer, Graph Algorithm Visualizer, Link Layer Visualizer`;
+
+  const response = await fetch(PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 1000,
+      system: SYSTEM,
+      messages: messages
+    })
+  });
+
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error('HTTP ' + response.status + ': ' + (errData.error?.message || JSON.stringify(errData)));
+  }
+  const data = await response.json();
+  return data.content[0].text;
+}
+
+// -- Parse answer + tool hint from Claude response ------------
+function parseResponse(raw) {
+  const lines = raw.split('\n');
+  const toolLine = lines.findLast(l => l.trim().startsWith('TOOL:'));
+  const toolName = toolLine ? toolLine.replace('TOOL:', '').trim() : null;
+  const answer = lines.filter(l => !l.trim().startsWith('TOOL:')).join('\n').trim();
+  const tool = toolName && toolName !== 'none'
+    ? TOOLS.find(t => t.name.toLowerCase() === toolName.toLowerCase()) || recommendTool(answer, answer)
+    : null;
+  return { answer, tool };
+}
+
+// -- Main search handler ---------------------------------------
+async function handleSearch() {
+  const input = document.getElementById('ai-search-input');
+  const q = input.value.trim();
+  if (!q) return;
+
+  openAiDrawer(q);
+  input.value = '';
+
+  // Reset history for new search
+  aiHistory = [{ role: 'user', content: q }];
+
+  // Show question chip
+  appendMessage(q, 'ai-question-chip');
+
+  // Show loading
+  const loadingDiv = appendMessage(
+    '<div class="ai-loading"><div class="ai-loading-dots"><span></span><span></span><span></span></div><span>Thinking&hellip;</span></div>',
+    'ai-answer-block'
+  );
+
+  setInputsDisabled(true);
+
+  try {
+    const raw = await callClaude(aiHistory);
+    const { answer, tool } = parseResponse(raw);
+
+    // Add to history
+    aiHistory.push({ role: 'assistant', content: raw });
+
+    // Replace loading with answer
+    loadingDiv.innerHTML = `<div class="ai-answer-text">${answer.split('\n\n').map(p => p ? '<p>'+p+'</p>' : '').join('')}</div>`;
+
+    // Tool recommendation
+    if (tool) {
+      appendMessage(renderToolCard(tool), '');
+    }
+    // Cache the result
+    cachedDrawerHTML = document.getElementById('ai-drawer-body').innerHTML;
+    cachedQuestion = q;
+    document.getElementById('btn-last-result').style.display = 'inline-flex';
+  } catch(e) {
+    loadingDiv.innerHTML = '<div class="ai-answer-text" style="color:var(--red)">Error: ' + e.message + '</div>';
+    console.error('Claude API error:', e);
+  }
+
+  setInputsDisabled(false);
+  document.getElementById('ai-followup-input').focus();
+}
+
+// -- Follow-up handler -----------------------------------------
+async function sendFollowUp() {
+  const input = document.getElementById('ai-followup-input');
+  const q = input.value.trim();
+  if (!q) return;
+
+  input.value = '';
+  aiHistory.push({ role: 'user', content: q });
+  appendMessage(q, 'ai-question-chip');
+
+  const loadingDiv = appendMessage(
+    '<div class="ai-loading"><div class="ai-loading-dots"><span></span><span></span><span></span></div><span>Thinking&hellip;</span></div>',
+    'ai-answer-block'
+  );
+
+  setInputsDisabled(true);
+
+  try {
+    const raw = await callClaude(aiHistory);
+    const { answer, tool } = parseResponse(raw);
+    aiHistory.push({ role: 'assistant', content: raw });
+    loadingDiv.innerHTML = `<div class="ai-answer-text">${answer.split('\n\n').map(p => p ? '<p>'+p+'</p>' : '').join('')}</div>`;
+    if (tool) appendMessage(renderToolCard(tool), '');
+    // Cache updated conversation
+    cachedDrawerHTML = document.getElementById('ai-drawer-body').innerHTML;
+    cachedQuestion = aiHistory[0]?.content || cachedQuestion;
+  } catch(e) {
+    loadingDiv.innerHTML = '<div class="ai-answer-text" style="color:var(--red)">Error: ' + e.message + '</div>';
+    console.error('Claude API error:', e);
+  }
+
+  setInputsDisabled(false);
+  input.focus();
+}
+
+// -- Drawer size control ---------------------------------------
+function setDrawerSize(size) {
+  const drawer = document.getElementById('ai-drawer');
+  drawer.classList.remove('expanded','fullscreen');
+  if (size !== 'default') drawer.classList.add(size);
+  currentDrawerSize = size;
+  document.getElementById('btn-expand').classList.toggle('active', size==='expanded');
+  document.getElementById('btn-full').classList.toggle('active', size==='fullscreen');
+}
+
+// -- Open/close AI drawer --------------------------------------
+function openAiDrawer(question) {
+  const body = document.getElementById('ai-drawer-body');
+  if (question) {
+    // New search &mdash; clear drawer
+    body.innerHTML = '';
+    document.getElementById('ai-drawer-question-preview').textContent = '"' + question + '"';
+  } else if (cachedDrawerHTML) {
+    // Restore cached result
+    body.innerHTML = cachedDrawerHTML;
+    document.getElementById('ai-drawer-question-preview').textContent = cachedQuestion ? '"' + cachedQuestion + '"' : '';
+    body.scrollTop = body.scrollHeight;
+  }
+  document.getElementById('ai-drawer').classList.add('open');
+  document.getElementById('ai-drawer-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeAiDrawer() {
+  document.getElementById('ai-drawer').classList.remove('open');
+  document.getElementById('ai-drawer-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  setDrawerSize('default');
+}
+
+// -- Instructor drawer ----------------------------------------
+function openInstDrawer() {
+  document.getElementById('instructor-drawer').classList.add('open');
+  document.getElementById('inst-drawer-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeInstDrawer() {
+  document.getElementById('instructor-drawer').classList.remove('open');
+  document.getElementById('inst-drawer-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// -- Helpers ---------------------------------------------------
+function setInputsDisabled(val) {
+  document.getElementById('ai-search-btn').disabled = val;
+  document.getElementById('ai-followup-btn').disabled = val;
+  document.getElementById('ai-followup-input').disabled = val;
+}
+
+// -- Enter key on search input ---------------------------------
+document.addEventListener('DOMContentLoaded', function() {
+  var inp = document.getElementById('ai-search-input');
+  if (inp) inp.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') handleSearch();
+  });
+});
+
+function toggleLayer(id) {
+  const el = document.getElementById(id);
+  const btn = el.querySelector('.layer-header');
+  const isOpen = el.classList.contains('open');
+  el.classList.toggle('open', !isOpen);
+  btn.setAttribute('aria-expanded', String(!isOpen));
+}
+
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeAiDrawer(); closeInstDrawer(); } });
+
+// -- Layer accordion -------------------------------------------
+</script>
+
+<script src="../assets/js/components/instructor-drawer-loader.js"></script>
+</body>
+</html>

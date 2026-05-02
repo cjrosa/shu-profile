@@ -1,0 +1,919 @@
+
+<!-- saved from url=(0051)file:///C:/Users/Chris/Downloads/tcp_full_V2_2.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>TCP Interactive Visualizer</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 24 24&#39; fill=&#39;none&#39; stroke=&#39;%23185FA5&#39; stroke-width=&#39;2&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39;&gt;&lt;rect x=&#39;2&#39; y=&#39;2&#39; width=&#39;6&#39; height=&#39;6&#39; rx=&#39;1&#39;/&gt;&lt;rect x=&#39;16&#39; y=&#39;2&#39; width=&#39;6&#39; height=&#39;6&#39; rx=&#39;1&#39;/&gt;&lt;rect x=&#39;9&#39; y=&#39;16&#39; width=&#39;6&#39; height=&#39;6&#39; rx=&#39;1&#39;/&gt;&lt;line x1=&#39;5&#39; y1=&#39;8&#39; x2=&#39;5&#39; y2=&#39;12&#39;/&gt;&lt;line x1=&#39;19&#39; y1=&#39;8&#39; x2=&#39;19&#39; y2=&#39;12&#39;/&gt;&lt;line x1=&#39;5&#39; y1=&#39;12&#39; x2=&#39;19&#39; y2=&#39;12&#39;/&gt;&lt;line x1=&#39;12&#39; y1=&#39;12&#39; x2=&#39;12&#39; y2=&#39;16&#39;/&gt;&lt;/svg&gt;">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:system-ui,-apple-system,sans-serif;font-size:12px;color:#1a1a1a;background:#f5f4f0;}
+#root{width:100%;padding:8px;display:flex;flex-direction:column;gap:8px;}
+#panels{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.stack{border-radius:10px;overflow:hidden;border:2px solid #85B7EB;background:#fff;}
+.stack.recv-stack{border-color:#5DCAA5;}
+.app-hdr{background:#E6F1FB;border-bottom:1px solid #85B7EB;border-left:4px solid #185FA5;padding:8px 12px;}
+.app-hdr.recv{background:#E1F5EE;border-bottom-color:#9FE1CB;border-left-color:#1D9E75;}
+.ctrl-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.app-name{font-size:13px;font-weight:600;color:#0C447C;white-space:nowrap;}
+.app-hdr.recv .app-name{color:#085041;}
+.port-badge{font-size:10px;font-weight:600;background:#185FA5;color:#fff;border-radius:4px;padding:1px 7px;white-space:nowrap;}
+.app-hdr.recv .port-badge{background:#1D9E75;}
+.vsep{width:1px;height:18px;background:rgba(24,95,165,.25);flex-shrink:0;}
+.vsep.g{background:rgba(15,110,86,.25);}
+.seg-label{font-size:10px;color:#185FA5;font-weight:600;white-space:nowrap;}
+.seg-btn{background:#185FA5;border:none;color:#fff;font-size:14px;font-weight:600;width:22px;height:24px;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.seg-btn:hover{opacity:.8;}
+input[type=number]{font-family:monospace;font-size:11px;width:50px;padding:1px 4px;border:1px solid #85B7EB;border-radius:4px;background:#fff;color:#042C53;text-align:center;font-weight:600;height:24px;}
+input[type=number]::-webkit-inner-spin-button{opacity:0;}
+.btn{font-family:system-ui,sans-serif;font-size:11px;font-weight:600;padding:0 11px;height:24px;border-radius:5px;border:none;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;}
+.btn:disabled{opacity:.3;cursor:not-allowed;}
+.btn:hover:not(:disabled){opacity:.82;}
+.btn-connect{background:#534AB7;color:#fff;}
+.btn-send{background:#185FA5;color:#fff;}
+.btn-close{background:#A32D2D;color:#fff;}
+.btn-recv{background:#1D9E75;color:#fff;}
+.btn-pause{background:#534AB7;color:#fff;font-size:10px;}
+.btn-mode{font-size:10px;padding:0 9px;height:24px;border-radius:4px;border:1px solid #85B7EB;background:#fff;color:#185FA5;font-weight:600;cursor:pointer;}
+.btn-mode.active{background:#185FA5;color:#fff;border-color:#185FA5;}
+.cc-mode-btn{font-size:10px;padding:0 9px;height:24px;border-radius:4px;border:1px solid #BA7517;background:#fff;color:#BA7517;font-weight:700;cursor:pointer;}
+.cc-mode-btn.active{background:#BA7517;color:#fff;}
+select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB;border-radius:4px;background:#fff;color:#042C53;font-weight:600;padding:0 4px;cursor:pointer;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.65;}}
+@keyframes rto-pulse{0%,100%{box-shadow:0 0 0 0 rgba(163,45,45,0.55);}60%{box-shadow:0 0 0 5px rgba(163,45,45,0);}}
+.sec-hdr{font-size:9px;font-weight:700;color:#888780;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px 3px;background:#f0efea;border-top:1px solid #e8e7e2;}
+.sec-hdr-row{display:flex;justify-content:space-between;align-items:center;padding:4px 12px 3px;background:#f0efea;border-top:1px solid #e8e7e2;}
+.sec-hdr-row .lh{font-size:9px;font-weight:700;color:#888780;letter-spacing:.1em;text-transform:uppercase;}
+.badge{font-size:10px;font-weight:600;font-family:monospace;}
+.badge.ok{color:#1D9E75;}.badge.warn{color:#BA7517;}.badge.full{color:#A32D2D;}
+.kv-grid{display:grid;grid-template-columns:auto 1fr;padding:5px 12px 7px;background:#fff;}
+.kv-key{font-size:10px;color:#888780;white-space:nowrap;font-family:monospace;padding:2px 0;display:flex;align-items:baseline;gap:5px;}
+.rfc{color:#1a1a1a;font-weight:700;font-size:11px;}.sub{color:#aaa9a2;font-size:9px;}
+.kv-val{font-size:11px;font-weight:700;font-family:monospace;color:#1a1a1a;text-align:right;padding:2px 0;}
+.hi-b{color:#185FA5;}.hi-g{color:#1D9E75;}.hi-p{color:#534AB7;}
+.c-warn{color:#BA7517;}.c-danger{color:#A32D2D;}.c-ss{color:#534AB7;}.c-ca{color:#1D9E75;}.c-fr{color:#993C1D;}
+.kv-div{grid-column:1/-1;height:1px;background:#f0efea;margin:1px 0;}
+.buf-track{height:3px;background:#e8e7e2;}
+.buf-bar{height:100%;transition:width .15s,background .15s;}
+.buf-body{min-height:40px;padding:5px 12px;background:#fff;display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,110px));gap:4px;}
+.seg-pill{font-size:10px;font-family:monospace;font-weight:600;padding:4px 6px 4px 8px;border-radius:4px;border-left:3px solid;display:flex;flex-direction:row;align-items:center;gap:4px;}
+.seg-pill-info{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0;}
+.seg-pill-seq{font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.seg-pill-len{font-size:9px;font-weight:500;opacity:.7;}
+.seg-ring{flex-shrink:0;width:22px;height:22px;border-radius:50%;position:relative;}
+.empty-msg{font-size:10px;color:#aaa9a2;font-style:italic;padding:3px 0;grid-column:1/-1;}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px 12px 8px;background:#fff;}
+.stat-cell{display:flex;flex-direction:column;gap:1px;}
+.stat-label{font-size:9px;color:#888780;text-transform:uppercase;letter-spacing:.06em;font-weight:600;}
+.stat-value{font-size:12px;font-weight:700;font-family:monospace;color:#1a1a1a;}
+#chart-wrap{background:#fff;border:1px solid #c0beb6;border-radius:8px;padding:8px 12px 6px;display:flex;flex-direction:column;gap:4px;}
+#chart-title{font-size:9px;font-weight:700;color:#888780;letter-spacing:.08em;text-transform:uppercase;}
+#chart-cv{display:block;width:100%;border-radius:4px;}
+#chart-legend{display:flex;gap:12px;font-size:9px;color:#888780;flex-wrap:wrap;}
+.leg-item{display:flex;align-items:center;gap:4px;}
+.leg-dot{width:16px;height:3px;border-radius:2px;}
+#net-strip{height:64px;cursor:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23A32D2D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>') 4 4, crosshair;}
+#net-cv{display:block;width:100%;height:100%;}
+#state-bar{text-align:center;font-size:11px;font-weight:600;padding:2px;letter-spacing:.04em;}
+#log-wrap{border:1px solid #c0beb6;border-radius:8px;overflow:hidden;background:#fff;}
+#log-hdr-row{padding:4px 10px;background:#f0efea;border-bottom:1px solid #e8e7e2;display:flex;align-items:center;gap:8px;}
+#log-hdr-cols{display:grid;grid-template-columns:44px 18px 80px 52px 14px 52px 66px 66px 36px 56px;flex:1;font-size:9px;font-weight:700;color:#888780;letter-spacing:.05em;text-transform:uppercase;}
+#log-hdr-cols .r{text-align:right;} #log-hdr-cols .c{text-align:center;}
+#log-body{height:90px;overflow-y:auto;}
+.log-cols{display:grid;grid-template-columns:44px 18px 80px 52px 14px 52px 66px 66px 36px 56px;}
+.lr{padding:2px 10px;font-size:10px;font-family:monospace;align-items:center;border-bottom:1px solid #f0efea;}
+.lr .r{text-align:right;} .lr .c{text-align:center;} .lr .muted{color:#888780;}
+.dir-s{color:#185FA5;font-weight:700;}.dir-r{color:#1D9E75;font-weight:700;}
+.fl-syn{color:#534AB7;font-weight:700;}.fl-fin{color:#A32D2D;font-weight:700;}
+.fl-ack{color:#1D9E75;font-weight:700;}.fl-psh{color:#185FA5;font-weight:700;}
+.fl-ret{color:#A32D2D;font-weight:700;}.fl-frt{color:#993C1D;font-weight:700;}
+.lr.syn-r{background:#f5f4fe;}.lr.fin-r{background:#fef5f5;}
+.lr.ack-r{background:#f2fbf7;}.lr.psh-r{background:#f0f7fd;}.lr.ret-r{background:#fef0f0;}.lr.frt-r{background:#fdf3ee;}
+.btn-copy{font-size:9px;font-weight:600;padding:0 8px;height:20px;border-radius:4px;border:1px solid #c0beb6;background:#fff;color:#888780;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.btn-copy:hover{background:#f0efea;}
+.btn-copy.copied{background:#1D9E75;color:#fff;border-color:#1D9E75;}
+</style></head>
+
+
+<body><div id="root">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 4px 4px;">
+    <div style="display:flex;align-items:center;gap:7px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#185FA5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="2" width="6" height="6" rx="1"></rect><rect x="16" y="2" width="6" height="6" rx="1"></rect><rect x="9" y="16" width="6" height="6" rx="1"></rect>
+        <line x1="5" y1="8" x2="5" y2="12"></line><line x1="19" y1="8" x2="19" y2="12"></line><line x1="5" y1="12" x2="19" y2="12"></line><line x1="12" y1="12" x2="12" y2="16"></line>
+      </svg>
+      <div style="font-size:13px;font-weight:700;color:#1a1a1a;letter-spacing:.02em;">TCP Interactive Visualizer</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:10px;color:#888780;">
+      <span>Developed by Professor Chris Rosa — CS339 Networks, Sacred Heart University</span>
+      <a href="mailto:rosac75066@sacredheart.edu" title="rosac75066@sacredheart.edu" style="display:inline-flex;align-items:center;color:#185FA5;text-decoration:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><polyline points="2,4 12,13 22,4"></polyline></svg>
+      </a>
+      <a href="https://linkedin.com/in/chris-rosa-3192326" target="_blank" title="LinkedIn" style="display:inline-flex;align-items:center;color:#0A66C2;text-decoration:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.354V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path></svg>
+      </a>
+    </div>
+  </div>
+  <div id="panels">
+    <div class="stack">
+      <div class="app-hdr">
+        <div class="ctrl-row">
+          <span class="app-name">Sender app</span>
+          <span class="port-badge" id="s-port" style="display: inline-block;">:62682</span>
+          <div class="vsep"></div>
+          <span class="seg-label">seg</span>
+          <button class="seg-btn" id="btn-minus">−</button>
+          <input type="number" id="seg-input" value="500" min="100" max="9000" step="100">
+          <span style="font-size:10px;color:#185FA5;font-weight:600;">B</span>
+          <button class="seg-btn" id="btn-plus">+</button>
+          <div class="vsep"></div>
+          <button class="btn-mode active" id="mode-manual">Manual</button>
+          <button class="btn-mode" id="mode-sim">Simulate</button>
+          <div class="vsep"></div>
+          <button class="btn btn-connect" id="btn-connect" style="display: none;">Connect</button>
+          <button class="btn btn-send" id="btn-send" style="display: inline-flex;">Send</button>
+          <button class="btn btn-close" id="btn-close" style="display: inline-flex;">Close</button>
+          <button class="btn btn-pause" id="btn-pause" style="display: none;">Pause</button>
+        </div>
+      </div>
+      <div class="sec-hdr-row">
+        <span class="lh">TCP transport</span>
+        <span id="s-warn" style="font-size:9px;font-weight:600;color:#854F0B;"></span>
+      </div>
+      <div class="kv-grid">
+        <div class="kv-key"><span class="rfc">ISN_S</span><span class="sub">initial seq#</span></div><div class="kv-val" id="t-isns">9366</div>
+        <div class="kv-div"></div>
+        <div class="kv-key"><span class="rfc">SND.NXT</span><span style="color:#aaa9a2;font-size:9px;">/</span><span class="rfc">SND.UACK</span><span class="sub">nxt send / unacked</span></div><div class="kv-val" id="t-nxt-una" style="font-size:11px;font-weight:700;font-family:monospace;color:#1a1a1a;text-align:right;padding:2px 0;"><span style="color:#185FA5">10367</span><span style="color:#aaa9a2;font-size:10px;"> / </span><span style="color:#534AB7">10367</span></div>
+        <div class="kv-div"></div>
+        <div class="kv-key"><span class="rfc">in flight</span><span class="sub">SND.NXT − SND.UNA</span></div><div class="kv-val" id="t-inflight">0 B</div>
+        <div class="kv-div"></div>
+        <div class="kv-key"><span class="rfc">peer rwnd</span><span class="sub">recv window</span></div><div class="kv-val" id="t-prwnd">9000 B</div>
+      </div>
+      <div class="sec-hdr" id="cc-sec-hdr" style="display: none;">Congestion control — <span id="cc-mode-label" style="color:#BA7517;">Tahoe</span></div>
+      <div id="cc-variant-row" style="display: none; gap: 6px; padding: 5px 12px; background: rgb(255, 255, 255); border-bottom: 1px solid rgb(232, 231, 226); align-items: center;">
+        <button class="cc-mode-btn active" id="cc-tahoe">Tahoe</button>
+        <button class="cc-mode-btn" id="cc-reno">Reno</button>
+        <span style="font-size:9px;color:#888780;align-self:center;padding-left:4px;" id="cc-desc">cwnd→1 on any loss</span>
+        <div style="flex:1"></div>
+        <label id="sim-loss-wrap" style="display: none; align-items: center; gap: 4px; font-size: 10px; color: rgb(24, 95, 165); font-weight: 600;">
+          loss every <select id="sim-loss-sel"><option value="0">never</option><option value="4">4</option><option value="6" selected="">6</option><option value="10">10</option></select> rounds
+        </label>
+      </div>
+      <div class="kv-grid" id="cc-kv-grid" style="display: none;">
+        <div class="kv-key"><span class="rfc">cwnd</span><span class="sub">congestion window</span></div><div class="kv-val hi-p" id="t-cwnd">2 MSS (2000 B)</div>
+        <div class="kv-div"></div>
+        <div class="kv-key"><span class="rfc">ssthresh</span><span class="sub">slow start threshold</span></div><div class="kv-val" id="t-ssthresh">8 MSS</div>
+        <div class="kv-div"></div>
+        <div class="kv-key"><span class="rfc">eff window</span><span class="sub">min(rwnd, cwnd)</span></div><div class="kv-val" id="t-effwin">2000 B total / 2000 B free</div>
+        <div class="kv-div"></div>
+        <div class="kv-key"><span class="rfc">CC phase</span><span class="sub">current state</span></div><div class="kv-val c-ss" id="t-ccphase">slow start</div>
+        <div class="kv-div"></div>
+        <div class="kv-key"><span class="rfc">RTT #</span><span class="sub">simulation round</span></div><div class="kv-val hi-p" id="t-rtt">—</div>
+      </div>
+      <div class="sec-hdr-row">
+        <span class="lh">Send buffer</span><span class="badge ok" id="s-buf-ct">0 seg in flight</span>
+      </div>
+      <div class="buf-track"><div class="buf-bar" id="s-buf-bar" style="width: 0%; background: rgb(24, 95, 165);"></div></div>
+      <div class="buf-body" id="s-buf-body"><span class="empty-msg">empty</span></div>
+      <div class="sec-hdr" style="border-top:1px solid #e8e7e2;">Session</div>
+      <div class="stats-grid">
+        <div class="stat-cell"><div class="stat-label">src port</div><div class="stat-value" id="i-port">62682</div></div>
+        <div class="stat-cell"><div class="stat-label">retransmits</div><div class="stat-value" id="i-retx" style="color:#A32D2D;">0</div></div>
+        <div class="stat-cell"><div class="stat-label">bytes sent</div><div class="stat-value" id="i-sent">1000 B</div></div>
+        <div class="stat-cell"><div class="stat-label">loss events</div><div class="stat-value" id="i-loss" style="color:#A32D2D;">0</div></div>
+      </div>
+    </div>
+
+    <div class="stack recv-stack">
+      <div class="app-hdr recv">
+        <div class="ctrl-row">
+          <span class="app-name" style="color:#085041;">Receiver app</span>
+          <span class="port-badge" id="r-port" style="display: inline-block; background: rgb(29, 158, 117);">:80</span>
+          <div class="vsep g"></div>
+          <span style="font-size:10px;color:#0F6E56;font-weight:500;white-space:nowrap;" id="recv-hint">drain one segment per click</span>
+          <div class="vsep g"></div>
+          <button class="btn-mode" id="btn-auto-recv" style="border-color: rgb(29, 158, 117); color: rgb(29, 158, 117); background: rgb(255, 255, 255);">Auto</button>
+          <button class="btn btn-recv" id="btn-recv" disabled="" style="display: inline-flex;">Recv</button>
+        </div>
+      </div>
+      <div class="sec-hdr">TCP transport</div>
+      <div class="kv-grid">
+        <div class="kv-key"><span class="rfc">ISN_R</span><span class="sub">initial seq#</span></div><div class="kv-val" id="t-isnr">3630</div>
+        <div class="kv-div"></div>
+        <div class="kv-key"><span class="rfc">RCV.NXT</span><span class="sub">next expected seq</span></div><div class="kv-val hi-g" id="t-rcvnxt">10367</div>
+        <div class="kv-div"></div>
+        <div class="kv-key"><span class="rfc">rwnd</span><span class="sub">free buffer space</span></div><div class="kv-val" id="t-rwnd">10 KB (10 segs)</div>
+        <div class="kv-div"></div>
+        <div class="kv-key"><span class="rfc">buffered</span><span class="sub">held by transport</span></div><div class="kv-val" id="t-held">0 / 10000 B</div>
+      </div>
+      <div class="sec-hdr-row">
+        <span class="lh">Recv buffer</span><span class="badge ok" id="r-buf-pct">0 segs buffered</span>
+      </div>
+      <div class="buf-track"><div class="buf-bar" id="r-buf-bar" style="width: 0%; background: rgb(29, 158, 117);"></div></div>
+      <div class="buf-body" id="r-buf-body"><span class="empty-msg">empty</span></div>
+      <div class="sec-hdr" style="border-top:1px solid #e8e7e2;">Session</div>
+      <div class="stats-grid">
+        <div class="stat-cell"><div class="stat-label">dst port</div><div class="stat-value" id="ri-port">80</div></div>
+        <div class="stat-cell"><div class="stat-label">ISN</div><div class="stat-value" id="ri-isn">3630</div></div>
+        <div class="stat-cell"><div class="stat-label">bytes recvd</div><div class="stat-value" id="ri-recvd">1000 B</div></div>
+        <div class="stat-cell"><div class="stat-label">rwnd</div><div class="stat-value" id="ri-rwnd">10 KB</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="state-bar" style="color: rgb(29, 158, 117);">● established</div>
+  <div id="net-strip" title="Click to arm drop — next packet crossing the network will be lost"><canvas id="net-cv" width="1497" height="64"></canvas></div>
+
+  <div id="chart-wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div id="chart-title">Congestion window (cwnd) over time — AIMD sawtooth</div>
+      <button class="btn-copy" id="btn-clear-chart">Clear</button>
+    </div>
+    <canvas id="chart-cv" height="130" width="1471"></canvas>
+    <div id="chart-legend">
+      <div class="leg-item"><div class="leg-dot" style="background:#534AB7;"></div><span>cwnd</span></div>
+      <div class="leg-item"><div class="leg-dot" style="background:#BA7517;"></div><span>ssthresh (dashed)</span></div>
+      <div class="leg-item"><div class="leg-dot" style="background:#A32D2D;"></div><span>T = timeout</span></div>
+      <div class="leg-item"><div class="leg-dot" style="background:#F09595;"></div><span>FR = fast retransmit (Reno)</span></div>
+      <div class="leg-item"><div class="leg-dot" style="background:#E6F1FB;border:1px solid #85B7EB;height:10px;width:10px;border-radius:2px;"></div><span>slow start</span></div>
+      <div class="leg-item"><div class="leg-dot" style="background:#E1F5EE;border:1px solid #9FE1CB;height:10px;width:10px;border-radius:2px;"></div><span>cong avoidance</span></div>
+    </div>
+  </div>
+
+  <div id="log-wrap">
+    <div id="log-hdr-row">
+      <div id="log-hdr-cols" class="log-cols">
+        <span>time</span><span class="c">dir</span><span>flags</span>
+        <span class="r">src</span><span class="c"></span><span class="r">dst</span>
+        <span class="r">seq #</span><span class="r">ack #</span><span class="r">len</span><span class="r">rwnd</span>
+      </div>
+      <button class="btn-copy" id="btn-copy-log">Copy log</button>
+      <button class="btn-copy" id="btn-clear-log">Clear</button>
+    </div>
+    <div id="log-body"><div class="lr log-cols syn-r"><span class="muted">0.00s</span><span class="c dir-s">→</span><span class="fl-syn">SYN</span><span class="r">62682</span><span class="c muted">→</span><span class="r">80</span><span class="r">9366</span><span class="r">—</span><span class="r">1</span><span class="r">—</span></div><div class="lr log-cols syn-r"><span class="muted">0.61s</span><span class="c dir-r">←</span><span class="fl-syn">SYN-ACK</span><span class="r">80</span><span class="c muted">→</span><span class="r">62682</span><span class="r">3630</span><span class="r">9367</span><span class="r">1</span><span class="r">10000</span></div><div class="lr log-cols ack-r"><span class="muted">1.23s</span><span class="c dir-s">→</span><span class="fl-ack">ACK</span><span class="r">62682</span><span class="c muted">→</span><span class="r">80</span><span class="r">9367</span><span class="r">3631</span><span class="r">0</span><span class="r">10000</span></div><div class="lr log-cols psh-r"><span class="muted">8.49s</span><span class="c dir-s">→</span><span class="fl-psh">PSH</span><span class="r">62682</span><span class="c muted">→</span><span class="r">80</span><span class="r">9367</span><span class="r">—</span><span class="r">1000</span><span class="r">—</span></div><div class="lr log-cols ack-r"><span class="muted">9.08s</span><span class="c dir-r">←</span><span class="fl-ack">ACK</span><span class="r">80</span><span class="c muted">→</span><span class="r">62682</span><span class="r">—</span><span class="r">10367</span><span class="r">0</span><span class="r">9000</span></div></div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const BUF_CAP=10000,BASE_RTO=3000,DUP_ACK_THRESH=3,SEG_STAGGER=100,PKT_DUR=600;
+const PILLS=[
+  {bg:'#E6F1FB',bl:'#185FA5',tx:'#0C447C'},
+  {bg:'#FAEEDA',bl:'#BA7517',tx:'#633806'},
+  {bg:'#EEEDFE',bl:'#534AB7',tx:'#3C3489'},
+  {bg:'#E1F5EE',bl:'#0F6E56',tx:'#085041'},
+  {bg:'#FAECE7',bl:'#993C1D',tx:'#712B13'},
+  {bg:'#FBEAF0',bl:'#993556',tx:'#72243E'},
+];
+
+let ccVariant='tahoe';
+let mode='manual';
+let autoRecv=false;
+let autoRecvTimer=null;
+
+function scheduleAutoRecv(){
+  if(!autoRecv||autoRecvTimer)return;
+  if(!rcv.buf.length)return;
+  autoRecvTimer=setTimeout(function(){
+    autoRecvTimer=null;
+    if(autoRecv&&rcv.buf.length&&st==='established'){
+      var s=rcv.buf.shift();rcv.held=Math.max(0,rcv.held-s.len);
+      upd();
+      scheduleAutoRecv();
+    }
+  },420);
+}
+
+const sim={running:false,paused:false,rtt:0,phase:'idle',acksExpected:0,acksReceived:0,lossEveryN:6,rttsClean:0,connId:0};
+let st='closed',ISN_S=0,ISN_R=0,PS=0,PR=80;
+let snd={nxt:0,una:0,rw:BUF_CAP,unacked:[],inflight:0};
+let rcv={exp:0,buf:[],held:0};
+let segSize=500,nuid=1,pali=0,retxCount=0,lossEvents=0;
+const rto={active:false,startMs:0,timeout:BASE_RTO,seq:null,elapsed:0,pendingManual:false};
+let dropArmed=false;
+const probe={s:'idle',el:0,iv:3000,fly:false};
+const cc={cwnd:1,ssthresh:8,phase:'slow_start',fracAcc:0,dupAcks:0,lastAck:null};
+const chartPts=[],lossMarkers=[];
+let logE=[],t0=0,pkts=[];
+
+function rnd(a,b){return a+Math.floor(Math.random()*(b-a));}
+function tel(){return t0?((Date.now()-t0)/1000).toFixed(2):'0.00';}
+function telN(){return t0?(Date.now()-t0)/1000:0;}
+function addLog(dir,flags,seq,ack,len,rw){
+  if(logE.length>300)logE.shift();
+  logE.push({t:tel(),dir,flags,sp:dir==='→'?PS:PR,dp:dir==='→'?PR:PS,seq,ack,len,rw});
+  renderLog();
+}
+function effWinFree(){return Math.max(0,Math.min(snd.rw,cc.cwnd*segSize)-snd.inflight);}
+function effWinTotal(){return Math.min(snd.rw,cc.cwnd*segSize);}
+function canSend(){
+  if(st!=='established'||probe.s!=='idle')return false;
+  if(mode==='manual')return snd.rw>=(segSize)&&(snd.nxt-snd.una)<snd.rw;
+  return effWinFree()>=segSize&&!rto.active&&cc.phase!=='fast_recovery';
+}
+function startRTOFor(seg){rto.active=true;rto.startMs=Date.now();rto.elapsed=0;rto.seq=seg.seq;}
+function cancelRTO(){rto.active=false;rto.elapsed=0;rto.seq=null;rto.pendingManual=false;}
+function restartRTOAfterAck(){rto.timeout=BASE_RTO;if(snd.unacked.length>0)startRTOFor(snd.unacked[0]);else cancelRTO();}
+
+const netCv=document.getElementById('net-cv'),netCtx=netCv.getContext('2d');
+const chartCv=document.getElementById('chart-cv'),chartCtx=chartCv.getContext('2d');
+function rszNet(){netCv.width=document.getElementById('net-strip').clientWidth||600;netCv.height=64;}
+function rszChart(){chartCv.width=document.getElementById('chart-wrap').clientWidth-24||600;}
+rszNet();rszChart();
+window.addEventListener('resize',()=>{rszNet();rszChart();});
+
+function getNC(){
+  const wr=document.getElementById('root').getBoundingClientRect();
+  const lp=document.querySelector('#panels .stack:first-child').getBoundingClientRect();
+  const rp=document.querySelector('#panels .stack:last-child').getBoundingClientRect();
+  return{sx:(lp.left+lp.right)/2-wr.left,rx:(rp.left+rp.right)/2-wr.left,my:netCv.height/2};
+}
+function mkPkt(dir,col,l1,l2,cb,delayMs){
+  delayMs=delayMs||0;
+  const n=getNC(),cid=sim.connId;
+  return{uid:nuid++,dir,col,l1,l2,
+    sx:dir==='toR'?n.sx:n.rx,ex:dir==='toR'?n.rx:n.sx,
+    elapsed:-Math.abs(delayMs),dur:PKT_DUR,done:false,
+    cb:function(){if(sim.connId===cid&&cb)cb();}};
+}
+function recordChart(){chartPts.push({t:telN(),cwnd:cc.cwnd,ssthresh:cc.ssthresh,phase:cc.phase});if(chartPts.length>1000)chartPts.splice(0,300);}
+
+// ── CC ────────────────────────────────────────────────────────────────────────
+function onAckCC(ackNum){
+  if(cc.phase==='fast_recovery'){cc.cwnd=cc.ssthresh;cc.phase='cong_avoid';cc.fracAcc=0;cc.dupAcks=0;cc.lastAck=ackNum;recordChart();return;}
+  if(ackNum===cc.lastAck){cc.dupAcks++;if(ccVariant==='reno'&&cc.dupAcks===DUP_ACK_THRESH)triggerFastRetx();return;}
+  cc.dupAcks=0;cc.lastAck=ackNum;
+  if(cc.phase==='slow_start'){cc.cwnd+=1;if(cc.cwnd>=cc.ssthresh){cc.phase='cong_avoid';cc.cwnd=cc.ssthresh;}}
+  else{cc.fracAcc+=1/cc.cwnd;if(cc.fracAcc>=1){cc.cwnd+=1;cc.fracAcc=0;}}
+  recordChart();
+}
+function triggerFastRetx(){
+  cancelRTO();  // stop RTO immediately — FR takes over loss recovery
+  lossEvents++;lossMarkers.push({t:telN(),type:'fast_retx'});
+  cc.ssthresh=Math.max(Math.floor(cc.cwnd/2),2);cc.cwnd=cc.ssthresh;cc.phase='fast_recovery';cc.fracAcc=0;cc.dupAcks=0;
+  retxCount++;recordChart();
+  if(!snd.unacked.length)return;
+  const seg=snd.unacked[0];snd.inflight=seg.len;
+  addLog('→','PSH [fast-retx]',seg.seq,null,seg.len,null);
+  pkts.push(mkPkt('toR',{bg:'#FAECE7',bd:'#993C1D',tx:'#712B13'},'PSH [fast-retx] seq='+seg.seq,'len='+seg.len,function(){
+    if(seg.seq===rcv.exp){rcv.buf.push({seq:seg.seq,len:seg.len,id:seg.id,pi:seg.pi});rcv.held+=seg.len;rcv.exp+=seg.len;scheduleAutoRecv();}
+    if(mode==='sim')simEmitRetxAck();else emitAck();
+  }));upd();
+}
+function onTimeoutCC(){
+  lossEvents++;lossMarkers.push({t:telN(),type:'timeout'});
+  cc.ssthresh=Math.max(Math.floor(cc.cwnd/2),2);cc.cwnd=1;cc.phase='slow_start';cc.fracAcc=0;cc.dupAcks=0;recordChart();
+}
+
+// ── Sim retransmit ACK — resyncs snd.nxt to receiver's position ──────────────
+function simEmitRetxAck(){
+  const an=rcv.exp,rw=Math.max(0,BUF_CAP-rcv.held);
+  addLog('←','ACK [retx]',null,an,0,rw);
+  pkts.push(mkPkt('toL',{bg:'#FCEBEB',bd:'#A32D2D',tx:'#791F1F'},'ACK [retx] ack='+an,'rwnd='+rw,function(){
+    snd.rw=rw;
+    snd.unacked=[];    // flush dropped + post-drop segments; pre-drop already drained by emitAck
+    snd.una=an;
+    snd.nxt=an;        // resync sender's next pointer to receiver's position
+    snd.inflight=0;
+    cancelRTO();rto.timeout=BASE_RTO;
+    // For Reno: retx ACK exits fast_recovery → cong_avoid with cwnd=ssthresh
+    if(ccVariant==='reno'&&cc.phase==='fast_recovery')onAckCC(an);
+    if(mode==='sim')drainRecv();
+    sim.phase='idle';
+    upd();
+    setTimeout(function(){if(mode==='sim'&&sim.running&&!sim.paused&&st==='established')simNextRTT();},400);
+  }));
+}
+
+// ── Normal ACK ────────────────────────────────────────────────────────────────
+function emitAck(){
+  const an=rcv.exp,rw=Math.max(0,BUF_CAP-rcv.held);
+  addLog('←','ACK',null,an,0,rw);
+  pkts.push(mkPkt('toL',{bg:'#E1F5EE',bd:'#1D9E75',tx:'#085041'},'ACK  ack='+an,'rwnd='+rw,function(){
+    // Dup ACK: an === snd.una (hole in sequence, receiver stuck). Still call onAckCC for dup counting.
+    if(an<=snd.una){
+      snd.rw=rw;  // always update rwnd — receiver may be advertising zero window
+      if(rw===0){probe.s='persist';probe.el=0;probe.iv=3000;probe.fly=false;}
+      onAckCC(an);upd();return;
+    }
+    const prev=snd.una;
+    snd.rw=rw;snd.unacked=snd.unacked.filter(function(u){return an<u.seq+u.len;});
+    snd.una=an;snd.inflight=Math.max(0,snd.inflight-(an-prev));
+    onAckCC(an);
+    restartRTOAfterAck();
+    if(rw===0){probe.s='persist';probe.el=0;probe.iv=3000;probe.fly=false;}else{probe.s='idle';probe.fly=false;}
+    if(mode==='sim')drainRecv();
+    if(mode==='sim'&&sim.running&&!sim.paused&&sim.phase==='waiting_acks'){
+      sim.acksReceived++;
+      if(sim.acksReceived>=sim.acksExpected){
+        sim.phase='idle';
+        setTimeout(function(){if(mode==='sim'&&sim.running&&!sim.paused&&st==='established')simNextRTT();},350);
+      }
+    }
+    upd();
+  }));
+}
+
+function drainRecv(){while(rcv.buf.length>0){var s=rcv.buf.shift();rcv.held=Math.max(0,rcv.held-s.len);}}
+
+// ── RTO retransmit ────────────────────────────────────────────────────────────
+function doRetransmit(){
+  if(!snd.unacked.length)return;
+  if(rto.seq!==snd.unacked[0].seq){cancelRTO();return;}
+  // In manual mode: pause and let the student click ▶ to retransmit
+  if(mode==='manual'&&!rto.pendingManual){
+    rto.pendingManual=true;
+    upd();return;
+  }
+  rto.pendingManual=false;
+  retxCount++;onTimeoutCC();
+  const seg=snd.unacked[0];
+  rto.timeout=Math.min(rto.timeout*2,60000);rto.startMs=Date.now();rto.elapsed=0;rto.seq=seg.seq;
+  snd.inflight=seg.len;
+  addLog('→','PSH [retx]',seg.seq,null,seg.len,null);
+  pkts.push(mkPkt('toR',{bg:'#FCEBEB',bd:'#A32D2D',tx:'#791F1F'},'PSH [retx] seq='+seg.seq,'len='+seg.len,function(){
+    if(seg.seq===rcv.exp){rcv.buf.push({seq:seg.seq,len:seg.len,id:seg.id,pi:seg.pi});rcv.held+=seg.len;rcv.exp+=seg.len;scheduleAutoRecv();}
+    if(mode==='sim')simEmitRetxAck();else emitAck();
+    upd();
+  }));upd();
+}
+
+function sendProbe(){
+  if(probe.fly)return;probe.fly=true;probe.s='probing';
+  const seq=snd.una;addLog('→','PSH(probe)',seq,null,1,null);
+  pkts.push(mkPkt('toR',{bg:'#FAEEDA',bd:'#BA7517',tx:'#633806'},'PSH [probe]','seq='+seq+' len=1',function(){
+    const an=rcv.exp,rw=Math.max(0,BUF_CAP-rcv.held);addLog('←','ACK',null,an,0,rw);
+    pkts.push(mkPkt('toL',{bg:'#E1F5EE',bd:'#1D9E75',tx:'#085041'},'ACK  ack='+an,'rwnd='+rw,function(){
+      probe.fly=false;snd.rw=rw;
+      if(rw===0){probe.s='persist';probe.el=0;probe.iv=Math.min(probe.iv*2,10000);}
+      else{probe.s='idle';probe.el=0;}upd();
+    }));
+  }));
+}
+
+// ── Core segment send ─────────────────────────────────────────────────────────
+function sendSegCore(dropped,delayMs){
+  delayMs=delayMs||0;
+  const seq=snd.nxt,len=segSize,id=nuid++,pi=pali%PILLS.length;
+  pali++;snd.nxt+=len;snd.inflight+=len;
+  const segObj={seq:seq,len:len,id:id,pi:pi};
+  snd.unacked.push(segObj);
+  addLog('→','PSH',seq,null,len,null);
+  if(snd.unacked.length===1)startRTOFor(segObj);
+  pkts.push(mkPkt('toR',{bg:'#E6F1FB',bd:'#185FA5',tx:'#042C53'},'PSH  seq='+seq,'len='+len,function(){
+    // Check if this packet is intercepted — either pre-armed by sim or by wire click
+    var willDrop=dropped||dropArmed;
+    if(willDrop){
+      dropArmed=false;
+      addLog('→','[dropped]',seq,null,len,null);
+      upd();return;
+    }
+    // Deliver to receiver
+    if(seq===rcv.exp){rcv.buf.push({seq:seq,len:len,id:id,pi:pi});rcv.held+=len;rcv.exp+=len;scheduleAutoRecv();}
+    emitAck();upd();
+  },delayMs));
+}
+
+// ── Simulate: fire one RTT ────────────────────────────────────────────────────
+function simNextRTT(){
+  if(!sim.running||sim.paused||st!=='established')return;
+  if(rto.active||cc.phase==='fast_recovery'){setTimeout(function(){if(sim.running&&!sim.paused&&st==='established')simNextRTT();},300);return;}
+  if(snd.unacked.length>0){setTimeout(function(){if(sim.running&&!sim.paused&&st==='established')simNextRTT();},200);return;}
+  sim.rtt++;sim.rttsClean++;
+  const n=Math.max(1,Math.floor(effWinTotal()/segSize));
+  sim.acksExpected=n;sim.acksReceived=0;
+  var dropIdx=-1,hasLoss=false;
+  if(dropArmed){dropIdx=Math.floor(Math.random()*n);hasLoss=true;}
+  else if(sim.lossEveryN>0&&sim.rttsClean>=sim.lossEveryN){dropIdx=Math.floor(Math.random()*n);hasLoss=true;sim.rttsClean=0;}
+  sim.phase=hasLoss?'waiting_retx':'waiting_acks';
+  for(var i=0;i<n;i++)sendSegCore(i===dropIdx,i*SEG_STAGGER);
+  upd();
+}
+
+function sendSeg(){
+  if(!canSend())return;
+  sendSegCore(false,0);upd();
+}
+function recvSeg(){if(st!=='established'||!rcv.buf.length)return;var s=rcv.buf.shift();rcv.held=Math.max(0,rcv.held-s.len);upd();}
+
+// ── Connect / Close ───────────────────────────────────────────────────────────
+function doConnect(){
+  if(st!=='closed')return;
+  sim.connId++;pkts=[];
+  segSize=Math.round(BUF_CAP/10);
+  document.getElementById('seg-input').value=segSize;
+  ISN_S=rnd(1000,9999);do{ISN_R=rnd(1000,9999);}while(ISN_R===ISN_S);
+  PS=rnd(49152,65535);t0=Date.now();logE=[];retxCount=0;lossEvents=0;
+  snd.nxt=ISN_S+1;snd.una=ISN_S+1;snd.rw=BUF_CAP;snd.unacked=[];snd.inflight=0;
+  rcv.exp=ISN_S+1;rcv.buf=[];rcv.held=0;
+  pali=0;probe.s='idle';probe.el=0;probe.iv=3000;probe.fly=false;
+  cancelRTO();rto.timeout=BASE_RTO;dropArmed=false;
+  cc.cwnd=1;cc.ssthresh=8;cc.phase='slow_start';cc.fracAcc=0;cc.dupAcks=0;cc.lastAck=null;
+  chartPts.length=0;lossMarkers.length=0;
+  sim.running=false;sim.paused=false;sim.rtt=0;sim.phase='idle';sim.acksExpected=0;sim.acksReceived=0;sim.rttsClean=0;
+  recordChart();st='syn_sent';upd();
+  addLog('→','SYN',ISN_S,null,1,null);
+  pkts.push(mkPkt('toR',{bg:'#EEEDFE',bd:'#534AB7',tx:'#3C3489'},'SYN  seq='+ISN_S,'ISN_S='+ISN_S,function(){
+    addLog('←','SYN-ACK',ISN_R,ISN_S+1,1,BUF_CAP);
+    pkts.push(mkPkt('toL',{bg:'#EEEDFE',bd:'#534AB7',tx:'#3C3489'},'SYN-ACK  seq='+ISN_R,'ack='+(ISN_S+1),function(){
+      addLog('→','ACK',ISN_S+1,ISN_R+1,0,BUF_CAP);
+      pkts.push(mkPkt('toR',{bg:'#E1F5EE',bd:'#1D9E75',tx:'#085041'},'ACK','ack='+(ISN_R+1),function(){
+        st='established';
+        if(mode==='sim'){sim.running=true;simNextRTT();}
+        upd();
+      }));
+    }));
+  }));
+}
+
+function doClose(){
+  if(st!=='established')return;
+  sim.running=false;
+  st='fin_wait';cancelRTO();upd();
+  const fseq=snd.nxt;snd.nxt++;
+  addLog('→','FIN',fseq,null,1,null);
+  pkts.push(mkPkt('toR',{bg:'#FCEBEB',bd:'#A32D2D',tx:'#791F1F'},'FIN  seq='+fseq,'',function(){
+    const fas=ISN_R+1;addLog('←','FIN+ACK',fas,fseq+1,1,0);
+    pkts.push(mkPkt('toL',{bg:'#FCEBEB',bd:'#A32D2D',tx:'#791F1F'},'FIN+ACK  seq='+fas,'ack='+(fseq+1),function(){
+      st='closing';upd();addLog('→','ACK',snd.nxt,fas+1,0,null);
+      pkts.push(mkPkt('toR',{bg:'#E1F5EE',bd:'#1D9E75',tx:'#085041'},'ACK','ack='+(fas+1),function(){
+        st='closed';snd.nxt=0;snd.una=0;snd.rw=BUF_CAP;snd.unacked=[];snd.inflight=0;
+        rcv.exp=0;rcv.buf=[];rcv.held=0;probe.s='idle';cancelRTO();rto.timeout=BASE_RTO;dropArmed=false;upd();
+      }));
+    }));
+  }));
+}
+
+function setMode(m){
+  mode=m;sim.running=false;sim.paused=false;sim.phase='idle';
+  ['mode-manual','mode-sim'].forEach(function(id){
+    document.getElementById(id).className='btn-mode'+(id==='mode-'+m?' active':'');
+  });
+  if(m==='sim'&&st==='established'){sim.running=true;sim.rtt=0;sim.rttsClean=0;simNextRTT();}
+  upd();
+}
+function setCCVariant(v){
+  ccVariant=v;cc.dupAcks=0;cc.lastAck=null;
+  if(cc.phase==='fast_recovery'){cc.phase='cong_avoid';cc.cwnd=cc.ssthresh;}
+  document.getElementById('cc-tahoe').className='cc-mode-btn'+(v==='tahoe'?' active':'');
+  document.getElementById('cc-reno').className='cc-mode-btn'+(v==='reno'?' active':'');
+  document.getElementById('cc-mode-label').textContent=v==='tahoe'?'Tahoe':'Reno';
+  document.getElementById('cc-desc').textContent=v==='tahoe'?'cwnd→1 on any loss':'cwnd→ssthresh on 3 dup ACKs; cwnd→1 on timeout';
+  upd();
+}
+
+// ── Wire up all controls ONCE ─────────────────────────────────────────────────
+document.getElementById('btn-minus').addEventListener('click',function(){segSize=Math.max(100,segSize-100);document.getElementById('seg-input').value=segSize;});
+document.getElementById('btn-plus').addEventListener('click',function(){segSize=Math.min(9000,segSize+100);document.getElementById('seg-input').value=segSize;});
+document.getElementById('seg-input').addEventListener('change',function(){segSize=Math.max(100,Math.min(9000,Math.round((parseInt(this.value)||500)/100)*100));this.value=segSize;});
+document.getElementById('btn-connect').addEventListener('click',doConnect);
+document.getElementById('btn-send').addEventListener('click',sendSeg);
+document.getElementById('btn-close').addEventListener('click',doClose);
+document.getElementById('btn-recv').addEventListener('click',recvSeg);
+document.getElementById('btn-auto-recv').addEventListener('click',function(){
+  autoRecv=!autoRecv;
+  if(autoRecv){scheduleAutoRecv();}
+  else{if(autoRecvTimer){clearTimeout(autoRecvTimer);autoRecvTimer=null;}}
+  upd();
+});
+// Click the network wire to arm/cancel a drop
+netCv.addEventListener('click',function(){
+  if(st!=='established')return;
+  dropArmed=!dropArmed;upd();
+});
+document.getElementById('btn-pause').addEventListener('click',function(){
+  if(mode==='sim'){sim.paused=!sim.paused;if(!sim.paused&&sim.phase==='idle'&&sim.running&&st==='established')simNextRTT();}
+  upd();
+});
+document.getElementById('sim-loss-sel').addEventListener('change',function(){sim.lossEveryN=parseInt(this.value);});
+document.getElementById('mode-manual').addEventListener('click',function(){setMode('manual');});
+document.getElementById('mode-sim').addEventListener('click',function(){setMode('sim');});
+document.getElementById('cc-tahoe').addEventListener('click',function(){setCCVariant('tahoe');});
+document.getElementById('cc-reno').addEventListener('click',function(){setCCVariant('reno');});
+document.getElementById('btn-copy-log').addEventListener('click',function(){
+  var btn=this;
+  var hdr='time         dir  flags                          src    dst        seq#       ack#   len     rwnd';
+  var lines=logE.map(function(e){
+    function n(v){return v!=null?String(v):'—';}
+    return [e.t+'s',e.dir,e.flags,e.sp,'→',e.dp,n(e.seq),n(e.ack),n(e.len),n(e.rw)].join('  ');
+  });
+  var text=hdr+'\n'+Array(hdr.length+1).join('─')+'\n'+lines.join('\n');
+  try{
+    navigator.clipboard.writeText(text).then(function(){
+      btn.textContent='Copied!';btn.className='btn-copy copied';
+      setTimeout(function(){btn.textContent='Copy log';btn.className='btn-copy';},1800);
+    });
+  }catch(err){
+    var ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0;top:0;left:0';
+    document.body.appendChild(ta);ta.focus();ta.select();
+    try{document.execCommand('copy');}catch(e){}
+    document.body.removeChild(ta);
+    btn.textContent='Copied!';btn.className='btn-copy copied';
+    setTimeout(function(){btn.textContent='Copy log';btn.className='btn-copy';},1800);
+  }
+});
+
+document.getElementById('btn-clear-log').addEventListener('click',function(){
+  logE=[];renderLog();
+});
+
+document.getElementById('btn-clear-chart').addEventListener('click',function(){
+  chartPts.length=0;lossMarkers.length=0;
+});
+
+function mk(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;}
+
+// ── upd ───────────────────────────────────────────────────────────────────────
+function upd(){
+  var est=st==='established',closed=st==='closed',isSim=mode==='sim';
+  var sl={closed:'● closed',syn_sent:'◐ SYN sent — handshaking',established:'● established',fin_wait:'◑ FIN sent — closing',closing:'◑ closing'};
+  var sc={closed:'#888780',syn_sent:'#534AB7',established:'#1D9E75',fin_wait:'#A32D2D',closing:'#A32D2D'};
+  document.getElementById('state-bar').textContent=sl[st]||st;
+  document.getElementById('state-bar').style.color=sc[st]||'#888780';
+
+  var spb=document.getElementById('s-port');spb.style.display=closed?'none':'inline-block';if(!closed)spb.textContent=':'+PS;
+  var rpb=document.getElementById('r-port');rpb.style.display=closed?'none':'inline-block';if(!closed)rpb.textContent=':'+PR;
+
+  document.getElementById('btn-connect').style.display=closed?'inline-flex':'none';
+  document.getElementById('btn-send').style.display=(est&&mode==='manual')?'inline-flex':'none';
+  document.getElementById('btn-send').disabled=!canSend();
+  document.getElementById('btn-close').style.display=est?'inline-flex':'none';
+  document.getElementById('btn-pause').style.display=(isSim&&est)?'inline-flex':'none';
+  document.getElementById('btn-pause').textContent=sim.paused?'Resume':'Pause';
+  document.getElementById('sim-loss-wrap').style.display=isSim?'flex':'none';
+  var autoBtn=document.getElementById('btn-auto-recv');
+  autoBtn.style.background=autoRecv?'#1D9E75':'#fff';
+  autoBtn.style.color=autoRecv?'#fff':'#1D9E75';
+  autoBtn.style.borderColor='#1D9E75';
+  document.getElementById('btn-recv').style.display=(est&&!autoRecv&&mode==='manual')?'inline-flex':'none';
+  document.getElementById('btn-recv').disabled=!est||!rcv.buf.length;
+  document.getElementById('recv-hint').textContent=autoRecv?'auto draining app buffer':isSim?'auto drain':'drain one segment per click';
+
+  var sw=document.getElementById('s-warn');
+  if(est&&rto.pendingManual)sw.textContent='⏱ RTO expired — click ▶ in segment to retransmit';
+  else if(est&&probe.s!=='idle'){var rem=Math.max(0,(probe.iv-probe.el)/1000);sw.textContent='zero window — probe in '+rem.toFixed(1)+'s';}
+  else if(est&&cc.phase==='fast_recovery')sw.textContent='Reno fast recovery — waiting for new ACK';
+  else if(est&&isSim&&sim.paused)sw.textContent='simulation paused';
+  else if(est&&isSim&&sim.phase==='waiting_retx')sw.textContent='loss — waiting for retransmit ACK';
+  else sw.textContent='';
+
+  // CC section — only relevant in simulate mode
+  var ccDisplay=isSim?'':'none';
+  document.getElementById('cc-sec-hdr').style.display=ccDisplay;
+  document.getElementById('cc-variant-row').style.display=isSim?'flex':'none';
+  document.getElementById('cc-kv-grid').style.display=isSim?'grid':'none';
+
+  document.getElementById('t-isns').textContent=closed?'—':ISN_S;
+  document.getElementById('t-nxt-una').innerHTML=closed?'—':'<span style="color:#185FA5">'+snd.nxt+'</span><span style="color:#aaa9a2;font-size:10px;"> / </span><span style="color:#534AB7">'+snd.una+'</span>';
+  document.getElementById('t-inflight').textContent=closed?'—':snd.inflight+' B';
+  document.getElementById('t-prwnd').textContent=closed?'—':snd.rw+' B';
+  document.getElementById('t-cwnd').textContent=closed?'—':cc.cwnd+' MSS ('+cc.cwnd*segSize+' B)';
+  document.getElementById('t-ssthresh').textContent=closed?'—':cc.ssthresh+' MSS';
+  document.getElementById('t-effwin').textContent=closed?'—':effWinTotal()+' B total / '+effWinFree()+' B free';
+  var ph=document.getElementById('t-ccphase');
+  var plmap={slow_start:'slow start',cong_avoid:'cong avoidance',fast_recovery:'fast recovery (Reno)'};
+  ph.textContent=closed?'—':(plmap[cc.phase]||cc.phase);
+  ph.className='kv-val '+(cc.phase==='slow_start'?'c-ss':cc.phase==='fast_recovery'?'c-fr':'c-ca');
+  document.getElementById('t-rtt').textContent=(!closed&&isSim&&sim.running)?sim.rtt:'—';
+
+  var inFlight=snd.unacked.length;
+  var sbc=document.getElementById('s-buf-ct');sbc.textContent=inFlight+' seg in flight';sbc.className='badge '+(inFlight?'warn':'ok');
+  var sfrac=Math.min(snd.inflight/Math.max(1,cc.cwnd*segSize),1);
+  var sbbar=document.getElementById('s-buf-bar');sbbar.style.width=(sfrac*100)+'%';sbbar.style.background=sfrac>=1?'#A32D2D':sfrac>=0.75?'#BA7517':'#185FA5';
+  var sbb=document.getElementById('s-buf-body');sbb.innerHTML='';
+  if(!snd.unacked.length){sbb.appendChild(mk('span','empty-msg','empty'));}
+  else{
+    snd.unacked.slice(0,20).forEach(function(seg,idx){
+      var p=PILLS[seg.pi%PILLS.length];
+      var d=document.createElement('div');
+      d.className='seg-pill';
+      d.style.cssText='background:'+p.bg+';border-left-color:'+p.bl+';color:'+p.tx;
+
+      // Text info — seq and len stacked
+      var info=document.createElement('div');info.className='seg-pill-info';
+      var seqEl=mk('span','seg-pill-seq','seq='+seg.seq);
+      var lenEl=mk('span','seg-pill-len','len='+seg.len);
+      info.appendChild(seqEl);info.appendChild(lenEl);
+      d.appendChild(info);
+
+      // Ring indicator
+      var ring=document.createElement('div');ring.className='seg-ring';
+      if(idx===0&&rto.active&&rto.pendingManual){
+        // RTO fired in manual mode — show a clickable ▶ retransmit button
+        ring.style.cssText='width:22px;height:22px;border-radius:50%;background:#A32D2D;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+        ring.title='RTO expired — click to retransmit';
+        // Pulsing outline
+        ring.style.animation='rto-pulse 0.9s ease-in-out infinite';
+        var playIcon=document.createElement('span');
+        playIcon.textContent='▶';
+        playIcon.style.cssText='font-size:9px;color:#fff;margin-left:2px;pointer-events:none;';
+        ring.appendChild(playIcon);
+        ring.addEventListener('click',function(){doRetransmit();});
+      } else if(idx===0&&rto.active){
+        var frac=Math.min(rto.elapsed/rto.timeout,1);
+        var rem=Math.max(0,(rto.timeout-rto.elapsed)/1000);
+        var col=frac>0.75?'#A32D2D':frac>0.4?'#BA7517':'#185FA5';
+        // Conic gradient ring: filled arc = elapsed, track = remaining
+        ring.style.cssText='width:22px;height:22px;border-radius:50%;background:conic-gradient('+col+' 0% '+(frac*100)+'%, rgba(0,0,0,0.12) '+(frac*100)+'% 100%);';
+        // Inner cutout for donut effect
+        var inner=document.createElement('div');
+        inner.style.cssText='position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:'+p.bg+';display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;font-family:system-ui;color:'+col+';';
+        inner.textContent=rem.toFixed(1);
+        ring.appendChild(inner);
+      } else {
+        // Muted ring for non-RTO segments
+        ring.style.cssText='width:22px;height:22px;border-radius:50%;background:conic-gradient(rgba(0,0,0,0.08) 100%);';
+        var inner2=document.createElement('div');
+        inner2.style.cssText='position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:'+p.bg+';';
+        ring.appendChild(inner2);
+      }
+      d.appendChild(ring);
+      sbb.appendChild(d);
+    });
+    if(snd.unacked.length>20)sbb.appendChild(mk('span','empty-msg','… +'+(snd.unacked.length-20)+' more'));
+  }
+
+  document.getElementById('i-port').textContent=closed?'—':PS;
+  document.getElementById('i-retx').textContent=retxCount;
+  document.getElementById('i-sent').textContent=(closed?0:Math.max(0,snd.nxt-ISN_S-1))+' B';
+  document.getElementById('i-loss').textContent=lossEvents;
+
+  var rw=Math.max(0,BUF_CAP-rcv.held);
+  document.getElementById('t-isnr').textContent=closed?'—':ISN_R;
+  document.getElementById('t-rcvnxt').textContent=closed?'—':rcv.exp;
+  document.getElementById('t-rwnd').textContent=closed?'—':Math.round(rw/1000)+' KB ('+Math.floor(rw/segSize)+' segs)';
+  document.getElementById('t-held').textContent=closed?'—':rcv.held+' / '+BUF_CAP+' B';
+  var ff=Math.min(rcv.held/BUF_CAP,1);
+  var rSegs=rcv.buf.length;
+  var rbc=document.getElementById('r-buf-pct');
+  rbc.textContent=rSegs+' seg'+(rSegs!==1?'s':'')+' buffered';
+  rbc.className='badge '+(ff>=1?'full':ff>=0.75?'warn':'ok');
+  var rbbar=document.getElementById('r-buf-bar');rbbar.style.width=(ff*100)+'%';rbbar.style.background=ff>=1?'#A32D2D':ff>=0.75?'#BA7517':'#1D9E75';
+  var rbb=document.getElementById('r-buf-body');rbb.innerHTML='';
+  if(!rcv.buf.length)rbb.appendChild(mk('span','empty-msg','empty'));
+  else rcv.buf.slice(0,4).forEach(function(seg){var p=PILLS[seg.pi%PILLS.length];var d=mk('div','seg-pill','seq='+seg.seq+'  len='+seg.len);d.style.cssText='background:'+p.bg+';border-left-color:'+p.bl+';color:'+p.tx;rbb.appendChild(d);});
+  if(rcv.buf.length>4)rbb.appendChild(mk('span','empty-msg','… +'+(rcv.buf.length-4)+' more'));
+  document.getElementById('ri-port').textContent=closed?'—':PR;
+  document.getElementById('ri-isn').textContent=closed?'—':ISN_R;
+  document.getElementById('ri-recvd').textContent=(closed?0:Math.max(0,rcv.exp-(ISN_S+1)))+' B';
+  document.getElementById('ri-rwnd').textContent=Math.round(rw/1000)+' KB';
+}
+
+function renderLog(){
+  var body=document.getElementById('log-body');body.innerHTML='';
+  logE.slice(-40).forEach(function(e){
+    var isSyn=e.flags.indexOf('SYN')>=0,isFin=e.flags.indexOf('FIN')>=0;
+    var isAck=e.flags.indexOf('ACK')>=0&&!isSyn&&!isFin;
+    var isRet=e.flags.indexOf('retx')>=0&&e.flags.indexOf('fast')<0;
+    var isFrt=e.flags.indexOf('fast-retx')>=0;
+    var rc='lr log-cols '+(isSyn?'syn-r':isFin?'fin-r':isFrt?'frt-r':isRet?'ret-r':isAck?'ack-r':'psh-r');
+    var fc='fl-'+(isSyn?'syn':isFin?'fin':isFrt?'frt':isRet?'ret':isAck?'ack':'psh');
+    function n(v){return v!=null?String(v):'—';}
+    var row=mk('div',rc);
+    row.innerHTML='<span class="muted">'+e.t+'s</span><span class="c '+(e.dir==='→'?'dir-s':'dir-r')+'">'+e.dir+'</span><span class="'+fc+'">'+e.flags+'</span><span class="r">'+e.sp+'</span><span class="c muted">→</span><span class="r">'+e.dp+'</span><span class="r">'+n(e.seq)+'</span><span class="r">'+n(e.ack)+'</span><span class="r">'+n(e.len)+'</span><span class="r">'+n(e.rw)+'</span>';
+    body.appendChild(row);
+  });
+  body.scrollTop=body.scrollHeight;
+}
+
+function drawChart(){
+  var W=chartCv.width,H=chartCv.height;chartCtx.clearRect(0,0,W,H);
+  if(chartPts.length<2){chartCtx.fillStyle='#aaa9a2';chartCtx.font='11px system-ui';chartCtx.textAlign='center';chartCtx.fillText('Connect → Simulate to see the sawtooth build',W/2,H/2);return;}
+  var PAD={l:40,r:12,t:12,b:22},cw=W-PAD.l-PAD.r,ch=H-PAD.t-PAD.b;
+  var maxC=2;chartPts.forEach(function(p){if(p.cwnd>maxC)maxC=p.cwnd;if(p.ssthresh>maxC)maxC=p.ssthresh;});maxC+=2;
+  var tMin=chartPts[0].t,tMax=Math.max(chartPts[chartPts.length-1].t,tMin+1),tR=tMax-tMin;
+  function tx(t){return PAD.l+((t-tMin)/tR)*cw;}
+  function ty(c){return PAD.t+ch*(1-c/maxC);}
+  for(var i=1;i<chartPts.length;i++){var a=chartPts[i-1],b=chartPts[i];chartCtx.fillStyle=a.phase==='slow_start'?'rgba(230,241,251,.55)':'rgba(225,245,238,.55)';chartCtx.fillRect(tx(a.t),PAD.t,Math.max(1,tx(b.t)-tx(a.t)),ch);}
+  chartCtx.strokeStyle='#e8e7e2';chartCtx.lineWidth=0.5;
+  var step=maxC<=8?1:maxC<=16?2:maxC<=32?4:8;
+  for(var c=0;c<=maxC;c+=step){var y=ty(c);chartCtx.beginPath();chartCtx.moveTo(PAD.l,y);chartCtx.lineTo(W-PAD.r,y);chartCtx.stroke();chartCtx.fillStyle='#888780';chartCtx.font='8px system-ui';chartCtx.textAlign='right';chartCtx.fillText(c,PAD.l-4,y+3);}
+  chartCtx.save();chartCtx.translate(12,PAD.t+ch/2);chartCtx.rotate(-Math.PI/2);chartCtx.fillStyle='#888780';chartCtx.font='8px system-ui';chartCtx.textAlign='center';chartCtx.fillText('MSS',0,0);chartCtx.restore();
+  chartCtx.fillStyle='#888780';chartCtx.font='8px system-ui';chartCtx.textAlign='center';chartCtx.fillText('time →',PAD.l+cw/2,H-4);
+  chartCtx.strokeStyle='#BA7517';chartCtx.lineWidth=1.5;chartCtx.setLineDash([4,3]);
+  chartCtx.beginPath();chartPts.forEach(function(p,i){if(i===0)chartCtx.moveTo(tx(p.t),ty(p.ssthresh));else chartCtx.lineTo(tx(p.t),ty(p.ssthresh));});chartCtx.stroke();chartCtx.setLineDash([]);
+  lossMarkers.forEach(function(m){var x=tx(m.t),isT=m.type==='timeout';chartCtx.strokeStyle=isT?'rgba(163,45,45,.6)':'rgba(240,149,149,.8)';chartCtx.lineWidth=isT?1.5:1;chartCtx.beginPath();chartCtx.moveTo(x,PAD.t);chartCtx.lineTo(x,PAD.t+ch);chartCtx.stroke();chartCtx.fillStyle=isT?'#A32D2D':'#F09595';chartCtx.beginPath();chartCtx.arc(x,PAD.t+7,3,0,Math.PI*2);chartCtx.fill();chartCtx.fillStyle=isT?'#A32D2D':'#993C1D';chartCtx.font='7px system-ui';chartCtx.textAlign='center';chartCtx.fillText(isT?'T':'FR',x,PAD.t+18);});
+  chartCtx.strokeStyle='#534AB7';chartCtx.lineWidth=2;
+  chartCtx.beginPath();chartPts.forEach(function(p,i){if(i===0)chartCtx.moveTo(tx(p.t),ty(p.cwnd));else chartCtx.lineTo(tx(p.t),ty(p.cwnd));});chartCtx.stroke();
+  if(chartPts.length<300){chartCtx.fillStyle='#534AB7';chartPts.forEach(function(p){chartCtx.beginPath();chartCtx.arc(tx(p.t),ty(p.cwnd),1.5,0,Math.PI*2);chartCtx.fill();});}
+}
+
+function rrect(x,y,w,h,r,fill,stroke,lw){
+  netCtx.beginPath();netCtx.moveTo(x+r,y);netCtx.lineTo(x+w-r,y);netCtx.quadraticCurveTo(x+w,y,x+w,y+r);netCtx.lineTo(x+w,y+h-r);netCtx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);netCtx.lineTo(x+r,y+h);netCtx.quadraticCurveTo(x,y+h,x,y+h-r);netCtx.lineTo(x,y+r);netCtx.quadraticCurveTo(x,y,x+r,y);netCtx.closePath();
+  if(fill){netCtx.fillStyle=fill;netCtx.fill();}
+  if(stroke){netCtx.strokeStyle=stroke;netCtx.lineWidth=lw||1;netCtx.stroke();}
+}
+
+var prev=null;
+function loop(ts){
+  requestAnimationFrame(loop);
+  var dt=prev===null?16:Math.min(ts-prev,100);prev=ts;
+  var completed=[];
+  for(var i=0;i<pkts.length;i++){var p=pkts[i];if(p.done)continue;p.elapsed+=dt;if(p.elapsed>=p.dur){p.done=true;completed.push(i);}}
+  completed.forEach(function(i){if(pkts[i].cb)pkts[i].cb();});
+  pkts=pkts.filter(function(p){return !p.done;});
+  if(probe.s==='persist'){probe.el+=dt;if(probe.el>=probe.iv){sendProbe();upd();}else upd();}
+  if(rto.active&&!rto.pendingManual&&st==='established'){
+    rto.elapsed=Date.now()-rto.startMs;
+    if(rto.elapsed>=rto.timeout){
+      if(snd.unacked.length>0&&snd.unacked[0].seq===rto.seq)doRetransmit();
+      else{cancelRTO();if(snd.unacked.length>0)startRTOFor(snd.unacked[0]);}
+    } else upd();
+  }
+  netCtx.clearRect(0,0,netCv.width,netCv.height);
+  var n=getNC();
+  var armed=dropArmed;
+  var connected=st==='established';
+  var pipeY=n.my,pipeH=22,pipeR=pipeH/2;
+  var x0=n.sx+10,x1=n.rx-10;
+  var baseCol=armed?'#c0392b':connected?'#4cba8a':'#b0b8c1';
+  var lightCol=armed?'#e74c3c':connected?'#a8e6cc':'#d0d8e0';
+  var darkCol=armed?'#922b21':connected?'#1a7a52':'#7a8694';
+  var midCol=armed?'#e8d5d5':connected?'#e8f8f2':'#e8edf2';
+
+  // Pipe body
+  var grad=netCtx.createLinearGradient(0,pipeY-pipeR,0,pipeY+pipeR);
+  grad.addColorStop(0,lightCol);
+  grad.addColorStop(0.25,midCol);
+  grad.addColorStop(0.55,baseCol);
+  grad.addColorStop(1,darkCol);
+  // Draw right end first so pipe body covers its left edge cleanly
+  netCtx.save();
+  netCtx.beginPath();netCtx.ellipse(x1,pipeY,10,pipeR,0,0,Math.PI*2);netCtx.clip();
+  var noseGrad=netCtx.createLinearGradient(x1-10,pipeY-pipeR,x1+4,pipeY+pipeR);
+  noseGrad.addColorStop(0,lightCol);
+  noseGrad.addColorStop(0.3,midCol);
+  noseGrad.addColorStop(0.7,baseCol);
+  noseGrad.addColorStop(1,darkCol);
+  netCtx.fillStyle=noseGrad;
+  netCtx.fillRect(x1-10,pipeY-pipeR,20,pipeH);
+  netCtx.restore();
+  netCtx.strokeStyle=darkCol;netCtx.lineWidth=0.5;
+  netCtx.beginPath();netCtx.ellipse(x1,pipeY,10,pipeR,0,0,Math.PI*2);netCtx.stroke();
+
+  // Pipe body over right cap
+  netCtx.fillStyle=grad;
+  netCtx.beginPath();netCtx.rect(x0,pipeY-pipeR,x1-x0,pipeH);netCtx.fill();
+
+  // Highlight streak along top of body
+  var hlGrad=netCtx.createLinearGradient(x0,0,x1,0);
+  hlGrad.addColorStop(0,'rgba(255,255,255,0)');
+  hlGrad.addColorStop(0.15,'rgba(255,255,255,0.4)');
+  hlGrad.addColorStop(0.85,'rgba(255,255,255,0.4)');
+  hlGrad.addColorStop(1,'rgba(255,255,255,0)');
+  netCtx.fillStyle=hlGrad;
+  netCtx.fillRect(x0,pipeY-pipeR+1,x1-x0,3);
+
+  // Left end drawn last — same radius as right cap, with hollow tunnel interior
+  var flangeGrad=netCtx.createLinearGradient(0,pipeY-pipeR,0,pipeY+pipeR);
+  flangeGrad.addColorStop(0,lightCol);
+  flangeGrad.addColorStop(0.4,baseCol);
+  flangeGrad.addColorStop(1,darkCol);
+  netCtx.fillStyle=flangeGrad;
+  netCtx.beginPath();netCtx.ellipse(x0,pipeY,10,pipeR,0,0,Math.PI*2);netCtx.fill();
+  netCtx.strokeStyle=darkCol;netCtx.lineWidth=0.8;
+  netCtx.beginPath();netCtx.ellipse(x0,pipeY,10,pipeR,0,0,Math.PI*2);netCtx.stroke();
+  // Tunnel interior
+  var tunnelGrad=netCtx.createRadialGradient(x0+1,pipeY-1,0,x0,pipeY,pipeR);
+  tunnelGrad.addColorStop(0,darkCol);
+  tunnelGrad.addColorStop(0.6,darkCol);
+  tunnelGrad.addColorStop(1,baseCol);
+  netCtx.fillStyle=tunnelGrad;
+  netCtx.beginPath();netCtx.ellipse(x0,pipeY,5,pipeR-3,0,0,Math.PI*2);netCtx.fill();
+  // Top rim highlight
+  netCtx.strokeStyle='rgba(255,255,255,0.55)';netCtx.lineWidth=1.5;
+  netCtx.beginPath();netCtx.ellipse(x0,pipeY,10,pipeR,0,Math.PI*1.1,Math.PI*1.9);netCtx.stroke();
+
+  // Armed: ✕ badge at midpoint
+  if(armed){
+    var mx=(x0+x1)/2,my=pipeY,br=9;
+    netCtx.fillStyle='#7b1c1c';
+    netCtx.beginPath();netCtx.arc(mx,my,br,0,Math.PI*2);netCtx.fill();
+    netCtx.strokeStyle='#fff';netCtx.lineWidth=2;netCtx.lineCap='round';
+    netCtx.beginPath();netCtx.moveTo(mx-4,my-4);netCtx.lineTo(mx+4,my+4);netCtx.stroke();
+    netCtx.beginPath();netCtx.moveTo(mx+4,my-4);netCtx.lineTo(mx-4,my+4);netCtx.stroke();
+    netCtx.fillStyle='#c0392b';netCtx.font='600 9px system-ui';netCtx.textAlign='center';
+    netCtx.fillText('click to cancel',mx,pipeY+pipeR+11);
+  } else if(st==='established'){
+    netCtx.fillStyle='rgba(14,110,82,0.7)';netCtx.font='600 10px system-ui';netCtx.textAlign='center';
+    netCtx.fillText('✕  click pipe to drop a packet  ✕',(x0+x1)/2,pipeY+pipeR+13);
+  }
+  pkts.forEach(function(p){
+    if(p.done||p.elapsed<0)return;
+    var f=Math.min(p.elapsed/p.dur,1),e=f<0.5?2*f*f:1-Math.pow(-2*f+2,2)/2;
+    var x=p.sx+(p.ex-p.sx)*e;
+    // If wire is armed and this is a toR packet near midpoint, tint it red
+    var isMidzone=p.dir==='toR'&&dropArmed&&Math.abs(x-(n.sx+n.rx)/2)<50;
+    var pw=p.l1.length>16?152:p.l1.length>12?130:108,ph=16;
+    rrect(x-pw/2,n.my-ph/2,pw,ph,3,isMidzone?'#FCEBEB':p.col.bg,isMidzone?'#A32D2D':p.col.bd,isMidzone?2:1.5);
+    netCtx.fillStyle=isMidzone?'#A32D2D':p.col.tx;netCtx.font='600 8px system-ui';netCtx.textAlign='center';
+    netCtx.fillText(p.l1,x,n.my-2);netCtx.font='7px system-ui';netCtx.fillText(p.l2,x,n.my+7);
+  });
+  drawChart();
+}
+requestAnimationFrame(loop);
+upd();
+})();
+</script>
+</body></html>
