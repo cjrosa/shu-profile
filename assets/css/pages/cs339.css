@@ -2,7 +2,7 @@
   --bg2:     #ffffff;
 }
 
-/* CS339 course banner matches index.html red badge */
+/* CS339 page accents match the hub's rust-orange palette. */
 .course-banner { background: var(--red); }
 
 /* ── IP Stack wrapper ─────────────────────────────────────── */

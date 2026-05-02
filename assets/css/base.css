@@ -41,6 +41,148 @@ html { scroll-behavior: smooth; }
   --sys-font-ui: -apple-system, sans-serif;
   --sys-label-size: 10px;
   --sys-subtitle-size: 11px;
+
+  /* Shared course theme palettes */
+  --course-cs112-accent: var(--red);
+  --course-cs112-accent-soft: var(--red-l);
+  --course-cs112-accent-strong: var(--red-m);
+  --course-cs112-hover-shadow: rgba(206, 17, 65, 0.68);
+  --course-cs112-header-bg: rgba(206, 17, 65, 0.045);
+  --course-cs112-header-bg-hover: rgba(206, 17, 65, 0.08);
+  --course-cs112-header-border: rgba(206, 17, 65, 0.14);
+
+  --course-cs339-accent: #69A9DC;
+  --course-cs339-accent-soft: #EAF4FC;
+  --course-cs339-accent-strong: #3B84C0;
+  --course-cs339-hover-shadow: rgba(105, 169, 220, 0.58);
+  --course-cs339-header-bg: rgba(105, 169, 220, 0.05);
+  --course-cs339-header-bg-hover: rgba(105, 169, 220, 0.09);
+  --course-cs339-header-border: rgba(105, 169, 220, 0.15);
+
+  --course-cs432-accent: #0078D4;
+  --course-cs432-accent-soft: #E5F2FD;
+  --course-cs432-accent-strong: #106EBE;
+  --course-cs432-hover-shadow: rgba(0, 120, 212, 0.64);
+  --course-cs432-header-bg: rgba(0, 120, 212, 0.05);
+  --course-cs432-header-bg-hover: rgba(0, 120, 212, 0.09);
+  --course-cs432-header-border: rgba(0, 120, 212, 0.16);
+
+  --course-ai100-accent: #2C8A56;
+  --course-ai100-accent-soft: #EDF8F1;
+  --course-ai100-accent-strong: #68A884;
+  --course-ai100-hover-shadow: rgba(44, 138, 86, 0.62);
+  --course-ai100-header-bg: rgba(44, 138, 86, 0.035);
+  --course-ai100-header-bg-hover: rgba(44, 138, 86, 0.06);
+  --course-ai100-header-border: rgba(44, 138, 86, 0.12);
+
+  /* Generic page accent hook used by shared components like hero.css */
+  --course-page-accent: var(--teal);
+  --course-page-accent-soft: var(--teal-l);
+  --course-page-accent-strong: var(--teal-m);
+}
+
+.course-theme-cs112,
+body.theme-cs112 {
+  --course-accent: var(--course-cs112-accent);
+  --course-accent-soft: var(--course-cs112-accent-soft);
+  --course-accent-strong: var(--course-cs112-accent-strong);
+  --course-card-hover-shadow: var(--course-cs112-hover-shadow);
+  --course-card-header-bg: var(--course-cs112-header-bg);
+  --course-card-header-bg-hover: var(--course-cs112-header-bg-hover);
+  --course-card-header-border: var(--course-cs112-header-border);
+  --course-card-em-color: var(--course-cs112-accent);
+  --card-hover-shadow: var(--course-cs112-hover-shadow);
+  --course-header-bg: var(--course-cs112-header-bg);
+  --course-header-bg-hover: var(--course-cs112-header-bg-hover);
+  --course-header-border: var(--course-cs112-header-border);
+  --course-em-color: var(--course-cs112-accent);
+}
+
+.course-theme-cs339,
+body.theme-cs339 {
+  --course-accent: var(--course-cs339-accent);
+  --course-accent-soft: var(--course-cs339-accent-soft);
+  --course-accent-strong: var(--course-cs339-accent-strong);
+  --course-card-hover-shadow: var(--course-cs339-hover-shadow);
+  --course-card-header-bg: var(--course-cs339-header-bg);
+  --course-card-header-bg-hover: var(--course-cs339-header-bg-hover);
+  --course-card-header-border: var(--course-cs339-header-border);
+  --course-card-em-color: var(--course-cs339-accent);
+  --card-hover-shadow: var(--course-cs339-hover-shadow);
+  --course-header-bg: var(--course-cs339-header-bg);
+  --course-header-bg-hover: var(--course-cs339-header-bg-hover);
+  --course-header-border: var(--course-cs339-header-border);
+  --course-em-color: var(--course-cs339-accent);
+}
+
+.course-theme-cs432,
+body.theme-cs432 {
+  --course-accent: var(--course-cs432-accent);
+  --course-accent-soft: var(--course-cs432-accent-soft);
+  --course-accent-strong: var(--course-cs432-accent-strong);
+  --course-card-hover-shadow: var(--course-cs432-hover-shadow);
+  --course-card-header-bg: var(--course-cs432-header-bg);
+  --course-card-header-bg-hover: var(--course-cs432-header-bg-hover);
+  --course-card-header-border: var(--course-cs432-header-border);
+  --course-card-em-color: var(--course-cs432-accent);
+  --card-hover-shadow: var(--course-cs432-hover-shadow);
+  --course-header-bg: var(--course-cs432-header-bg);
+  --course-header-bg-hover: var(--course-cs432-header-bg-hover);
+  --course-header-border: var(--course-cs432-header-border);
+  --course-em-color: var(--course-cs432-accent);
+}
+
+.course-theme-ai100,
+body.theme-ai100 {
+  --course-accent: var(--course-ai100-accent);
+  --course-accent-soft: var(--course-ai100-accent-soft);
+  --course-accent-strong: var(--course-ai100-accent-strong);
+  --course-card-hover-shadow: var(--course-ai100-hover-shadow);
+  --course-card-header-bg: var(--course-ai100-header-bg);
+  --course-card-header-bg-hover: var(--course-ai100-header-bg-hover);
+  --course-card-header-border: var(--course-ai100-header-border);
+  --course-card-em-color: var(--course-ai100-accent);
+  --card-hover-shadow: var(--course-ai100-hover-shadow);
+  --course-header-bg: var(--course-ai100-header-bg);
+  --course-header-bg-hover: var(--course-ai100-header-bg-hover);
+  --course-header-border: var(--course-ai100-header-border);
+  --course-em-color: var(--course-ai100-accent);
+}
+
+body.theme-cs112 {
+  --teal: var(--course-cs112-accent);
+  --teal-l: var(--course-cs112-accent-soft);
+  --teal-m: var(--course-cs112-accent-strong);
+  --course-page-accent: var(--course-cs112-accent);
+  --course-page-accent-soft: var(--course-cs112-accent-soft);
+  --course-page-accent-strong: var(--course-cs112-accent-strong);
+}
+
+body.theme-cs339 {
+  --red: var(--course-cs339-accent);
+  --red-l: var(--course-cs339-accent-soft);
+  --red-m: var(--course-cs339-accent-strong);
+  --course-page-accent: var(--course-cs339-accent);
+  --course-page-accent-soft: var(--course-cs339-accent-soft);
+  --course-page-accent-strong: var(--course-cs339-accent-strong);
+}
+
+body.theme-cs432 {
+  --teal: var(--course-cs432-accent);
+  --teal-l: var(--course-cs432-accent-soft);
+  --teal-m: var(--course-cs432-accent-strong);
+  --course-page-accent: var(--course-cs432-accent);
+  --course-page-accent-soft: var(--course-cs432-accent-soft);
+  --course-page-accent-strong: var(--course-cs432-accent-strong);
+}
+
+body.theme-ai100 {
+  --teal: var(--course-ai100-accent);
+  --teal-l: var(--course-ai100-accent-soft);
+  --teal-m: var(--course-ai100-accent-strong);
+  --course-page-accent: var(--course-ai100-accent);
+  --course-page-accent-soft: var(--course-ai100-accent-soft);
+  --course-page-accent-strong: var(--course-ai100-accent-strong);
 }
 
 body {

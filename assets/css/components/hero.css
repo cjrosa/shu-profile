@@ -17,19 +17,19 @@
   display: inline-flex; align-items: center; gap: 6px;
   font-family: -apple-system, sans-serif; font-size: 10px; font-weight: 700;
   letter-spacing: .08em; text-transform: uppercase;
-  color: var(--teal); text-decoration: none; margin-bottom: 4px;
+  color: var(--course-page-accent); text-decoration: none; margin-bottom: 4px;
   transition: color .15s;
 }
-.hero-back:hover { color: var(--teal-m); }
+.hero-back:hover { color: var(--course-page-accent-strong); }
 
 .hero-badge {
   display: inline-flex; align-items: center; gap: 6px;
   font-family: -apple-system, sans-serif;
   font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
-  color: var(--teal); margin-bottom: 2px;
+  color: var(--course-page-accent); margin-bottom: 2px;
 }
 .hero-badge-dot {
-  width: 5px; height: 5px; border-radius: 50%; background: var(--teal-m);
+  width: 5px; height: 5px; border-radius: 50%; background: var(--course-page-accent-strong);
   animation: pulse 2s ease-in-out infinite;
 }
 @keyframes pulse {
@@ -42,7 +42,7 @@
   font-weight: 400; color: var(--navy); line-height: 1.2; letter-spacing: -.01em;
   margin-bottom: 6px;
 }
-.hero-title em { font-style: italic; color: var(--teal); }
+.hero-title em { font-style: italic; color: var(--course-page-accent); }
 
 .hero-course {
   font-family: -apple-system, sans-serif; font-size: 11px; font-weight: 600;

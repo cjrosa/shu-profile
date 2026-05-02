@@ -121,14 +121,14 @@ input:focus-visible {
 .course-card.upcoming-course {
   border: 1.5px dashed #c8d0da !important;
   background: rgba(250, 251, 252, 0.82) !important;
-  box-shadow: none !important;
+  box-shadow: 0 6px 16px rgba(13, 16, 24, 0.08) !important;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
 
 .course-card.upcoming-course:hover {
-  transform: none;
-  box-shadow: none !important;
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(19, 35, 23, 0.14) !important;
 }
 
 @media (max-width: 640px) {

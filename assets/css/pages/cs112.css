@@ -1,7 +1,3 @@
 :root {
-  /* CS112 — course accent (burgundy) overrides default teal */
-  --teal:    #A70034;
-  --teal-l:  #FAE0E8;
-  --teal-m:  #D4506E;
   --bg2:     #ffffff;
 }
