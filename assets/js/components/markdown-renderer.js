@@ -1,8 +1,27 @@
 (function (global) {
   'use strict';
 
+  var entityDecoder = null;
+
+  function decodeHtmlEntities(text) {
+    if (text == null) {
+      return '';
+    }
+    if (!/[&][#A-Za-z0-9]+;/.test(String(text))) {
+      return String(text);
+    }
+    if (typeof document === 'undefined' || !document.createElement) {
+      return String(text);
+    }
+    if (!entityDecoder) {
+      entityDecoder = document.createElement('textarea');
+    }
+    entityDecoder.innerHTML = String(text);
+    return entityDecoder.value;
+  }
+
   function escapeHtml(text) {
-    return String(text || '')
+    return decodeHtmlEntities(text)
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
@@ -160,7 +179,8 @@
     closeLists();
     flushCode();
 
-    return html.join('');
+    var rendered = html.join('');
+    return rendered + '<p class="ai-disclaimer">Disclaimer: AI-generated response.</p>';
   }
 
   global.SHUMarkdown = {

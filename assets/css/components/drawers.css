@@ -63,6 +63,15 @@
 }
 .ai-answer-text p { margin-bottom: 10px; }
 .ai-answer-text p:last-child { margin-bottom: 0; }
+.ai-answer-text .ai-disclaimer {
+  margin-top: 12px;
+  margin-bottom: 0;
+  font-size: 10px;
+  line-height: 1.35;
+  color: var(--text3);
+  opacity: 0.82;
+  letter-spacing: 0.02em;
+}
 .ai-answer-text h1,
 .ai-answer-text h2,
 .ai-answer-text h3,
