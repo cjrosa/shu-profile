@@ -2,6 +2,7 @@
 .ds-stack { display: flex; flex-direction: column; gap: 14px; margin-bottom: 48px; }
 
 .cat-accordion {
+  background: #ffffff;
   border-radius: 12px; overflow: hidden; box-shadow: var(--shadow);
 }
 .cat-header {
@@ -10,6 +11,7 @@
   text-align: left;
 }
 .cat-header-inner {
+  background: #ffffff;
   display: flex; align-items: center; gap: 0; width: 100%; padding: 0;
   transition: filter .2s ease;
 }
@@ -41,6 +43,6 @@
 }
 .cat-chevron svg { transition: transform .3s cubic-bezier(.4,0,.2,1); }
 .cat-accordion.open .cat-chevron svg { transform: rotate(180deg); }
-.cat-body { display: none; padding: var(--accordion-body-padding); }
+.cat-body { display: none; padding: var(--accordion-body-padding); background: #ffffff; }
 .cat-body .tools-grid { padding-top: var(--accordion-grid-top-padding); }
 .cat-accordion.open .cat-body { display: block; }

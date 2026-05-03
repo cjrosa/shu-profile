@@ -92,7 +92,6 @@ body {
   filter: brightness(1.01);
 }
 
-.cat-body,
 .layer-body {
   background: var(--glass-surface-soft);
 }
@@ -129,6 +128,15 @@ input:focus-visible {
 .course-card.upcoming-course:hover {
   transform: translateY(-3px);
   box-shadow: 0 14px 30px rgba(19, 35, 23, 0.14) !important;
+}
+
+/* Home-page AI100 upcoming hub card: no border at rest, hover ring on interaction. */
+.course-card.upcoming-card {
+  border-color: transparent !important;
+}
+
+.course-card.upcoming-card:hover {
+  border-color: var(--card-hover-shadow) !important;
 }
 
 @media (max-width: 640px) {
