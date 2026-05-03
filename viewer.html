@@ -11,6 +11,7 @@
       --crimson: #A70034;
       --crimson-dark: #7D0026;
       --crimson-light: rgba(167,0,52,0.12);
+      --bar-bg: var(--crimson);
       --bar-h: 48px;
     }
 
@@ -23,7 +24,7 @@
     #bar {
       position: fixed; top: 0; left: 0; right: 0;
       height: var(--bar-h);
-      background: var(--crimson);
+      background: var(--bar-bg);
       display: flex; align-items: center;
       padding: 0 16px; gap: 16px;
       z-index: 100;
@@ -174,12 +175,42 @@
   </div>
 
   <script>
+    function detectViewerThemeKey(course, back, tool) {
+      const lowerCourse = (course || '').toLowerCase();
+      const lowerBack = (back || '').toLowerCase();
+      const lowerTool = (tool || '').toLowerCase();
+
+      if (lowerCourse.includes('cs112') || lowerBack.includes('cs112/') || lowerTool.startsWith('cs112/')) return 'cs112';
+      if (lowerCourse.includes('cs339') || lowerBack.includes('cs339/') || lowerTool.startsWith('cs339/')) return 'cs339';
+      if (lowerCourse.includes('cs432') || lowerBack.includes('cs432/') || lowerTool.startsWith('cs432/')) return 'cs432';
+      if (lowerCourse.includes('ai100') || lowerBack.includes('ai100/') || lowerTool.startsWith('ai100/')) return 'ai100';
+
+      return null;
+    }
+
+    function applyViewerTheme(course, back, tool) {
+      const colorsByTheme = {
+        cs112: '#CE1141',
+        cs339: '#69A9DC',
+        cs432: '#0078D4',
+        ai100: '#2C8A56'
+      };
+
+      const themeKey = detectViewerThemeKey(course, back, tool);
+      const barColor = colorsByTheme[themeKey];
+      if (barColor) {
+        document.documentElement.style.setProperty('--bar-bg', barColor);
+      }
+    }
+
     const params = new URLSearchParams(location.search);
     const tool    = params.get('tool');
     const course  = params.get('course')  || '';
     const label   = params.get('label')   || '';
     const back    = params.get('back')    || '#';
     const toolName = params.get('name')  || (tool ? decodeURIComponent(tool).replace(/\.html$/, '').replace(/[_-]/g, ' ') : 'Tool');
+
+    applyViewerTheme(course, back, tool);
 
     // Populate bar
     document.getElementById('bc-course').textContent  = course;
