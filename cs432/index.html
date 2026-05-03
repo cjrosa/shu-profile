@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CS432 Cloud Computing &middot; Teaching Tools</title>
+<title>Cloud Computing</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231A5CA8'/%3E%3Ccircle cx='16' cy='8' r='4' fill='white' opacity='.9'/%3E%3Ccircle cx='8' cy='22' r='3.5' fill='white' opacity='.9'/%3E%3Ccircle cx='24' cy='22' r='3.5' fill='white' opacity='.9'/%3E%3Cline x1='16' y1='12' x2='8' y2='18.5' stroke='white' stroke-width='1.5'/%3E%3Cline x1='16' y1='12' x2='24' y2='18.5' stroke='white' stroke-width='1.5'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="../assets/css/reset.css">
 <link rel="stylesheet" href="../assets/css/base.css">
@@ -238,24 +238,7 @@
 <script>
 const PROXY_URL = 'https://red-union-6b9e.crosa.workers.dev';
 
-const TOOLS = [
-  { name:'BST Insert Animation',   file:'bst_insert_animation.html',        cat:'Trees', desc:'BST insertion, comparison path, left right decision', keywords:['bst','insert','insertion','binary search tree','add node','place'] },
-  { name:'Insert Order Effect',    file:'bst_insert_order.html',            cat:'Trees', desc:'Insertion order, tree shape, balanced vs degenerate', keywords:['insert order','balanced','degenerate','skewed','tree shape','height'] },
-  { name:'BST Search',             file:'bst_search.html',                  cat:'Trees', desc:'BST search, traversal, comparison, found not found', keywords:['search','find','lookup','bst search','contains'] },
-  { name:'BST Delete (Simple)',    file:'bst_delete_animation.html',        cat:'Trees', desc:'BST deletion leaf node single child case 1 case 2', keywords:['delete','deletion','remove','leaf','one child','case 1','case 2'] },
-  { name:'BST Delete (Two Children)', file:'bst_delete_animation_complex.html', cat:'Trees', desc:'BST deletion two children in-order successor case 3', keywords:['delete','two children','successor','in-order successor','case 3','in order'] },
-  { name:'BST Violations',         file:'bst_violations.html',              cat:'Trees', desc:'BST violations wrong placement too many children fix', keywords:['violation','invalid bst','broken','wrong','fix','property'] },
-  { name:'Tree Traversals',        file:'traversal_animation_2_.html',      cat:'Trees', desc:'in-order pre-order post-order DFS traversal visit', keywords:['traversal','inorder','preorder','postorder','in-order','pre-order','post-order','visit','dfs'] },
-  { name:'Level-Order Traversal',  file:'bst_level_order_deque.html',       cat:'Trees', desc:'BFS level order traversal deque queue breadth first', keywords:['level order','bfs','breadth first','deque','queue','level'] },
-  { name:'AVL Rotations',          file:'avl_rotation_explorer.html',       cat:'Trees', desc:'AVL tree rotations LL RR LR RL self-balancing balance factor', keywords:['avl','rotation','ll','rr','lr','rl','balance factor','self-balancing','rebalance'] },
-  { name:'Heap Build & Insert',    file:'heap_full_animation.html',         cat:'Heaps', desc:'max heap min heap build insert sift-up percolate', keywords:['heap','max heap','min heap','build heap','insert heap','sift up','percolate up'] },
-  { name:'Reheap Up & Down',       file:'reheap_array.html',                cat:'Heaps', desc:'reheap up down sift repair percolate heap property', keywords:['reheap','sift down','percolate down','reheap up','reheap down','heap repair'] },
-  { name:'Heap Array Indexing',    file:'array_indexing.html',              cat:'Heaps', desc:'heap array indexing parent child formula index arithmetic', keywords:['array indexing','heap array','parent formula','left child','right child','index','2n+1','2n+2'] },
-  { name:'Hash Table Chaining',    file:'chaining_animation.html',          cat:'Hash',  desc:'hash table chaining separate chaining linked list collision', keywords:['chaining','separate chaining','hash table','collision','bucket','linked list','load factor'] },
-  { name:'Linear Probing & Clustering', file:'linear_probing_clustering.html', cat:'Hash', desc:'linear probing clustering primary cluster open addressing', keywords:['linear probing','clustering','primary cluster','open addressing','probe','collision','hash'] },
-  { name:'Quadratic Probing',      file:'quadratic_prime_animation.html',   cat:'Hash',  desc:'quadratic probing prime table size cycle open addressing', keywords:['quadratic probing','prime','table size','probe sequence','cycle','hash'] },
-  { name:'Graph Algorithm Visualizer', file:'graph_viz.html',               cat:'Graphs', desc:'graph BFS DFS traversal shortest path weighted edges', keywords:['graph','bfs','dfs','breadth first','depth first','shortest path','weighted','edge','vertex','node','adjacency'] },
-];
+const TOOLS = [];
 
 const VIEWER_COURSE = 'CS432';
 const VIEWER_LABEL = 'Cloud Computing';
