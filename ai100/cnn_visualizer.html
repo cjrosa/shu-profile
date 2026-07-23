@@ -60,6 +60,14 @@
   .output .cell { background:#edf4ff; border-color:#cadcf2; color:var(--blue); }
   .output .cell.pending { background:#f7f9f8; border-color:#e5eae7; color:#aab2ad; }
   .output .cell.current { outline:3px solid var(--amber); outline-offset:-3px; background:#fff3df; color:#9b5700; }
+  .output .cell:not(.pending) { cursor:pointer; }
+  .output .cell.selected-activation { outline:4px solid var(--blue); outline-offset:-3px; z-index:3; }
+  .input .cell.selected-window { outline:3px solid var(--blue); outline-offset:-3px; box-shadow:inset 0 0 0 2px rgba(38,115,201,.18); }
+  .feature-insight { min-height:42px; margin-top:11px; padding:9px 10px; border-radius:8px; background:#f6f9f7; color:var(--muted); font-size:10px; line-height:1.45; }
+  .feature-insight strong { color:var(--ink); }
+  .activation-legend { margin-top:10px; }
+  .legend-bar { height:7px; border-radius:99px; background:linear-gradient(90deg,#7850a8 0%,#f2f4f2 50%,#1f7a46 100%); }
+  .legend-labels { display:flex; justify-content:space-between; gap:5px; margin-top:4px; color:var(--muted); font-size:8px; font-weight:700; }
   .arrow { display:grid; place-items:center; color:var(--green); text-align:center; }
   .arrow svg { width:35px; }
   .arrow span { display:block; margin-top:7px; color:var(--muted); font-size:9px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
@@ -148,6 +156,8 @@
     <article class="panel">
       <div class="panel-head"><div><div class="panel-title">Feature map</div><div class="panel-note">3 × 3 activation output</div></div><span class="chip">Output</span></div>
       <div class="grid output" id="outputGrid"></div>
+      <div class="activation-legend" aria-label="Activation color legend"><div class="legend-bar"></div><div class="legend-labels"><span>Opposite edge</span><span>No response</span><span>Strong match</span></div></div>
+      <div class="feature-insight" id="featureInsight"></div>
     </article>
   </section>
 
@@ -179,7 +189,7 @@ const kernelGrid = document.querySelector('#kernelGrid');
 const outputGrid = document.querySelector('#outputGrid');
 const imageSelect = document.querySelector('#imageSelect');
 const filterSelect = document.querySelector('#filterSelect');
-let step = 0, timer = null, detailMode = false, inputView = 'pixels';
+let step = 0, timer = null, highlightTimer = null, detailMode = false, inputView = 'pixels', hasRun = false;
 
 function convolve(image,kernel,row,col) {
   let sum = 0, parts = [];
@@ -196,6 +206,39 @@ function results() {
   for(let r=0;r<3;r++) for(let c=0;c<3;c++) out.push(convolve(image,kernel,r,c));
   return out;
 }
+function paintActivation(el,value,maxAbs) {
+  const strength=Math.abs(value)/Math.max(maxAbs,1), alpha=.12+strength*.78;
+  const rgb=value>0?'31,122,70':value<0?'120,80,168':'225,230,226';
+  el.style.backgroundColor=`rgba(${rgb},${value===0?1:alpha})`;
+  el.style.borderColor=value>0?'rgba(31,122,70,.45)':value<0?'rgba(120,80,168,.45)':'#dfe5e1';
+  el.style.color=strength>.52?'#fff':value>0?'#165c35':value<0?'#573778':'#78817b';
+}
+function describeActivation(value,maxAbs) {
+  if(value===0) return '<strong>No response:</strong> positive and negative contributions cancel, so this region does not contain the selected edge.';
+  const strength=Math.abs(value)/Math.max(maxAbs,1), level=strength>.66?'Strong':strength>.33?'Moderate':'Weak';
+  return value>0?`<strong>${level} match:</strong> this region contains the edge orientation the filter is designed to detect.`:`<strong>${level} opposite response:</strong> an edge is present, but its light-to-dark direction is reversed.`;
+}
+function linkOutputToInput(el,index) {
+  function markWindow(className) {
+    const row=Math.floor(index/3), col=index%3;
+    for(let r=0;r<3;r++) for(let c=0;c<3;c++) inputGrid.children[(row+r)*5+col+c].classList.add(className);
+  }
+  function selectActivation() {
+    if(el.classList.contains('pending')) return;
+    outputGrid.querySelectorAll('.selected-activation').forEach(cell=>cell.classList.remove('selected-activation'));
+    inputGrid.querySelectorAll('.selected-window').forEach(cell=>cell.classList.remove('selected-window'));
+    el.classList.add('selected-activation'); markWindow('selected-window');
+    const value=results()[index].sum, maxAbs=Math.max(...results().map(item=>Math.abs(item.sum)),1);
+    const gridRow=Math.floor(index/3), gridCol=index%3;
+    const calculation=convolve(images[imageSelect.value],kernels[filterSelect.value],gridRow,gridCol);
+    document.querySelector('#positionText').textContent=`Selected feature-map cell (${gridRow+1}, ${gridCol+1})`;
+    document.querySelector('#equationText').textContent=`${calculation.parts.join(' + ')} = ${format(calculation.sum)}`;
+    document.querySelector('#score').textContent=format(calculation.sum);
+    document.querySelector('#featureInsight').innerHTML=`<strong>Selected cell (${gridRow+1}, ${gridCol+1}) · activation ${format(value)}</strong><br>${describeActivation(value,maxAbs)}`;
+  }
+  el.addEventListener('click',selectActivation);
+  el.addEventListener('keydown',event=>{ if(event.key==='Enter'||event.key===' ') { event.preventDefault(); selectActivation(); } });
+}
 function cell(value,classes='',detail='') {
   const el=document.createElement('div'); el.className=`cell ${classes}`;
   const valueEl=document.createElement('span'); valueEl.className='cell-value'; valueEl.textContent=format(value); el.append(valueEl);
@@ -203,14 +246,14 @@ function cell(value,classes='',detail='') {
   return el;
 }
 let animationEpoch = 0;
-function render(preparingAnimation=false) {
+function render(preparingAnimation=false,showReceptiveField=false) {
   const image=images[imageSelect.value], kernel=kernels[filterSelect.value];
-  const row=Math.floor(step/3), col=step%3, out=results();
+  const row=Math.floor(step/3), col=step%3, out=results(), maxAbs=Math.max(...out.map(item=>Math.abs(item.sum)),1);
   inputGrid.replaceChildren();
   inputGrid.classList.toggle('detail',detailMode);
   inputGrid.classList.toggle('image-view',inputView==='image');
   image.forEach((line,r)=>line.forEach((value,c)=>{
-    const inWindow=r>=row&&r<row+3&&c>=col&&c<col+3;
+    const inWindow=showReceptiveField&&r>=row&&r<row+3&&c>=col&&c<col+3;
     const weight=inWindow?kernel[r-row][c-col]:null;
     const detail=inWindow?`× ${format(weight)} = ${format(value*weight)}`:'';
     inputGrid.append(cell(value,`${value?'on':''} ${inWindow?'window':''}`,detail));
@@ -219,17 +262,22 @@ function render(preparingAnimation=false) {
   kernel.flat().forEach((value,i)=>{ const el=cell(value,'active'); el.dataset.kernelIndex=i; kernelGrid.append(el); });
   outputGrid.replaceChildren();
   out.forEach((item,i)=>{
-    const shown=i<step?item.sum:i===step&&!preparingAnimation?item.sum:'·';
-    const el=cell(shown,i>step||i===step&&preparingAnimation?'pending':i===step?'current':'');
-    el.dataset.outputIndex=i; outputGrid.append(el);
+    const shown=hasRun&&(i<step||i===step&&!preparingAnimation)?item.sum:'·';
+    const pending=!hasRun||i>step||i===step&&preparingAnimation;
+    const el=cell(shown,pending?'pending':i===step&&step<8?'current':'');
+    el.dataset.outputIndex=i;
+    if(hasRun&&(i<step||i===step&&!preparingAnimation)) paintActivation(el,item.sum,maxAbs);
+    if(hasRun&&(i<step||i===step&&!preparingAnimation)) { el.tabIndex=0; el.setAttribute('role','button'); el.setAttribute('aria-label',`Activation ${format(item.sum)} at row ${Math.floor(i/3)+1}, column ${i%3+1}`); }
+    linkOutputToInput(el,i); outputGrid.append(el);
   });
-  document.querySelector('#positionText').textContent=`Position (${row+1}, ${col+1})`;
-  document.querySelector('#equationText').textContent=`${out[step].parts.join(' + ')} = ${format(out[step].sum)}`;
-  document.querySelector('#score').textContent=format(out[step].sum);
-  document.querySelector('#stepLabel').textContent=`${step+1} of 9`;
-  document.querySelector('#progressFill').style.width=`${(step+1)/9*100}%`;
-  document.querySelector('#prevBtn').disabled=step===0;
-  document.querySelector('#nextBtn').disabled=step===8;
+  document.querySelector('#positionText').textContent=hasRun?`Position (${row+1}, ${col+1})`:'Ready to convolve';
+  document.querySelector('#equationText').textContent=hasRun?`${out[step].parts.join(' + ')} = ${format(out[step].sum)}`:'Choose an input and filter, then run the first step.';
+  document.querySelector('#score').textContent=hasRun?format(out[step].sum):'—';
+  document.querySelector('#featureInsight').innerHTML=hasRun?describeActivation(out[step].sum,maxAbs):'<strong>No activations yet.</strong> Run the convolution to build the feature map one cell at a time.';
+  document.querySelector('#stepLabel').textContent=`${hasRun?step+1:0} of 9`;
+  document.querySelector('#progressFill').style.width=`${hasRun?(step+1)/9*100:0}%`;
+  document.querySelector('#prevBtn').disabled=!hasRun;
+  document.querySelector('#nextBtn').disabled=hasRun&&step===8;
 }
 function wait(ms) { return new Promise(resolve=>setTimeout(resolve,ms)); }
 function fly(source,target,label,type,targetOffset=0,duration=360) {
@@ -242,7 +290,7 @@ function fly(source,target,label,type,targetOffset=0,duration=360) {
 }
 async function animateDetail() {
   const epoch=++animationEpoch;
-  stopAuto(); render(true);
+  stopAuto(); render(true,true);
   const image=images[imageSelect.value], kernel=kernels[filterSelect.value];
   const row=Math.floor(step/3), col=step%3, scoreEl=document.querySelector('#score');
   const outputEl=outputGrid.querySelector(`[data-output-index="${step}"]`);
@@ -265,13 +313,25 @@ async function animateDetail() {
   document.querySelector('#equationText').textContent=`All nine products add up to ${format(running)}. This activation becomes one feature-map cell.`;
   await fly(scoreEl,outputEl,format(running),'sum',0,520);
   if(epoch!==animationEpoch) return;
-  outputEl.classList.remove('pending'); outputEl.classList.add('current'); outputEl.querySelector('.cell-value').textContent=format(running);
+  outputEl.classList.remove('pending');
+  if(step<8) outputEl.classList.add('current');
+  outputEl.querySelector('.cell-value').textContent=format(running);
+  outputEl.tabIndex=0; outputEl.setAttribute('role','button'); outputEl.setAttribute('aria-label',`Activation ${format(running)} at row ${Math.floor(step/3)+1}, column ${step%3+1}`);
+  paintActivation(outputEl,running,Math.max(...results().map(item=>Math.abs(item.sum)),1));
+  inputGrid.querySelectorAll('.window').forEach(cell=>cell.classList.remove('window'));
 }
-function showStep() { detailMode ? animateDetail() : (++animationEpoch,render()); }
-function stopAuto() { clearInterval(timer); timer=null; document.querySelector('#autoBtn').textContent='Auto play'; }
-function reset() { stopAuto(); ++animationEpoch; step=0; showStep(); }
-document.querySelector('#prevBtn').addEventListener('click',()=>{ stopAuto(); ++animationEpoch; step=Math.max(0,step-1); showStep(); });
-document.querySelector('#nextBtn').addEventListener('click',()=>{ stopAuto(); ++animationEpoch; step=Math.min(8,step+1); showStep(); });
+function showStep(flashReceptiveField=false) {
+  clearTimeout(highlightTimer);
+  if(detailMode&&hasRun) return animateDetail();
+  ++animationEpoch;
+  const shouldFlash=flashReceptiveField&&hasRun&&step<8;
+  render(false,shouldFlash);
+  if(shouldFlash) highlightTimer=setTimeout(()=>inputGrid.querySelectorAll('.window').forEach(cell=>cell.classList.remove('window')),650);
+}
+function stopAuto() { clearInterval(timer); clearTimeout(highlightTimer); timer=null; highlightTimer=null; document.querySelector('#autoBtn').textContent='Auto play'; inputGrid.querySelectorAll('.window').forEach(cell=>cell.classList.remove('window')); }
+function reset() { stopAuto(); ++animationEpoch; step=0; hasRun=false; showStep(); }
+document.querySelector('#prevBtn').addEventListener('click',()=>{ stopAuto(); ++animationEpoch; if(step===0) hasRun=false; else step--; showStep(true); });
+document.querySelector('#nextBtn').addEventListener('click',()=>{ stopAuto(); ++animationEpoch; if(!hasRun) hasRun=true; else step=Math.min(8,step+1); showStep(true); });
 document.querySelector('#resetBtn').addEventListener('click',reset);
 function setInputView(view) {
   if(detailMode && view==='image') return;
@@ -298,9 +358,10 @@ document.querySelector('#detailBtn').addEventListener('click',()=>{
 });
 document.querySelector('#autoBtn').addEventListener('click',()=>{
   if(timer) return stopAuto();
-  if(step===8) step=0;
-  document.querySelector('#autoBtn').textContent='Pause'; render();
-  timer=setInterval(()=>{ if(step===8) return stopAuto(); step++; render(); },850);
+  if(!hasRun||step===8) step=0;
+  hasRun=true;
+  document.querySelector('#autoBtn').textContent='Pause'; render(false,true);
+  timer=setInterval(()=>{ if(step===8) return stopAuto(); step++; render(false,true); },850);
 });
 imageSelect.addEventListener('change',reset);
 filterSelect.addEventListener('change',reset);
