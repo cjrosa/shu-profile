@@ -46,8 +46,8 @@
       <p class="hero-subtitle">Undergraduate Computer Science courses built and taught for depth and clarity — the kind that stays with students long after the semester ends.</p>
       <div class="hero-divider"></div>
       <div class="hero-stats">
-        <button class="hero-stat clickable js-scroll-target" type="button" data-scroll-target="section-active"><span class="hero-stat-num">3</span><span class="hero-stat-label">Taught</span></button>
-        <button class="hero-stat clickable js-scroll-target" type="button" data-scroll-target="section-upcoming"><span class="hero-stat-num">1</span><span class="hero-stat-label">Upcoming</span></button>
+        <button class="hero-stat clickable js-scroll-target" type="button" data-scroll-target="section-courses"><span class="hero-stat-num" id="offeringCount">4</span><span class="hero-stat-label" id="offeringStatus">Upcoming</span></button>
+        <button class="hero-stat clickable js-scroll-target" type="button" data-scroll-target="section-courses"><span class="hero-stat-num">3</span><span class="hero-stat-label">Returning</span></button>
         <div class="hero-stat"><span class="hero-stat-num">23</span><span class="hero-stat-label">Tools</span></div>
       </div>
     </div>
@@ -80,12 +80,15 @@
 
 <main class="main">
 
-  <div class="section-label" id="section-active">Courses Taught</div>
+  <div class="section-label section-label-with-meta" id="section-courses">
+    <span id="courseSectionTitle">Upcoming Courses</span>
+    <span class="section-term" id="courseSectionTerm">Fall 2026</span>
+  </div>
 
   <div class="course-grid">
 
     <!-- CS339 -->
-    <a class="course-card course-theme-cs339" href="cs339/index.html">
+    <a class="course-card course-theme-cs339" href="cs339/index.html" data-course="CS339" data-semesters="FA26,SP26">
       <div class="course-card-top">
         <div class="course-num-badge course-num-badge-standard">
           <span class="cnum cnum-inline">CS339</span>
@@ -94,7 +97,7 @@
           <div class="course-title">Networking and Data <em>Communication</em></div>
           <div class="course-subtitle">Data Communication &nbsp;&middot;&nbsp; 300-Level</div>
         </div>
-        <span class="season-badge">SP26</span>
+        <span class="semester-history" data-semester-history></span>
       </div>
       <p class="course-desc">The Internet protocol stack from the ground up &mdash; transport, network, and link layers. Covers TCP, IP addressing, routing algorithms, NAT, ARP, and MAC learning through interactive simulations.</p>
       <div class="course-tools-strip">
@@ -111,7 +114,7 @@
     </a>
 
     <!-- CS112 -->
-    <a class="course-card course-theme-cs112" href="cs112/index.html">
+    <a class="course-card course-theme-cs112" href="cs112/index.html" data-course="CS112" data-semesters="FA26,SP26">
       <div class="course-card-top">
         <div class="course-num-badge course-num-badge-standard">
           <span class="cnum cnum-inline">CS112</span>
@@ -120,7 +123,7 @@
           <div class="course-title">Data <em>Structures</em></div>
           <div class="course-subtitle">Python &nbsp;&middot;&nbsp; 100-Level</div>
         </div>
-        <span class="season-badge">SP26</span>
+        <span class="semester-history" data-semester-history></span>
       </div>
       <p class="course-desc">Arrays, linked lists, trees, heaps, hash tables, and graphs implemented in Python. Covers BST operations, AVL rotations, heap sort, hash collision strategies, and graph traversal.</p>
       <div class="course-tools-strip">
@@ -140,7 +143,7 @@
     </a>
 
     <!-- CS432 -->
-    <a class="course-card course-theme-cs432" href="cs432/index.html">
+    <a class="course-card course-theme-cs432" href="cs432/index.html" data-course="CS432" data-semesters="FA26,FA25">
       <div class="course-card-top">
         <div class="course-num-badge course-num-badge-standard">
           <span class="cnum cnum-inline">CS432</span>
@@ -149,7 +152,7 @@
           <div class="course-title">Cloud <em>Computing</em></div>
           <div class="course-subtitle">Microsoft Azure &nbsp;&middot;&nbsp; 400-Level</div>
         </div>
-        <span class="season-badge">FA25</span>
+        <span class="semester-history" data-semester-history></span>
       </div>
       <p class="course-desc">Cloud architecture fundamentals through the lens of real-world Azure infrastructure. Covers compute, storage, networking, identity, and cost management &mdash; aligned with AZ-900 Azure Foundations certification readiness.</p>
       <div class="course-tools-strip">
@@ -164,14 +167,8 @@
       </div>
     </a>
 
-  </div>
-
-  <div class="section-label spaced" id="section-upcoming">Upcoming</div>
-
-  <div class="course-grid final">
-
     <!-- AI100 -->
-    <a class="course-card course-theme-ai100 upcoming-card" href="ai100/index.html">
+    <a class="course-card course-theme-ai100" href="ai100/index.html" data-course="AI100" data-semesters="FA26" data-first-offering="FA26">
       <div class="course-card-top">
         <div class="course-num-badge course-num-badge-upcoming">
           <span class="cnum cnum-ai100">AI100</span>
@@ -181,10 +178,7 @@
           <div class="course-title">Foundations of <em>Artificial Intelligence</em></div>
           <div class="course-subtitle">AI Foundations &nbsp;&middot;&nbsp; 100-Level</div>
         </div>
-        <div class="course-top-badges">
-          <span class="season-badge">FA26</span>
-          <span class="upcoming-pill">Upcoming</span>
-        </div>
+        <span class="semester-history" data-semester-history></span>
       </div>
       <p class="course-desc">History, terminology, and foundational concepts of AI explored through the lens of real-world applications. Students examine ethical tensions, data privacy, societal impact, and gain introductory exposure to machine learning &mdash; with hands-on time in the AI Lab. No prior CS experience required.</p>
       <div class="course-tools-strip">
@@ -196,7 +190,7 @@
         <span class="course-pill">3 Credits</span>
         <span class="course-pill">No Prereqs</span>
         <span class="course-pill">Non-Technical Majors</span>
-        <span class="course-cta course-cta-themed">Preview course <svg class="course-cta-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+        <span class="course-cta course-cta-themed">Open course <svg class="course-cta-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
       </div>
     </a>
 
@@ -209,6 +203,7 @@
 
 <script src="assets/js/components/instructor-drawer-loader.js"></script>
 <script src="assets/js/components/markdown-renderer.js"></script>
+<script src="assets/js/semester-schedule.js" defer></script>
 <script src="assets/js/pages/index.js" defer></script>
 
 

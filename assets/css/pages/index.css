@@ -565,6 +565,143 @@
   margin-top: 8px;
 }
 
+.section-label-with-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-term {
+  border-left: 1px solid #D5D9DE;
+  padding-left: 10px;
+  color: #7A8491;
+  font-weight: 600;
+}
+
+.semester-history {
+  position: relative;
+  flex-shrink: 0;
+  margin-left: auto;
+  font-family: -apple-system, sans-serif;
+}
+
+.semester-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #A8D5B5;
+  border-radius: 20px;
+  padding: 4px 8px;
+  background: #E8F5EE;
+  color: #1A6E3A;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+.semester-badge:hover,
+.semester-badge:focus-visible,
+.semester-history.is-open .semester-badge {
+  border-color: currentColor;
+  box-shadow: 0 2px 8px rgba(22, 32, 43, .12);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.semester-badge-upcoming {
+  background: #FFF7DF;
+  border-color: #E6C86A;
+  color: #735711;
+}
+
+.semester-badge-previous {
+  background: #F0F2F4;
+  border-color: #CDD2D8;
+  color: #59636F;
+}
+
+.semester-badge-code { letter-spacing: .07em; }
+.semester-badge-status { font-weight: 600; }
+.semester-badge-status::before { content: "\00b7"; margin-right: 5px; }
+.history-icon { flex: none; margin-left: 1px; }
+
+.semester-popover {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 230px;
+  padding: 12px;
+  border: 1px solid #D8DDE3;
+  border-radius: 10px;
+  background: white;
+  box-shadow: 0 12px 30px rgba(22, 32, 43, .16);
+  color: #2F3740;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity .14s ease, transform .14s ease, visibility .14s;
+}
+
+.semester-popover::before {
+  content: "";
+  position: absolute;
+  right: 18px;
+  top: -5px;
+  width: 8px;
+  height: 8px;
+  border-left: 1px solid #D8DDE3;
+  border-top: 1px solid #D8DDE3;
+  background: white;
+  transform: rotate(45deg);
+}
+
+.semester-history:hover .semester-popover,
+.semester-history:focus-within .semester-popover,
+.semester-history.is-open .semester-popover {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.semester-popover-title {
+  display: block;
+  margin-bottom: 8px;
+  color: #68727E;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.semester-popover ul { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.semester-popover li { display: grid; grid-template-columns: 42px 1fr auto; align-items: center; gap: 7px; }
+.history-term { font-size: 10px; font-weight: 800; letter-spacing: .05em; }
+.history-status { font-size: 10px; font-weight: 650; }
+.history-status-current { color: #1A6E3A; }
+.history-status-upcoming { color: #8A6710; }
+.history-status-previous { color: #7A8491; }
+.history-first {
+  border-radius: 10px;
+  padding: 2px 5px;
+  background: #F3E8ED;
+  color: #9E1745;
+  font-size: 8px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (max-width: 440px) {
+  .semester-badge-status { display: none; }
+  .semester-popover { width: 210px; }
+}
+
 /* Course grid with bottom margin override */
 .course-grid.final {
   margin-bottom: 0;
