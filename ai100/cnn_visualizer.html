@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CNN Visualizer</title>
+<style>
+  :root {
+    --green:#1f7a46; --green-dark:#165c35; --green-soft:#eaf6ef;
+    --ink:#17201b; --muted:#66706a; --line:#dce7e0; --page:#f4f8f5;
+    --blue:#2673c9; --amber:#d98213;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; background:var(--page); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+  button, select { font:inherit; }
+  .shell { width:min(1180px,calc(100% - 32px)); margin:0 auto; padding:28px 0 40px; }
+  .eyebrow { color:var(--green); font-size:11px; font-weight:800; letter-spacing:.13em; text-transform:uppercase; }
+  h1 { margin:5px 0 6px; font-size:clamp(25px,4vw,38px); letter-spacing:-.035em; }
+  .intro { margin:0; color:var(--muted); font-size:14px; line-height:1.6; max-width:760px; }
+  .controls { display:flex; flex-wrap:wrap; align-items:end; gap:12px; margin:22px 0 14px; }
+  .control { display:grid; gap:5px; }
+  label { color:var(--muted); font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  select, button { min-height:38px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); padding:0 12px; }
+  button { cursor:pointer; font-weight:700; transition:.15s ease; }
+  button:hover { border-color:var(--green); color:var(--green); }
+  button.primary { border-color:var(--green); background:var(--green); color:#fff; }
+  button.primary:hover { background:var(--green-dark); color:#fff; }
+  button.toggle[aria-pressed="true"] { border-color:var(--blue); background:#edf4ff; color:var(--blue); }
+  button:disabled { cursor:not-allowed; opacity:.45; }
+  .progress { flex:1; min-width:210px; }
+  .progress-row { display:flex; justify-content:space-between; color:var(--muted); font-size:11px; margin-bottom:7px; }
+  .track { height:6px; overflow:hidden; border-radius:9px; background:#dfe8e2; }
+  .track > div { height:100%; width:11.11%; background:var(--green); transition:width .25s ease; }
+  .stage { display:grid; grid-template-columns:minmax(220px,1fr) 74px minmax(185px,.78fr) 74px minmax(185px,.78fr); align-items:center; gap:12px; }
+  .panel { height:100%; min-width:0; background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px; box-shadow:0 8px 28px rgba(21,68,41,.06); }
+  .panel-head { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; margin-bottom:14px; }
+  .panel-title { font-size:14px; font-weight:800; }
+  .panel-note { color:var(--muted); font-size:10px; margin-top:3px; line-height:1.4; }
+  .chip { border-radius:999px; background:var(--green-soft); color:var(--green); padding:4px 8px; font-size:9px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; }
+  .view-toggle { display:flex; padding:2px; border:1px solid var(--line); border-radius:8px; background:#f3f6f4; }
+  .view-toggle button { min-height:25px; border:0; border-radius:6px; background:transparent; padding:0 8px; color:var(--muted); font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; }
+  .view-toggle button.active { background:#fff; color:var(--green); box-shadow:0 1px 4px rgba(0,0,0,.1); }
+  .grid { display:grid; gap:4px; width:100%; aspect-ratio:1; }
+  .grid.input { grid-template-columns:repeat(5,1fr); }
+  .grid.kernel,.grid.output { grid-template-columns:repeat(3,1fr); }
+  .cell { display:grid; place-items:center; min-width:0; border:1px solid #dde5df; border-radius:5px; background:#f7faf8; color:#4f5b54; font-size:clamp(10px,1.4vw,15px); font-weight:700; transition:.2s ease; }
+  .cell-detail { display:none; font-size:clamp(7px,.75vw,10px); font-weight:700; line-height:1.2; text-align:center; white-space:nowrap; }
+  .input.detail .cell.window { grid-template-rows:auto auto; align-content:center; gap:2px; }
+  .input.detail .cell.window > .cell-value { font-size:clamp(9px,1vw,12px); opacity:.8; }
+  .input.detail .cell.window .cell-detail { display:block; }
+  .input .cell.on { background:#334b3d; border-color:#334b3d; color:#fff; }
+  .input .cell.window { outline:3px solid var(--amber); outline-offset:-3px; }
+  .input.image-view { gap:0; overflow:hidden; border:1px solid #bfcac3; border-radius:8px; image-rendering:pixelated; }
+  .input.image-view .cell { border:0; border-radius:0; background:#f8faf8; color:transparent; }
+  .input.image-view .cell.on { background:#273b30; }
+  .input.image-view .cell.window { outline:0; box-shadow:inset 0 0 0 1px rgba(217,130,19,.3); }
+  .kernel .cell { background:var(--green-soft); border-color:#bee0ca; color:var(--green-dark); }
+  .kernel .cell.active { background:#cfead8; transform:scale(1.04); }
+  .cell.pair-focus { outline:4px solid var(--amber); outline-offset:-2px; transform:scale(1.08); z-index:2; box-shadow:0 5px 16px rgba(217,130,19,.3); }
+  .output .cell { background:#edf4ff; border-color:#cadcf2; color:var(--blue); }
+  .output .cell.pending { background:#f7f9f8; border-color:#e5eae7; color:#aab2ad; }
+  .output .cell.current { outline:3px solid var(--amber); outline-offset:-3px; background:#fff3df; color:#9b5700; }
+  .arrow { display:grid; place-items:center; color:var(--green); text-align:center; }
+  .arrow svg { width:35px; }
+  .arrow span { display:block; margin-top:7px; color:var(--muted); font-size:9px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .math { margin-top:14px; border:1px solid var(--line); border-radius:12px; background:#fff; padding:16px 18px; }
+  .math-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .equation { font-size:13px; line-height:1.6; color:var(--muted); }
+  .equation strong { color:var(--ink); }
+  .score { flex:0 0 auto; min-width:76px; padding:9px 12px; border-radius:9px; background:var(--green-soft); color:var(--green-dark); text-align:center; font-size:20px; font-weight:850; }
+  .score.pulse { animation:scorePulse .3s ease; }
+  .flying-token { position:fixed; z-index:1000; display:grid; place-items:center; min-width:42px; height:34px; padding:0 8px; border-radius:7px; pointer-events:none; font-size:12px; font-weight:850; box-shadow:0 8px 24px rgba(0,0,0,.2); }
+  .flying-token.pixel { background:#334b3d; color:#fff; }
+  .flying-token.weight { background:var(--green-soft); border:2px solid var(--green); color:var(--green-dark); }
+  .flying-token.sum { background:var(--amber); color:#fff; min-width:58px; }
+  @keyframes scorePulse { 50% { transform:scale(1.12); background:#fff0d6; color:#9b5700; } }
+  .explain { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px; }
+  .fact { border-top:3px solid var(--green); border-radius:9px; background:#fff; padding:14px 15px; box-shadow:0 4px 18px rgba(21,68,41,.05); }
+  .fact b { display:block; font-size:12px; margin-bottom:5px; }
+  .fact p { margin:0; color:var(--muted); font-size:11px; line-height:1.55; }
+  @media (max-width:850px) {
+    .stage { grid-template-columns:1fr 40px 1fr; }
+    .stage .panel:last-child { grid-column:1/-1; width:min(360px,100%); justify-self:center; }
+    .stage .arrow:nth-of-type(2) { display:none; }
+  }
+  @media (max-width:570px) {
+    .shell { width:min(100% - 20px,1180px); padding-top:18px; }
+    .stage { grid-template-columns:1fr; }
+    .arrow { transform:rotate(90deg); height:36px; }
+    .arrow span { display:none; }
+    .stage .panel:last-child { grid-column:auto; }
+    .stage .arrow:nth-of-type(2) { display:grid; }
+    .explain { grid-template-columns:1fr; }
+    .math-top { align-items:flex-start; }
+  }
+</style>
+</head>
+<body>
+<main class="shell">
+  <div class="eyebrow">Convolutional Neural Networks</div>
+  <h1>See how a CNN finds patterns</h1>
+  <p class="intro">Move a small filter across an image. At each position, the CNN multiplies matching cells, adds the results, and stores one number in a feature map.</p>
+
+  <div class="controls">
+    <div class="control">
+      <label for="imageSelect">Input pattern</label>
+      <select id="imageSelect">
+        <option value="vertical">Vertical line</option>
+        <option value="horizontal">Horizontal line</option>
+        <option value="cross">Cross</option>
+      </select>
+    </div>
+    <div class="control">
+      <label for="filterSelect">3 × 3 filter</label>
+      <select id="filterSelect">
+        <option value="vertical">Detect vertical edges</option>
+        <option value="horizontal">Detect horizontal edges</option>
+      </select>
+    </div>
+    <button id="prevBtn" aria-label="Previous convolution step">← Previous</button>
+    <button id="nextBtn" class="primary">Next step →</button>
+    <button id="autoBtn">Auto play</button>
+    <button id="resetBtn">Reset</button>
+    <button id="detailBtn" class="toggle" aria-pressed="false">Detail mode: Off</button>
+    <div class="progress">
+      <div class="progress-row"><span>Convolution progress</span><strong id="stepLabel">1 of 9</strong></div>
+      <div class="track"><div id="progressFill"></div></div>
+    </div>
+  </div>
+
+  <section class="stage" aria-label="Convolution visualization">
+    <article class="panel">
+      <div class="panel-head">
+        <div><div class="panel-title">Input image</div><div class="panel-note">5 × 5 pixels · highlighted area is the receptive field</div></div>
+        <div class="view-toggle" role="group" aria-label="Input display mode">
+          <button id="imageViewBtn" type="button">Image</button>
+          <button id="pixelViewBtn" type="button" class="active">Pixels</button>
+        </div>
+      </div>
+      <div class="grid input" id="inputGrid"></div>
+    </article>
+    <div class="arrow" aria-hidden="true"><div><svg viewBox="0 0 40 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10h32M27 3l7 7-7 7"/></svg><span>Scan</span></div></div>
+    <article class="panel">
+      <div class="panel-head"><div><div class="panel-title">Convolution filter</div><div class="panel-note">3 × 3 learned weights</div></div><span class="chip">Kernel</span></div>
+      <div class="grid kernel" id="kernelGrid"></div>
+    </article>
+    <div class="arrow" aria-hidden="true"><div><svg viewBox="0 0 40 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10h32M27 3l7 7-7 7"/></svg><span>Produce</span></div></div>
+    <article class="panel">
+      <div class="panel-head"><div><div class="panel-title">Feature map</div><div class="panel-note">3 × 3 activation output</div></div><span class="chip">Output</span></div>
+      <div class="grid output" id="outputGrid"></div>
+    </article>
+  </section>
+
+  <section class="math" aria-live="polite">
+    <div class="math-top">
+      <div class="equation"><strong id="positionText">Position (1, 1)</strong><br><span id="equationText"></span></div>
+      <div class="score" id="score">0</div>
+    </div>
+  </section>
+
+  <section class="explain">
+    <div class="fact"><b>1. Local receptive field</b><p>The filter looks at only 3 × 3 pixels at a time, helping it notice small local patterns.</p></div>
+    <div class="fact"><b>2. Shared weights</b><p>The same nine filter values scan the entire image, so the pattern can be found anywhere.</p></div>
+    <div class="fact"><b>3. Feature hierarchy</b><p>Later CNN layers combine simple edges into textures, shapes, objects, and predictions.</p></div>
+  </section>
+</main>
+<script>
+const images = {
+  vertical: [[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0]],
+  horizontal: [[0,0,0,0,0],[0,0,0,0,0],[1,1,1,1,1],[0,0,0,0,0],[0,0,0,0,0]],
+  cross: [[0,0,1,0,0],[0,0,1,0,0],[1,1,1,1,1],[0,0,1,0,0],[0,0,1,0,0]]
+};
+const kernels = {
+  vertical: [[-1,0,1],[-1,0,1],[-1,0,1]],
+  horizontal: [[-1,-1,-1],[0,0,0],[1,1,1]]
+};
+const inputGrid = document.querySelector('#inputGrid');
+const kernelGrid = document.querySelector('#kernelGrid');
+const outputGrid = document.querySelector('#outputGrid');
+const imageSelect = document.querySelector('#imageSelect');
+const filterSelect = document.querySelector('#filterSelect');
+let step = 0, timer = null, detailMode = false, inputView = 'pixels';
+
+function convolve(image,kernel,row,col) {
+  let sum = 0, parts = [];
+  for (let r=0;r<3;r++) for (let c=0;c<3;c++) {
+    const product = image[row+r][col+c] * kernel[r][c];
+    sum += product;
+    parts.push(`${image[row+r][col+c]}×${format(kernel[r][c])}`);
+  }
+  return {sum,parts};
+}
+function format(n) { return typeof n !== 'number' ? n : Number.isInteger(n) ? n : n.toFixed(2); }
+function results() {
+  const image=images[imageSelect.value], kernel=kernels[filterSelect.value], out=[];
+  for(let r=0;r<3;r++) for(let c=0;c<3;c++) out.push(convolve(image,kernel,r,c));
+  return out;
+}
+function cell(value,classes='',detail='') {
+  const el=document.createElement('div'); el.className=`cell ${classes}`;
+  const valueEl=document.createElement('span'); valueEl.className='cell-value'; valueEl.textContent=format(value); el.append(valueEl);
+  if(detail) { const detailEl=document.createElement('span'); detailEl.className='cell-detail'; detailEl.textContent=detail; el.append(detailEl); }
+  return el;
+}
+let animationEpoch = 0;
+function render(preparingAnimation=false) {
+  const image=images[imageSelect.value], kernel=kernels[filterSelect.value];
+  const row=Math.floor(step/3), col=step%3, out=results();
+  inputGrid.replaceChildren();
+  inputGrid.classList.toggle('detail',detailMode);
+  inputGrid.classList.toggle('image-view',inputView==='image');
+  image.forEach((line,r)=>line.forEach((value,c)=>{
+    const inWindow=r>=row&&r<row+3&&c>=col&&c<col+3;
+    const weight=inWindow?kernel[r-row][c-col]:null;
+    const detail=inWindow?`× ${format(weight)} = ${format(value*weight)}`:'';
+    inputGrid.append(cell(value,`${value?'on':''} ${inWindow?'window':''}`,detail));
+  }));
+  kernelGrid.replaceChildren();
+  kernel.flat().forEach((value,i)=>{ const el=cell(value,'active'); el.dataset.kernelIndex=i; kernelGrid.append(el); });
+  outputGrid.replaceChildren();
+  out.forEach((item,i)=>{
+    const shown=i<step?item.sum:i===step&&!preparingAnimation?item.sum:'·';
+    const el=cell(shown,i>step||i===step&&preparingAnimation?'pending':i===step?'current':'');
+    el.dataset.outputIndex=i; outputGrid.append(el);
+  });
+  document.querySelector('#positionText').textContent=`Position (${row+1}, ${col+1})`;
+  document.querySelector('#equationText').textContent=`${out[step].parts.join(' + ')} = ${format(out[step].sum)}`;
+  document.querySelector('#score').textContent=format(out[step].sum);
+  document.querySelector('#stepLabel').textContent=`${step+1} of 9`;
+  document.querySelector('#progressFill').style.width=`${(step+1)/9*100}%`;
+  document.querySelector('#prevBtn').disabled=step===0;
+  document.querySelector('#nextBtn').disabled=step===8;
+}
+function wait(ms) { return new Promise(resolve=>setTimeout(resolve,ms)); }
+function fly(source,target,label,type,targetOffset=0,duration=360) {
+  const from=source.getBoundingClientRect(), to=target.getBoundingClientRect();
+  const token=document.createElement('div'); token.className=`flying-token ${type}`; token.textContent=label;
+  token.style.left=`${from.left+from.width/2-21}px`; token.style.top=`${from.top+from.height/2-17}px`; document.body.append(token);
+  const dx=to.left+to.width/2-(from.left+from.width/2)+targetOffset, dy=to.top+to.height/2-(from.top+from.height/2);
+  const motion=token.animate([{transform:'translate(0,0) scale(.85)',opacity:.8},{transform:`translate(${dx}px,${dy}px) scale(1)`,opacity:1}],{duration,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+  return motion.finished.catch(()=>{}).then(()=>token.remove());
+}
+async function animateDetail() {
+  const epoch=++animationEpoch;
+  stopAuto(); render(true);
+  const image=images[imageSelect.value], kernel=kernels[filterSelect.value];
+  const row=Math.floor(step/3), col=step%3, scoreEl=document.querySelector('#score');
+  const outputEl=outputGrid.querySelector(`[data-output-index="${step}"]`);
+  let running=0;
+  scoreEl.textContent='0';
+  for(let i=0;i<9;i++) {
+    if(epoch!==animationEpoch) return;
+    const kr=Math.floor(i/3), kc=i%3, inputIndex=(row+kr)*5+col+kc;
+    const inputEl=inputGrid.children[inputIndex], kernelEl=kernelGrid.children[i];
+    const pixel=image[row+kr][col+kc], weight=kernel[kr][kc], product=pixel*weight;
+    inputEl.classList.add('pair-focus'); kernelEl.classList.add('pair-focus');
+    document.querySelector('#equationText').textContent=`Cell ${i+1}: ${format(pixel)} × ${format(weight)} = ${format(product)} · running total ${format(running)}`;
+    await Promise.all([fly(inputEl,scoreEl,format(pixel),'pixel',-24),fly(kernelEl,scoreEl,format(weight),'weight',24)]);
+    if(epoch!==animationEpoch) return;
+    running+=product; scoreEl.textContent=format(running); scoreEl.classList.remove('pulse'); void scoreEl.offsetWidth; scoreEl.classList.add('pulse');
+    inputEl.classList.remove('pair-focus'); kernelEl.classList.remove('pair-focus');
+    await wait(130);
+  }
+  if(epoch!==animationEpoch) return;
+  document.querySelector('#equationText').textContent=`All nine products add up to ${format(running)}. This activation becomes one feature-map cell.`;
+  await fly(scoreEl,outputEl,format(running),'sum',0,520);
+  if(epoch!==animationEpoch) return;
+  outputEl.classList.remove('pending'); outputEl.classList.add('current'); outputEl.querySelector('.cell-value').textContent=format(running);
+}
+function showStep() { detailMode ? animateDetail() : (++animationEpoch,render()); }
+function stopAuto() { clearInterval(timer); timer=null; document.querySelector('#autoBtn').textContent='Auto play'; }
+function reset() { stopAuto(); ++animationEpoch; step=0; showStep(); }
+document.querySelector('#prevBtn').addEventListener('click',()=>{ stopAuto(); ++animationEpoch; step=Math.max(0,step-1); showStep(); });
+document.querySelector('#nextBtn').addEventListener('click',()=>{ stopAuto(); ++animationEpoch; step=Math.min(8,step+1); showStep(); });
+document.querySelector('#resetBtn').addEventListener('click',reset);
+function setInputView(view) {
+  if(detailMode && view==='image') return;
+  inputView=view;
+  document.querySelector('#imageViewBtn').classList.toggle('active',view==='image');
+  document.querySelector('#pixelViewBtn').classList.toggle('active',view==='pixels');
+  ++animationEpoch; render();
+}
+document.querySelector('#imageViewBtn').addEventListener('click',()=>setInputView('image'));
+document.querySelector('#pixelViewBtn').addEventListener('click',()=>setInputView('pixels'));
+document.querySelector('#detailBtn').addEventListener('click',()=>{
+  detailMode=!detailMode;
+  const button=document.querySelector('#detailBtn');
+  button.setAttribute('aria-pressed',String(detailMode));
+  button.textContent=`Detail mode: ${detailMode?'On':'Off'}`;
+  document.querySelector('#autoBtn').disabled=detailMode;
+  document.querySelector('#imageViewBtn').disabled=detailMode;
+  if(detailMode) {
+    inputView='pixels';
+    document.querySelector('#imageViewBtn').classList.remove('active');
+    document.querySelector('#pixelViewBtn').classList.add('active');
+  }
+  showStep();
+});
+document.querySelector('#autoBtn').addEventListener('click',()=>{
+  if(timer) return stopAuto();
+  if(step===8) step=0;
+  document.querySelector('#autoBtn').textContent='Pause'; render();
+  timer=setInterval(()=>{ if(step===8) return stopAuto(); step++; render(); },850);
+});
+imageSelect.addEventListener('change',reset);
+filterSelect.addEventListener('change',reset);
+render();
+</script>
+</body>
+</html>
