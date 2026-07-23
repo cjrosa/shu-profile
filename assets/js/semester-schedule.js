@@ -47,16 +47,36 @@
       Previous: { metric: 'Taught', heading: 'Previously Taught Courses' }
     };
     const copy = labels[status] || labels.Upcoming;
-    document.getElementById('offeringCount').textContent = count;
-    document.getElementById('offeringStatus').textContent = copy.metric;
-    document.getElementById('courseSectionTitle').textContent = copy.heading;
-    document.getElementById('courseSectionTerm').textContent = SEMESTERS.FA26.label;
+    const offeringCount = document.getElementById('offeringCount');
+    const offeringStatus = document.getElementById('offeringStatus');
+    const courseSectionTitle = document.getElementById('courseSectionTitle');
+    const courseSectionTerm = document.getElementById('courseSectionTerm');
+    if (offeringCount) offeringCount.textContent = count;
+    if (offeringStatus) offeringStatus.textContent = copy.metric;
+    if (courseSectionTitle) courseSectionTitle.textContent = copy.heading;
+    if (courseSectionTerm) courseSectionTerm.textContent = SEMESTERS.FA26.label;
+  }
+
+  function initializeStatusCopy(today) {
+    document.querySelectorAll('[data-semester-status]').forEach(function (element) {
+      const status = statusFor(element.dataset.semesterStatus, today).toLowerCase();
+      const copy = element.dataset['status' + status.charAt(0).toUpperCase() + status.slice(1)];
+      if (copy) element.textContent = copy;
+      element.dataset.currentStatus = status;
+    });
+
+    document.querySelectorAll('[data-show-while-semester-upcoming]').forEach(function (element) {
+      const isUpcoming = statusFor(element.dataset.showWhileSemesterUpcoming, today) === 'Upcoming';
+      element.hidden = !isUpcoming;
+      element.setAttribute('aria-hidden', String(!isUpcoming));
+    });
   }
 
   function initializeSemesterHistory() {
     const today = easternDate();
     const cards = Array.from(document.querySelectorAll('[data-semesters]'));
     const primaryStatus = statusFor('FA26', today);
+    initializeStatusCopy(today);
     setPageSummary(primaryStatus, cards.filter(function (card) {
       return card.dataset.semesters.split(',').includes('FA26');
     }).length);

@@ -83,6 +83,7 @@ html { scroll-behavior: smooth; }
 
 .course-theme-cs112,
 body.theme-cs112 {
+  --semester-badge-ink: #A50D33;
   --course-accent: var(--course-cs112-accent);
   --course-accent-soft: var(--course-cs112-accent-soft);
   --course-accent-strong: var(--course-cs112-accent-strong);
@@ -100,6 +101,7 @@ body.theme-cs112 {
 
 .course-theme-cs339,
 body.theme-cs339 {
+  --semester-badge-ink: #285F8C;
   --course-accent: var(--course-cs339-accent);
   --course-accent-soft: var(--course-cs339-accent-soft);
   --course-accent-strong: var(--course-cs339-accent-strong);
@@ -117,6 +119,7 @@ body.theme-cs339 {
 
 .course-theme-cs432,
 body.theme-cs432 {
+  --semester-badge-ink: #0B5FA5;
   --course-accent: var(--course-cs432-accent);
   --course-accent-soft: var(--course-cs432-accent-soft);
   --course-accent-strong: var(--course-cs432-accent-strong);
@@ -134,6 +137,7 @@ body.theme-cs432 {
 
 .course-theme-ai100,
 body.theme-ai100 {
+  --semester-badge-ink: #236E45;
   --course-accent: var(--course-ai100-accent);
   --course-accent-soft: var(--course-ai100-accent-soft);
   --course-accent-strong: var(--course-ai100-accent-strong);
