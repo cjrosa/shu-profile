@@ -80,7 +80,6 @@
 
 <main class="main">
 
-
   <div class="cert-banner">
     <div class="cert-icon-box">
       <svg width="44" height="44" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.33492 1.37491C5.44717 1.04229 5.75909 0.818359 6.11014 0.818359H11.25L5.91513 16.6255C5.80287 16.9581 5.49095 17.182 5.13991 17.182H1.13968C0.579936 17.182 0.185466 16.6325 0.364461 16.1022L5.33492 1.37491Z" fill="url(#paint0_linear_6102_134469)"/><path d="M13.5517 11.4546H5.45126C5.1109 11.4546 4.94657 11.8715 5.19539 12.1037L10.4005 16.9618C10.552 17.1032 10.7515 17.1819 10.9587 17.1819H15.5453L13.5517 11.4546Z" fill="#0078D4"/><path d="M6.11014 0.818359C5.75909 0.818359 5.44717 1.04229 5.33492 1.37491L0.364461 16.1022C0.185466 16.6325 0.579936 17.182 1.13968 17.182H5.13991C5.49095 17.182 5.80287 16.9581 5.91513 16.6255L6.90327 13.6976L10.4005 16.9617C10.552 17.1032 10.7515 17.1818 10.9588 17.1818H15.5454L13.5517 11.4545H7.66032L11.25 0.818359H6.11014Z" fill="url(#paint1_linear_6102_134469)"/><path d="M12.665 1.37478C12.5528 1.04217 12.2409 0.818237 11.8898 0.818237H6.13629H6.16254C6.51358 0.818237 6.82551 1.04217 6.93776 1.37478L11.9082 16.1021C12.0872 16.6324 11.6927 17.1819 11.133 17.1819H11.0454H16.8603C17.42 17.1819 17.8145 16.6324 17.6355 16.1021L12.665 1.37478Z" fill="url(#paint2_linear_6102_134469)"/><defs><linearGradient id="paint0_linear_6102_134469" x1="6.07512" y1="1.38476" x2="0.738178" y2="17.1514" gradientUnits="userSpaceOnUse"><stop stop-color="#0D3B75"/><stop offset="1" stop-color="#1A5CA8"/></linearGradient><linearGradient id="paint1_linear_6102_134469" x1="10.3402" y1="11.4564" x2="9.107" y2="11.8734" gradientUnits="userSpaceOnUse"><stop stop-opacity="0.3"/><stop offset="0.0711768" stop-opacity="0.2"/><stop offset="0.321031" stop-opacity="0.1"/><stop offset="0.623053" stop-opacity="0.05"/><stop offset="1" stop-opacity="0"/></linearGradient><linearGradient id="paint2_linear_6102_134469" x1="9.45858" y1="1.38467" x2="15.3168" y2="16.9926" gradientUnits="userSpaceOnUse"><stop stop-color="#3CCBF4"/><stop offset="1" stop-color="#2892DF"/></linearGradient></defs></svg>
@@ -92,6 +91,25 @@
         <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,8 5,12 15,4"/></svg>
         Built on a decade of firsthand Azure architecture experience
       </div>
+    </div>
+  </div>
+
+  <!-- AI course assistant -->
+  <div class="search-bar-wrap">
+    <div class="search-bar-inner">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.5" cy="6.5" r="4.5"/><line x1="10.5" y1="10.5" x2="14" y2="14"/></svg>
+      <input id="ai-search-input" class="search-input" type="text" placeholder="Ask a question about cloud computing &mdash; e.g. &quot;when should I use Azure Functions?&quot;" autocomplete="off" />
+      <button id="ai-search-btn" class="search-btn" onclick="handleSearch()">
+        Ask
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg>
+      </button>
+    </div>
+    <div class="search-hint-row">
+      <span class="search-hint">Powered by Claude &nbsp;&middot;&nbsp; answers scoped to CS432 cloud computing topics</span>
+      <button id="btn-last-result" class="search-last-btn" onclick="openAiDrawer(null)" style="display:none">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4h14M1 8h10M1 12h6"/></svg>
+        Last result
+      </button>
     </div>
   </div>
 
@@ -317,16 +335,18 @@ function appendMessage(html, cls) {
 }
 
 async function callClaude(messages) {
-  const SYSTEM = `You are a concise, friendly teaching assistant for CS432 Cloud Computing at Sacred Heart University.
-Answer questions about: arrays, linked lists, stacks, queues, binary trees, binary search trees (BST), AVL trees and rotations, heaps (max/min, sift-up/down, array representation), hash tables (chaining, linear probing, quadratic probing, clustering), graphs (BFS, DFS, weighted), recursion, Big-O complexity, and Python classes/OOP.
+  const SYSTEM = `You are a concise, expert teaching assistant for CS432 Cloud Computing at Sacred Heart University.
+Professor Chris Rosa is the primary instructor for CS432. Do not claim to be the instructor or frame yourself as replacing the instructor.
+Answer questions about cloud concepts and the course's Microsoft Azure topics: IaaS, PaaS, and SaaS; public, private, and hybrid clouds; shared responsibility; regions, availability zones, subscriptions, resource groups, and Azure Resource Manager; virtual machines, App Service, Azure Functions, Logic Apps, and containers; Blob, File, and Queue storage; virtual networks, network security groups, VPN Gateway, Load Balancer, DNS, Application Gateway, and ExpressRoute; Microsoft Entra ID, role-based access control, multifactor authentication, Conditional Access, Key Vault, Defender for Cloud, and Azure Policy; Azure SQL Database; Azure Monitor, Log Analytics, Kusto Query Language, dashboards, and alerts; pricing, budgets, tagging, governance, reliability, and cost optimization; web services, integration, and cloud deployment or CI/CD practices.
 Rules:
-- Be beginner-friendly. This is a 100-level course.
-- Use Python examples where helpful.
-- Be concise: 2-4 short paragraphs maximum.
-- You may use markdown when helpful: headings, bold, italics, links, inline code, fenced code blocks, and simple lists.
-- If outside CS432 scope, politely redirect.
-- End with a single line starting "TOOL:" naming the most relevant tool from this list, or "TOOL:none":
-  BST Insert Animation, Insert Order Effect, BST Search, BST Delete (Simple), BST Delete (Two Children), BST Violations, Tree Traversals, Level-Order Traversal, AVL Rotations, Heap Build & Insert, Reheap Up & Down, Heap Array Indexing, Hash Table Chaining, Linear Probing & Clustering, Quadratic Probing, Graph Algorithm Visualizer`;
+- Treat this as an upper-level course: explain the reasoning and tradeoffs behind architecture choices while keeping the language clear and student-friendly.
+- Prefer secure, reliable, and cost-aware Azure practices. Distinguish concepts from portal steps, CLI commands, code, or architecture examples when relevant.
+- Define acronyms on first use and call out important shared-responsibility, security, or cost implications.
+- Keep answers concise but complete: 2-4 short paragraphs maximum, unless the student asks for a walkthrough, comparison, or code example that needs more space.
+- You may use markdown when helpful: headings, bold, italics, links, inline code, fenced code blocks, tables, and simple lists.
+- If a question is outside CS432 or cloud-computing scope, politely redirect it to the closest relevant course concept.
+- Do not invent course policies, assignment requirements, Azure prices, service limits, or portal details. If current information is required and you are uncertain, say that it should be verified in the official Microsoft Azure documentation.
+- End with a single line exactly as "TOOL:none".`;
 
   const response = await fetch(PROXY_URL, {
     method: 'POST',
