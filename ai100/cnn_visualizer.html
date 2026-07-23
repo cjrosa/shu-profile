@@ -116,6 +116,7 @@
         <option value="vertical">Vertical line</option>
         <option value="horizontal">Horizontal line</option>
         <option value="cross">Cross</option>
+        <option value="x">X</option>
       </select>
     </div>
     <div class="control">
@@ -178,7 +179,8 @@
 const images = {
   vertical: [[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0]],
   horizontal: [[0,0,0,0,0],[0,0,0,0,0],[1,1,1,1,1],[0,0,0,0,0],[0,0,0,0,0]],
-  cross: [[0,0,1,0,0],[0,0,1,0,0],[1,1,1,1,1],[0,0,1,0,0],[0,0,1,0,0]]
+  cross: [[0,0,1,0,0],[0,0,1,0,0],[1,1,1,1,1],[0,0,1,0,0],[0,0,1,0,0]],
+  x: [[1,0,0,0,1],[0,1,0,1,0],[0,0,1,0,0],[0,1,0,1,0],[1,0,0,0,1]]
 };
 const kernels = {
   vertical: [[-1,0,1],[-1,0,1],[-1,0,1]],
