@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="../assets/css/components/prof-card.css">
 <link rel="stylesheet" href="../assets/css/components/buttons-badges.css">
 <link rel="stylesheet" href="../assets/css/components/course-banner.css">
+<link rel="stylesheet" href="../assets/css/components/semester-history.css">
 <link rel="stylesheet" href="../assets/css/components/search.css">
 <link rel="stylesheet" href="../assets/css/components/cards.css">
 <link rel="stylesheet" href="../assets/css/components/accordion.css">
@@ -58,12 +59,14 @@
 </section>
 
 <div class="course-banner">
-  <div class="course-banner-inner">
+  <div class="course-banner-inner" data-course="CS339" data-semesters="FA26,SP26">
     <div class="course-banner-left">
       <div class="course-desc-label">Course Description &nbsp;&middot;&nbsp; <a href="https://sacredheart.smartcatalogiq.com/en/2024-2025/2024-2025-undergraduate-catalog/courses/cs-computer-science-and-information-technology/300/cs-339" target="_blank" class="catalog-link">Undergraduate Catalog</a></div>
       <p class="course-desc-text">Students study networks and data communication concentrating on the Internet model. This is a laboratory-based course that includes projects implemented on both Unix and Windows machines. Topics such as the Internet protocol stack, hardware, routing, circuit-switching and packet-switching networks, multiplexing, error handling, and WiFi are among those studied. Students use packet sniffing tools to design and simulate networks.</p>
     </div>
-    <div class="course-meta-pills">
+    <div class="course-banner-side">
+      <span class="semester-history" data-semester-history></span>
+      <div class="course-meta-pills">
       <div class="course-pill">
         <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><polyline points="8,4 8,8 11,10"/></svg>
         3 Credits
@@ -76,9 +79,6 @@
         <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="2" width="14" height="12" rx="1"/><line x1="5" y1="6" x2="11" y2="6"/><line x1="5" y1="9" x2="9" y2="9"/></svg>
         Lab-Based
       </div>
-      <div class="course-pill">
-        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="14" height="10" rx="1"/><polyline points="1,6 8,10 15,6"/></svg>
-        All Semesters
       </div>
     </div>
   </div>
@@ -587,6 +587,7 @@
 </div>
 
 <script src="../assets/js/components/markdown-renderer.js"></script>
+<script src="../assets/js/semester-schedule.js"></script>
 <script>
 // -- Proxy URL -------------------------------------------------
 const PROXY_URL = 'https://red-union-6b9e.crosa.workers.dev';

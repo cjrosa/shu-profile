@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="../assets/css/components/prof-card.css">
 <link rel="stylesheet" href="../assets/css/components/buttons-badges.css">
 <link rel="stylesheet" href="../assets/css/components/course-banner.css">
+<link rel="stylesheet" href="../assets/css/components/semester-history.css">
 <link rel="stylesheet" href="../assets/css/components/search.css">
 <link rel="stylesheet" href="../assets/css/components/cards.css">
 <link rel="stylesheet" href="../assets/css/components/accordion.css">
@@ -54,12 +55,14 @@
 </section>
 
 <div class="course-banner">
-  <div class="course-banner-inner">
+  <div class="course-banner-inner" data-course="AI100" data-semesters="FA26" data-first-offering="FA26">
     <div class="course-banner-left">
       <div class="course-desc-label">Course Description &nbsp;&middot;&nbsp; <a href="https://sacredheart.smartcatalogiq.com/en/2025-2026/2025-2026-undergraduate-catalog/courses/ai-artificial-intelligence/100/ai-100" target="_blank" rel="noopener noreferrer" style="color:inherit;">Undergraduate Catalog</a></div>
       <p class="course-desc-text">This course provides an introduction to the history, terminology, and foundational concepts of artificial intelligence (AI). Students will explore contemporary AI technologies and their applications across various industries, considering both the opportunities and risks associated with AI's growing influence. Special attention is given to ethical tensions, data privacy, and broader societal challenges. Students gain introductory exposure to machine learning concepts and engage in hands-on learning in the AI Lab, building a strong base for deeper exploration in later courses. Designed for non-technical majors, the course aims to spark curiosity and strengthen critical thinking about AI's implications within each student's academic discipline. No prior computer science experience is required.</p>
     </div>
-    <div class="course-meta-pills">
+    <div class="course-banner-side">
+      <span class="semester-history" data-semester-history></span>
+      <div class="course-meta-pills">
       <div class="course-pill">
         <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><polyline points="8,4 8,8 11,10"/></svg>
         3 Credits
@@ -68,9 +71,6 @@
         <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h12v10H2z"/><line x1="8" y1="3" x2="8" y2="13"/></svg>
         Prereq: None
       </div>
-      <div class="course-pill">
-        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2l2 4 5 .7-3.5 3.5.8 5L8 13l-4.3 2.2.8-5L1 6.7 6 6z"/></svg>
-        Upcoming Course
       </div>
     </div>
   </div>
@@ -96,7 +96,7 @@
     </div>
   </div>
 
-  <div class="upcoming-banner">
+  <div class="upcoming-banner" data-show-while-semester-upcoming="FA26">
     <div class="upcoming-icon-box">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <rect x="4" y="5" width="16" height="15" rx="2.5" stroke="#9A3F12" stroke-width="1.6"/>
@@ -109,11 +109,11 @@
       </svg>
     </div>
     <div>
-      <div class="upcoming-title">Planned for FA26</div>
-      <p class="upcoming-desc">This page is live in advance so students can preview course direction and ask AI100 prep questions.</p>
+      <div class="upcoming-title" data-semester-status="FA26" data-status-upcoming="Planned for FA26" data-status-current="AI100 is underway" data-status-previous="First offered in FA26">Planned for FA26</div>
+      <p class="upcoming-desc" data-semester-status="FA26" data-status-upcoming="This page is live in advance so students can preview course direction and ask AI100 prep questions." data-status-current="The course is currently in session. Use this page to explore course topics and AI100 learning resources." data-status-previous="Explore the topics and learning resources from AI100's first offering.">This page is live in advance so students can preview course direction and ask AI100 prep questions.</p>
       <div class="upcoming-badge">
         <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,8 5,12 15,4"/></svg>
-        Course preview available now
+        <span data-semester-status="FA26" data-status-upcoming="Course preview available now" data-status-current="Course resources available now" data-status-previous="Course resources available">Course preview available now</span>
       </div>
     </div>
   </div>
@@ -187,6 +187,7 @@
 </div>
 
 <script src="../assets/js/components/markdown-renderer.js"></script>
+<script src="../assets/js/semester-schedule.js"></script>
 <script>
 const PROXY_URL = 'https://red-union-6b9e.crosa.workers.dev';
 

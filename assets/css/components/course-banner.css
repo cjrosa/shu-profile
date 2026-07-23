@@ -10,6 +10,13 @@
   justify-content: space-between; gap: 32px;
 }
 .course-banner-left { flex: 1; }
+.course-banner-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+}
 .course-desc-label {
   font-family: -apple-system, sans-serif; font-size: 9px; font-weight: 700;
   letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,0.5);
@@ -26,10 +33,19 @@
   color: rgba(255,255,255,0.88); line-height: 1.65; max-width: 620px;
 }
 .course-meta-pills { display: flex; flex-wrap: wrap; gap: 7px; flex-shrink: 0; align-self: center; }
+.course-banner-side .course-meta-pills { align-self: flex-end; justify-content: flex-end; }
 .course-pill {
   display: inline-flex; align-items: center; gap: 5px;
   background: rgba(255,255,255,0.18); border: 0.5px solid rgba(255,255,255,0.4);
   border-radius: 20px; padding: 4px 11px;
   font-family: -apple-system, sans-serif; font-size: 10px; font-weight: 600;
   color: rgba(255,255,255,0.95); white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .course-banner-inner { flex-direction: column; gap: 14px; }
+  .course-banner-side { width: 100%; align-items: flex-start; }
+  .course-banner-side .course-meta-pills { align-self: flex-start; justify-content: flex-start; }
+  .course-banner-side .semester-popover { right: auto; left: 0; }
+  .course-banner-side .semester-popover::before { right: auto; left: 18px; }
 }
