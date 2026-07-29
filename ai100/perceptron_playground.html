@@ -86,6 +86,32 @@
 
   .reset:hover { border-color: var(--green); }
 
+  .learning-brief {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    margin-bottom: 14px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--line);
+  }
+
+  .learning-brief div {
+    background: var(--panel);
+    padding: 13px 15px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .learning-brief strong {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--ink);
+    font-size: 12px;
+  }
+
   .mode-bar {
     display: flex;
     align-items: center;
@@ -124,6 +150,32 @@
     text-align: right;
   }
 
+  .first-run {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0 0 14px;
+    padding: 10px 14px;
+    border-left: 3px solid var(--orange);
+    background: var(--orange-soft);
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  .first-run strong {
+    flex: 0 0 auto;
+    color: var(--ink);
+  }
+
+  .first-run ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    margin: 0;
+    padding-left: 18px;
+  }
+
   .workspace {
     display: grid;
     grid-template-columns: minmax(350px, .9fr) minmax(450px, 1.25fr);
@@ -157,6 +209,17 @@
     color: var(--muted);
     font-size: 12px;
   }
+
+  .input-key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    margin: -5px 0 13px;
+    color: var(--muted);
+    font-size: 10px;
+  }
+
+  .input-key strong { color: var(--ink); }
 
   #people {
     display: grid;
@@ -600,6 +663,32 @@
     background: var(--green-soft);
   }
 
+  .takeaway {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 14px;
+    padding: 16px 18px;
+    border-radius: 14px;
+    background: var(--ink);
+    color: rgba(255, 255, 255, .78);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .takeaway strong {
+    display: block;
+    margin-bottom: 4px;
+    color: white;
+    font-size: 13px;
+  }
+
+  .neuron-panel.is-playing .calculation-strip,
+  .neuron-panel.is-playing .decision-strip {
+    opacity: .16;
+    transition: opacity .2s ease;
+  }
+
   .mode-flash { animation: mode-flash .55s ease-out; }
 
   @keyframes mode-flash {
@@ -642,6 +731,9 @@
     .mode-bar { align-items: stretch; flex-direction: column; }
     .mode-switch { display: grid; grid-template-columns: 1fr 1fr; }
     .mode-note { text-align: left; }
+    .learning-brief, .takeaway { grid-template-columns: 1fr; }
+    .first-run { align-items: flex-start; flex-direction: column; }
+    .first-run ol { display: grid; }
     .people-panel { padding: 14px; }
     .person { grid-template-columns: 32px minmax(0, 1fr) auto; padding: 10px; gap: 8px; }
     .avatar { width: 32px; height: 32px; }
@@ -672,10 +764,21 @@
     <div>
       <div class="eyebrow">A perceptron in everyday life</div>
       <h1>Should I go to Sally&rsquo;s Apizza?</h1>
-      <p>Each person supplies an input. Your trust in them supplies the weight. The neuron combines the weighted advice and compares the result with a threshold.</p>
+      <p>Use a familiar decision to see how a simple AI system combines information.</p>
     </div>
-    <button class="reset" id="reset" type="button">Reset example</button>
+    <button class="reset" id="reset" type="button">Start over</button>
   </header>
+
+  <section class="learning-brief" aria-label="Learning introduction">
+    <div>
+      <strong>Learning goal</strong>
+      See how a decision changes when every opinion counts equally versus when some opinions carry more weight.
+    </div>
+    <div>
+      <strong>What is a perceptron?</strong>
+      A perceptron is a simple artificial neuron: a numerical decision maker that combines inputs and applies a rule.
+    </div>
+  </section>
 
   <div class="mode-bar">
     <div class="mode-switch" role="group" aria-label="Decision mode">
@@ -685,11 +788,25 @@
     <div class="mode-note" id="mode-note">Every person counts equally: yes is +1, no is −1, and a positive total wins.</div>
   </div>
 
+  <section class="first-run" aria-label="Guided first run">
+    <strong>First time?</strong>
+    <ol>
+      <li>Press <b>Start</b> to count everyone&rsquo;s vote.</li>
+      <li>Switch to <b>Weighted advice</b>.</li>
+      <li>Notice how Charlie&rsquo;s trusted opinion changes the calculation.</li>
+    </ol>
+  </section>
+
   <section class="workspace" aria-label="Interactive perceptron">
     <section class="panel people-panel">
       <div class="panel-heading">
         <h2>Friends&rsquo; advice</h2>
         <span class="count" id="count"></span>
+      </div>
+      <div class="input-key" aria-label="Advice values">
+        <span><strong>Yes</strong> supports going</span>
+        <span><strong>No</strong> supports skipping</span>
+        <span><strong>Neutral</strong> adds nothing</span>
       </div>
       <div id="people"></div>
       <button class="add" id="add" type="button">+ Add another person</button>
@@ -740,6 +857,16 @@
     </div>
     <button class="challenge-button" id="load-challenge" type="button">Load example</button>
   </aside>
+  <section class="takeaway" aria-label="Key takeaway">
+    <div>
+      <strong>Key takeaway</strong>
+      A perceptron does not understand pizza. It combines numerical inputs using weights and a decision rule.
+    </div>
+    <div>
+      <strong>Why the setup matters</strong>
+      The result depends entirely on the inputs, weights, and threshold chosen by a person or learned from data.
+    </div>
+  </section>
   <div class="legend" aria-hidden="true"><span>Supports going</span><span class="against">Supports skipping</span></div>
 </main>
 
@@ -822,6 +949,7 @@
 
   function cancelPlayback() {
     playbackRun += 1;
+    neuronPanelEl.classList.remove("is-playing");
     startButtonEl.disabled = false;
     stepButtonEl.disabled = false;
     startButtonEl.textContent = "Start";
@@ -1086,6 +1214,7 @@
     startButtonEl.disabled = true;
     stepButtonEl.disabled = true;
     startButtonEl.textContent = "Playing…";
+    neuronPanelEl.classList.add("is-playing");
     hasStarted = true;
 
     for (let index = 0; index < people.length; index += 1) {
@@ -1103,6 +1232,7 @@
     startButtonEl.disabled = false;
     stepButtonEl.disabled = false;
     startButtonEl.textContent = "Replay";
+    neuronPanelEl.classList.remove("is-playing");
   });
 
   document.getElementById("load-challenge").addEventListener("click", () => {
