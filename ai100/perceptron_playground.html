@@ -718,9 +718,259 @@
 
   .legend .against::before { background: var(--red); }
 
+  .lesson-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 22px;
+    padding: 4px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel);
+  }
+
+  .lesson-tab {
+    flex: 1;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    padding: 10px 14px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .lesson-tab[aria-selected="true"] {
+    background: var(--green);
+    color: white;
+  }
+
+  .xor-intro {
+    max-width: 760px;
+    margin-bottom: 18px;
+  }
+
+  .xor-intro h1 {
+    margin-bottom: 8px;
+  }
+
+  .xor-intro p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+
+  .xor-rule {
+    margin: 14px 0 0;
+    padding: 11px 14px;
+    border-left: 3px solid var(--orange);
+    background: var(--orange-soft);
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .xor-layout {
+    display: grid;
+    grid-template-columns: minmax(270px, .7fr) minmax(420px, 1.3fr);
+    gap: 18px;
+    align-items: start;
+  }
+
+  .xor-controls {
+    padding: 20px;
+  }
+
+  .xor-controls h2, .xor-results h2 {
+    margin: 0 0 6px;
+    font-size: 16px;
+  }
+
+  .xor-controls > p, .xor-results > p {
+    margin: 0 0 16px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .xor-slider {
+    display: grid;
+    gap: 7px;
+    margin-top: 16px;
+  }
+
+  .xor-slider span {
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .xor-slider strong { color: var(--ink); }
+  .xor-slider input { width: 100%; accent-color: var(--green); }
+
+  .xor-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .xor-secondary {
+    border: 1px solid var(--green);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--green-dark);
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .xor-results { padding: 20px; }
+
+  .xor-cases {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .xor-case {
+    padding: 13px;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: var(--panel);
+    transition: transform .2s, border-color .2s, background .2s;
+  }
+
+  .xor-case.testing {
+    transform: translateY(-3px);
+    border-color: var(--orange);
+    background: var(--orange-soft);
+  }
+
+  .xor-case.correct { border-color: #94b7a4; }
+  .xor-case.wrong { border-color: #d8a19b; background: var(--red-soft); }
+
+  .xor-case-inputs {
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .xor-case-detail {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .xor-score {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--page);
+    color: var(--ink);
+    font-weight: 800;
+  }
+
+  .xor-score span {
+    display: block;
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .xor-reveal {
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--panel);
+  }
+
+  .xor-reveal h2 { margin: 0 0 6px; font-size: 16px; }
+  .xor-reveal p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+  .layer-demo {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    gap: 10px;
+    align-items: center;
+    margin-top: 16px;
+    text-align: center;
+  }
+
+  .layer-node {
+    padding: 12px 8px;
+    border-radius: 11px;
+    background: var(--green-soft);
+    color: var(--green-dark);
+    font-size: 12px;
+    font-weight: 800;
+    opacity: .38;
+    transition: opacity .2s, transform .2s, box-shadow .2s;
+  }
+
+  .layer-node.active {
+    opacity: 1;
+    transform: translateY(-3px);
+    box-shadow: 0 0 0 3px rgba(231, 121, 47, .22);
+  }
+
+  .layer-node.complete { opacity: 1; }
+
+  .layer-node small {
+    display: block;
+    margin-top: 3px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .layer-arrow { color: var(--green); font-size: 20px; }
+
+  .solution-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .solution-case {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--muted);
+    padding: 7px 10px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .solution-case[aria-pressed="true"] {
+    border-color: var(--green);
+    background: var(--green-soft);
+    color: var(--green-dark);
+  }
+
+  .solution-narration {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--orange-soft);
+    color: var(--ink);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
   @media (max-width: 860px) {
     .workspace { grid-template-columns: 1fr; }
     .neuron-panel { min-height: 480px; }
+    .xor-layout { grid-template-columns: 1fr; }
   }
 
   @media (max-width: 560px) {
@@ -741,6 +991,10 @@
     .decision-strip { grid-template-columns: 1fr; }
     .calculation-strip { grid-template-columns: 1fr; }
     .challenge { align-items: stretch; flex-direction: column; }
+    .lesson-tabs { flex-direction: column; }
+    .xor-cases { grid-template-columns: 1fr; }
+    .layer-demo { grid-template-columns: 1fr; }
+    .layer-arrow { transform: rotate(90deg); }
     .diagram, #network { min-height: 340px; }
   }
 
@@ -760,6 +1014,12 @@
 </head>
 <body>
 <main class="app">
+  <div class="lesson-tabs" role="tablist" aria-label="Perceptron activities">
+    <button class="lesson-tab" id="everyday-tab" type="button" role="tab" aria-selected="true" aria-controls="everyday-panel" data-tab="everyday">Everyday decision</button>
+    <button class="lesson-tab" id="xor-tab" type="button" role="tab" aria-selected="false" aria-controls="xor-panel" data-tab="xor">XOR challenge</button>
+  </div>
+
+  <section id="everyday-panel" role="tabpanel" aria-labelledby="everyday-tab">
   <header class="intro">
     <div>
       <div class="eyebrow">A perceptron in everyday life</div>
@@ -868,6 +1128,79 @@
     </div>
   </section>
   <div class="legend" aria-hidden="true"><span>Supports going</span><span class="against">Supports skipping</span></div>
+  </section>
+
+  <section id="xor-panel" role="tabpanel" aria-labelledby="xor-tab" hidden>
+    <header class="xor-intro">
+      <div class="eyebrow">Optional challenge &middot; A limit of one neuron</div>
+      <h1>Can one neuron learn every rule?</h1>
+      <p>Try to make one perceptron handle a rule called XOR. Adjust its two weights and threshold, then test all four possible combinations.</p>
+      <div class="xor-rule">The XOR rule: choose Go when exactly one friend says Yes&mdash;but not when both friends agree.</div>
+    </header>
+
+    <div class="xor-layout">
+      <section class="panel xor-controls">
+        <h2>Adjust the neuron</h2>
+        <p>Each friend can contribute either 0 for No or 1 for Yes.</p>
+        <label class="xor-slider">
+          <span><span>Friend A&rsquo;s weight</span><strong id="xor-w1-value">1</strong></span>
+          <input id="xor-w1" type="range" min="-3" max="3" step="1" value="1">
+        </label>
+        <label class="xor-slider">
+          <span><span>Friend B&rsquo;s weight</span><strong id="xor-w2-value">1</strong></span>
+          <input id="xor-w2" type="range" min="-3" max="3" step="1" value="1">
+        </label>
+        <label class="xor-slider">
+          <span><span>Decision threshold</span><strong id="xor-threshold-value">1</strong></span>
+          <input id="xor-threshold" type="range" min="-3" max="4" step="1" value="1">
+        </label>
+        <div class="xor-actions">
+          <button class="start-button" id="xor-test" type="button">Test all four</button>
+          <button class="xor-secondary" id="xor-best" type="button">Try a strong attempt</button>
+        </div>
+      </section>
+
+      <section class="panel xor-results">
+        <h2>Four situations</h2>
+        <p>Green means the neuron matches the XOR rule. Red means its decision differs from the rule.</p>
+        <div class="xor-cases" id="xor-cases"></div>
+        <div class="xor-score" id="xor-score" aria-live="polite"></div>
+      </section>
+    </div>
+
+    <section class="xor-reveal">
+      <h2>Why one neuron gets stuck</h2>
+      <p id="xor-explanation">Try different settings. Fixing one situation will eventually break another because a single perceptron can make only one simple dividing rule.</p>
+      <div class="xor-actions">
+        <button class="challenge-button" id="xor-reveal" type="button">Reveal the two-layer solution</button>
+      </div>
+      <div id="xor-layers" hidden>
+        <div class="solution-controls" role="group" aria-label="Choose an XOR situation">
+          <strong>Try:</strong>
+          <button class="solution-case" type="button" data-solution-case="0" aria-pressed="true">A No · B No</button>
+          <button class="solution-case" type="button" data-solution-case="1" aria-pressed="false">A Yes · B No</button>
+          <button class="solution-case" type="button" data-solution-case="2" aria-pressed="false">A No · B Yes</button>
+          <button class="solution-case" type="button" data-solution-case="3" aria-pressed="false">A Yes · B Yes</button>
+          <button class="challenge-button" id="xor-solution-next" type="button">Start solution</button>
+        </div>
+        <div class="layer-demo" aria-label="Two-layer XOR solution">
+          <div class="layer-node" id="layer-inputs">Friend inputs<small id="layer-inputs-value"></small></div>
+          <div class="layer-arrow" aria-hidden="true">&rarr;</div>
+          <div>
+            <div class="layer-node" id="layer-or">Neuron 1: OR<small id="layer-or-value">At least one says Yes</small></div>
+            <div class="layer-node" id="layer-nand" style="margin-top:8px;">Neuron 2: NAND<small id="layer-nand-value">Not both say Yes</small></div>
+          </div>
+          <div class="layer-arrow" aria-hidden="true">&rarr;</div>
+          <div class="layer-node" id="layer-final">Final neuron: AND<small id="layer-final-value">Both conditions must be true</small></div>
+        </div>
+        <div class="solution-narration" id="solution-narration" aria-live="polite">Choose a situation, then press Start solution.</div>
+        <div class="takeaway">
+          <div><strong>What changed?</strong>Two intermediate neurons created useful smaller decisions.</div>
+          <div><strong>Why layers matter</strong>A second layer combines those decisions and solves all four XOR situations.</div>
+        </div>
+      </div>
+    </section>
+  </section>
 </main>
 
 <script>
@@ -1287,7 +1620,161 @@
     render();
   });
 
+  const xorCases = [
+    { a: 0, b: 0, target: 0 },
+    { a: 1, b: 0, target: 1 },
+    { a: 0, b: 1, target: 1 },
+    { a: 1, b: 1, target: 0 }
+  ];
+  const xorW1El = document.getElementById("xor-w1");
+  const xorW2El = document.getElementById("xor-w2");
+  const xorThresholdEl = document.getElementById("xor-threshold");
+  const xorCasesEl = document.getElementById("xor-cases");
+  const xorScoreEl = document.getElementById("xor-score");
+
+  function renderXor() {
+    const w1 = Number(xorW1El.value);
+    const w2 = Number(xorW2El.value);
+    const threshold = Number(xorThresholdEl.value);
+    document.getElementById("xor-w1-value").textContent = w1;
+    document.getElementById("xor-w2-value").textContent = w2;
+    document.getElementById("xor-threshold-value").textContent = threshold;
+
+    let correct = 0;
+    xorCasesEl.innerHTML = xorCases.map((item, index) => {
+      const score = item.a * w1 + item.b * w2;
+      const prediction = score >= threshold ? 1 : 0;
+      const matches = prediction === item.target;
+      if (matches) correct += 1;
+      return `
+        <div class="xor-case ${matches ? "correct" : "wrong"}" data-xor-case="${index}">
+          <div class="xor-case-inputs">A: ${item.a ? "Yes" : "No"} &nbsp;·&nbsp; B: ${item.b ? "Yes" : "No"}</div>
+          <div class="xor-case-detail"><span>Wanted: ${item.target ? "Go" : "Skip"}</span><span>Neuron: ${prediction ? "Go" : "Skip"}</span></div>
+          <div class="xor-case-detail"><span>Score ${score} ${prediction ? "≥" : "<"} ${threshold}</span><strong>${matches ? "Matches the rule" : "Doesn’t match the rule"}</strong></div>
+        </div>`;
+    }).join("");
+
+    xorScoreEl.innerHTML = `${correct} of 4 situations match the XOR rule<span>${correct === 4
+      ? "All four situations match the rule."
+      : "One neuron always misses at least one XOR situation."}</span>`;
+  }
+
+  [xorW1El, xorW2El, xorThresholdEl].forEach(control => {
+    control.addEventListener("input", renderXor);
+  });
+
+  document.getElementById("xor-best").addEventListener("click", () => {
+    xorW1El.value = 1;
+    xorW2El.value = 1;
+    xorThresholdEl.value = 1;
+    renderXor();
+  });
+
+  document.getElementById("xor-test").addEventListener("click", async event => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    renderXor();
+    const cards = Array.from(xorCasesEl.querySelectorAll(".xor-case"));
+    for (const card of cards) {
+      card.classList.add("testing");
+      await waitForAnimation(520);
+      card.classList.remove("testing");
+    }
+    button.disabled = false;
+  });
+
+  let solutionCaseIndex = 0;
+  let solutionStep = -1;
+
+  function renderXorSolution() {
+    const item = xorCases[solutionCaseIndex];
+    const orValue = item.a || item.b ? 1 : 0;
+    const nandValue = item.a && item.b ? 0 : 1;
+    const finalValue = orValue && nandValue ? 1 : 0;
+    const stages = [
+      document.getElementById("layer-inputs"),
+      document.getElementById("layer-or"),
+      document.getElementById("layer-nand"),
+      document.getElementById("layer-final")
+    ];
+
+    document.getElementById("layer-inputs-value").textContent = `A: ${item.a ? "Yes" : "No"} · B: ${item.b ? "Yes" : "No"}`;
+    document.getElementById("layer-or-value").textContent = `At least one Yes? ${orValue ? "Yes" : "No"}`;
+    document.getElementById("layer-nand-value").textContent = `Not both Yes? ${nandValue ? "Yes" : "No"}`;
+    document.getElementById("layer-final-value").textContent = `Both conditions true? ${finalValue ? "Yes → Go" : "No → Skip"}`;
+
+    stages.forEach((stage, index) => {
+      stage.classList.toggle("active", index === solutionStep);
+      stage.classList.toggle("complete", index < solutionStep);
+    });
+
+    const narration = document.getElementById("solution-narration");
+    const nextButton = document.getElementById("xor-solution-next");
+    if (solutionStep < 0) {
+      narration.textContent = "Choose a situation, then press Start solution.";
+      nextButton.textContent = "Start solution";
+    } else if (solutionStep === 0) {
+      narration.textContent = `Start with the two inputs: Friend A says ${item.a ? "Yes" : "No"} and Friend B says ${item.b ? "Yes" : "No"}.`;
+      nextButton.textContent = "Next: OR neuron";
+    } else if (solutionStep === 1) {
+      narration.textContent = `The OR neuron asks, “Did at least one friend say Yes?” The answer is ${orValue ? "Yes" : "No"}.`;
+      nextButton.textContent = "Next: NAND neuron";
+    } else if (solutionStep === 2) {
+      narration.textContent = `The NAND neuron asks, “Did we avoid having both friends say Yes?” The answer is ${nandValue ? "Yes" : "No"}.`;
+      nextButton.textContent = "Next: final decision";
+    } else {
+      narration.textContent = `The final AND neuron combines both answers. It chooses ${finalValue ? "Go" : "Skip"}, which matches the XOR rule for this situation.`;
+      nextButton.textContent = "Restart solution";
+    }
+  }
+
+  document.querySelectorAll("[data-solution-case]").forEach(button => {
+    button.addEventListener("click", () => {
+      solutionCaseIndex = Number(button.dataset.solutionCase);
+      solutionStep = -1;
+      document.querySelectorAll("[data-solution-case]").forEach(item => {
+        item.setAttribute("aria-pressed", String(item === button));
+      });
+      renderXorSolution();
+    });
+  });
+
+  document.getElementById("xor-solution-next").addEventListener("click", () => {
+    solutionStep = solutionStep >= 3 ? -1 : solutionStep + 1;
+    renderXorSolution();
+  });
+
+  document.getElementById("xor-reveal").addEventListener("click", event => {
+    const layers = document.getElementById("xor-layers");
+    layers.hidden = !layers.hidden;
+    event.currentTarget.textContent = layers.hidden ? "Reveal the two-layer solution" : "Hide the two-layer solution";
+    if (!layers.hidden) renderXorSolution();
+  });
+
+  const lessonTabs = Array.from(document.querySelectorAll(".lesson-tab"));
+  function selectLessonTab(tabName) {
+    cancelPlayback();
+    lessonTabs.forEach(tab => {
+      const selected = tab.dataset.tab === tabName;
+      tab.setAttribute("aria-selected", String(selected));
+      document.getElementById(tab.getAttribute("aria-controls")).hidden = !selected;
+    });
+  }
+
+  lessonTabs.forEach((tab, index) => {
+    tab.addEventListener("click", () => selectLessonTab(tab.dataset.tab));
+    tab.addEventListener("keydown", event => {
+      if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+      event.preventDefault();
+      const direction = event.key === "ArrowRight" ? 1 : -1;
+      const next = lessonTabs[(index + direction + lessonTabs.length) % lessonTabs.length];
+      selectLessonTab(next.dataset.tab);
+      next.focus();
+    });
+  });
+
   render();
+  renderXor();
 })();
 </script>
 </body>
