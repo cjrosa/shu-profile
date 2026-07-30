@@ -46,6 +46,59 @@
       color: var(--aix-ink);
       font-size: 12px;
     }
+    .aix-card-head-tools {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .aix-add-applicant {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border: 1px solid var(--aix-line);
+      border-radius: 50%;
+      background: #fff;
+      color: var(--aix-blue);
+      font-size: 20px;
+      font-weight: 500;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .aix-add-applicant:hover,
+    .aix-add-applicant:focus-visible {
+      border-color: var(--aix-blue);
+      background: var(--aix-soft);
+      outline: none;
+    }
+    .aix-add-applicant::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      z-index: 30;
+      top: calc(100% + 8px);
+      right: 0;
+      width: max-content;
+      max-width: 190px;
+      padding: 7px 9px;
+      border-radius: 7px;
+      background: var(--aix-ink);
+      color: #fff;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .18);
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.3;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(-3px);
+      transition: opacity .15s ease, transform .15s ease;
+    }
+    .aix-add-applicant:hover::after,
+    .aix-add-applicant:focus-visible::after {
+      opacity: 1;
+      transform: translateY(0);
+    }
     @media (max-width: 720px) {
       .aix-learning-brief, .aix-takeaway { grid-template-columns: 1fr; }
     }
@@ -68,7 +121,7 @@
     <section class="aix-challenge aix-card" style="margin-bottom:15px"><div class="aix-card-body" style="display:flex;align-items:center;justify-content:space-between;gap:14px"><div><b>Make your prediction first</b><div class="aix-learn-note">Will this applicant be approved? Inspect the inputs, then reveal the network's answer.</div></div><div class="aix-actions"><button class="aix-btn" id="newApplicationBtn">New application</button><button class="aix-btn primary" id="revealBtn">Reveal answer</button></div></div></section>
     <div class="aix-grid">
       <div class="aix-stack">
-        <section class="aix-card"><div class="aix-card-head"><h2>Applicant information</h2><span>Signals in</span></div><div class="aix-card-body"><div id="inputs"></div><div id="applicationActions"></div></div></section>
+        <section class="aix-card"><div class="aix-card-head"><h2>Applicant information</h2><div class="aix-card-head-tools"><span>Signals in</span><button class="aix-add-applicant" id="addApplicantBtn" type="button" aria-label="Add a random applicant" data-tooltip="Add a random applicant">+</button></div></div><div class="aix-card-body"><div id="inputs"></div><div id="applicationActions"></div></div></section>
         <section class="aix-card student-only"><div class="aix-card-head"><h2>Learning controls</h2><span>Supervised example</span></div><div class="aix-card-body"><div class="aix-field"><label for="knownOutcome"><span>Known outcome for this applicant</span></label><select id="knownOutcome" style="width:100%"><option value="approved">Approved</option><option value="declined">Declined</option></select></div><div class="aix-actions"><button class="aix-btn primary" id="forwardBtn">Forward pass</button><button class="aix-btn" id="trainOne">Train on example ×1</button><button class="aix-btn" id="trainTen">Train on example ×10</button><button class="aix-btn" id="randomBtn">Randomize weights</button><button class="aix-btn danger" id="resetBtn">Reset</button></div><p class="aix-learn-note" id="learningNote">Training compares the prediction with the known outcome above, then adjusts the connections toward that outcome.</p><hr style="border:0;border-top:1px solid var(--aix-line);margin:16px 0"><div class="aix-field"><label for="datasetType"><span>Animated dataset training</span></label><select id="datasetType" style="width:100%"><option value="balanced">Balanced examples</option><option value="biased">Biased examples</option></select></div><div class="aix-actions"><button class="aix-btn primary" id="trainDatasetOne">Next example</button><button class="aix-btn" id="trainDataset25">Train 25</button><button class="aix-btn" id="autoTrain">Auto train</button><select id="trainingSpeed" aria-label="Training animation speed"><option value="1000">Slow</option><option value="550" selected>Normal</option><option value="250">Fast</option></select></div><div class="aix-training-stats"><div class="aix-training-stat"><b id="datasetCount">0</b><span>Examples</span></div><div class="aix-training-stat"><b id="datasetAccuracy">—</b><span>Accuracy</span></div><div class="aix-training-stat"><b id="datasetBalance">—</b><span>Approved</span></div></div><p class="aix-learn-note" id="datasetNote">Each generated applicant has a known outcome. The network predicts, compares, and adjusts before moving to the next example.</p></div></section>
       </div>
       <section class="aix-card"><div class="aix-card-head"><h2>Neural network</h2><span>4 inputs → 3 pattern finders → 1 prediction</span></div><div class="aix-training-phases" aria-label="Three steps of neural network training"><div class="aix-phase" id="phaseForward"><b>1 · Forward pass</b>Inputs flow forward to make a prediction.</div><div class="aix-phase" id="phaseLoss"><b>2 · Loss calculation</b>The prediction is compared with the known answer.</div><div class="aix-phase" id="phaseBack"><b>3 · Backpropagation</b>The chain rule traces each weight’s share of the error backward.</div><div class="aix-loss-readout" id="lossReadout"><b>Automatic:</b> use the training-bar buttons. <b>Manual:</b> select Play in Forward Pass.</div></div><div class="aix-network"><svg id="networkSvg" viewBox="0 0 600 410" role="img" aria-label="A neural network with four inputs, three hidden neurons, and one output"></svg></div><div class="aix-network-legend"><span class="aix-key"><i class="aix-swatch"></i>Positive influence</span><span class="aix-key"><i class="aix-swatch red"></i>Negative influence</span><span>Thicker = stronger</span></div></section>
@@ -203,7 +256,7 @@ function playManualPhase(index){if(index===0&&!pendingTraining){stopDataset();tr
 syncPhasePlayButtons();
 function syncTrainingBar(forcedStatus=null){const values=features.map(f=>f.value),approved=forcedStatus===null?qualificationScore(values,datasetType.value==='biased')>=.56:forcedStatus;trainingExampleEl.innerHTML=`<span class="aix-training-datum"><b>Age</b> ${values[0]}</span><span class="aix-training-datum"><b>Income</b> $${values[1]}k</span><span class="aix-training-datum"><b>Credit</b> ${values[2]} · ${creditCategory(values[2])}</span><span class="aix-training-datum"><b>Employed</b> ${values[3]} yrs</span><span class="aix-known-status ${approved?'':'declined'}">${approved?'Approved':'Declined'}</span>`}
 trainLauncher.onclick=()=>{trainingBar.classList.add('open');document.body.classList.add('training-bar-open');syncTrainingBar()};closeTrainingBarBtn.onclick=()=>{trainingBar.classList.remove('open');document.body.classList.remove('training-bar-open')};inputs.addEventListener('input',()=>syncTrainingBar());datasetType.addEventListener('change',()=>syncTrainingBar());syncTrainingBar();
-forwardBtn.onclick=forward;trainOne.onclick=()=>train(1);trainTen.onclick=()=>train(10);trainDatasetOne.onclick=trainDatasetExample;trainDataset25.onclick=()=>startDataset(25);autoTrain.onclick=()=>datasetRunning?stopDataset():startDataset(Infinity);knownOutcome.onchange=()=>{knownTarget=knownOutcome.value==='approved'?.88:.12;training=0;learningNote.textContent=`This applicant is now supervised as “${knownOutcome.value==='approved'?'Approved':'Declined'}.” Training will adjust the connections toward that known outcome.`;AIExplorer.toast('Known outcome updated')};randomBtn.onclick=()=>{weights=weights.map(r=>r.map(()=>Math.random()*1.7-.45));outWeights=outWeights.map(()=>Math.random()*1.2-.2);renderAll();forward();AIExplorer.toast('Weights randomized')};resetBtn.onclick=()=>AIExplorer.reset();newApplicationBtn.onclick=newTestApplication;revealBtn.onclick=()=>{document.body.classList.add('revealed');revealBtn.textContent='Answer revealed';forward()};const explainPrediction=()=>showConcept('What is the prediction?',`The network combines its hidden patterns into a ${probability.textContent} approval estimate. This is a pattern-based guess, not an explanation or understanding of the applicant.`);predictionCard.onclick=explainPrediction;predictionCard.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();explainPrediction()}};closeConcept.onclick=()=>conceptPopup.classList.remove('open');document.addEventListener('keydown',e=>{if(e.key==='Escape')conceptPopup.classList.remove('open')});
+forwardBtn.onclick=forward;trainOne.onclick=()=>train(1);trainTen.onclick=()=>train(10);trainDatasetOne.onclick=trainDatasetExample;trainDataset25.onclick=()=>startDataset(25);autoTrain.onclick=()=>datasetRunning?stopDataset():startDataset(Infinity);knownOutcome.onchange=()=>{knownTarget=knownOutcome.value==='approved'?.88:.12;training=0;learningNote.textContent=`This applicant is now supervised as “${knownOutcome.value==='approved'?'Approved':'Declined'}.” Training will adjust the connections toward that known outcome.`;AIExplorer.toast('Known outcome updated')};randomBtn.onclick=()=>{weights=weights.map(r=>r.map(()=>Math.random()*1.7-.45));outWeights=outWeights.map(()=>Math.random()*1.2-.2);renderAll();forward();AIExplorer.toast('Weights randomized')};resetBtn.onclick=()=>AIExplorer.reset();newApplicationBtn.onclick=newTestApplication;document.querySelector('#addApplicantBtn').onclick=newTestApplication;revealBtn.onclick=()=>{document.body.classList.add('revealed');revealBtn.textContent='Answer revealed';forward()};const explainPrediction=()=>showConcept('What is the prediction?',`The network combines its hidden patterns into a ${probability.textContent} approval estimate. This is a pattern-based guess, not an explanation or understanding of the applicant.`);predictionCard.onclick=explainPrediction;predictionCard.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();explainPrediction()}};closeConcept.onclick=()=>conceptPopup.classList.remove('open');document.addEventListener('keydown',e=>{if(e.key==='Escape')conceptPopup.classList.remove('open')});
 AIExplorer.init({steps,onStep:(index)=>{visibleStage=index;renderAll();if(index===3||index===8||index===9)forward()},onReset:reset,onMode:(mode)=>{visibleStage=mode==='presentation'?0:9;renderAll()}});
 trainDataset25.onclick=()=>startDataset(Math.max(1,Math.min(200,+batchSizeInput.value||1)));
 </script>
