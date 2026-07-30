@@ -2122,10 +2122,14 @@
   }
 
   const detectorTemplate = segmentPixels("abcdefg");
-  const middlePixels = segmentPixels("g");
-  const starterWeights = detectorTemplate.map((value, index) => value ? (middlePixels[index] ? 2 : 1) : -.35);
-  let detectorWeights = starterWeights.slice();
-  let detectorBias = -starterWeights.reduce((sum, weight, index) => sum + weight * detectorTemplate[index], 0) * .9;
+  function randomDetectorValue() {
+    return Math.random() * 2 - 1;
+  }
+  function randomDetectorWeights() {
+    return Array.from({ length: detectorSize * detectorSize }, randomDetectorValue);
+  }
+  let detectorWeights = randomDetectorWeights();
+  let detectorBias = -randomDetectorValue();
   let detectorTraining = false;
 
   function renderDetector() {
@@ -2318,13 +2322,13 @@
     trainingIndex = 0;
     trainingCorrect = 0;
     trainingUpdates = 0;
-    detectorWeights = Array(detectorPixels.length).fill(0);
-    detectorBias = 0;
+    detectorWeights = randomDetectorWeights();
+    detectorBias = -randomDetectorValue();
     showingWeights = true;
     document.getElementById("weight-toggle").setAttribute("aria-pressed", "true");
     document.getElementById("weight-toggle").textContent = "Show input image";
     trainingProgressEl.style.width = "0%";
-    trainingStatusEl.textContent = `Ready to present ${requestedCount} labeled examples. The weights and threshold have been reset.`;
+    trainingStatusEl.textContent = `Ready to present ${requestedCount} labeled examples. All 324 weights and the threshold were randomized between −1 and 1.`;
     renderDetector();
   }
 
