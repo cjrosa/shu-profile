@@ -17,6 +17,9 @@
   .eyebrow { color:var(--green); font-size:11px; font-weight:800; letter-spacing:.13em; text-transform:uppercase; }
   h1 { margin:5px 0 6px; font-size:clamp(25px,4vw,38px); letter-spacing:-.035em; }
   .intro { margin:0; color:var(--muted); font-size:14px; line-height:1.6; max-width:760px; }
+  .learning-brief { display:grid; grid-template-columns:1fr 1fr; gap:1px; margin:18px 0 14px; overflow:hidden; border:1px solid var(--line); border-radius:12px; background:var(--line); }
+  .learning-brief div { background:#fff; padding:13px 15px; color:var(--muted); font-size:12px; line-height:1.5; }
+  .learning-brief strong { display:block; margin-bottom:3px; color:var(--ink); font-size:12px; }
   .controls { display:flex; flex-wrap:wrap; align-items:end; gap:12px; margin:22px 0 14px; }
   .control { display:grid; gap:5px; }
   label { color:var(--muted); font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
@@ -27,15 +30,20 @@
   button.primary:hover { background:var(--green-dark); color:#fff; }
   button.toggle[aria-pressed="true"] { border-color:var(--blue); background:#edf4ff; color:var(--blue); }
   button:disabled { cursor:not-allowed; opacity:.45; }
-  .progress { flex:1; min-width:210px; }
-  .progress-row { display:flex; justify-content:space-between; color:var(--muted); font-size:11px; margin-bottom:7px; }
-  .track { height:6px; overflow:hidden; border-radius:9px; background:#dfe8e2; }
-  .track > div { height:100%; width:11.11%; background:var(--green); transition:width .25s ease; }
+  .step-indicator { min-height:38px; display:flex; align-items:center; padding:0 4px; color:var(--muted); font-size:11px; font-weight:800; white-space:nowrap; }
   .stage { display:grid; grid-template-columns:minmax(220px,1fr) 74px minmax(185px,.78fr) 74px minmax(185px,.78fr); align-items:center; gap:12px; }
-  .panel { height:100%; min-width:0; background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px; box-shadow:0 8px 28px rgba(21,68,41,.06); }
+  .panel { position:relative; height:100%; min-width:0; background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px; box-shadow:0 8px 28px rgba(21,68,41,.06); }
   .panel-head { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; margin-bottom:14px; }
+  .panel-head-actions { display:flex; align-items:flex-start; gap:7px; }
   .panel-title { font-size:14px; font-weight:800; }
   .panel-note { color:var(--muted); font-size:10px; margin-top:3px; line-height:1.4; }
+  .panel-help { position:absolute; z-index:20; top:-14px; right:-14px; }
+  .panel-help summary { display:grid; place-items:center; width:27px; height:27px; border:1px solid var(--line); border-radius:50%; background:#fff; color:var(--green); font-size:13px; font-weight:850; cursor:pointer; list-style:none; }
+  .panel-help summary::-webkit-details-marker { display:none; }
+  .panel-help summary:hover, .panel-help summary:focus-visible { border-color:var(--green); background:var(--green-soft); outline:none; }
+  .panel-help[open] summary { border-color:var(--green); background:var(--green-soft); }
+  .panel-help-text { position:absolute; z-index:20; top:35px; right:0; width:250px; padding:12px 13px; border-radius:10px; background:var(--ink); color:rgba(255,255,255,.8); box-shadow:0 10px 28px rgba(0,0,0,.2); font-size:11px; line-height:1.5; }
+  .panel-help-text strong { display:block; margin-bottom:4px; color:#fff; font-size:12px; }
   .chip { border-radius:999px; background:var(--green-soft); color:var(--green); padding:4px 8px; font-size:9px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; }
   .view-toggle { display:flex; padding:2px; border:1px solid var(--line); border-radius:8px; background:#f3f6f4; }
   .view-toggle button { min-height:25px; border:0; border-radius:6px; background:transparent; padding:0 8px; color:var(--muted); font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; }
@@ -73,6 +81,7 @@
   .arrow span { display:block; margin-top:7px; color:var(--muted); font-size:9px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
   .math { margin-top:14px; border:1px solid var(--line); border-radius:12px; background:#fff; padding:16px 18px; }
   .math-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .math-status { display:flex; align-items:center; gap:10px; }
   .equation { font-size:13px; line-height:1.6; color:var(--muted); }
   .equation strong { color:var(--ink); }
   .score { flex:0 0 auto; min-width:76px; padding:9px 12px; border-radius:9px; background:var(--green-soft); color:var(--green-dark); text-align:center; font-size:20px; font-weight:850; }
@@ -82,10 +91,8 @@
   .flying-token.weight { background:var(--green-soft); border:2px solid var(--green); color:var(--green-dark); }
   .flying-token.sum { background:var(--amber); color:#fff; min-width:58px; }
   @keyframes scorePulse { 50% { transform:scale(1.12); background:#fff0d6; color:#9b5700; } }
-  .explain { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px; }
-  .fact { border-top:3px solid var(--green); border-radius:9px; background:#fff; padding:14px 15px; box-shadow:0 4px 18px rgba(21,68,41,.05); }
-  .fact b { display:block; font-size:12px; margin-bottom:5px; }
-  .fact p { margin:0; color:var(--muted); font-size:11px; line-height:1.55; }
+  .takeaway { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:14px; padding:16px 18px; border-radius:14px; background:var(--ink); color:rgba(255,255,255,.78); font-size:12px; line-height:1.5; }
+  .takeaway strong { display:block; margin-bottom:4px; color:#fff; font-size:13px; }
   @media (max-width:850px) {
     .stage { grid-template-columns:1fr 40px 1fr; }
     .stage .panel:last-child { grid-column:1/-1; width:min(360px,100%); justify-self:center; }
@@ -98,8 +105,9 @@
     .arrow span { display:none; }
     .stage .panel:last-child { grid-column:auto; }
     .stage .arrow:nth-of-type(2) { display:grid; }
-    .explain { grid-template-columns:1fr; }
-    .math-top { align-items:flex-start; }
+    .learning-brief, .takeaway { grid-template-columns:1fr; }
+    .math-top { align-items:flex-start; flex-direction:column; }
+    .math-status { width:100%; justify-content:space-between; }
   }
 </style>
 </head>
@@ -108,6 +116,17 @@
   <div class="eyebrow">Convolutional Neural Networks</div>
   <h1>See how a CNN finds patterns</h1>
   <p class="intro">Move a small filter across an image. At each position, the CNN multiplies matching cells, adds the results, and stores one number in a feature map.</p>
+
+  <section class="learning-brief" aria-label="Learning introduction">
+    <div>
+      <strong>Learning goal</strong>
+      See how a CNN scans an image with a reusable filter and turns local matches into a feature map.
+    </div>
+    <div>
+      <strong>What is a CNN?</strong>
+      A convolutional neural network is a model that learns filters for detecting visual patterns such as edges, textures, shapes, and objects.
+    </div>
+  </section>
 
   <div class="controls">
     <div class="control">
@@ -131,31 +150,51 @@
     <button id="autoBtn">Auto play</button>
     <button id="resetBtn">Reset</button>
     <button id="detailBtn" class="toggle" aria-pressed="false">Detail mode: Off</button>
-    <div class="progress">
-      <div class="progress-row"><span>Convolution progress</span><strong id="stepLabel">1 of 9</strong></div>
-      <div class="track"><div id="progressFill"></div></div>
-    </div>
   </div>
 
   <section class="stage" aria-label="Convolution visualization">
     <article class="panel">
       <div class="panel-head">
         <div><div class="panel-title">Input image</div><div class="panel-note">5 × 5 pixels · highlighted area is the receptive field</div></div>
-        <div class="view-toggle" role="group" aria-label="Input display mode">
-          <button id="imageViewBtn" type="button">Image</button>
-          <button id="pixelViewBtn" type="button" class="active">Pixels</button>
+        <div class="panel-head-actions">
+          <div class="view-toggle" role="group" aria-label="Input display mode">
+            <button id="imageViewBtn" type="button">Image</button>
+            <button id="pixelViewBtn" type="button" class="active">Pixels</button>
+          </div>
+          <details class="panel-help">
+            <summary aria-label="Explain the input image">&#128161;</summary>
+            <div class="panel-help-text"><strong>Local receptive field</strong>The filter looks at only 3 × 3 pixels at a time, helping it notice small local patterns.</div>
+          </details>
         </div>
       </div>
       <div class="grid input" id="inputGrid"></div>
     </article>
     <div class="arrow" aria-hidden="true"><div><svg viewBox="0 0 40 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10h32M27 3l7 7-7 7"/></svg><span>Scan</span></div></div>
     <article class="panel">
-      <div class="panel-head"><div><div class="panel-title">Convolution filter</div><div class="panel-note">3 × 3 learned weights</div></div><span class="chip">Kernel</span></div>
+      <div class="panel-head">
+        <div><div class="panel-title">Convolution filter</div><div class="panel-note">3 × 3 learned weights</div></div>
+        <div class="panel-head-actions">
+          <span class="chip">Kernel</span>
+          <details class="panel-help">
+            <summary aria-label="Explain the convolution filter">&#128161;</summary>
+            <div class="panel-help-text"><strong>Shared weights</strong>The same nine filter values scan the entire image, so the pattern can be found anywhere.</div>
+          </details>
+        </div>
+      </div>
       <div class="grid kernel" id="kernelGrid"></div>
     </article>
     <div class="arrow" aria-hidden="true"><div><svg viewBox="0 0 40 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10h32M27 3l7 7-7 7"/></svg><span>Produce</span></div></div>
     <article class="panel">
-      <div class="panel-head"><div><div class="panel-title">Feature map</div><div class="panel-note">3 × 3 activation output</div></div><span class="chip">Output</span></div>
+      <div class="panel-head">
+        <div><div class="panel-title">Feature map</div><div class="panel-note">3 × 3 activation output</div></div>
+        <div class="panel-head-actions">
+          <span class="chip">Output</span>
+          <details class="panel-help">
+            <summary aria-label="Explain the feature map">&#128161;</summary>
+            <div class="panel-help-text"><strong>Feature hierarchy</strong>Later CNN layers combine simple edges into textures, shapes, objects, and predictions.</div>
+          </details>
+        </div>
+      </div>
       <div class="grid output" id="outputGrid"></div>
       <div class="activation-legend" aria-label="Activation color legend"><div class="legend-bar"></div><div class="legend-labels"><span>Opposite edge</span><span>No response</span><span>Strong match</span></div></div>
       <div class="feature-insight" id="featureInsight"></div>
@@ -165,14 +204,22 @@
   <section class="math" aria-live="polite">
     <div class="math-top">
       <div class="equation"><strong id="positionText">Position (1, 1)</strong><br><span id="equationText"></span></div>
-      <div class="score" id="score">0</div>
+      <div class="math-status">
+        <div class="step-indicator" id="stepLabel" aria-live="polite">Ready to start</div>
+        <div class="score" id="score">0</div>
+      </div>
     </div>
   </section>
 
-  <section class="explain">
-    <div class="fact"><b>1. Local receptive field</b><p>The filter looks at only 3 × 3 pixels at a time, helping it notice small local patterns.</p></div>
-    <div class="fact"><b>2. Shared weights</b><p>The same nine filter values scan the entire image, so the pattern can be found anywhere.</p></div>
-    <div class="fact"><b>3. Feature hierarchy</b><p>Later CNN layers combine simple edges into textures, shapes, objects, and predictions.</p></div>
+  <section class="takeaway" aria-label="Key takeaway">
+    <div>
+      <strong>Key takeaway</strong>
+      A CNN does not understand an image. It applies numerical filters to pixel values and combines detected patterns across layers.
+    </div>
+    <div>
+      <strong>Why it matters</strong>
+      The result depends on the training images, labels, learned filter weights, and network design chosen for the task.
+    </div>
   </section>
 </main>
 <script>
@@ -276,8 +323,7 @@ function render(preparingAnimation=false,showReceptiveField=false) {
   document.querySelector('#equationText').textContent=hasRun?`${out[step].parts.join(' + ')} = ${format(out[step].sum)}`:'Choose an input and filter, then run the first step.';
   document.querySelector('#score').textContent=hasRun?format(out[step].sum):'—';
   document.querySelector('#featureInsight').innerHTML=hasRun?describeActivation(out[step].sum,maxAbs):'<strong>No activations yet.</strong> Run the convolution to build the feature map one cell at a time.';
-  document.querySelector('#stepLabel').textContent=`${hasRun?step+1:0} of 9`;
-  document.querySelector('#progressFill').style.width=`${hasRun?(step+1)/9*100:0}%`;
+  document.querySelector('#stepLabel').textContent=hasRun?`Step ${step+1} of 9`:'Ready to start';
   document.querySelector('#prevBtn').disabled=!hasRun;
   document.querySelector('#nextBtn').disabled=hasRun&&step===8;
 }

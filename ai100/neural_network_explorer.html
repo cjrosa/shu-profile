@@ -4,11 +4,67 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Neural Network Explorer · AI-100</title>
   <link rel="stylesheet" href="../assets/css/components/ai-explorer.css">
+  <style>
+    .aix-takeaway {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 15px;
+      padding: 16px 18px;
+      border-radius: 14px;
+      background: #17201b;
+      color: rgba(255, 255, 255, .78);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .aix-takeaway strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #fff;
+      font-size: 13px;
+    }
+    .aix-learning-brief {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      margin-bottom: 15px;
+      overflow: hidden;
+      border: 1px solid var(--aix-line);
+      border-radius: 12px;
+      background: var(--aix-line);
+    }
+    .aix-learning-brief div {
+      background: #fff;
+      padding: 13px 15px;
+      color: var(--aix-muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .aix-learning-brief strong {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--aix-ink);
+      font-size: 12px;
+    }
+    @media (max-width: 720px) {
+      .aix-learning-brief, .aix-takeaway { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
 <div class="aix-app">
   <main class="aix-main">
     <section class="aix-hero"><div><div class="aix-kicker">See patterns become predictions</div><h1>How does a network learn a pattern?</h1><p>Change an applicant, send the information forward, and watch connection strengths adapt. A successful prediction is pattern recognition—not human understanding.</p></div><div class="aix-hero-tools"><div class="aix-mode" role="group" aria-label="Learning mode"><button class="aix-tab" data-mode="explore">Explore</button><button class="aix-tab" data-mode="challenge">Challenge</button></div><button class="aix-icon-btn" data-drawer="helpDrawer" aria-label="Open help">?</button><div class="aix-status"><i class="aix-dot"></i><span id="statusText">Ready to explore</span></div></div></section>
+    <section class="aix-learning-brief" aria-label="Learning introduction">
+      <div>
+        <strong>Learning goal</strong>
+        See how inputs move through weighted connections to produce a prediction and how training changes those connections.
+      </div>
+      <div>
+        <strong>What is a neural network?</strong>
+        A neural network is a layered model that combines numerical inputs through weighted connections to learn patterns from examples.
+      </div>
+    </section>
     <section class="aix-challenge aix-card" style="margin-bottom:15px"><div class="aix-card-body" style="display:flex;align-items:center;justify-content:space-between;gap:14px"><div><b>Make your prediction first</b><div class="aix-learn-note">Will this applicant be approved? Inspect the inputs, then reveal the network's answer.</div></div><div class="aix-actions"><button class="aix-btn" id="newApplicationBtn">New application</button><button class="aix-btn primary" id="revealBtn">Reveal answer</button></div></div></section>
     <div class="aix-grid">
       <div class="aix-stack">
@@ -22,6 +78,16 @@
         <section class="aix-card"><div class="aix-card-head"><h2>Concept lens</h2><span>Plain English</span></div><div class="aix-card-body"><div class="aix-concept"><div class="aix-mark" style="width:30px;height:30px" aria-hidden="true">💡</div><div><b id="conceptTitle">What is a weight?</b><p id="conceptText">A weight represents how strongly one piece of information influences the next step.</p></div></div></div></section>
       </div>
     </div>
+    <section class="aix-takeaway" aria-label="Key takeaway">
+      <div>
+        <strong>Key takeaway</strong>
+        A neural network does not understand the decision. It combines numerical inputs through layers of weighted connections to produce a pattern-based prediction.
+      </div>
+      <div>
+        <strong>Why it matters</strong>
+        The result depends on the training examples, labels, selected inputs, network design, and patterns the system learns from the data.
+      </div>
+    </section>
   </main>
   <aside class="aix-help" id="helpDrawer"><div class="aix-drawer-head"><h2>Explorer guide</h2><button class="aix-icon-btn" data-close="helpDrawer">×</button></div><section><h3>Explore</h3><p>Adjust the applicant, evaluate the prediction, and train the network. Click any neuron for a short explanation.</p></section><section><h3>Challenge</h3><p>Commit to your own prediction before revealing the network's answer, then inspect which features influenced it.</p></section><section><h3>Remember</h3><p>The network detects patterns in examples. It does not understand loans, people, fairness, or consequences.</p></section></aside>
   <aside class="aix-concept-popup" id="conceptPopup" role="dialog" aria-modal="true" aria-labelledby="popupTitle"><div class="aix-concept-popup-head"><h2 id="popupTitle">Concept explanation</h2><button class="aix-icon-btn" id="closeConcept" aria-label="Close explanation">×</button></div><p id="popupText"></p></aside>
