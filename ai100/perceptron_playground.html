@@ -744,6 +744,177 @@
     color: white;
   }
 
+  .detector-intro { max-width: 820px; margin-bottom: 18px; }
+  .detector-intro p { margin: 0; color: var(--muted); line-height: 1.55; }
+  .detector-layout {
+    display: grid;
+    grid-template-columns: minmax(290px, .8fr) minmax(430px, 1.2fr);
+    gap: 18px;
+    align-items: stretch;
+  }
+  .pixel-panel, .detector-panel { padding: 20px; }
+  .pixel-panel h2, .detector-panel h2 { margin: 0 0 5px; font-size: 16px; }
+  .pixel-panel > p, .detector-panel > p { margin: 0 0 14px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+  .digit-grid {
+    display: grid;
+    grid-template-columns: repeat(18, 1fr);
+    width: min(100%, 342px);
+    aspect-ratio: 1;
+    margin: 0 auto;
+    overflow: hidden;
+    border: 2px solid var(--ink);
+    background: #dfe6e3;
+    gap: 1px;
+    touch-action: none;
+  }
+  .digit-pixel {
+    min-width: 0;
+    border: 0;
+    padding: 0;
+    background: #fff;
+    cursor: crosshair;
+  }
+  .digit-pixel.on { background: var(--ink); }
+  .digit-grid.show-weights .digit-pixel { background: #f7d9d4; }
+  .digit-grid.show-weights .digit-pixel.positive { background: #a8d2b9; }
+  .digit-grid.show-weights .digit-pixel.strong { background: var(--green); }
+  .digit-grid.show-weights .digit-pixel.neutral { background: #eef2f0; }
+  .weight-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 14px;
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 10px;
+  }
+  .weight-legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .weight-swatch {
+    width: 13px;
+    height: 13px;
+    border: 1px solid rgba(23, 50, 42, .12);
+    border-radius: 3px;
+    background: #f7d9d4;
+  }
+  .weight-swatch.neutral { background: #eef2f0; }
+  .weight-swatch.positive { background: #a8d2b9; }
+  .weight-swatch.strong { background: var(--green); }
+  .training-box {
+    margin-top: 14px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--page);
+  }
+  .training-box strong { display: block; font-size: 12px; }
+  .training-status { margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.45; }
+  .training-controls {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: end;
+    gap: 8px;
+    margin-top: 10px;
+    overflow-x: auto;
+  }
+  .training-controls button { flex: 1 0 auto; white-space: nowrap; }
+  .training-example {
+    display: grid;
+    grid-template-columns: 94px 1fr;
+    gap: 12px;
+    align-items: center;
+    margin-top: 11px;
+    padding: 10px;
+    border-radius: 9px;
+    background: white;
+  }
+  .training-preview {
+    display: grid;
+    grid-template-columns: repeat(18, 1fr);
+    width: 94px;
+    aspect-ratio: 1;
+    gap: 1px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: var(--line);
+  }
+  .training-preview i { background: white; }
+  .training-preview i.on { background: var(--ink); }
+  .training-example-copy { color: var(--muted); font-size: 11px; line-height: 1.5; }
+  .training-example-copy strong { color: var(--ink); font-size: 13px; }
+  .training-progress {
+    height: 6px;
+    margin-top: 9px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: var(--line);
+  }
+  .training-progress i {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--orange);
+    transition: width .18s ease;
+  }
+  .digit-presets, .detector-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .digit-presets button, .weight-toggle {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: white;
+    color: var(--ink);
+    padding: 7px 10px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .digit-presets button:hover, .weight-toggle:hover { border-color: var(--green); }
+  .detector-flow {
+    display: grid;
+    grid-template-columns: minmax(120px, 1fr) auto minmax(150px, 1fr);
+    gap: 14px;
+    align-items: center;
+    margin: 18px 0;
+  }
+  .detector-stack { display: grid; gap: 8px; }
+  .detector-step {
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--page);
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  .detector-step strong { display: block; color: var(--ink); font-size: 12px; }
+  .detector-step .input-counts { display: grid; gap: 3px; margin-bottom: 7px; }
+  .detector-step .input-counts span { color: var(--ink); font-weight: 800; }
+  .detector-step p { margin: 0; }
+  .detector-arrow { color: var(--orange); font-size: 24px; font-weight: 800; }
+  .detector-neuron {
+    display: grid;
+    place-items: center;
+    min-height: 190px;
+    padding: 22px;
+    border: 4px solid var(--green);
+    border-radius: 50%;
+    background: var(--green-soft);
+    text-align: center;
+  }
+  .detector-neuron span { color: var(--muted); font-size: 11px; }
+  .detector-neuron strong { display: block; margin: 4px 0; font-size: 28px; }
+  .detector-result {
+    padding: 14px 16px;
+    border-radius: 11px;
+    background: var(--green-soft);
+    color: var(--green-dark);
+    font-weight: 850;
+    text-align: center;
+  }
+  .detector-result.no { background: var(--red-soft); color: var(--red); }
+  .detector-result span { display: block; margin-top: 4px; font-size: 11px; font-weight: 500; }
+  .detector-note { margin-top: 16px; padding: 13px 15px; border-left: 3px solid var(--orange); background: var(--orange-soft); color: var(--muted); font-size: 12px; line-height: 1.5; }
+  .detector-note strong { color: var(--ink); }
+
   .xor-intro {
     max-width: 760px;
     margin-bottom: 18px;
@@ -1029,7 +1200,7 @@
   @media (max-width: 860px) {
     .workspace { grid-template-columns: 1fr; }
     .neuron-panel { min-height: 480px; }
-    .xor-layout { grid-template-columns: 1fr; }
+    .xor-layout, .detector-layout { grid-template-columns: 1fr; }
   }
 
   @media (max-width: 560px) {
@@ -1051,6 +1222,8 @@
     .calculation-strip { grid-template-columns: 1fr; }
     .challenge { align-items: stretch; flex-direction: column; }
     .lesson-tabs { flex-direction: column; }
+    .detector-flow { grid-template-columns: 1fr; }
+    .detector-arrow { transform: rotate(90deg); text-align: center; }
     .xor-cases { grid-template-columns: 1fr; }
     .layer-demo { grid-template-columns: 1fr; gap: 12px; }
     .layer-arrow { transform: rotate(90deg); }
@@ -1075,8 +1248,82 @@
 <main class="app">
   <div class="lesson-tabs" role="tablist" aria-label="Perceptron activities">
     <button class="lesson-tab" id="everyday-tab" type="button" role="tab" aria-selected="true" aria-controls="everyday-panel" data-tab="everyday">Everyday decision</button>
+    <button class="lesson-tab" id="detector-tab" type="button" role="tab" aria-selected="false" aria-controls="detector-panel" data-tab="detector">8 detector</button>
     <button class="lesson-tab" id="xor-tab" type="button" role="tab" aria-selected="false" aria-controls="xor-panel" data-tab="xor">XOR challenge</button>
   </div>
+
+  <section id="detector-panel" role="tabpanel" aria-labelledby="detector-tab" hidden>
+    <header class="detector-intro">
+      <div class="eyebrow">Mitchell&rsquo;s example &middot; 324 pixel inputs</div>
+      <h1>Can one perceptron spot an 8?</h1>
+      <p>Every square in an 18 &times; 18 image becomes a number. The perceptron multiplies each pixel by its learned weight, adds the results, and fires when the sum reaches its threshold.</p>
+    </header>
+
+    <div class="detector-layout">
+      <section class="panel pixel-panel">
+        <h2>1. Give it an image</h2>
+        <p>Choose a sample, or draw by clicking and dragging across the pixels.</p>
+        <div class="digit-grid" id="digit-grid" role="grid" aria-label="Editable 18 by 18 pixel image"></div>
+        <div class="weight-legend" id="weight-legend" aria-label="Detector weight colors" hidden>
+          <span><i class="weight-swatch strong"></i>Strong positive weight</span>
+          <span><i class="weight-swatch positive"></i>Positive weight</span>
+          <span><i class="weight-swatch neutral"></i>Near zero</span>
+          <span><i class="weight-swatch"></i>Negative weight</span>
+        </div>
+        <div class="digit-presets" aria-label="Sample digit images">
+          <button type="button" data-digit="8">Try an 8</button>
+          <button type="button" data-digit="0">Try a 0</button>
+          <button type="button" data-digit="3">Try a 3</button>
+          <button type="button" data-digit="noise">Add noise</button>
+          <button type="button" data-digit="clear">Clear</button>
+        </div>
+      </section>
+
+      <section class="panel detector-panel">
+        <h2>2. Follow all 324 signals</h2>
+        <p>Black pixels have intensity 1; white pixels have intensity 0. Each input has its own weight, although only a summary can fit here.</p>
+        <div class="detector-flow">
+          <div class="detector-stack">
+            <div class="detector-step">
+              <strong>324 pixel inputs</strong>
+              <div class="input-counts">
+                <span id="active-pixels">0 black pixels send a value of 1</span>
+                <span id="inactive-pixels">324 white pixels send a value of 0</span>
+              </div>
+              <p>Every square is a separate input. Its value is multiplied by that location&rsquo;s learned weight before all 324 results are added.</p>
+            </div>
+          </div>
+          <div class="detector-arrow" aria-hidden="true">&rarr;</div>
+          <div class="detector-neuron">
+            <div><span>WEIGHTED SUM</span><strong id="detector-score">0</strong><span id="detector-equation">threshold 0</span></div>
+          </div>
+        </div>
+        <div class="detector-result" id="detector-result" aria-live="polite"></div>
+        <div class="training-box">
+          <strong>Training</strong>
+          <div class="training-status" id="training-status">Train automatically on 200 labeled examples, or step through them one at a time.</div>
+          <div class="training-controls">
+            <button class="start-button" id="train-detector" type="button">Train automatically</button>
+            <button class="weight-toggle" id="step-training" type="button">Step</button>
+            <button class="weight-toggle" id="weight-toggle" type="button" aria-pressed="false">Show learned weights</button>
+          </div>
+          <div class="training-example">
+            <div class="training-preview" id="training-preview" aria-label="Current training image"></div>
+            <div class="training-example-copy" id="training-example-copy">
+              <strong>No example presented yet</strong>
+              Press Step to inspect each prediction and weight update.
+            </div>
+          </div>
+          <div class="training-progress" aria-hidden="true"><i id="training-progress"></i></div>
+        </div>
+        <div class="detector-note"><strong>What the detector knows:</strong> no written rule says &ldquo;look for two loops.&rdquo; Its entire skill is stored in 324 weights and one threshold. Different handwriting can still fool it.</div>
+      </section>
+    </div>
+    <section class="takeaway">
+      <div><strong>From picture to numbers</strong>An image is represented as 324 pixel intensities&mdash;one input for every square.</div>
+      <div><strong>From numbers to a decision</strong>The perceptron produces 1 for &ldquo;8&rdquo; or 0 for &ldquo;not 8&rdquo; by comparing its weighted sum with a threshold.</div>
+    </section>
+  </section>
 
   <section id="everyday-panel" role="tabpanel" aria-labelledby="everyday-tab">
   <header class="intro">
@@ -1844,6 +2091,312 @@
     });
   });
 
+  const detectorSize = 18;
+  const digitGridEl = document.getElementById("digit-grid");
+  const detectorPixels = Array(detectorSize * detectorSize).fill(0);
+  let detectorDrawing = false;
+  let detectorDrawValue = 1;
+  let showingWeights = false;
+
+  function segmentPixels(segments) {
+    const pixels = Array(detectorSize * detectorSize).fill(0);
+    const paint = (row, column) => {
+      if (row >= 0 && row < detectorSize && column >= 0 && column < detectorSize) {
+        pixels[row * detectorSize + column] = 1;
+      }
+    };
+    const horizontal = row => {
+      for (let r = row; r < row + 2; r += 1) for (let c = 4; c <= 13; c += 1) paint(r, c);
+    };
+    const vertical = (column, start) => {
+      for (let c = column; c < column + 2; c += 1) for (let r = start; r < start + 6; r += 1) paint(r, c);
+    };
+    if (segments.includes("a")) horizontal(1);
+    if (segments.includes("g")) horizontal(8);
+    if (segments.includes("d")) horizontal(15);
+    if (segments.includes("f")) vertical(3, 3);
+    if (segments.includes("b")) vertical(13, 3);
+    if (segments.includes("e")) vertical(3, 10);
+    if (segments.includes("c")) vertical(13, 10);
+    return pixels;
+  }
+
+  const detectorTemplate = segmentPixels("abcdefg");
+  const middlePixels = segmentPixels("g");
+  const starterWeights = detectorTemplate.map((value, index) => value ? (middlePixels[index] ? 2 : 1) : -.35);
+  let detectorWeights = starterWeights.slice();
+  let detectorBias = -starterWeights.reduce((sum, weight, index) => sum + weight * detectorTemplate[index], 0) * .9;
+  let detectorTraining = false;
+
+  function renderDetector() {
+    const weightedInput = detectorPixels.reduce((sum, value, index) => sum + value * detectorWeights[index], 0);
+    const threshold = -detectorBias;
+    const fires = weightedInput + detectorBias >= 0;
+    const active = detectorPixels.filter(Boolean).length;
+    const strongestPositive = Math.max(.01, ...detectorWeights);
+    Array.from(digitGridEl.children).forEach((pixel, index) => {
+      pixel.classList.toggle("on", Boolean(detectorPixels[index]) && !showingWeights);
+      pixel.classList.toggle("positive", detectorWeights[index] > .025);
+      pixel.classList.toggle("strong", detectorWeights[index] >= strongestPositive * .55);
+      pixel.classList.toggle("neutral", Math.abs(detectorWeights[index]) <= .025);
+      pixel.setAttribute("aria-pressed", String(Boolean(detectorPixels[index])));
+    });
+    digitGridEl.classList.toggle("show-weights", showingWeights);
+    document.getElementById("weight-legend").hidden = !showingWeights;
+    document.getElementById("active-pixels").textContent = `${active} black ${active === 1 ? "pixel sends" : "pixels send"} a value of 1`;
+    const inactive = detectorPixels.length - active;
+    document.getElementById("inactive-pixels").textContent = `${inactive} white ${inactive === 1 ? "pixel sends" : "pixels send"} a value of 0`;
+    document.getElementById("detector-score").textContent = weightedInput.toFixed(1);
+    document.getElementById("detector-equation").textContent = `${weightedInput.toFixed(1)} ${fires ? "≥" : "<"} threshold ${threshold.toFixed(1)}`;
+    const result = document.getElementById("detector-result");
+    result.classList.toggle("no", !fires);
+    result.innerHTML = fires
+      ? `Output 1: “8 detected”<span>The weighted evidence reached the threshold.</span>`
+      : `Output 0: “not an 8”<span>The weighted evidence did not reach the threshold.</span>`;
+  }
+
+  function setDetectorPixel(index, value) {
+    detectorPixels[index] = value;
+    renderDetector();
+  }
+
+  detectorTemplate.forEach((value, index) => {
+    const pixel = document.createElement("button");
+    pixel.type = "button";
+    pixel.className = "digit-pixel";
+    pixel.setAttribute("role", "gridcell");
+    pixel.setAttribute("aria-label", `Pixel ${Math.floor(index / detectorSize) + 1}, ${index % detectorSize + 1}`);
+    pixel.addEventListener("pointerdown", event => {
+      if (showingWeights) return;
+      event.preventDefault();
+      detectorDrawing = true;
+      detectorDrawValue = detectorPixels[index] ? 0 : 1;
+      setDetectorPixel(index, detectorDrawValue);
+    });
+    pixel.addEventListener("pointerenter", () => {
+      if (detectorDrawing && !showingWeights) setDetectorPixel(index, detectorDrawValue);
+    });
+    pixel.addEventListener("keydown", event => {
+      if ((event.key === " " || event.key === "Enter") && !showingWeights) {
+        event.preventDefault();
+        setDetectorPixel(index, detectorPixels[index] ? 0 : 1);
+      }
+    });
+    digitGridEl.appendChild(pixel);
+  });
+  window.addEventListener("pointerup", () => { detectorDrawing = false; });
+
+  document.querySelectorAll("[data-digit]").forEach(button => {
+    button.addEventListener("click", () => {
+      const digit = button.dataset.digit;
+      if (digit === "noise") {
+        for (let index = 0; index < detectorPixels.length; index += 1) {
+          if (Math.random() < .055) detectorPixels[index] = detectorPixels[index] ? 0 : 1;
+        }
+      } else {
+        const sample = digit === "8" ? detectorTemplate
+          : digit === "0" ? segmentPixels("abcdef")
+            : digit === "3" ? segmentPixels("abcdg")
+              : Array(detectorPixels.length).fill(0);
+        detectorPixels.splice(0, detectorPixels.length, ...sample);
+      }
+      showingWeights = false;
+      document.getElementById("weight-toggle").setAttribute("aria-pressed", "false");
+      document.getElementById("weight-toggle").textContent = "Show learned weights";
+      renderDetector();
+    });
+  });
+
+  document.getElementById("weight-toggle").addEventListener("click", event => {
+    showingWeights = !showingWeights;
+    event.currentTarget.setAttribute("aria-pressed", String(showingWeights));
+    event.currentTarget.textContent = showingWeights ? "Show input image" : "Show learned weights";
+    renderDetector();
+  });
+
+  function noisyTrainingExample(base, noiseRate = .035) {
+    return base.map(value => Math.random() < noiseRate ? (value ? 0 : 1) : value);
+  }
+
+  function randomPixelField(minDensity = .12, maxDensity = .52) {
+    const density = minDensity + Math.random() * (maxDensity - minDensity);
+    return Array.from({ length: detectorPixels.length }, () => Math.random() < density ? 1 : 0);
+  }
+
+  function scrambledEight() {
+    const activeCount = detectorTemplate.filter(Boolean).length;
+    const pixels = Array(detectorPixels.length).fill(0);
+    for (let placed = 0; placed < activeCount; placed += 1) {
+      pixels[Math.floor(Math.random() * pixels.length)] = 1;
+    }
+    return pixels;
+  }
+
+  function buildTrainingSet(count) {
+    const positive = { make: () => noisyTrainingExample(detectorTemplate, .045), target: 1, label: "8" };
+    const negatives = [
+      { make: () => noisyTrainingExample(segmentPixels("abcdef")), target: 0, label: "0" },
+      { make: () => noisyTrainingExample(segmentPixels("abcdg")), target: 0, label: "3" },
+      { make: () => noisyTrainingExample(segmentPixels("abcdfg")), target: 0, label: "9" },
+      { make: () => noisyTrainingExample(segmentPixels("bc")), target: 0, label: "1" },
+      { make: () => randomPixelField(), target: 0, label: "random pixels" },
+      { make: () => scrambledEight(), target: 0, label: "scrambled pixels" }
+    ];
+    const examples = [];
+    for (let index = 0; index < count; index += 1) {
+      const base = index % 2 === 0 ? positive : negatives[Math.floor(index / 2) % negatives.length];
+      examples.push({ pixels: base.make(), target: base.target, label: base.label });
+    }
+    return examples.sort(() => Math.random() - .5);
+  }
+
+  function calibrateDetectorThreshold() {
+    const validation = [];
+    for (let index = 0; index < 60; index += 1) {
+      validation.push({ pixels: noisyTrainingExample(detectorTemplate, .055), target: 1 });
+    }
+    const negativeMakers = [
+      () => noisyTrainingExample(segmentPixels("abcdef"), .045),
+      () => noisyTrainingExample(segmentPixels("abcdg"), .045),
+      () => noisyTrainingExample(segmentPixels("abcdfg"), .045),
+      () => noisyTrainingExample(segmentPixels("bc"), .045),
+      () => randomPixelField(),
+      () => scrambledEight()
+    ];
+    for (let index = 0; index < 60; index += 1) {
+      validation.push({ pixels: negativeMakers[index % negativeMakers.length](), target: 0 });
+    }
+    const scored = validation.map(example => ({
+      target: example.target,
+      score: example.pixels.reduce((sum, value, index) => sum + value * detectorWeights[index], 0)
+    }));
+    const candidates = scored.map(item => item.score).sort((a, b) => a - b);
+    let bestThreshold = -detectorBias;
+    let bestCorrect = -1;
+    candidates.forEach(threshold => {
+      const correct = scored.filter(item => (item.score >= threshold ? 1 : 0) === item.target).length;
+      if (correct > bestCorrect || (correct === bestCorrect && threshold > bestThreshold)) {
+        bestCorrect = correct;
+        bestThreshold = threshold;
+      }
+    });
+    detectorBias = -bestThreshold;
+    return Math.round(bestCorrect / scored.length * 100);
+  }
+
+  function consolidateLearnedWeights(examples) {
+    const positiveExamples = examples.filter(example => example.target === 1);
+    const negativeExamples = examples.filter(example => example.target === 0);
+    if (!positiveExamples.length || !negativeExamples.length) return;
+
+    detectorWeights = detectorWeights.map((weight, pixelIndex) => {
+      const positiveFrequency = positiveExamples.reduce((sum, example) => sum + example.pixels[pixelIndex], 0) / positiveExamples.length;
+      const negativeFrequency = negativeExamples.reduce((sum, example) => sum + example.pixels[pixelIndex], 0) / negativeExamples.length;
+      const learnedEvidence = positiveFrequency - negativeFrequency;
+      return weight * .2 + learnedEvidence * 1.8;
+    });
+  }
+
+  const trainButtonEl = document.getElementById("train-detector");
+  const stepTrainingEl = document.getElementById("step-training");
+  const trainingStatusEl = document.getElementById("training-status");
+  const trainingProgressEl = document.getElementById("training-progress");
+  const trainingPreviewEl = document.getElementById("training-preview");
+  const trainingExampleCopyEl = document.getElementById("training-example-copy");
+  let trainingExamples = [];
+  let trainingIndex = 0;
+  let trainingCorrect = 0;
+  let trainingUpdates = 0;
+
+  for (let index = 0; index < detectorPixels.length; index += 1) {
+    trainingPreviewEl.appendChild(document.createElement("i"));
+  }
+
+  function beginTrainingSession() {
+    const requestedCount = 200;
+    trainingExamples = buildTrainingSet(requestedCount);
+    trainingIndex = 0;
+    trainingCorrect = 0;
+    trainingUpdates = 0;
+    detectorWeights = Array(detectorPixels.length).fill(0);
+    detectorBias = 0;
+    showingWeights = true;
+    document.getElementById("weight-toggle").setAttribute("aria-pressed", "true");
+    document.getElementById("weight-toggle").textContent = "Show input image";
+    trainingProgressEl.style.width = "0%";
+    trainingStatusEl.textContent = `Ready to present ${requestedCount} labeled examples. The weights and threshold have been reset.`;
+    renderDetector();
+  }
+
+  function showTrainingExample(example, prediction, activation, updated) {
+    Array.from(trainingPreviewEl.children).forEach((pixel, index) => {
+      pixel.classList.toggle("on", Boolean(example.pixels[index]));
+    });
+    const expected = example.target ? "8" : "not an 8";
+    const predicted = prediction ? "8" : "not an 8";
+    trainingPreviewEl.setAttribute("aria-label", `Training image labeled ${expected}`);
+    trainingExampleCopyEl.innerHTML = `
+      <strong>Example ${trainingIndex} of ${trainingExamples.length}: labeled “${expected}”</strong>
+      Image shows a noisy ${example.label}. Detector predicted “${predicted}” with activation ${activation.toFixed(2)}.
+      ${updated ? "That was a mistake, so its active-pixel weights and threshold were updated." : "That was correct, so the weights stayed the same."}`;
+  }
+
+  function processNextTrainingExample() {
+    if (!trainingExamples.length || trainingIndex >= trainingExamples.length) beginTrainingSession();
+    const example = trainingExamples[trainingIndex];
+    const activation = example.pixels.reduce((sum, value, index) => sum + value * detectorWeights[index], detectorBias);
+    const prediction = activation >= 0 ? 1 : 0;
+    const updated = prediction !== example.target;
+    if (updated) {
+      const error = example.target - prediction;
+      example.pixels.forEach((value, index) => {
+        detectorWeights[index] += .12 * error * value;
+      });
+      detectorBias += .12 * error;
+      trainingUpdates += 1;
+    } else {
+      trainingCorrect += 1;
+    }
+    trainingIndex += 1;
+    const accuracy = Math.round(trainingCorrect / trainingIndex * 100);
+    showTrainingExample(example, prediction, activation, updated);
+    trainingProgressEl.style.width = `${trainingIndex / trainingExamples.length * 100}%`;
+    if (trainingIndex === trainingExamples.length) {
+      consolidateLearnedWeights(trainingExamples);
+      const validationAccuracy = calibrateDetectorThreshold();
+      trainingStatusEl.textContent = `Training complete: ${trainingUpdates} mistakes updated the detector. Pixel evidence was consolidated across all examples, then the threshold reached ${validationAccuracy}% accuracy on 120 new examples.`;
+    } else {
+      trainingStatusEl.textContent = `${trainingIndex} of ${trainingExamples.length} examples presented · ${accuracy}% correct so far · ${trainingUpdates} weight updates.`;
+    }
+    renderDetector();
+    return trainingIndex < trainingExamples.length;
+  }
+
+  stepTrainingEl.addEventListener("click", () => {
+    if (detectorTraining) return;
+    processNextTrainingExample();
+    stepTrainingEl.textContent = trainingIndex >= trainingExamples.length ? "Start new session" : "Step";
+  });
+
+  trainButtonEl.addEventListener("click", async () => {
+    if (detectorTraining) return;
+    beginTrainingSession();
+    detectorTraining = true;
+    trainButtonEl.disabled = true;
+    stepTrainingEl.disabled = true;
+    trainButtonEl.textContent = "Training…";
+    while (processNextTrainingExample()) {
+      await waitForAnimation(180);
+    }
+    trainButtonEl.disabled = false;
+    stepTrainingEl.disabled = false;
+    trainButtonEl.textContent = "Train again";
+    stepTrainingEl.textContent = "Start new session";
+    detectorTraining = false;
+  });
+
+  detectorPixels.splice(0, detectorPixels.length, ...detectorTemplate);
+  renderDetector();
   render();
   renderXor();
 })();
