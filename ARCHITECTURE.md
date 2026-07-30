@@ -152,3 +152,13 @@ When adding features, follow these principles:
 5. Preserve theme class conventions so shared CSS variables continue to work.
 
 This approach keeps the codebase simple, teachable, and maintainable as new courses and visualizers are added.
+
+### AI-100 Interactive Explorer modules
+
+AI-100 concept tools can opt into the shared Explorer shell:
+
+- `assets/css/components/ai-explorer.css` provides the suite layout, cards, mode switcher, drawers, presentation controls, responsive behavior, and reduced-motion support.
+- `assets/js/components/ai-explorer-shell.js` owns mode changes, guided-step navigation, keyboard controls, help/cue-card drawers, pause/reset behavior, and notifications.
+- Each module owns only its educational data, visualization renderer, and concept-specific interactions.
+
+To add a module, create a static HTML page, include both shared Explorer assets, and call `AIExplorer.init()` with `steps`, `onStep`, `onMode`, `onPause`, and `onReset` hooks as needed. This keeps Decision Trees, Search, Reinforcement Learning, and future modules visually and behaviorally consistent without coupling their simulations.
