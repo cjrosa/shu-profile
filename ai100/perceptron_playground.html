@@ -775,6 +775,7 @@
     cursor: crosshair;
   }
   .digit-pixel.on { background: var(--ink); }
+  .digit-pixel.gray { background: #8f9a96; }
   .digit-grid.show-weights .digit-pixel { background: #f7d9d4; }
   .digit-grid.show-weights .digit-pixel.positive { background: #a8d2b9; }
   .digit-grid.show-weights .digit-pixel.strong { background: var(--green); }
@@ -839,6 +840,7 @@
   }
   .training-preview i { background: white; }
   .training-preview i.on { background: var(--ink); }
+  .training-preview i.gray { background: #8f9a96; }
   .training-example-copy { color: var(--muted); font-size: 11px; line-height: 1.5; }
   .training-example-copy strong { color: var(--ink); font-size: 13px; }
   .training-progress {
@@ -1262,7 +1264,7 @@
     <div class="detector-layout">
       <section class="panel pixel-panel">
         <h2>1. Give it an image</h2>
-        <p>Choose a sample, or draw by clicking and dragging across the pixels.</p>
+        <p>Choose a sample, or click pixels to cycle through white, gray, and black. Drag to paint with the selected intensity.</p>
         <div class="digit-grid" id="digit-grid" role="grid" aria-label="Editable 18 by 18 pixel image"></div>
         <div class="weight-legend" id="weight-legend" aria-label="Detector weight colors" hidden>
           <span><i class="weight-swatch strong"></i>Strong positive weight</span>
@@ -1281,13 +1283,14 @@
 
       <section class="panel detector-panel">
         <h2>2. Follow all 324 signals</h2>
-        <p>Black pixels have intensity 1; white pixels have intensity 0. Each input has its own weight, although only a summary can fit here.</p>
+        <p>White pixels have intensity 0, gray pixels have intensity 0.5, and black pixels have intensity 1. Each input has its own weight.</p>
         <div class="detector-flow">
           <div class="detector-stack">
             <div class="detector-step">
               <strong>324 pixel inputs</strong>
               <div class="input-counts">
                 <span id="active-pixels">0 black pixels send a value of 1</span>
+                <span id="gray-pixels">0 gray pixels send a value of 0.5</span>
                 <span id="inactive-pixels">324 white pixels send a value of 0</span>
               </div>
               <p>Every square is a separate input. Its value is multiplied by that location&rsquo;s learned weight before all 324 results are added.</p>
@@ -2121,7 +2124,20 @@
     return pixels;
   }
 
-  const detectorTemplate = segmentPixels("abcdefg");
+  function addGrayTones(pixels) {
+    return pixels.map((value, index) => {
+      if (!value) return 0;
+      const row = Math.floor(index / detectorSize);
+      const column = index % detectorSize;
+      return (row * 3 + column * 5) % 11 < 3 ? .5 : 1;
+    });
+  }
+
+  function digitPixels(segments) {
+    return addGrayTones(segmentPixels(segments));
+  }
+
+  const detectorTemplate = digitPixels("abcdefg");
   function randomDetectorValue() {
     return Math.random() * 2 - 1;
   }
@@ -2137,9 +2153,12 @@
     const threshold = -detectorBias;
     const fires = weightedInput + detectorBias >= 0;
     const active = detectorPixels.filter(Boolean).length;
+    const black = detectorPixels.filter(value => value === 1).length;
+    const gray = detectorPixels.filter(value => value === .5).length;
     const strongestPositive = Math.max(.01, ...detectorWeights);
     Array.from(digitGridEl.children).forEach((pixel, index) => {
-      pixel.classList.toggle("on", Boolean(detectorPixels[index]) && !showingWeights);
+      pixel.classList.toggle("on", detectorPixels[index] === 1 && !showingWeights);
+      pixel.classList.toggle("gray", detectorPixels[index] === .5 && !showingWeights);
       pixel.classList.toggle("positive", detectorWeights[index] > .025);
       pixel.classList.toggle("strong", detectorWeights[index] >= strongestPositive * .55);
       pixel.classList.toggle("neutral", Math.abs(detectorWeights[index]) <= .025);
@@ -2147,7 +2166,8 @@
     });
     digitGridEl.classList.toggle("show-weights", showingWeights);
     document.getElementById("weight-legend").hidden = !showingWeights;
-    document.getElementById("active-pixels").textContent = `${active} black ${active === 1 ? "pixel sends" : "pixels send"} a value of 1`;
+    document.getElementById("active-pixels").textContent = `${black} black ${black === 1 ? "pixel sends" : "pixels send"} a value of 1`;
+    document.getElementById("gray-pixels").textContent = `${gray} gray ${gray === 1 ? "pixel sends" : "pixels send"} a value of 0.5`;
     const inactive = detectorPixels.length - active;
     document.getElementById("inactive-pixels").textContent = `${inactive} white ${inactive === 1 ? "pixel sends" : "pixels send"} a value of 0`;
     document.getElementById("detector-score").textContent = weightedInput.toFixed(1);
@@ -2174,7 +2194,7 @@
       if (showingWeights) return;
       event.preventDefault();
       detectorDrawing = true;
-      detectorDrawValue = detectorPixels[index] ? 0 : 1;
+      detectorDrawValue = detectorPixels[index] === 0 ? .5 : detectorPixels[index] === .5 ? 1 : 0;
       setDetectorPixel(index, detectorDrawValue);
     });
     pixel.addEventListener("pointerenter", () => {
@@ -2183,7 +2203,8 @@
     pixel.addEventListener("keydown", event => {
       if ((event.key === " " || event.key === "Enter") && !showingWeights) {
         event.preventDefault();
-        setDetectorPixel(index, detectorPixels[index] ? 0 : 1);
+        const nextValue = detectorPixels[index] === 0 ? .5 : detectorPixels[index] === .5 ? 1 : 0;
+        setDetectorPixel(index, nextValue);
       }
     });
     digitGridEl.appendChild(pixel);
@@ -2195,12 +2216,15 @@
       const digit = button.dataset.digit;
       if (digit === "noise") {
         for (let index = 0; index < detectorPixels.length; index += 1) {
-          if (Math.random() < .055) detectorPixels[index] = detectorPixels[index] ? 0 : 1;
+          if (Math.random() < .055) {
+            const choices = [0, .5, 1].filter(value => value !== detectorPixels[index]);
+            detectorPixels[index] = choices[Math.floor(Math.random() * choices.length)];
+          }
         }
       } else {
         const sample = digit === "8" ? detectorTemplate
-          : digit === "0" ? segmentPixels("abcdef")
-            : digit === "3" ? segmentPixels("abcdg")
+          : digit === "0" ? digitPixels("abcdef")
+            : digit === "3" ? digitPixels("abcdg")
               : Array(detectorPixels.length).fill(0);
         detectorPixels.splice(0, detectorPixels.length, ...sample);
       }
@@ -2219,12 +2243,19 @@
   });
 
   function noisyTrainingExample(base, noiseRate = .035) {
-    return base.map(value => Math.random() < noiseRate ? (value ? 0 : 1) : value);
+    return base.map(value => {
+      if (Math.random() >= noiseRate) return value;
+      const choices = [0, .5, 1].filter(choice => choice !== value);
+      return choices[Math.floor(Math.random() * choices.length)];
+    });
   }
 
   function randomPixelField(minDensity = .12, maxDensity = .52) {
     const density = minDensity + Math.random() * (maxDensity - minDensity);
-    return Array.from({ length: detectorPixels.length }, () => Math.random() < density ? 1 : 0);
+    return Array.from({ length: detectorPixels.length }, () => {
+      if (Math.random() >= density) return 0;
+      return Math.random() < .28 ? .5 : 1;
+    });
   }
 
   function scrambledEight() {
@@ -2239,10 +2270,10 @@
   function buildTrainingSet(count) {
     const positive = { make: () => noisyTrainingExample(detectorTemplate, .045), target: 1, label: "8" };
     const negatives = [
-      { make: () => noisyTrainingExample(segmentPixels("abcdef")), target: 0, label: "0" },
-      { make: () => noisyTrainingExample(segmentPixels("abcdg")), target: 0, label: "3" },
-      { make: () => noisyTrainingExample(segmentPixels("abcdfg")), target: 0, label: "9" },
-      { make: () => noisyTrainingExample(segmentPixels("bc")), target: 0, label: "1" },
+      { make: () => noisyTrainingExample(digitPixels("abcdef")), target: 0, label: "0" },
+      { make: () => noisyTrainingExample(digitPixels("abcdg")), target: 0, label: "3" },
+      { make: () => noisyTrainingExample(digitPixels("abcdfg")), target: 0, label: "9" },
+      { make: () => noisyTrainingExample(digitPixels("bc")), target: 0, label: "1" },
       { make: () => randomPixelField(), target: 0, label: "random pixels" },
       { make: () => scrambledEight(), target: 0, label: "scrambled pixels" }
     ];
@@ -2260,10 +2291,10 @@
       validation.push({ pixels: noisyTrainingExample(detectorTemplate, .055), target: 1 });
     }
     const negativeMakers = [
-      () => noisyTrainingExample(segmentPixels("abcdef"), .045),
-      () => noisyTrainingExample(segmentPixels("abcdg"), .045),
-      () => noisyTrainingExample(segmentPixels("abcdfg"), .045),
-      () => noisyTrainingExample(segmentPixels("bc"), .045),
+      () => noisyTrainingExample(digitPixels("abcdef"), .045),
+      () => noisyTrainingExample(digitPixels("abcdg"), .045),
+      () => noisyTrainingExample(digitPixels("abcdfg"), .045),
+      () => noisyTrainingExample(digitPixels("bc"), .045),
       () => randomPixelField(),
       () => scrambledEight()
     ];
@@ -2334,7 +2365,8 @@
 
   function showTrainingExample(example, prediction, activation, updated) {
     Array.from(trainingPreviewEl.children).forEach((pixel, index) => {
-      pixel.classList.toggle("on", Boolean(example.pixels[index]));
+      pixel.classList.toggle("on", example.pixels[index] === 1);
+      pixel.classList.toggle("gray", example.pixels[index] === .5);
     });
     const expected = example.target ? "8" : "not an 8";
     const predicted = prediction ? "8" : "not an 8";
