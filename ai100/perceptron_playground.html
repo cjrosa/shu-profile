@@ -891,6 +891,22 @@
   .detector-step .input-counts { display: grid; gap: 3px; margin-bottom: 7px; }
   .detector-step .input-counts span { color: var(--ink); font-weight: 800; }
   .detector-step p { margin: 0; }
+  .detector-step #show-inputs { width: 100%; margin-top: 12px; }
+  .pixel-flight {
+    position: fixed;
+    z-index: 100;
+    border: 1px solid #cbd6d1;
+    background: white;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(1);
+    transition: left .38s ease-in, top .38s ease-in, transform .38s ease-in, opacity .38s ease-in;
+  }
+  .pixel-flight.gray { background: #8f9a96; }
+  .pixel-flight.black { background: var(--ink); }
+  .pixel-flight.flying {
+    transform: translate(-50%, -50%) scale(.2);
+    opacity: .25;
+  }
   .detector-arrow { color: var(--orange); font-size: 24px; font-weight: 800; }
   .detector-neuron {
     display: grid;
@@ -913,7 +929,15 @@
     text-align: center;
   }
   .detector-result.no { background: var(--red-soft); color: var(--red); }
+  .detector-result.untrained { background: #eef2f0; color: var(--muted); }
   .detector-result span { display: block; margin-top: 4px; font-size: 11px; font-weight: 500; }
+  .detector-neuron.untrained { border-color: #9aa7a2; background: #f4f6f5; }
+  .detector-neuron.calculation-complete { animation: detector-pulse .7s ease-out; }
+  @keyframes detector-pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(31, 122, 70, .42); }
+    45% { transform: scale(1.055); box-shadow: 0 0 0 14px rgba(31, 122, 70, .18); }
+    100% { transform: scale(1); box-shadow: 0 0 0 25px rgba(31, 122, 70, 0); }
+  }
   .detector-note { margin-top: 16px; padding: 13px 15px; border-left: 3px solid var(--orange); background: var(--orange-soft); color: var(--muted); font-size: 12px; line-height: 1.5; }
   .detector-note strong { color: var(--ink); }
 
@@ -1242,7 +1266,8 @@
     .neuron-ring.receiving,
     .sum-value.updating,
     .output-line.activating,
-    .output-dot.activating { animation: none; }
+    .output-dot.activating,
+    .detector-neuron.calculation-complete { animation: none; }
   }
 </style>
 </head>
@@ -1294,6 +1319,7 @@
                 <span id="inactive-pixels">324 white pixels send a value of 0</span>
               </div>
               <p>Every square is a separate input. Its value is multiplied by that location&rsquo;s learned weight before all 324 results are added.</p>
+              <button class="start-button" id="show-inputs" type="button">Show inputs</button>
             </div>
           </div>
           <div class="detector-arrow" aria-hidden="true">&rarr;</div>
@@ -2147,6 +2173,7 @@
   let detectorWeights = randomDetectorWeights();
   let detectorBias = -randomDetectorValue();
   let detectorTraining = false;
+  let detectorModelState = "untrained";
 
   function renderDetector() {
     const weightedInput = detectorPixels.reduce((sum, value, index) => sum + value * detectorWeights[index], 0);
@@ -2173,10 +2200,19 @@
     document.getElementById("detector-score").textContent = weightedInput.toFixed(1);
     document.getElementById("detector-equation").textContent = `${weightedInput.toFixed(1)} ${fires ? "≥" : "<"} threshold ${threshold.toFixed(1)}`;
     const result = document.getElementById("detector-result");
-    result.classList.toggle("no", !fires);
-    result.innerHTML = fires
-      ? `Output 1: “8 detected”<span>The weighted evidence reached the threshold.</span>`
-      : `Output 0: “not an 8”<span>The weighted evidence did not reach the threshold.</span>`;
+    const neuron = document.querySelector(".detector-neuron");
+    result.classList.toggle("untrained", detectorModelState !== "trained");
+    result.classList.toggle("no", detectorModelState === "trained" && !fires);
+    neuron.classList.toggle("untrained", detectorModelState !== "trained");
+    if (detectorModelState === "untrained") {
+      result.innerHTML = `Not trained yet<span>The random starting weights do not represent a meaningful prediction.</span>`;
+    } else if (detectorModelState === "training") {
+      result.innerHTML = `Training in progress<span>Complete all 200 examples before using the detector&rsquo;s output.</span>`;
+    } else {
+      result.innerHTML = fires
+        ? `Output 1: “8 detected”<span>The weighted evidence reached the threshold.</span>`
+        : `Output 0: “not an 8”<span>The weighted evidence did not reach the threshold.</span>`;
+    }
   }
 
   function setDetectorPixel(index, value) {
@@ -2210,6 +2246,48 @@
     digitGridEl.appendChild(pixel);
   });
   window.addEventListener("pointerup", () => { detectorDrawing = false; });
+
+  document.getElementById("show-inputs").addEventListener("click", async event => {
+    const button = event.currentTarget;
+    if (button.disabled) return;
+    button.disabled = true;
+    const cells = Array.from(digitGridEl.children);
+    const neuron = document.querySelector(".detector-neuron");
+    const neuronRect = neuron.getBoundingClientRect();
+    const destinationX = neuronRect.left + neuronRect.width / 2;
+    const destinationY = neuronRect.top + neuronRect.height / 2;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    for (let index = 0; index < cells.length; index += 1) {
+      const cellRect = cells[index].getBoundingClientRect();
+      const flight = document.createElement("i");
+      const value = detectorPixels[index];
+      flight.className = `pixel-flight${value === 1 ? " black" : value === .5 ? " gray" : ""}`;
+      flight.style.left = `${cellRect.left + cellRect.width / 2}px`;
+      flight.style.top = `${cellRect.top + cellRect.height / 2}px`;
+      flight.style.width = `${cellRect.width}px`;
+      flight.style.height = `${cellRect.height}px`;
+      flight.setAttribute("aria-hidden", "true");
+      document.body.appendChild(flight);
+      void flight.offsetWidth;
+      button.textContent = `Input ${index + 1} of ${cells.length}`;
+
+      requestAnimationFrame(() => {
+        flight.style.left = `${destinationX}px`;
+        flight.style.top = `${destinationY}px`;
+        flight.classList.add("flying");
+      });
+      window.setTimeout(() => flight.remove(), reducedMotion ? 30 : 420);
+      await new Promise(resolve => window.setTimeout(resolve, reducedMotion ? 2 : 13));
+    }
+
+    await new Promise(resolve => window.setTimeout(resolve, reducedMotion ? 40 : 430));
+    neuron.classList.remove("calculation-complete");
+    void neuron.offsetWidth;
+    neuron.classList.add("calculation-complete");
+    button.textContent = "Show inputs";
+    button.disabled = false;
+  });
 
   document.querySelectorAll("[data-digit]").forEach(button => {
     button.addEventListener("click", () => {
@@ -2355,6 +2433,7 @@
     trainingUpdates = 0;
     detectorWeights = randomDetectorWeights();
     detectorBias = -randomDetectorValue();
+    detectorModelState = "training";
     showingWeights = true;
     document.getElementById("weight-toggle").setAttribute("aria-pressed", "true");
     document.getElementById("weight-toggle").textContent = "Show input image";
@@ -2400,6 +2479,7 @@
     if (trainingIndex === trainingExamples.length) {
       consolidateLearnedWeights(trainingExamples);
       const validationAccuracy = calibrateDetectorThreshold();
+      detectorModelState = "trained";
       trainingStatusEl.textContent = `Training complete: ${trainingUpdates} mistakes updated the detector. Pixel evidence was consolidated across all examples, then the threshold reached ${validationAccuracy}% accuracy on 120 new examples.`;
     } else {
       trainingStatusEl.textContent = `${trainingIndex} of ${trainingExamples.length} examples presented · ${accuracy}% correct so far · ${trainingUpdates} weight updates.`;
