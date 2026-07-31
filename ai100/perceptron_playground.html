@@ -1096,13 +1096,19 @@
   .xor-reveal p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
 
   .layer-demo {
+    position: relative;
     display: grid;
-    grid-template-columns: minmax(210px, 1fr) auto minmax(150px, .8fr) auto minmax(150px, .8fr);
-    gap: 16px;
+    grid-template-columns: minmax(170px, .9fr) minmax(72px, .35fr) minmax(170px, .9fr) minmax(72px, .35fr) minmax(170px, .9fr);
+    gap: 10px;
     align-items: center;
     margin-top: 16px;
     text-align: center;
   }
+
+  #xor-network-connections { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; pointer-events: none; }
+  .layer-demo > :not(#xor-network-connections):not(.flying-signal) { position: relative; z-index: 1; }
+
+  .layer-column-label { margin-bottom: 9px; color: var(--ink); font-size: 11px; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
 
   .layer-node {
     width: 142px;
@@ -1119,7 +1125,7 @@
     color: var(--green-dark);
     font-size: 12px;
     font-weight: 800;
-    opacity: .38;
+    opacity: .62;
     transition: opacity .2s, transform .2s, box-shadow .2s;
   }
 
@@ -1189,7 +1195,30 @@
     font-weight: 500;
   }
 
-  .layer-arrow { color: var(--green); font-size: 20px; }
+  .perceptron-rule { display: block; max-width: 112px; line-height: 1.2; }
+  .logic-name { margin-top: 3px; color: var(--muted); font-size: 10px; font-weight: 650; }
+  .layer-node .perceptron-signal { margin-top: 5px; font-weight: 800; }
+
+  .flying-signal {
+    position: absolute;
+    z-index: 4;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 2px solid var(--green);
+    border-radius: 50%;
+    background: #fff;
+    color: var(--green-dark);
+    box-shadow: 0 3px 9px rgba(25, 70, 43, .2);
+    font-size: 13px;
+    font-weight: 900;
+    pointer-events: none;
+  }
+
+  .network-spacer { min-width: 72px; min-height: 1px; }
+  .perceptron-mechanics { margin-top: 16px !important; padding: 12px 14px; border-left: 3px solid var(--green); background: var(--green-soft); color: var(--ink) !important; }
+  .perceptron-mechanics code { color: var(--green-dark); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-weight: 800; }
 
   .solution-controls {
     display: flex;
@@ -1255,7 +1284,7 @@
     .detector-arrow { transform: rotate(90deg); text-align: center; }
     .xor-cases { grid-template-columns: 1fr; }
     .layer-demo { grid-template-columns: 1fr; gap: 12px; }
-    .layer-arrow { transform: rotate(90deg); }
+    .network-spacer { min-width: 0; min-height: 54px; }
     .diagram, #network { min-height: 340px; }
   }
 
@@ -1513,6 +1542,7 @@
         <button class="challenge-button" id="xor-reveal" type="button">Reveal the two-layer solution</button>
       </div>
       <div id="xor-layers" hidden>
+        <p class="perceptron-mechanics"><strong>Every perceptron makes a decision in the same way:</strong> it multiplies each input by its weight, adds the results, and answers Yes when the total reaches its threshold. The network passes Yes as <code>1</code> and No as <code>0</code>.</p>
         <div class="solution-controls" role="group" aria-label="Choose an XOR situation">
           <strong>Try:</strong>
           <button class="solution-case" type="button" data-solution-case="0" aria-pressed="true">A No · B No</button>
@@ -1522,30 +1552,40 @@
           <button class="challenge-button" id="xor-solution-next" type="button">Start solution</button>
         </div>
         <div class="layer-demo" aria-label="Two-layer XOR solution">
-          <div class="input-pair" id="layer-inputs">
-            <div class="input-person">
-              <div class="layer-node input-picture-a" role="img" aria-label="Illustrated person for input A"></div>
-              <strong>Input A</strong>
-              <small id="layer-a-value"></small>
-            </div>
-            <div class="input-person">
-              <div class="layer-node input-picture-b" role="img" aria-label="Illustrated person for input B"></div>
-              <strong>Input B</strong>
-              <small id="layer-b-value"></small>
+          <canvas id="xor-network-connections" aria-hidden="true"></canvas>
+          <div>
+            <div class="layer-column-label">Inputs</div>
+            <div class="input-pair" id="layer-inputs">
+              <div class="input-person">
+                <div class="layer-node input-picture-a" role="img" aria-label="Illustrated person for input A"></div>
+                <strong>Input A</strong>
+                <small id="layer-a-value"></small>
+              </div>
+              <div class="input-person">
+                <div class="layer-node input-picture-b" role="img" aria-label="Illustrated person for input B"></div>
+                <strong>Input B</strong>
+                <small id="layer-b-value"></small>
+              </div>
             </div>
           </div>
-          <div class="layer-arrow" aria-hidden="true">&rarr;</div>
-          <div class="layer-middle">
-            <div class="layer-node" id="layer-or">Neuron 1: OR<small id="layer-or-value">At least one says Yes</small></div>
-            <div class="layer-node" id="layer-nand">Neuron 2: NAND<small id="layer-nand-value">Not both say Yes</small></div>
+          <div class="network-spacer" aria-hidden="true"></div>
+          <div>
+            <div class="layer-column-label">Hidden layer</div>
+            <div class="layer-middle">
+              <div class="layer-node" id="layer-or"><strong class="perceptron-rule">At least one Yes</strong><span class="logic-name">Also called OR</span><small class="perceptron-signal" id="layer-or-value" hidden>Sends: 0 (No)</small></div>
+              <div class="layer-node" id="layer-nand"><strong class="perceptron-rule">Not both Yes</strong><span class="logic-name">Also called NAND</span><small class="perceptron-signal" id="layer-nand-value" hidden>Sends: 1 (Yes)</small></div>
+            </div>
           </div>
-          <div class="layer-arrow" aria-hidden="true">&rarr;</div>
-          <div class="layer-node" id="layer-final">Final neuron: AND<small id="layer-final-value">Both conditions must be true</small></div>
+          <div class="network-spacer" aria-hidden="true"></div>
+          <div>
+            <div class="layer-column-label">Output layer</div>
+            <div class="layer-node" id="layer-final"><strong class="perceptron-rule">Both conditions true</strong><span class="logic-name">Also called AND</span><small class="perceptron-signal" id="layer-final-value" hidden>XOR result: 0 (No)</small></div>
+          </div>
         </div>
         <div class="solution-narration" id="solution-narration" aria-live="polite">Choose a situation, then press Start solution.</div>
         <div class="takeaway">
-          <div><strong>What changed?</strong>Two intermediate neurons created useful smaller decisions.</div>
-          <div><strong>Why layers matter</strong>A second layer combines those decisions and solves all four XOR situations.</div>
+          <div><strong>What changed?</strong>Two hidden perceptrons answer simpler questions: &ldquo;at least one?&rdquo; and &ldquo;not both?&rdquo;</div>
+          <div><strong>Why layers matter</strong>The output perceptron checks whether both answers are 1, solving all four XOR situations.</div>
         </div>
       </div>
     </section>
@@ -2035,11 +2075,155 @@
   let solutionCaseIndex = 0;
   let solutionStep = -1;
 
+  function drawXorConnections() {
+    const canvas = document.getElementById("xor-network-connections");
+    if (!canvas || canvas.offsetParent === null) return;
+    const diagram = canvas.parentElement;
+    const diagramRect = diagram.getBoundingClientRect();
+    const scale = window.devicePixelRatio || 1;
+    canvas.width = Math.round(diagramRect.width * scale);
+    canvas.height = Math.round(diagramRect.height * scale);
+    const context = canvas.getContext("2d");
+    context.scale(scale, scale);
+    context.strokeStyle = "rgba(31, 122, 70, .58)";
+    context.fillStyle = "#1f7a46";
+    context.lineWidth = 2.5;
+    context.lineCap = "round";
+
+    function circleMetrics(element) {
+      const rect = element.getBoundingClientRect();
+      return {
+        x: rect.left - diagramRect.left + rect.width / 2,
+        y: rect.top - diagramRect.top + rect.height / 2,
+        radius: Math.min(rect.width, rect.height) / 2
+      };
+    }
+
+    function boundaryPoint(circle, toward) {
+      const dx = toward.x - circle.x;
+      const dy = toward.y - circle.y;
+      const length = Math.hypot(dx, dy) || 1;
+      return { x: circle.x + dx / length * circle.radius, y: circle.y + dy / length * circle.radius };
+    }
+
+    function drawWeightLabel(start, end, weight, position, offset) {
+      const x = start.x + (end.x - start.x) * position;
+      const y = start.y + (end.y - start.y) * position;
+      const dx = end.x - start.x;
+      const dy = end.y - start.y;
+      const length = Math.hypot(dx, dy) || 1;
+      const labelX = x - dy / length * offset;
+      const labelY = y + dx / length * offset;
+      const label = `w = ${weight}`;
+      context.save();
+      context.font = "700 11px ui-monospace, SFMono-Regular, Consolas, monospace";
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      const width = context.measureText(label).width + 12;
+      context.fillStyle = "rgba(255, 255, 255, .94)";
+      context.strokeStyle = "rgba(31, 122, 70, .42)";
+      context.lineWidth = 1;
+      context.beginPath();
+      context.roundRect(labelX - width / 2, labelY - 10, width, 20, 6);
+      context.fill();
+      context.stroke();
+      context.fillStyle = "#245b39";
+      context.fillText(label, labelX, labelY + .5);
+      context.restore();
+    }
+
+    function connect(sourceElement, targetElement, weight, position = .38, offset = 0) {
+      const source = circleMetrics(sourceElement);
+      const target = circleMetrics(targetElement);
+      const start = boundaryPoint(source, target);
+      const end = boundaryPoint(target, source);
+      context.beginPath();
+      context.moveTo(start.x, start.y);
+      context.lineTo(end.x, end.y);
+      context.stroke();
+      [start, end].forEach(point => {
+        context.beginPath();
+        context.arc(point.x, point.y, 4.5, 0, Math.PI * 2);
+        context.fill();
+      });
+      drawWeightLabel(start, end, weight, position, offset);
+    }
+
+    const inputs = document.querySelectorAll("#layer-inputs .layer-node");
+    const orNode = document.getElementById("layer-or");
+    const nandNode = document.getElementById("layer-nand");
+    const outputNode = document.getElementById("layer-final");
+    inputs.forEach((input, index) => {
+      connect(input, orNode, "1", .35, index ? -8 : 8);
+      connect(input, nandNode, "−1", .35, index ? 8 : -8);
+    });
+    connect(orNode, outputNode, "1", .5, -8);
+    connect(nandNode, outputNode, "1", .5, 8);
+  }
+
+  function animateXorSignals(step) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || step < 1) return Promise.resolve();
+    const diagram = document.querySelector(".layer-demo");
+    const diagramRect = diagram.getBoundingClientRect();
+    diagram.querySelectorAll(".flying-signal").forEach(signal => signal.remove());
+
+    function circleMetrics(element) {
+      const rect = element.getBoundingClientRect();
+      return {
+        x: rect.left - diagramRect.left + rect.width / 2,
+        y: rect.top - diagramRect.top + rect.height / 2,
+        radius: Math.min(rect.width, rect.height) / 2
+      };
+    }
+
+    function boundaryPoint(circle, toward) {
+      const dx = toward.x - circle.x;
+      const dy = toward.y - circle.y;
+      const length = Math.hypot(dx, dy) || 1;
+      return { x: circle.x + dx / length * circle.radius, y: circle.y + dy / length * circle.radius };
+    }
+
+    function fly(sourceElement, targetElement, value, delay) {
+      const source = circleMetrics(sourceElement);
+      const target = circleMetrics(targetElement);
+      const start = boundaryPoint(source, target);
+      const end = boundaryPoint(target, source);
+      const signal = document.createElement("span");
+      signal.className = "flying-signal";
+      signal.textContent = value;
+      signal.setAttribute("aria-hidden", "true");
+      signal.style.left = `${start.x}px`;
+      signal.style.top = `${start.y}px`;
+      diagram.appendChild(signal);
+      const animation = signal.animate([
+        { transform: "translate(-50%, -50%) scale(.75)", opacity: 0 },
+        { transform: "translate(-50%, -50%) scale(1)", opacity: 1, offset: .14 },
+        { transform: `translate(calc(-50% + ${end.x - start.x}px), calc(-50% + ${end.y - start.y}px)) scale(1)`, opacity: 1, offset: .86 },
+        { transform: `translate(calc(-50% + ${end.x - start.x}px), calc(-50% + ${end.y - start.y}px)) scale(.75)`, opacity: 0 }
+      ], { duration: 900, delay, easing: "cubic-bezier(.4, 0, .2, 1)", fill: "forwards" });
+      return animation.finished.catch(() => {}).finally(() => signal.remove());
+    }
+
+    const item = xorCases[solutionCaseIndex];
+    const inputs = document.querySelectorAll("#layer-inputs .layer-node");
+    const orNode = document.getElementById("layer-or");
+    const nandNode = document.getElementById("layer-nand");
+    const outputNode = document.getElementById("layer-final");
+    if (step === 1) return Promise.all([fly(inputs[0], orNode, item.a, 0), fly(inputs[1], orNode, item.b, 110)]);
+    if (step === 2) return Promise.all([fly(inputs[0], nandNode, item.a, 0), fly(inputs[1], nandNode, item.b, 110)]);
+    const orValue = item.a || item.b ? 1 : 0;
+    const nandValue = item.a && item.b ? 0 : 1;
+    return Promise.all([fly(orNode, outputNode, orValue, 0), fly(nandNode, outputNode, nandValue, 110)]);
+  }
+
   function renderXorSolution() {
     const item = xorCases[solutionCaseIndex];
     const orValue = item.a || item.b ? 1 : 0;
     const nandValue = item.a && item.b ? 0 : 1;
     const finalValue = orValue && nandValue ? 1 : 0;
+    const orScore = item.a + item.b;
+    const nandScore = -item.a - item.b;
+    const finalScore = orValue + nandValue;
     const stages = [
       document.getElementById("layer-inputs"),
       document.getElementById("layer-or"),
@@ -2047,16 +2231,19 @@
       document.getElementById("layer-final")
     ];
 
-    document.getElementById("layer-a-value").textContent = item.a ? "Yes" : "No";
-    document.getElementById("layer-b-value").textContent = item.b ? "Yes" : "No";
-    document.getElementById("layer-or-value").textContent = `At least one Yes? ${orValue ? "Yes" : "No"}`;
-    document.getElementById("layer-nand-value").textContent = `Not both Yes? ${nandValue ? "Yes" : "No"}`;
-    document.getElementById("layer-final-value").textContent = `Both conditions true? ${finalValue ? "Yes" : "No"}`;
+    document.getElementById("layer-a-value").textContent = `${item.a} (${item.a ? "Yes" : "No"})`;
+    document.getElementById("layer-b-value").textContent = `${item.b} (${item.b ? "Yes" : "No"})`;
+    document.getElementById("layer-or-value").textContent = `Sends: ${orValue} (${orValue ? "Yes" : "No"})`;
+    document.getElementById("layer-nand-value").textContent = `Sends: ${nandValue} (${nandValue ? "Yes" : "No"})`;
+    document.getElementById("layer-final-value").textContent = `XOR result: ${finalValue} (${finalValue ? "Yes" : "No"})`;
 
     stages.forEach((stage, index) => {
       stage.classList.toggle("active", index === solutionStep);
       stage.classList.toggle("complete", index < solutionStep);
     });
+    document.getElementById("layer-or-value").hidden = solutionStep < 1;
+    document.getElementById("layer-nand-value").hidden = solutionStep < 2;
+    document.getElementById("layer-final-value").hidden = solutionStep < 3;
 
     const narration = document.getElementById("solution-narration");
     const nextButton = document.getElementById("xor-solution-next");
@@ -2064,19 +2251,22 @@
       narration.textContent = "Choose a situation, then press Start solution.";
       nextButton.textContent = "Start solution";
     } else if (solutionStep === 0) {
-      narration.textContent = `Start with the two inputs: Friend A says ${item.a ? "Yes" : "No"} and Friend B says ${item.b ? "Yes" : "No"}.`;
-      nextButton.textContent = "Next: OR neuron";
+      narration.textContent = `Start with the inputs: A sends ${item.a} (${item.a ? "Yes" : "No"}) and B sends ${item.b} (${item.b ? "Yes" : "No"}).`;
+      nextButton.textContent = "Next: at least one?";
     } else if (solutionStep === 1) {
-      narration.textContent = `The OR neuron asks, “Did at least one friend say Yes?” The answer is ${orValue ? "Yes" : "No"}.`;
-      nextButton.textContent = "Next: NAND neuron";
+      narration.textContent = `The first perceptron uses weights 1 and 1. Its total is ${orScore}; threshold 1 makes it send ${orValue} (${orValue ? "Yes" : "No"}). This behavior is called OR.`;
+      nextButton.textContent = "Next: not both?";
     } else if (solutionStep === 2) {
-      narration.textContent = `The NAND neuron asks, “Did we avoid having both friends say Yes?” The answer is ${nandValue ? "Yes" : "No"}.`;
+      narration.textContent = `The second perceptron uses weights −1 and −1. Its total is ${nandScore}; threshold −1 makes it send ${nandValue} (${nandValue ? "Yes" : "No"}). This behavior is called NAND.`;
       nextButton.textContent = "Next: final decision";
     } else {
-      narration.textContent = `The final AND neuron combines both answers. It outputs ${finalValue ? "Yes" : "No"}, which matches the XOR rule for this situation.`;
+      narration.textContent = `The output perceptron adds the two signals: ${orValue} + ${nandValue} = ${finalScore}. Threshold 2 makes the XOR result ${finalValue} (${finalValue ? "Yes" : "No"}). This final behavior is called AND.`;
       nextButton.textContent = "Restart solution";
     }
+    requestAnimationFrame(drawXorConnections);
   }
+
+  window.addEventListener("resize", drawXorConnections);
 
   document.querySelectorAll("[data-solution-case]").forEach(button => {
     button.addEventListener("click", () => {
@@ -2089,9 +2279,13 @@
     });
   });
 
-  document.getElementById("xor-solution-next").addEventListener("click", () => {
+  document.getElementById("xor-solution-next").addEventListener("click", async event => {
+    const button = event.currentTarget;
+    button.disabled = true;
     solutionStep = solutionStep >= 3 ? -1 : solutionStep + 1;
     renderXorSolution();
+    await animateXorSignals(solutionStep);
+    button.disabled = false;
   });
 
   document.getElementById("xor-reveal").addEventListener("click", event => {
