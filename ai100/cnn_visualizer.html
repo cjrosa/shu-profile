@@ -3,417 +3,162 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CNN Visualizer</title>
+<title>How a CNN Learns</title>
 <style>
-  :root {
-    --green:#1f7a46; --green-dark:#165c35; --green-soft:#eaf6ef;
-    --ink:#17201b; --muted:#66706a; --line:#dce7e0; --page:#f4f8f5;
-    --blue:#2673c9; --amber:#d98213;
-  }
-  * { box-sizing:border-box; }
-  body { margin:0; min-height:100vh; background:var(--page); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-  button, select { font:inherit; }
-  .shell { width:min(1180px,calc(100% - 32px)); margin:0 auto; padding:28px 0 40px; }
-  .eyebrow { color:var(--green); font-size:11px; font-weight:800; letter-spacing:.13em; text-transform:uppercase; }
-  h1 { margin:5px 0 6px; font-size:clamp(25px,4vw,38px); letter-spacing:-.035em; }
-  .intro { margin:0; color:var(--muted); font-size:14px; line-height:1.6; max-width:760px; }
-  .learning-brief { display:grid; grid-template-columns:1fr 1fr; gap:1px; margin:18px 0 14px; overflow:hidden; border:1px solid var(--line); border-radius:12px; background:var(--line); }
-  .learning-brief div { background:#fff; padding:13px 15px; color:var(--muted); font-size:12px; line-height:1.5; }
-  .learning-brief strong { display:block; margin-bottom:3px; color:var(--ink); font-size:12px; }
-  .controls { display:flex; flex-wrap:wrap; align-items:end; gap:12px; margin:22px 0 14px; }
-  .control { display:grid; gap:5px; }
-  label { color:var(--muted); font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
-  select, button { min-height:38px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); padding:0 12px; }
-  button { cursor:pointer; font-weight:700; transition:.15s ease; }
-  button:hover { border-color:var(--green); color:var(--green); }
-  button.primary { border-color:var(--green); background:var(--green); color:#fff; }
-  button.primary:hover { background:var(--green-dark); color:#fff; }
-  button.toggle[aria-pressed="true"] { border-color:var(--blue); background:#edf4ff; color:var(--blue); }
-  button:disabled { cursor:not-allowed; opacity:.45; }
-  .step-indicator { min-height:38px; display:flex; align-items:center; padding:0 4px; color:var(--muted); font-size:11px; font-weight:800; white-space:nowrap; }
-  .stage { display:grid; grid-template-columns:minmax(220px,1fr) 74px minmax(185px,.78fr) 74px minmax(185px,.78fr); align-items:center; gap:12px; }
-  .panel { position:relative; height:100%; min-width:0; background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px; box-shadow:0 8px 28px rgba(21,68,41,.06); }
-  .panel-head { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; margin-bottom:14px; }
-  .panel-head-actions { display:flex; align-items:flex-start; gap:7px; }
-  .panel-title { font-size:14px; font-weight:800; }
-  .panel-note { color:var(--muted); font-size:10px; margin-top:3px; line-height:1.4; }
-  .panel-help { position:absolute; z-index:20; top:-14px; right:-14px; }
-  .panel-help summary { display:grid; place-items:center; width:27px; height:27px; border:1px solid var(--line); border-radius:50%; background:#fff; color:var(--green); font-size:13px; font-weight:850; cursor:pointer; list-style:none; }
-  .panel-help summary::-webkit-details-marker { display:none; }
-  .panel-help summary:hover, .panel-help summary:focus-visible { border-color:var(--green); background:var(--green-soft); outline:none; }
-  .panel-help[open] summary { border-color:var(--green); background:var(--green-soft); }
-  .panel-help-text { position:absolute; z-index:20; top:35px; right:0; width:250px; padding:12px 13px; border-radius:10px; background:var(--ink); color:rgba(255,255,255,.8); box-shadow:0 10px 28px rgba(0,0,0,.2); font-size:11px; line-height:1.5; }
-  .panel-help-text strong { display:block; margin-bottom:4px; color:#fff; font-size:12px; }
-  .chip { border-radius:999px; background:var(--green-soft); color:var(--green); padding:4px 8px; font-size:9px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; }
-  .view-toggle { display:flex; padding:2px; border:1px solid var(--line); border-radius:8px; background:#f3f6f4; }
-  .view-toggle button { min-height:25px; border:0; border-radius:6px; background:transparent; padding:0 8px; color:var(--muted); font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; }
-  .view-toggle button.active { background:#fff; color:var(--green); box-shadow:0 1px 4px rgba(0,0,0,.1); }
-  .grid { display:grid; gap:4px; width:100%; aspect-ratio:1; }
-  .grid.input { grid-template-columns:repeat(5,1fr); }
-  .grid.kernel,.grid.output { grid-template-columns:repeat(3,1fr); }
-  .cell { display:grid; place-items:center; min-width:0; border:1px solid #dde5df; border-radius:5px; background:#f7faf8; color:#4f5b54; font-size:clamp(10px,1.4vw,15px); font-weight:700; transition:.2s ease; }
-  .cell-detail { display:none; font-size:clamp(7px,.75vw,10px); font-weight:700; line-height:1.2; text-align:center; white-space:nowrap; }
-  .input.detail .cell.window { grid-template-rows:auto auto; align-content:center; gap:2px; }
-  .input.detail .cell.window > .cell-value { font-size:clamp(9px,1vw,12px); opacity:.8; }
-  .input.detail .cell.window .cell-detail { display:block; }
-  .input .cell.on { background:#334b3d; border-color:#334b3d; color:#fff; }
-  .input .cell.window { outline:3px solid var(--amber); outline-offset:-3px; }
-  .input.image-view { gap:0; overflow:hidden; border:1px solid #bfcac3; border-radius:8px; image-rendering:pixelated; }
-  .input.image-view .cell { border:0; border-radius:0; background:#f8faf8; color:transparent; }
-  .input.image-view .cell.on { background:#273b30; }
-  .input.image-view .cell.window { outline:0; box-shadow:inset 0 0 0 1px rgba(217,130,19,.3); }
-  .kernel .cell { background:var(--green-soft); border-color:#bee0ca; color:var(--green-dark); }
-  .kernel .cell.active { background:#cfead8; transform:scale(1.04); }
-  .cell.pair-focus { outline:4px solid var(--amber); outline-offset:-2px; transform:scale(1.08); z-index:2; box-shadow:0 5px 16px rgba(217,130,19,.3); }
-  .output .cell { background:#edf4ff; border-color:#cadcf2; color:var(--blue); }
-  .output .cell.pending { background:#f7f9f8; border-color:#e5eae7; color:#aab2ad; }
-  .output .cell.current { outline:3px solid var(--amber); outline-offset:-3px; background:#fff3df; color:#9b5700; }
-  .output .cell:not(.pending) { cursor:pointer; }
-  .output .cell.selected-activation { outline:4px solid var(--blue); outline-offset:-3px; z-index:3; }
-  .input .cell.selected-window { outline:3px solid var(--blue); outline-offset:-3px; box-shadow:inset 0 0 0 2px rgba(38,115,201,.18); }
-  .feature-insight { min-height:42px; margin-top:11px; padding:9px 10px; border-radius:8px; background:#f6f9f7; color:var(--muted); font-size:10px; line-height:1.45; }
-  .feature-insight strong { color:var(--ink); }
-  .activation-legend { margin-top:10px; }
-  .legend-bar { height:7px; border-radius:99px; background:linear-gradient(90deg,#7850a8 0%,#f2f4f2 50%,#1f7a46 100%); }
-  .legend-labels { display:flex; justify-content:space-between; gap:5px; margin-top:4px; color:var(--muted); font-size:8px; font-weight:700; }
-  .arrow { display:grid; place-items:center; color:var(--green); text-align:center; }
-  .arrow svg { width:35px; }
-  .arrow span { display:block; margin-top:7px; color:var(--muted); font-size:9px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
-  .math { margin-top:14px; border:1px solid var(--line); border-radius:12px; background:#fff; padding:16px 18px; }
-  .math-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-  .math-status { display:flex; align-items:center; gap:10px; }
-  .equation { font-size:13px; line-height:1.6; color:var(--muted); }
-  .equation strong { color:var(--ink); }
-  .score { flex:0 0 auto; min-width:76px; padding:9px 12px; border-radius:9px; background:var(--green-soft); color:var(--green-dark); text-align:center; font-size:20px; font-weight:850; }
-  .score.pulse { animation:scorePulse .3s ease; }
-  .flying-token { position:fixed; z-index:1000; display:grid; place-items:center; min-width:42px; height:34px; padding:0 8px; border-radius:7px; pointer-events:none; font-size:12px; font-weight:850; box-shadow:0 8px 24px rgba(0,0,0,.2); }
-  .flying-token.pixel { background:#334b3d; color:#fff; }
-  .flying-token.weight { background:var(--green-soft); border:2px solid var(--green); color:var(--green-dark); }
-  .flying-token.sum { background:var(--amber); color:#fff; min-width:58px; }
-  @keyframes scorePulse { 50% { transform:scale(1.12); background:#fff0d6; color:#9b5700; } }
-  .takeaway { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:14px; padding:16px 18px; border-radius:14px; background:var(--ink); color:rgba(255,255,255,.78); font-size:12px; line-height:1.5; }
-  .takeaway strong { display:block; margin-bottom:4px; color:#fff; font-size:13px; }
-  @media (max-width:850px) {
-    .stage { grid-template-columns:1fr 40px 1fr; }
-    .stage .panel:last-child { grid-column:1/-1; width:min(360px,100%); justify-self:center; }
-    .stage .arrow:nth-of-type(2) { display:none; }
-  }
-  @media (max-width:570px) {
-    .shell { width:min(100% - 20px,1180px); padding-top:18px; }
-    .stage { grid-template-columns:1fr; }
-    .arrow { transform:rotate(90deg); height:36px; }
-    .arrow span { display:none; }
-    .stage .panel:last-child { grid-column:auto; }
-    .stage .arrow:nth-of-type(2) { display:grid; }
-    .learning-brief, .takeaway { grid-template-columns:1fr; }
-    .math-top { align-items:flex-start; flex-direction:column; }
-    .math-status { width:100%; justify-content:space-between; }
-  }
+:root{--green:#1f7a46;--green-dark:#155b34;--green-soft:#e8f5ed;--ink:#17201b;--muted:#66706a;--line:#dbe6df;--page:#f3f7f4;--blue:#2774c8;--blue-soft:#eaf3fc;--amber:#d98213;--amber-soft:#fff2dd;--purple:#7652a7;--purple-soft:#f1ebf8;--red:#b9493f;--red-soft:#fff0ee;--teal:#16847b;--white:#fff}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--page);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button{font:inherit}.shell{width:min(1180px,calc(100% - 28px));margin:auto;padding:24px 0 38px}.eyebrow{color:var(--green);font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}h1{margin:5px 0 6px;font-size:clamp(27px,4vw,39px);letter-spacing:-.035em}.intro{max-width:800px;margin:0;color:var(--muted);font-size:14px;line-height:1.55}
+.chapter-bar{display:grid;grid-template-columns:repeat(4,1fr);margin:20px 0 12px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--white)}.chapter{position:relative;padding:11px 12px 11px 38px;color:var(--muted);font-size:11px;font-weight:750;border-right:1px solid var(--line)}.chapter:last-child{border:0}.chapter:before{content:attr(data-number);position:absolute;left:12px;top:9px;display:grid;place-items:center;width:19px;height:19px;border-radius:50%;background:#edf1ee;color:var(--muted);font-size:9px}.chapter.active{background:var(--green-soft);color:var(--green-dark)}.chapter.active:before{background:var(--green);color:#fff}
+.story{min-height:560px;border:1px solid var(--line);border-radius:16px;background:var(--white);box-shadow:0 10px 34px rgba(21,68,41,.07);overflow:hidden}.story-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding:18px 20px 14px;border-bottom:1px solid var(--line)}.scene-kicker{color:var(--green);font-size:10px;font-weight:850;letter-spacing:.1em;text-transform:uppercase}.scene-title{margin:3px 0;font-size:clamp(18px,2.5vw,25px);letter-spacing:-.02em}.scene-copy{margin:0;max-width:790px;color:var(--muted);font-size:12px;line-height:1.5}.scene-count{flex:0 0 auto;color:var(--muted);font-size:11px;font-weight:800;white-space:nowrap}.canvas{min-height:452px;padding:22px;display:grid;place-items:center;overflow:hidden}.scene-content{position:relative;width:100%;animation:sceneIn .28s ease}@keyframes sceneIn{from{opacity:0;transform:translateY(5px)}}
+.bike-wrap{position:relative;width:min(500px,100%);margin:auto}.bike{display:block;width:100%;height:auto;color:#27362e}.bike .base{fill:none;stroke:currentColor;stroke-width:8;stroke-linecap:round;stroke-linejoin:round}.bike .feature{fill:none;stroke-width:13;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .35s}.bike .feature.show{opacity:1}.bike .vertical{stroke:var(--blue)}.bike .horizontal{stroke:var(--amber)}.bike .diagonal{stroke:var(--purple)}.bike .curve{stroke:var(--teal)}.bike .part{stroke:var(--green)}.bike .ghost{opacity:.14}.callout{position:absolute;padding:5px 8px;border:1px solid currentColor;border-radius:99px;background:#fff;font-size:9px;font-weight:850;white-space:nowrap;animation:pop .35s ease both}.callout:after{content:"";position:absolute;width:26px;border-top:1px solid currentColor;transform-origin:left}.callout.vertical-c{left:76%;top:15%;color:var(--blue)}.callout.vertical-c:after{right:100%;top:50%;transform:rotate(155deg)}.callout.horizontal-c{left:5%;top:22%;color:var(--amber)}.callout.horizontal-c:after{left:100%;top:50%;transform:rotate(18deg)}.callout.diagonal-c{left:42%;top:2%;color:var(--purple)}.callout.diagonal-c:after{left:50%;top:100%;transform:rotate(75deg)}.callout.curve-c{left:2%;top:75%;color:var(--teal)}.callout.curve-c:after{left:100%;top:50%;transform:rotate(-10deg)}.callout.arrange-c{right:0;top:69%;color:var(--green)}.callout.arrange-c:after{right:100%;top:50%;transform:rotate(185deg)}@keyframes pop{from{opacity:0;transform:scale(.9)}}
+.note{max-width:760px;margin:17px auto 0;padding:10px 13px;border-radius:9px;background:var(--amber-soft);color:#75450c;text-align:center;font-size:11px;line-height:1.45}.note.neutral{background:#f2f6f3;color:var(--muted)}.note strong{color:var(--ink)}
+.pixel-layout{display:grid;grid-template-columns:minmax(190px,.8fr) 38px minmax(360px,1.2fr);align-items:center;gap:12px;max-width:900px;margin:auto}.pixel-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:2px;width:min(270px,100%);aspect-ratio:1;margin:auto}.pixel{border-radius:2px;background:#eef2ef;transition:background .18s,outline .18s,transform .18s}.pixel.on{background:#33493c}.pixel.scan{outline:3px solid var(--amber);outline-offset:-1px;background:var(--amber-soft)}.pixel.on.scan{background:#8a5a1d}.pixel.selected-field{outline:3px solid var(--blue);outline-offset:-1px;background:var(--blue-soft)}.pixel.on.selected-field{background:#486c58}.pixel.pair-cell{outline:4px solid var(--amber);transform:scale(1.1);z-index:2}.dual-filter-results{display:grid;gap:10px}.filter-result-row{display:grid;grid-template-columns:minmax(92px,.62fr) 20px minmax(130px,1fr);gap:7px;align-items:center;padding-bottom:9px;border-bottom:1px solid var(--line)}.filter-result-row:last-child{padding-bottom:0;border-bottom:0}.shape-map{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;width:min(172px,100%);aspect-ratio:1;margin:auto}.shape-cell{display:grid;place-items:center;border-radius:3px;background:#edf1ee;color:transparent;font-size:8px;font-weight:850;transition:background .18s,transform .18s,color .18s}.shape-cell.revealed{color:var(--ink)}.shape-cell[role="button"]{cursor:pointer}.shape-cell[role="button"]:focus-visible{outline:3px solid var(--blue);outline-offset:2px}.shape-cell.current{outline:2px solid var(--amber);transform:scale(1.06)}.shape-cell.selected-cell{outline:3px solid var(--blue);outline-offset:1px;transform:scale(1.08);z-index:2}.shape-cell.selected-cell.sum-pulse{animation:sumPulse .34s ease}.shape-cell.linked-cell{box-shadow:inset 0 0 0 2px var(--blue)}@keyframes sumPulse{50%{transform:scale(1.28);background:var(--amber-soft);color:#7d4907}}.scan-readout{min-height:18px;margin-top:7px;color:var(--muted);font-size:9px;font-weight:800;text-align:center}.interaction-hint{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:5px;color:var(--blue);font-size:9px;font-weight:800;text-align:center}.interaction-hint:before{content:'↖';font-size:13px}.kernel-cell.current{outline:3px solid var(--amber);transform:scale(1.06)}.kernel-cell.pair-kernel{outline:4px solid var(--amber);background:var(--amber-soft);transform:scale(1.12);z-index:2}.flow-arrow{color:var(--green);font-size:32px;text-align:center}.flow-arrow small{display:block;color:var(--muted);font-size:8px;font-weight:850;text-transform:uppercase;letter-spacing:.08em}
+.scan-demo{display:grid;grid-template-columns:1fr 44px .65fr 44px .8fr;gap:12px;align-items:center}.panel{text-align:center;min-width:0}.panel-title{margin-bottom:8px;font-size:11px;font-weight:850}.panel-sub{margin-top:7px;min-height:27px;color:var(--muted);font-size:9px;line-height:1.4}.kernel{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:min(150px,100%);aspect-ratio:1;margin:auto}.kernel-cell{display:grid;place-items:center;border:1px solid #bcdcc8;border-radius:5px;background:var(--green-soft);color:var(--green-dark);font-size:12px;font-weight:850}.map{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;width:min(190px,100%);aspect-ratio:1.5;margin:auto}.map-cell{border-radius:3px;background:#edf1ee;transition:.3s}.map-cell.on{background:var(--filter-color,var(--green));opacity:var(--strength,.8)}
+.bank-layout{display:grid;grid-template-columns:minmax(270px,1.1fr) minmax(260px,.9fr);gap:28px;align-items:center;max-width:960px;margin:auto}.filter-bank{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.filter-slot{position:relative;min-width:0;padding:10px 7px;border:1px dashed #cbd5cf;border-radius:11px;background:#f7f9f8;text-align:center;color:var(--muted);transition:box-shadow .25s,transform .25s,opacity .25s}.filter-slot.learned{border-style:solid;border-color:var(--filter-color);background:color-mix(in srgb,var(--filter-color) 8%,white);color:var(--ink)}.filter-slot.active{box-shadow:0 0 0 3px color-mix(in srgb,var(--filter-color) 20%,transparent);animation:slotIn .5s ease}.filter-slot.concurrent{animation:concurrentPulse .65s ease}.filter-slot.received{box-shadow:0 0 0 3px color-mix(in srgb,var(--filter-color) 28%,transparent);transform:translateY(-3px)}.slot-icon{display:grid;place-items:center;width:29px;height:29px;margin:0 auto 6px;border-radius:50%;background:#e7ece9;color:var(--muted);font-size:12px;font-weight:900}.learned .slot-icon{background:var(--filter-color);color:#fff}.slot-name{font-size:9px;font-weight:850}.slot-state{margin-top:3px;font-size:8px}.slot-map{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;width:58px;aspect-ratio:1;margin:8px auto 0}.slot-map i{border-radius:1px;background:#e3e8e5}.slot-map i.on{background:var(--filter-color);opacity:.75}@keyframes slotIn{50%{transform:translateY(-4px)}}@keyframes concurrentPulse{50%{box-shadow:0 0 0 3px color-mix(in srgb,var(--filter-color) 18%,transparent);transform:translateY(-2px)}}
+.prediction{display:grid;gap:12px}.bar-label{display:flex;justify-content:space-between;margin-bottom:5px;font-size:11px;font-weight:800}.bar-track{height:14px;border-radius:99px;background:#e6ebe8;overflow:hidden}.bar-fill{height:100%;border-radius:inherit;background:var(--blue);transition:width .65s cubic-bezier(.2,.8,.2,1)}.bar-fill.wrong{background:var(--red)}.verdict{padding:11px 13px;border-left:4px solid var(--red);background:var(--red-soft);color:#73362f;font-size:11px;line-height:1.45}.feedback{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:18px;color:var(--red);font-size:22px;font-weight:900}.feedback span{padding:9px 13px;border-radius:9px;background:var(--red-soft);font-size:10px;text-transform:uppercase;letter-spacing:.06em}.feedback .back{animation:back 1.2s ease infinite}@keyframes back{50%{transform:translateX(-7px);opacity:.55}}
+.filter-scene{display:grid;grid-template-columns:minmax(280px,1fr) minmax(210px,.7fr) minmax(210px,.75fr);gap:22px;align-items:center}.source-card{position:relative;padding:12px}.source-card .bike{max-height:235px}.source-label{position:absolute;z-index:3;left:13px;top:8px;padding:4px 7px;border-radius:99px;background:var(--filter-color);color:#fff;font-size:8px;font-weight:850}.bike-scan-window{position:absolute;z-index:2;left:7%;top:12%;width:24%;height:30%;border:3px solid var(--filter-color);border-radius:7px;background:color-mix(in srgb,var(--filter-color) 10%,transparent);box-shadow:0 0 0 2px #fff;pointer-events:none;transition:left .16s linear,top .16s linear}.weight-change{display:grid;grid-template-columns:1fr 18px 1fr;gap:6px;align-items:center}.weight-change .kernel{width:105px}.weight-change .kernel-cell{border-color:var(--filter-color);background:color-mix(in srgb,var(--filter-color) 10%,white);color:var(--ink);font-size:9px;transition:background .25s,transform .25s,box-shadow .25s}.weight-change .before .kernel-cell{background:#f1f3f2;border-color:#d5ddd8;color:var(--muted)}.learned-target{opacity:.45;transition:opacity .35s}.kernel-cell.strengthen{background:var(--amber-soft);box-shadow:inset 0 0 0 2px var(--amber);transform:scale(1.08)}.kernel-cell.reduce{background:var(--blue-soft);box-shadow:inset 0 0 0 2px var(--blue);transform:scale(.94)}.weight-arrow{color:var(--filter-color);font-size:20px;text-align:center}.update-legend{display:flex;justify-content:center;gap:9px;min-height:18px;margin-top:5px;color:var(--muted);font-size:8px;font-weight:800}.update-legend .up{color:#8a520b}.update-legend .down{color:var(--blue)}.training-meter{margin:8px auto 0;max-width:210px}.training-meter-head{display:flex;justify-content:space-between;margin-bottom:4px;color:var(--muted);font-size:8px;font-weight:850}.error-track{height:7px;border-radius:99px;background:#e6ebe8;overflow:hidden}.error-fill{height:100%;border-radius:inherit;background:var(--red);transition:width .4s}.filter-output{--filter-color:var(--green);text-align:center}.filter-output .map{width:190px}.filter-output .map-cell.current{outline:3px solid var(--filter-color);transform:scale(1.1)}.filter-output .map-cell.on{animation:mapPulse .45s ease}@keyframes mapPulse{50%{transform:scale(1.12)}}.feedback-token{position:absolute;z-index:20;display:grid;place-items:center;min-width:74px;height:28px;padding:0 8px;border:2px solid var(--red);border-radius:99px;background:#fff;color:var(--red);font-size:8px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.14)}.accumulated{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}.accumulated-label{margin-bottom:8px;color:var(--muted);font-size:9px;font-weight:850;text-align:center;text-transform:uppercase;letter-spacing:.07em}
+.filter-output .map{width:164px}.filter-output .map-cell.current{outline-width:2px;transform:scale(1.08)}
+.stack-layout{display:grid;grid-template-columns:1fr 70px 1fr;gap:24px;align-items:center;max-width:900px;margin:auto}.map-stack{position:relative;width:250px;height:205px;margin:auto}.stack-card{position:absolute;inset:0;width:184px;height:124px;padding:9px;border:1px solid var(--filter-color);border-radius:10px;background:#fff;box-shadow:0 5px 16px rgba(0,0,0,.08);transform:translate(calc(var(--i)*16px),calc(var(--i)*18px + 12px)) scale(.96);z-index:calc(4 - var(--i));opacity:0;transition:opacity .35s,transform .35s}.stack-card.entered{opacity:1;transform:translate(calc(var(--i)*16px),calc(var(--i)*18px)) scale(1)}.stack-card .map{width:100%;height:100%}.stack-card strong{position:absolute;right:7px;top:5px;color:var(--filter-color);font-size:9px}.channel-list{display:grid;gap:8px}.channel-item{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:10px;opacity:.25;transition:opacity .3s}.channel-item.entered{opacity:1}.swatch{width:12px;height:12px;border-radius:3px;background:var(--filter-color)}
+.parts-flow{display:grid;grid-template-columns:repeat(7,minmax(50px,1fr));align-items:center;gap:9px;max-width:1040px;margin:auto}.feature-box{text-align:center;opacity:.18;transform:translateY(6px);transition:opacity .4s,transform .4s}.feature-box.entered{opacity:1;transform:none}.feature-visual{height:150px;display:grid;place-items:center;padding:12px;border-radius:13px;background:#f2f6f3;overflow:hidden}.feature-visual svg{width:100%;height:100%;color:var(--ink)}.feature-name{margin-top:8px;font-size:10px;font-weight:850}.feature-detail{margin-top:2px;color:var(--muted);font-size:8px}.part-arrow{color:var(--green);font-size:23px;text-align:center;opacity:.15;transition:opacity .3s}.part-arrow.entered{opacity:1}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:850px;margin:auto}.object-card{padding:15px;border:1px solid var(--line);border-radius:14px;background:#f6f9f7;text-align:center}.object-card.match{border-color:var(--green);background:var(--green-soft)}.object-card svg{width:100%;height:170px;color:var(--ink)}.evidence{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:10px;text-align:left}.evidence span{padding:5px 7px;border-radius:5px;background:#fff;color:var(--muted);font-size:8px}.match .evidence span{color:var(--green-dark)}
+.final-layout{display:grid;grid-template-columns:minmax(260px,.9fr) minmax(280px,1.1fr);gap:32px;align-items:center;max-width:900px;margin:auto}.final-layout .bike{max-height:230px}.recap{display:grid;gap:8px;margin-top:16px}.recap div{display:flex;gap:9px;align-items:flex-start;color:var(--muted);font-size:10px;line-height:1.4}.recap b{display:grid;flex:0 0 20px;place-items:center;height:20px;border-radius:50%;background:var(--green-soft);color:var(--green);font-size:9px}
+.controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}.control-group{display:flex;flex-wrap:wrap;gap:8px}button{min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);cursor:pointer;font-weight:750;transition:.15s}button:hover:not(:disabled){border-color:var(--green);color:var(--green)}button.primary{border-color:var(--green);background:var(--green);color:#fff}button.primary:hover:not(:disabled){background:var(--green-dark);color:#fff}button:focus-visible{outline:3px solid rgba(39,116,200,.35);outline-offset:2px}button:disabled{cursor:not-allowed;opacity:.42}.progress{flex:1;max-width:390px;height:5px;border-radius:99px;background:#dfe6e1;overflow:hidden}.progress-fill{height:100%;background:var(--green);transition:width .3s}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:800px){.canvas{min-height:600px}.pixel-layout,.bank-layout,.filter-scene,.stack-layout,.final-layout{grid-template-columns:1fr}.pixel-layout>.flow-arrow{transform:rotate(90deg);height:29px}.filter-scene{gap:12px}.source-card .bike{max-height:175px}.weight-change{max-width:300px;margin:auto}.filter-output .map{width:160px}.accumulated{margin-top:8px}.parts-flow{grid-template-columns:1fr 28px 1fr 28px 1fr}.parts-flow .feature-box:last-child,.parts-flow .part-arrow:last-of-type{display:none}.feature-visual{height:120px}.scan-demo{grid-template-columns:1fr 32px 1fr}.scan-demo .panel:last-child{grid-column:1/-1}.scan-demo .flow-arrow:nth-of-type(2){display:none}.stack-layout>.flow-arrow{transform:rotate(90deg)}.stack-layout{gap:5px}}
+@media(max-width:540px){.shell{width:min(100% - 18px,1180px);padding-top:16px}.chapter{padding:9px 5px;text-align:center;font-size:8px}.chapter:before{display:none}.story-head{padding:15px}.scene-count{display:none}.canvas{min-height:670px;padding:16px 11px}.pixel-layout,.scan-demo{grid-template-columns:1fr}.pixel-layout>.flow-arrow,.scan-demo>.flow-arrow{transform:rotate(90deg);height:29px}.filter-result-row{grid-template-columns:1fr 24px 1fr}.scan-demo .flow-arrow:nth-of-type(2){display:block}.filter-bank{grid-template-columns:1fr 1fr}.compare{grid-template-columns:1fr}.object-card svg{height:120px}.parts-flow{grid-template-columns:1fr}.parts-flow .part-arrow{transform:rotate(90deg);height:25px}.parts-flow .feature-box:last-child,.parts-flow .part-arrow:last-of-type{display:block}.feature-visual{width:min(220px,100%);height:105px;margin:auto}.controls{align-items:stretch;flex-direction:column}.control-group{display:grid;grid-template-columns:1fr 1fr}.progress{max-width:none}.callout{font-size:7px}.map-stack{transform:scale(.82);margin-block:-18px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
 <main class="shell">
   <div class="eyebrow">Convolutional Neural Networks</div>
-  <h1>See how a CNN finds patterns</h1>
-  <p class="intro">Move a small filter across an image. At each position, the CNN multiplies matching cells, adds the results, and stores one number in a feature map.</p>
-
-  <section class="learning-brief" aria-label="Learning introduction">
-    <div>
-      <strong>Learning goal</strong>
-      See how a CNN scans an image with a reusable filter and turns local matches into a feature map.
-    </div>
-    <div>
-      <strong>What is a CNN?</strong>
-      A convolutional neural network is a model that learns filters for detecting visual patterns such as edges, textures, shapes, and objects.
-    </div>
+  <h1>How does a CNN learn what to see?</h1>
+  <p class="intro">Decompose a bicycle into visual clues, watch a bank of filters specialize, and follow those clues as later layers assemble a prediction.</p>
+  <nav class="chapter-bar" aria-label="Lesson chapters">
+    <div class="chapter active" data-number="1" data-chapter="0">Observe</div>
+    <div class="chapter" data-number="2" data-chapter="1">Specialize</div>
+    <div class="chapter" data-number="3" data-chapter="2">Combine</div>
+    <div class="chapter" data-number="4" data-chapter="3">Predict</div>
+  </nav>
+  <section class="story" aria-labelledby="sceneTitle">
+    <header class="story-head">
+      <div><div class="scene-kicker" id="sceneKicker"></div><h2 class="scene-title" id="sceneTitle"></h2><p class="scene-copy" id="sceneCopy"></p></div>
+      <div class="scene-count" id="sceneCount"></div>
+    </header>
+    <div class="canvas"><div class="scene-content" id="sceneContent"></div></div>
   </section>
-
   <div class="controls">
-    <div class="control">
-      <label for="imageSelect">Input pattern</label>
-      <select id="imageSelect">
-        <option value="vertical">Vertical line</option>
-        <option value="horizontal">Horizontal line</option>
-        <option value="cross">Cross</option>
-        <option value="x">X</option>
-      </select>
-    </div>
-    <div class="control">
-      <label for="filterSelect">3 × 3 filter</label>
-      <select id="filterSelect">
-        <option value="vertical">Detect vertical edges</option>
-        <option value="horizontal">Detect horizontal edges</option>
-      </select>
-    </div>
-    <button id="prevBtn" aria-label="Previous convolution step">← Previous</button>
-    <button id="nextBtn" class="primary">Next step →</button>
-    <button id="autoBtn">Auto play</button>
-    <button id="resetBtn">Reset</button>
-    <button id="detailBtn" class="toggle" aria-pressed="false">Detail mode: Off</button>
+    <div class="control-group"><button id="prevBtn" type="button">← Previous</button><button id="nextBtn" class="primary" type="button">Next →</button></div>
+    <div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="1" aria-valuemax="12" aria-valuenow="1"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="control-group"><button id="playBtn" type="button" aria-pressed="false">Play</button><button id="restartBtn" type="button">Restart</button></div>
   </div>
-
-  <section class="stage" aria-label="Convolution visualization">
-    <article class="panel">
-      <div class="panel-head">
-        <div><div class="panel-title">Input image</div><div class="panel-note">5 × 5 pixels · highlighted area is the receptive field</div></div>
-        <div class="panel-head-actions">
-          <div class="view-toggle" role="group" aria-label="Input display mode">
-            <button id="imageViewBtn" type="button">Image</button>
-            <button id="pixelViewBtn" type="button" class="active">Pixels</button>
-          </div>
-          <details class="panel-help">
-            <summary aria-label="Explain the input image">&#128161;</summary>
-            <div class="panel-help-text"><strong>Local receptive field</strong>The filter looks at only 3 × 3 pixels at a time, helping it notice small local patterns.</div>
-          </details>
-        </div>
-      </div>
-      <div class="grid input" id="inputGrid"></div>
-    </article>
-    <div class="arrow" aria-hidden="true"><div><svg viewBox="0 0 40 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10h32M27 3l7 7-7 7"/></svg><span>Scan</span></div></div>
-    <article class="panel">
-      <div class="panel-head">
-        <div><div class="panel-title">Convolution filter</div><div class="panel-note">3 × 3 learned weights</div></div>
-        <div class="panel-head-actions">
-          <span class="chip">Kernel</span>
-          <details class="panel-help">
-            <summary aria-label="Explain the convolution filter">&#128161;</summary>
-            <div class="panel-help-text"><strong>Shared weights</strong>The same nine filter values scan the entire image, so the pattern can be found anywhere.</div>
-          </details>
-        </div>
-      </div>
-      <div class="grid kernel" id="kernelGrid"></div>
-    </article>
-    <div class="arrow" aria-hidden="true"><div><svg viewBox="0 0 40 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10h32M27 3l7 7-7 7"/></svg><span>Produce</span></div></div>
-    <article class="panel">
-      <div class="panel-head">
-        <div><div class="panel-title">Feature map</div><div class="panel-note">3 × 3 activation output</div></div>
-        <div class="panel-head-actions">
-          <span class="chip">Output</span>
-          <details class="panel-help">
-            <summary aria-label="Explain the feature map">&#128161;</summary>
-            <div class="panel-help-text"><strong>Feature hierarchy</strong>Later CNN layers combine simple edges into textures, shapes, objects, and predictions.</div>
-          </details>
-        </div>
-      </div>
-      <div class="grid output" id="outputGrid"></div>
-      <div class="activation-legend" aria-label="Activation color legend"><div class="legend-bar"></div><div class="legend-labels"><span>Opposite edge</span><span>No response</span><span>Strong match</span></div></div>
-      <div class="feature-insight" id="featureInsight"></div>
-    </article>
-  </section>
-
-  <section class="math" aria-live="polite">
-    <div class="math-top">
-      <div class="equation"><strong id="positionText">Position (1, 1)</strong><br><span id="equationText"></span></div>
-      <div class="math-status">
-        <div class="step-indicator" id="stepLabel" aria-live="polite">Ready to start</div>
-        <div class="score" id="score">0</div>
-      </div>
-    </div>
-  </section>
-
-  <section class="takeaway" aria-label="Key takeaway">
-    <div>
-      <strong>Key takeaway</strong>
-      A CNN does not understand an image. It applies numerical filters to pixel values and combines detected patterns across layers.
-    </div>
-    <div>
-      <strong>Why it matters</strong>
-      The result depends on the training images, labels, learned filter weights, and network design chosen for the task.
-    </div>
-  </section>
+  <div class="sr-only" id="liveStatus" aria-live="polite"></div>
 </main>
 <script>
-const images = {
-  vertical: [[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0]],
-  horizontal: [[0,0,0,0,0],[0,0,0,0,0],[1,1,1,1,1],[0,0,0,0,0],[0,0,0,0,0]],
-  cross: [[0,0,1,0,0],[0,0,1,0,0],[1,1,1,1,1],[0,0,1,0,0],[0,0,1,0,0]],
-  x: [[1,0,0,0,1],[0,1,0,1,0],[0,0,1,0,0],[0,1,0,1,0],[1,0,0,0,1]]
-};
-const kernels = {
-  vertical: [[-1,0,1],[-1,0,1],[-1,0,1]],
-  horizontal: [[-1,-1,-1],[0,0,0],[1,1,1]]
-};
-const inputGrid = document.querySelector('#inputGrid');
-const kernelGrid = document.querySelector('#kernelGrid');
-const outputGrid = document.querySelector('#outputGrid');
-const imageSelect = document.querySelector('#imageSelect');
-const filterSelect = document.querySelector('#filterSelect');
-let step = 0, timer = null, highlightTimer = null, detailMode = false, inputView = 'pixels', hasRun = false;
+const filters=[
+ {id:'vertical',name:'Vertical',color:'var(--blue)',learned:[-1,0,1,-1,0,1,-1,0,1],hits:[1,7,8,13,14,19,20,25,26,31],trainingRounds:[{error:82,label:'High',strength:.32,positions:[1,7,2,8],increase:[2,5,8],reduce:[0,3,6]},{error:52,label:'Medium',strength:.62,positions:[13,14,19,20],increase:[2,5,8],reduce:[0,3,6]},{error:24,label:'Lower',strength:1,positions:[25,26,31,30],increase:[2,5,8],reduce:[0,3,6]}]},
+ {id:'horizontal',name:'Horizontal',color:'var(--amber)',learned:[-1,-1,-1,0,0,0,1,1,1],hits:[2,3,4,8,9,10,20,21,22,27],trainingRounds:[{error:82,label:'High',strength:.32,positions:[2,3,7,8],increase:[6,7,8],reduce:[0,1,2]},{error:52,label:'Medium',strength:.62,positions:[4,9,10,15],increase:[6,7,8],reduce:[0,1,2]},{error:24,label:'Lower',strength:1,positions:[20,21,22,27],increase:[6,7,8],reduce:[0,1,2]}]},
+ {id:'diagonal',name:'Diagonal',color:'var(--purple)',learned:[-1,-1,0,-1,0,1,0,1,1],hits:[5,10,11,16,17,22,23,28,29],trainingRounds:[{error:82,label:'High',strength:.32,positions:[5,4,10,11],increase:[5,7,8],reduce:[0,1,3]},{error:52,label:'Medium',strength:.62,positions:[16,17,18,22],increase:[5,7,8],reduce:[0,1,3]},{error:24,label:'Lower',strength:1,positions:[23,28,29,34],increase:[5,7,8],reduce:[0,1,3]}]},
+ {id:'curve',name:'Curve fragments',color:'var(--teal)',learned:[0,1,0,1,-4,1,0,1,0],hits:[0,5,6,11,24,29,30,35],trainingRounds:[{error:82,label:'High',strength:.32,positions:[0,1,5,6],increase:[1,3,5,7],reduce:[4]},{error:52,label:'Medium',strength:.62,positions:[11,12,23,24],increase:[1,3,5,7],reduce:[4]},{error:24,label:'Lower',strength:1,positions:[29,30,34,35],increase:[1,3,5,7],reduce:[4]}]}
+];
+const rough=[-.1,.2,0,.1,-.1,.1,0,.2,-.1];
+const scenes=[
+ {chapter:0,kicker:'Observe · visual clues',title:'A bicycle is an arrangement of simpler patterns',copy:'Before thinking about filters, notice the edges, curves, corners, and relative positions that make this object recognizable.',kind:'observe',duration:6500},
+ {chapter:0,kicker:'Observe · pixels and receptive fields',title:'A CNN receives pixels, not named parts',copy:'A small receptive field examines one local patch at a time. The filter repeats the same operation across the image.',kind:'pixels',duration:9000},
+ {chapter:1,kicker:'Specialize · initialization',title:'Training starts with a rough bank of filters',copy:'All four filters already exist, but their initial weights are not useful. Weak evidence leads to a poor prediction.',kind:'rough',duration:6000},
+ {chapter:1,kicker:'Specialize · feedback',title:'Prediction error teaches the whole filter bank',copy:'The known bicycle label creates error. Backpropagation sends that signal backward and nudges every filter toward useful patterns.',kind:'feedback',duration:7500},
+ {chapter:1,kicker:'Specialize · filter 1 of 4',title:'One filter specializes in vertical edges',copy:'Three representative training rounds show forward scanning, backward feedback, weight adjustment, and improving vertical-edge responses.',kind:'filter',filter:0,duration:13000},
+ {chapter:1,kicker:'Specialize · filter 2 of 4',title:'Another filter specializes in horizontal edges',copy:'The same learning cycle strengthens responses to the seat, handlebars, and nearly horizontal frame segments.',kind:'filter',filter:1,duration:13000},
+ {chapter:1,kicker:'Specialize · filter 3 of 4',title:'A third filter specializes in diagonals',copy:'Repeated feedback reshapes this filter toward angled frame tubes while every other filter continues learning too.',kind:'filter',filter:2,duration:13000},
+ {chapter:1,kicker:'Specialize · filter 4 of 4',title:'A center-surround filter responds to curve fragments',copy:'Three example rounds strengthen responses along wheel boundaries and complete the four-filter bank.',kind:'filter',filter:3,duration:13000},
+ {chapter:2,kicker:'Combine · channels',title:'Feature maps stack; they do not become one picture',copy:'Each filter produces a separate activation channel. The next layer examines all four channels at the same spatial locations.',kind:'stack',duration:7500},
+ {chapter:2,kicker:'Combine · parts',title:'Later filters combine simple features into parts',copy:'Edges and curves occurring together become evidence for wheels, a triangular frame, a seat, and handlebars.',kind:'parts',duration:7500},
+ {chapter:2,kicker:'Combine · arrangement',title:'The arrangement of parts separates bicycle from car',copy:'Two exposed wheels, a narrow frame, a raised seat, and forward handlebars form a bicycle-specific spatial pattern.',kind:'arrange',duration:7000},
+ {chapter:3,kicker:'Predict · result',title:'Accumulated evidence supports the final prediction',copy:'The classifier combines part and arrangement evidence. Training has shifted confidence from the earlier wrong guess to bicycle.',kind:'final',duration:7500}
+];
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const state={scene:0,playing:false,timer:null,sceneTimers:new Set(),sceneAnimations:new Set(),epoch:0};
+const shapePixels=Array.from({length:81},(_,index)=>index%9===4?1:0);
+const shapeFilters={vertical:{name:'Vertical-edge filter',kernel:[-1,0,1,-1,0,1,-1,0,1]},horizontal:{name:'Horizontal-edge filter',kernel:[-1,-1,-1,0,0,0,1,1,1]}};
 
-function convolve(image,kernel,row,col) {
-  let sum = 0, parts = [];
-  for (let r=0;r<3;r++) for (let c=0;c<3;c++) {
-    const product = image[row+r][col+c] * kernel[r][c];
-    sum += product;
-    parts.push(`${image[row+r][col+c]}×${format(kernel[r][c])}`);
-  }
-  return {sum,parts};
+function bikeSVG(show=[],ghost=false,label='Illustration of a bicycle'){
+ const has=id=>show.includes(id)?'show':'';
+ return `<svg class="bike ${ghost?'ghost':''}" viewBox="0 0 360 210" role="img" aria-label="${label}">
+ <g class="base"><circle cx="82" cy="150" r="47"/><circle cx="278" cy="150" r="47"/><path d="M82 150l64-92 54 92H82l55-65 63 65 37-86h34M146 58h-34M237 64l-14-24h29M237 64L278 150"/></g>
+ <g class="feature vertical ${has('vertical')}"><path d="M237 64l-37 86"/></g>
+ <g class="feature horizontal ${has('horizontal')}"><path d="M112 58h34M237 64h34M137 85l63 65"/></g>
+ <g class="feature diagonal ${has('diagonal')}"><path d="M82 150l64-92 54 92M82 150l55-65M237 64L278 150"/></g>
+ <g class="feature curve ${has('curve')}"><circle cx="82" cy="150" r="47"/><circle cx="278" cy="150" r="47"/></g>
+ <g class="feature part ${has('part')}"><circle cx="82" cy="150" r="47"/><circle cx="278" cy="150" r="47"/><path d="M82 150l64-92 54 92H82"/></g></svg>`;
 }
-function format(n) { return typeof n !== 'number' ? n : Number.isInteger(n) ? n : n.toFixed(2); }
-function results() {
-  const image=images[imageSelect.value], kernel=kernels[filterSelect.value], out=[];
-  for(let r=0;r<3;r++) for(let c=0;c<3;c++) out.push(convolve(image,kernel,r,c));
-  return out;
+function kernel(values,before=false){return `<div class="kernel ${before?'before':''}">${values.map(v=>`<div class="kernel-cell">${Number.isInteger(v)?v:v.toFixed(1)}</div>`).join('')}</div>`}
+function featureMap(filter,revealed=true){return `<div class="map" style="--filter-color:${filter.color}">${Array.from({length:36},(_,i)=>`<i class="map-cell ${revealed&&filter.hits.includes(i)?'on':''}" data-hit="${filter.hits.includes(i)}" style="--strength:${filter.hits.includes(i)?(.48+(i%4)*.13).toFixed(2):0}"></i>`).join('')}</div>`}
+function miniMap(filter){return `<div class="slot-map">${Array.from({length:16},(_,i)=>`<i class="${filter.hits.some(h=>h%16===i)?'on':''}"></i>`).join('')}</div>`}
+function bank(revealed=-1,active=-1){return `<div class="filter-bank">${filters.map((f,i)=>`<div class="filter-slot ${i<=revealed?'learned':''} ${i===active?'active':''}" data-filter-index="${i}" style="--filter-color:${f.color}"><div class="slot-icon">${i<=revealed?'✓':'?'}</div><div class="slot-name">${i<=revealed?f.name:`Filter ${i+1}`}</div><div class="slot-state">${i<=revealed?'specialized':'rough weights'}</div>${i<=revealed?miniMap(f):''}</div>`).join('')}</div>`}
+function prediction(car,bike,wrong=false){return `<div class="prediction"><div><div class="bar-label"><span>Car</span><span>${car}%</span></div><div class="bar-track"><div class="bar-fill ${wrong?'wrong':''}" style="width:${car}%"></div></div></div><div><div class="bar-label"><span>Bicycle</span><span>${bike}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${bike}%"></div></div></div></div>`}
+function pixelGrid(){return `<div class="pixel-grid" id="shapeInput" aria-label="Nine by nine pixel shape containing one vertical line">${shapePixels.map((value,i)=>`<i class="pixel ${value?'on':''}" data-index="${i}"></i>`).join('')}</div>`}
+function convolveShape(kernelValues){const out=[];for(let row=0;row<7;row++)for(let col=0;col<7;col++){let sum=0;for(let kr=0;kr<3;kr++)for(let kc=0;kc<3;kc++)sum+=shapePixels[(row+kr)*9+col+kc]*kernelValues[kr*3+kc];out.push(sum)}return out}
+function shapeMap(filterId){const values=convolveShape(shapeFilters[filterId].kernel);return `<div class="shape-map" id="${filterId}ShapeMap" aria-label="Seven by seven ${shapeFilters[filterId].name.toLowerCase()} feature map">${values.map((value,i)=>`<i class="shape-cell" role="button" tabindex="0" data-filter="${filterId}" data-value="${value}" data-index="${i}" aria-label="${shapeFilters[filterId].name}, row ${Math.floor(i/7)+1}, column ${i%7+1}, activation ${value}">${value}</i>`).join('')}</div>`}
+function callouts(){return `<span class="callout vertical-c">vertical edges</span><span class="callout horizontal-c">horizontal edges</span><span class="callout diagonal-c">diagonals + corners</span><span class="callout curve-c">curves</span><span class="callout arrange-c">arrangement</span>`}
+
+function renderContent(scene){
+ if(scene.kind==='observe')return `<div class="bike-wrap">${bikeSVG(['vertical','horizontal','diagonal','curve'])}${callouts()}</div><div class="note neutral"><strong>The labels are ours, not the network's.</strong> Training must discover numerical filters whose responses become useful for predicting the label.</div>`;
+ if(scene.kind==='pixels')return `<div class="pixel-layout"><div><div class="panel-title">9 × 9 simple shape</div>${pixelGrid()}<div class="panel-sub">One vertical line · orange outline is the shared 3 × 3 receptive field</div></div><div class="flow-arrow">→<small>same patch</small></div><div><div class="dual-filter-results"><div class="filter-result-row"><div class="panel"><div class="panel-title">Vertical-edge filter</div><div id="verticalShapeKernel">${kernel(shapeFilters.vertical.kernel)}</div></div><div class="flow-arrow">→</div><div class="panel"><div class="panel-title">Vertical feature map</div>${shapeMap('vertical')}</div></div><div class="filter-result-row"><div class="panel"><div class="panel-title">Horizontal-edge filter</div><div id="horizontalShapeKernel">${kernel(shapeFilters.horizontal.kernel)}</div></div><div class="flow-arrow">→</div><div class="panel"><div class="panel-title">Horizontal feature map</div>${shapeMap('horizontal')}</div></div></div><div class="scan-readout" id="shapeScanReadout" aria-live="polite">Preparing the first scan position…</div><div class="interaction-hint">Select a map cell to animate its nine products and running sum</div></div></div><div class="note">Both filters inspect the same pixels. The vertical-edge map lights along the line's boundaries; the horizontal-edge map stays quiet because this shape has no horizontal boundary in the valid scan area.</div>`;
+ if(scene.kind==='rough')return `<div class="bank-layout"><div><div class="panel-title">Filter bank at initialization</div>${bank(-1)}<div class="note neutral">The layer already contains all four filters. They are progressively revealed in this lesson as training makes them specialize.</div></div><div><div class="panel-title">Weak evidence · wrong guess</div>${prediction(72,28,true)}<div class="verdict"><strong>Incorrect:</strong> the training label says bicycle, so the network receives a large error.</div></div></div>`;
+ if(scene.kind==='feedback')return `<div class="bank-layout"><div id="feedbackBank"><div class="panel-title">Error splits across all four filters</div>${bank(-1)}<div class="feedback"><span>four learning branches</span><b class="back">←</b><span>prediction error</span></div></div><div id="feedbackPrediction"><div class="panel-title">Known label versus prediction</div>${prediction(72,28,true)}<div class="note"><strong>Backpropagation:</strong> the error signal reaches every filter. The next scenes zoom into one branch at a time, but all filters learn together.</div></div></div>`;
+ if(scene.kind==='filter'){
+   const f=filters[scene.filter],visible=filters.slice(0,scene.filter+1).map(x=>x.id);
+   return `<div class="filter-scene"><div class="source-card" id="filterSource" style="--filter-color:${f.color}"><span class="source-label">${f.name} scan</span>${bikeSVG([],false,`${f.name} filter scanning a bicycle`)}<i class="bike-scan-window" id="bikeScanWindow" aria-hidden="true"></i></div><div id="kernelPanel" style="--filter-color:${f.color}"><div class="panel-title" id="roundLabel">Training round 1 of 3</div><div class="weight-change"><div>${kernel(rough,true)}</div><div class="weight-arrow">→</div><div class="learned-target" id="learnedTarget">${kernel(f.learned)}</div></div><div class="update-legend" id="updateLegend"><span>Waiting for feedback…</span></div><div class="training-meter"><div class="training-meter-head"><span>Error signal</span><strong id="errorLabel">High</strong></div><div class="error-track"><div class="error-fill" id="errorFill" style="width:82%"></div></div></div></div><div class="filter-output" style="--filter-color:${f.color}"><div class="panel-title">Conceptual activation map</div>${featureMap(f,false)}<div class="panel-sub" id="filterScanStatus">Round 1 · forward scan</div></div></div><div class="accumulated"><div class="accumulated-label">Filter bank · all four filters update together</div>${bank(scene.filter,scene.filter)}</div><div class="note">These are three representative moments from many training iterations. The map and error levels are conceptual; the backward signal and update direction show the causal learning cycle.</div>`;
+ }
+ if(scene.kind==='stack')return `<div class="stack-layout"><div class="map-stack">${filters.map((f,i)=>`<div class="stack-card" data-stack="${i}" style="--i:${i};--filter-color:${f.color}"><strong>${f.name}</strong>${featureMap(f)}</div>`).join('')}</div><div class="flow-arrow">→<small>next layer</small></div><div><div class="panel-title">Four channels at each location</div><div class="channel-list">${filters.map((f,i)=>`<div class="channel-item" data-channel="${i}" style="--filter-color:${f.color}"><i class="swatch"></i><span>${f.name} response remains separate</span></div>`).join('')}</div><div class="note neutral"><strong>Depth means channels.</strong> The next layer can learn combinations such as “curve here + diagonal beside it.”</div></div></div>`;
+ if(scene.kind==='parts')return `<div class="parts-flow"><div class="feature-box"><div class="feature-visual">${bikeSVG(['vertical','horizontal','diagonal','curve'],true)}</div><div class="feature-name">Four channels</div><div class="feature-detail">local responses</div></div><div class="part-arrow">→</div><div class="feature-box"><div class="feature-visual"><svg viewBox="0 0 180 130" role="img" aria-label="Detected bicycle parts"><g fill="none" stroke="currentColor" stroke-width="7"><circle cx="48" cy="79" r="31"/><path d="M103 103L136 38h29M100 102L66 42h-25"/></g></svg></div><div class="feature-name">Parts</div><div class="feature-detail">wheel · seat · handlebars</div></div><div class="part-arrow">→</div><div class="feature-box"><div class="feature-visual"><svg viewBox="0 0 180 130" role="img" aria-label="Detected frame triangle"><g fill="none" stroke="currentColor" stroke-width="8" stroke-linejoin="round"><path d="M27 103l59-78 47 78H27l52-55 54 55"/></g></svg></div><div class="feature-name">Frame structure</div><div class="feature-detail">edge combinations</div></div><div class="part-arrow">→</div><div class="feature-box"><div class="feature-visual">${bikeSVG(['part'])}</div><div class="feature-name">Bicycle candidate</div><div class="feature-detail">parts working together</div></div></div><div class="note">Later-layer filters still use convolution, but their receptive fields cover larger portions of the original image and combine information from many earlier channels.</div>`;
+ if(scene.kind==='arrange')return `<div class="compare"><div class="object-card match"><div class="panel-title">Bicycle arrangement · strong match</div>${bikeSVG(['part'])}<div class="evidence"><span>✓ two exposed wheels</span><span>✓ narrow frame</span><span>✓ seat above frame</span><span>✓ handlebars forward</span></div></div><div class="object-card"><div class="panel-title">Car arrangement · weak match</div><svg viewBox="0 0 360 210" role="img" aria-label="Simple illustration of a car"><g fill="none" stroke="currentColor" stroke-width="8" stroke-linejoin="round"><path d="M42 145h279l-25-63-57-33H128L77 90z"/><circle cx="105" cy="151" r="30"/><circle cx="270" cy="151" r="30"/></g></svg><div class="evidence"><span>two wheels, enclosed</span><span>wide body</span><span>no raised seat</span><span>no handlebars</span></div></div></div><div class="note neutral">A single curve is not enough. Classification depends on which parts appear, where they appear, and how they relate.</div>`;
+ return `<div class="final-layout"><div>${bikeSVG(['part'])}<div class="panel-title">Part + arrangement evidence aligns</div></div><div><div class="panel-title">Before training</div>${prediction(72,28,true)}<div style="height:14px"></div><div class="panel-title">After filter specialization</div>${prediction(16,84)}<div class="recap"><div><b>1</b><span>Filters scan local regions and specialize through training.</span></div><div><b>2</b><span>Every filter produces its own feature-map channel.</span></div><div><b>3</b><span>Later convolutions combine responses into parts and arrangements.</span></div><div><b>4</b><span>The classifier converts accumulated evidence into confidence.</span></div></div></div></div><div class="note">The activation maps and confidence values are conceptual illustrations. A practical classifier learns many more filters from many labeled examples.</div>`;
 }
-function paintActivation(el,value,maxAbs) {
-  const strength=Math.abs(value)/Math.max(maxAbs,1), alpha=.12+strength*.78;
-  const rgb=value>0?'31,122,70':value<0?'120,80,168':'225,230,226';
-  el.style.backgroundColor=`rgba(${rgb},${value===0?1:alpha})`;
-  el.style.borderColor=value>0?'rgba(31,122,70,.45)':value<0?'rgba(120,80,168,.45)':'#dfe5e1';
-  el.style.color=strength>.52?'#fff':value>0?'#165c35':value<0?'#573778':'#78817b';
+
+function cancelSceneAnimations(){state.sceneTimers.forEach(id=>clearTimeout(id));state.sceneTimers.clear();state.sceneAnimations.forEach(animation=>animation.cancel());state.sceneAnimations.clear();$$('.feedback-token').forEach(token=>token.remove())}
+function scheduleScene(callback,delay,epoch){const id=setTimeout(()=>{state.sceneTimers.delete(id);if(epoch===state.epoch)callback()},delay);state.sceneTimers.add(id);return id}
+function flyFeedback(from,to,epoch,color='var(--red)',label='Error feedback',via=null){if(!from||!to||epoch!==state.epoch)return;const root=$('#sceneContent'),rootRect=root.getBoundingClientRect(),fromRect=from.getBoundingClientRect(),toRect=to.getBoundingClientRect(),viaRect=via?via.getBoundingClientRect():null;const point=rect=>({x:rect.left-rootRect.left+rect.width/2-40,y:rect.top-rootRect.top+rect.height/2-14}),start=point(fromRect),end=point(toRect),middle=viaRect?point(viaRect):{x:(start.x+end.x)/2,y:(start.y+end.y)/2};const token=document.createElement('div');token.className='feedback-token';token.textContent=label;token.style.left=`${start.x}px`;token.style.top=`${start.y}px`;token.style.borderColor=color;token.style.color=color;root.append(token);const motion=token.animate([{transform:'translate(0,0) scale(.9)',opacity:.25},{transform:`translate(${middle.x-start.x}px,${middle.y-start.y}px) scale(1)`,opacity:1,offset:.55},{transform:`translate(${end.x-start.x}px,${end.y-start.y}px) scale(.9)`,opacity:.4}],{duration:850,easing:'cubic-bezier(.2,.75,.2,1)',fill:'forwards'});state.sceneAnimations.add(motion);motion.finished.catch(()=>{}).then(()=>{state.sceneAnimations.delete(motion);token.remove()})}
+function paintShapeCell(cell,value){const strength=Math.min(1,Math.abs(value)/3);cell.classList.add('revealed');cell.style.background=value>0?`rgba(31,122,70,${.18+strength*.7})`:value<0?`rgba(118,82,167,${.18+strength*.7})`:'#e2e8e4';cell.style.color=strength>.55?'#fff':'var(--ink)';cell.setAttribute('aria-label',`Activation ${value}`)}
+function completeSceneAnimation(scene){
+ if(scene.kind==='pixels'){$$('#shapeInput .pixel').forEach(cell=>cell.classList.remove('scan','pair-cell'));$$('#verticalShapeKernel .kernel-cell,#horizontalShapeKernel .kernel-cell').forEach(cell=>cell.classList.remove('current','pair-kernel'));$$('.shape-map .shape-cell').forEach(cell=>{cell.classList.remove('current','sum-pulse');cell.textContent=cell.dataset.value;paintShapeCell(cell,Number(cell.dataset.value))});if($('#shapeScanReadout'))$('#shapeScanReadout').textContent='Scan complete · one shape, two filters, and two selective 7 × 7 feature maps.'}
+ if(scene.kind==='feedback'){$$('.filter-slot').forEach(slot=>slot.classList.add('received'))}
+ if(scene.kind==='filter'){const f=filters[scene.filter];const windowEl=$('#bikeScanWindow');if(windowEl)windowEl.style.opacity='0';$$('.filter-output .map-cell').forEach((cell,i)=>{cell.classList.remove('current');cell.style.setProperty('--strength','1');if(f.hits.includes(i))cell.classList.add('on')});const feature=$(`.source-card .feature.${f.id}`);if(feature)feature.classList.add('show');if($('#roundLabel'))$('#roundLabel').textContent='Three representative rounds complete';if($('#errorLabel'))$('#errorLabel').textContent='Lower';if($('#errorFill'))$('#errorFill').style.width='24%';if($('#learnedTarget'))$('#learnedTarget').style.opacity='1';if($('#updateLegend'))$('#updateLegend').innerHTML='<span class="up">Warm = strengthen</span><span class="down">Cool = reduce</span>';if($('#filterScanStatus'))$('#filterScanStatus').textContent='High → Medium → Lower error · final responses remain lit.';$$('.kernel-cell').forEach(cell=>cell.classList.remove('strengthen','reduce'));$$('.filter-slot').forEach(slot=>slot.classList.remove('concurrent'))}
+ if(scene.kind==='stack'){$$('.stack-card,.channel-item').forEach(el=>el.classList.add('entered'))}
+ if(scene.kind==='parts'){$$('.feature-box,.part-arrow').forEach(el=>el.classList.add('entered'))}
 }
-function describeActivation(value,maxAbs) {
-  if(value===0) return '<strong>No response:</strong> positive and negative contributions cancel, so this region does not contain the selected edge.';
-  const strength=Math.abs(value)/Math.max(maxAbs,1), level=strength>.66?'Strong':strength>.33?'Moderate':'Weak';
-  return value>0?`<strong>${level} match:</strong> this region contains the edge orientation the filter is designed to detect.`:`<strong>${level} opposite response:</strong> an edge is present, but its light-to-dark direction is reversed.`;
+function animateShapeScan(epoch){
+ const verticalValues=convolveShape(shapeFilters.vertical.kernel),horizontalValues=convolveShape(shapeFilters.horizontal.kernel);let position=0;
+ const step=()=>{if(epoch!==state.epoch)return;$$('#shapeInput .pixel').forEach(cell=>cell.classList.remove('scan'));$$('.shape-map .shape-cell').forEach(cell=>cell.classList.remove('current'));const row=Math.floor(position/7),col=position%7;for(let r=0;r<3;r++)for(let c=0;c<3;c++)$('#shapeInput').children[(row+r)*9+col+c].classList.add('scan');$$('#verticalShapeKernel .kernel-cell,#horizontalShapeKernel .kernel-cell').forEach(cell=>cell.classList.add('current'));const verticalOutput=$('#verticalShapeMap').children[position],horizontalOutput=$('#horizontalShapeMap').children[position];paintShapeCell(verticalOutput,verticalValues[position]);paintShapeCell(horizontalOutput,horizontalValues[position]);verticalOutput.classList.add('current');horizontalOutput.classList.add('current');$('#shapeScanReadout').textContent=`Input (${row+1}, ${col+1}) → output (${row+1}, ${col+1}) · vertical ${verticalValues[position]} · horizontal ${horizontalValues[position]}`;position++;if(position<49)scheduleScene(step,position<8?300:68,epoch);else scheduleScene(()=>completeSceneAnimation(scenes[state.scene]),480,epoch)};
+ scheduleScene(step,350,epoch);
 }
-function linkOutputToInput(el,index) {
-  function markWindow(className) {
-    const row=Math.floor(index/3), col=index%3;
-    for(let r=0;r<3;r++) for(let c=0;c<3;c++) inputGrid.children[(row+r)*5+col+c].classList.add(className);
-  }
-  function selectActivation() {
-    if(el.classList.contains('pending')) return;
-    outputGrid.querySelectorAll('.selected-activation').forEach(cell=>cell.classList.remove('selected-activation'));
-    inputGrid.querySelectorAll('.selected-window').forEach(cell=>cell.classList.remove('selected-window'));
-    el.classList.add('selected-activation'); markWindow('selected-window');
-    const value=results()[index].sum, maxAbs=Math.max(...results().map(item=>Math.abs(item.sum)),1);
-    const gridRow=Math.floor(index/3), gridCol=index%3;
-    const calculation=convolve(images[imageSelect.value],kernels[filterSelect.value],gridRow,gridCol);
-    document.querySelector('#positionText').textContent=`Selected feature-map cell (${gridRow+1}, ${gridCol+1})`;
-    document.querySelector('#equationText').textContent=`${calculation.parts.join(' + ')} = ${format(calculation.sum)}`;
-    document.querySelector('#score').textContent=format(calculation.sum);
-    document.querySelector('#featureInsight').innerHTML=`<strong>Selected cell (${gridRow+1}, ${gridCol+1}) · activation ${format(value)}</strong><br>${describeActivation(value,maxAbs)}`;
-  }
-  el.addEventListener('click',selectActivation);
-  el.addEventListener('keydown',event=>{ if(event.key==='Enter'||event.key===' ') { event.preventDefault(); selectActivation(); } });
+function animateSharedFeedback(epoch){const from=$('#feedbackPrediction');filters.forEach((filter,i)=>scheduleScene(()=>{const slot=$(`[data-filter-index="${i}"]`);flyFeedback(from,slot,epoch,filter.color,'Error branch');scheduleScene(()=>slot.classList.add('received'),760,epoch)},450+i*230,epoch));scheduleScene(()=>completeSceneAnimation(scenes[state.scene]),2400,epoch)}
+function positionFilterScan(position){const row=Math.floor(position/6),col=position%6,windowEl=$('#bikeScanWindow');if(windowEl){windowEl.style.left=`${7+col*12.5}%`;windowEl.style.top=`${12+row*10.5}%`;windowEl.style.opacity='1'}return{row,col}}
+function showFilterPosition(f,round,position){const mapCells=$$('.filter-output .map-cell');mapCells.forEach(cell=>cell.classList.remove('current'));const {row,col}=positionFilterScan(position),cell=mapCells[position];cell.classList.add('current');cell.style.setProperty('--strength',String(round.strength));if(f.hits.includes(position)){cell.classList.add('on');const feature=$(`.source-card .feature.${f.id}`);if(feature)feature.classList.add('show');$('#filterScanStatus').textContent=`Forward pass · ${f.name.toLowerCase()} response at (${row+1}, ${col+1})`;}else $('#filterScanStatus').textContent=`Forward pass · weak response at (${row+1}, ${col+1})`}
+function applyWeightEmphasis(f,round,scene){const cells=$$('#learnedTarget .kernel-cell');cells.forEach((cell,i)=>{cell.classList.remove('strengthen','reduce');if(round.increase.includes(i))cell.classList.add('strengthen');if(round.reduce.includes(i))cell.classList.add('reduce')});$('#updateLegend').innerHTML='<span class="up">Strengthen influence</span><span class="down">Reduce influence</span>';$('#learnedTarget').style.opacity=String(.45+round.strength*.55);$$('.filter-slot').forEach((slot,i)=>{if(i!==scene.filter)slot.classList.add('concurrent')});scheduleScene(()=>{$$('.kernel-cell').forEach(cell=>cell.classList.remove('strengthen','reduce'));$$('.filter-slot').forEach(slot=>slot.classList.remove('concurrent'))},620,state.epoch)}
+function animateFilterTraining(scene,epoch){
+ const f=filters[scene.filter];
+ f.trainingRounds.forEach((round,roundIndex)=>{const base=roundIndex*3000;scheduleScene(()=>{$('#roundLabel').textContent=`Training round ${roundIndex+1} of 3`;$('#errorLabel').textContent=round.label;$('#errorFill').style.width=`${round.error}%`;$('#updateLegend').innerHTML='<span>Forward scan</span>';round.positions.forEach((position,i)=>scheduleScene(()=>showFilterPosition(f,round,position),180+i*155,epoch))},base+200,epoch);scheduleScene(()=>{$('#filterScanStatus').textContent=`Round ${roundIndex+1} · error travels backward`;flyFeedback($('.filter-output .map'),$('#filterSource'),epoch,f.color,'Error feedback',$('#kernelPanel'))},base+1050,epoch);scheduleScene(()=>{applyWeightEmphasis(f,round,scene);$('#filterScanStatus').textContent=`Round ${roundIndex+1} · weights adjust`;},base+1950,epoch);scheduleScene(()=>{$('#filterScanStatus').textContent=`Round ${roundIndex+1} · responses strengthen`;round.positions.filter(position=>f.hits.includes(position)).forEach(position=>{$$('.filter-output .map-cell')[position].style.setProperty('--strength',String(round.strength))})},base+2550,epoch)});
+ let sweep=0;const finalSweep=()=>{if(epoch!==state.epoch)return;const f=filters[scene.filter];showFilterPosition(f,f.trainingRounds[2],sweep);sweep++;if(sweep<36)scheduleScene(finalSweep,38,epoch);else scheduleScene(()=>completeSceneAnimation(scene),350,epoch)};scheduleScene(()=>{$('#roundLabel').textContent='Final fast sweep';$('#filterScanStatus').textContent='Specialized filter · completing the feature map';finalSweep()},9250,epoch);
 }
-function cell(value,classes='',detail='') {
-  const el=document.createElement('div'); el.className=`cell ${classes}`;
-  const valueEl=document.createElement('span'); valueEl.className='cell-value'; valueEl.textContent=format(value); el.append(valueEl);
-  if(detail) { const detailEl=document.createElement('span'); detailEl.className='cell-detail'; detailEl.textContent=detail; el.append(detailEl); }
-  return el;
+function animateStack(epoch){filters.forEach((filter,i)=>scheduleScene(()=>{$(`[data-stack="${i}"]`).classList.add('entered');$(`[data-channel="${i}"]`).classList.add('entered')},350+i*560,epoch));scheduleScene(()=>completeSceneAnimation(scenes[state.scene]),2800,epoch)}
+function animateParts(epoch){const sequence=$$('.parts-flow > .feature-box,.parts-flow > .part-arrow');sequence.forEach((el,i)=>scheduleScene(()=>el.classList.add('entered'),300+i*430,epoch));scheduleScene(()=>completeSceneAnimation(scenes[state.scene]),3500,epoch)}
+function runSceneAnimation(scene,epoch){if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){completeSceneAnimation(scene);return}if(scene.kind==='pixels')animateShapeScan(epoch);if(scene.kind==='feedback')animateSharedFeedback(epoch);if(scene.kind==='filter')animateFilterTraining(scene,epoch);if(scene.kind==='stack')animateStack(epoch);if(scene.kind==='parts')animateParts(epoch)}
+function animateSelectedSum(cell,row,col,epoch){const filter=shapeFilters[cell.dataset.filter],kernelRoot=$(`#${cell.dataset.filter}ShapeKernel`),finalValue=Number(cell.dataset.value);if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){cell.textContent=String(finalValue);$('#shapeScanReadout').textContent=`${filter.name} · nine products sum to activation ${finalValue}`;return}let termIndex=0,runningSum=0;cell.textContent='0';const step=()=>{if(epoch!==state.epoch)return;$$('#shapeInput .pixel').forEach(pixel=>pixel.classList.remove('pair-cell'));$$('#verticalShapeKernel .kernel-cell,#horizontalShapeKernel .kernel-cell').forEach(kernelCell=>kernelCell.classList.remove('pair-kernel'));const kr=Math.floor(termIndex/3),kc=termIndex%3,pixel=shapePixels[(row+kr)*9+col+kc],weight=filter.kernel[termIndex],product=pixel*weight;$('#shapeInput').children[(row+kr)*9+col+kc].classList.add('pair-cell');kernelRoot.querySelectorAll('.kernel-cell')[termIndex].classList.add('pair-kernel');runningSum+=product;cell.textContent=String(runningSum);cell.classList.remove('sum-pulse');void cell.offsetWidth;cell.classList.add('sum-pulse');$('#shapeScanReadout').textContent=`${filter.name} · product ${termIndex+1} of 9: ${pixel} × ${weight} = ${product} · running SUM ${runningSum}`;termIndex++;if(termIndex<9)scheduleScene(step,520,epoch);else scheduleScene(()=>{$$('#shapeInput .pixel').forEach(pixel=>pixel.classList.remove('pair-cell'));$$('#verticalShapeKernel .kernel-cell,#horizontalShapeKernel .kernel-cell').forEach(kernelCell=>kernelCell.classList.remove('pair-kernel'));cell.classList.remove('sum-pulse');cell.textContent=String(finalValue);$('#shapeScanReadout').textContent=`${filter.name} · SUM complete: activation ${finalValue}`},600,epoch)};scheduleScene(step,280,epoch)}
+function selectShapeMapCell(cell){setPlaying(false);cancelSceneAnimations();completeSceneAnimation(scenes[state.scene]);const index=Number(cell.dataset.index),row=Math.floor(index/7),col=index%7;$$('#shapeInput .pixel').forEach(pixel=>pixel.classList.remove('selected-field'));$$('.shape-map .shape-cell').forEach(mapCell=>{mapCell.classList.remove('selected-cell','linked-cell');mapCell.setAttribute('aria-pressed','false')});for(let r=0;r<3;r++)for(let c=0;c<3;c++)$('#shapeInput').children[(row+r)*9+col+c].classList.add('selected-field');cell.classList.add('selected-cell');cell.setAttribute('aria-pressed','true');const otherFilter=cell.dataset.filter==='vertical'?'horizontal':'vertical',otherCell=$(`#${otherFilter}ShapeMap`).children[index];otherCell.classList.add('linked-cell');animateSelectedSum(cell,row,col,state.epoch)}
+function bindShapeMapInteractions(){$$('.shape-map .shape-cell').forEach(cell=>{cell.setAttribute('aria-pressed','false');cell.addEventListener('click',()=>selectShapeMapCell(cell));cell.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();selectShapeMapCell(cell)}})})}
+
+function renderScene(index,announce=true){
+ cancelSceneAnimations();state.epoch++;clearTimeout(state.timer);state.timer=null;state.scene=Math.max(0,Math.min(scenes.length-1,index));
+ const scene=scenes[state.scene];$('#sceneKicker').textContent=scene.kicker;$('#sceneTitle').textContent=scene.title;$('#sceneCopy').textContent=scene.copy;$('#sceneCount').textContent=`Scene ${state.scene+1} of ${scenes.length}`;
+ const content=$('#sceneContent');content.classList.remove('scene-content');void content.offsetWidth;content.innerHTML=renderContent(scene);content.classList.add('scene-content');if(scene.kind==='pixels')bindShapeMapInteractions();
+ $$('.chapter').forEach(el=>el.classList.toggle('active',Number(el.dataset.chapter)===scene.chapter));$('#prevBtn').disabled=state.scene===0;$('#nextBtn').disabled=state.scene===scenes.length-1;
+ const pct=(state.scene+1)/scenes.length*100;$('#progressFill').style.width=`${pct}%`;$('.progress').setAttribute('aria-valuenow',String(state.scene+1));if(announce)$('#liveStatus').textContent=`Scene ${state.scene+1}: ${scene.title}. ${scene.copy}`;runSceneAnimation(scene,state.epoch);if(state.playing)scheduleNext();
 }
-let animationEpoch = 0;
-function render(preparingAnimation=false,showReceptiveField=false) {
-  const image=images[imageSelect.value], kernel=kernels[filterSelect.value];
-  const row=Math.floor(step/3), col=step%3, out=results(), maxAbs=Math.max(...out.map(item=>Math.abs(item.sum)),1);
-  inputGrid.replaceChildren();
-  inputGrid.classList.toggle('detail',detailMode);
-  inputGrid.classList.toggle('image-view',inputView==='image');
-  image.forEach((line,r)=>line.forEach((value,c)=>{
-    const inWindow=showReceptiveField&&r>=row&&r<row+3&&c>=col&&c<col+3;
-    const weight=inWindow?kernel[r-row][c-col]:null;
-    const detail=inWindow?`× ${format(weight)} = ${format(value*weight)}`:'';
-    inputGrid.append(cell(value,`${value?'on':''} ${inWindow?'window':''}`,detail));
-  }));
-  kernelGrid.replaceChildren();
-  kernel.flat().forEach((value,i)=>{ const el=cell(value,'active'); el.dataset.kernelIndex=i; kernelGrid.append(el); });
-  outputGrid.replaceChildren();
-  out.forEach((item,i)=>{
-    const shown=hasRun&&(i<step||i===step&&!preparingAnimation)?item.sum:'·';
-    const pending=!hasRun||i>step||i===step&&preparingAnimation;
-    const el=cell(shown,pending?'pending':i===step&&step<8?'current':'');
-    el.dataset.outputIndex=i;
-    if(hasRun&&(i<step||i===step&&!preparingAnimation)) paintActivation(el,item.sum,maxAbs);
-    if(hasRun&&(i<step||i===step&&!preparingAnimation)) { el.tabIndex=0; el.setAttribute('role','button'); el.setAttribute('aria-label',`Activation ${format(item.sum)} at row ${Math.floor(i/3)+1}, column ${i%3+1}`); }
-    linkOutputToInput(el,i); outputGrid.append(el);
-  });
-  document.querySelector('#positionText').textContent=hasRun?`Position (${row+1}, ${col+1})`:'Ready to convolve';
-  document.querySelector('#equationText').textContent=hasRun?`${out[step].parts.join(' + ')} = ${format(out[step].sum)}`:'Choose an input and filter, then run the first step.';
-  document.querySelector('#score').textContent=hasRun?format(out[step].sum):'—';
-  document.querySelector('#featureInsight').innerHTML=hasRun?describeActivation(out[step].sum,maxAbs):'<strong>No activations yet.</strong> Run the convolution to build the feature map one cell at a time.';
-  document.querySelector('#stepLabel').textContent=hasRun?`Step ${step+1} of 9`:'Ready to start';
-  document.querySelector('#prevBtn').disabled=!hasRun;
-  document.querySelector('#nextBtn').disabled=hasRun&&step===8;
-}
-function wait(ms) { return new Promise(resolve=>setTimeout(resolve,ms)); }
-function fly(source,target,label,type,targetOffset=0,duration=360) {
-  const from=source.getBoundingClientRect(), to=target.getBoundingClientRect();
-  const token=document.createElement('div'); token.className=`flying-token ${type}`; token.textContent=label;
-  token.style.left=`${from.left+from.width/2-21}px`; token.style.top=`${from.top+from.height/2-17}px`; document.body.append(token);
-  const dx=to.left+to.width/2-(from.left+from.width/2)+targetOffset, dy=to.top+to.height/2-(from.top+from.height/2);
-  const motion=token.animate([{transform:'translate(0,0) scale(.85)',opacity:.8},{transform:`translate(${dx}px,${dy}px) scale(1)`,opacity:1}],{duration,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
-  return motion.finished.catch(()=>{}).then(()=>token.remove());
-}
-async function animateDetail() {
-  const epoch=++animationEpoch;
-  stopAuto(); render(true,true);
-  const image=images[imageSelect.value], kernel=kernels[filterSelect.value];
-  const row=Math.floor(step/3), col=step%3, scoreEl=document.querySelector('#score');
-  const outputEl=outputGrid.querySelector(`[data-output-index="${step}"]`);
-  let running=0;
-  scoreEl.textContent='0';
-  for(let i=0;i<9;i++) {
-    if(epoch!==animationEpoch) return;
-    const kr=Math.floor(i/3), kc=i%3, inputIndex=(row+kr)*5+col+kc;
-    const inputEl=inputGrid.children[inputIndex], kernelEl=kernelGrid.children[i];
-    const pixel=image[row+kr][col+kc], weight=kernel[kr][kc], product=pixel*weight;
-    inputEl.classList.add('pair-focus'); kernelEl.classList.add('pair-focus');
-    document.querySelector('#equationText').textContent=`Cell ${i+1}: ${format(pixel)} × ${format(weight)} = ${format(product)} · running total ${format(running)}`;
-    await Promise.all([fly(inputEl,scoreEl,format(pixel),'pixel',-24),fly(kernelEl,scoreEl,format(weight),'weight',24)]);
-    if(epoch!==animationEpoch) return;
-    running+=product; scoreEl.textContent=format(running); scoreEl.classList.remove('pulse'); void scoreEl.offsetWidth; scoreEl.classList.add('pulse');
-    inputEl.classList.remove('pair-focus'); kernelEl.classList.remove('pair-focus');
-    await wait(130);
-  }
-  if(epoch!==animationEpoch) return;
-  document.querySelector('#equationText').textContent=`All nine products add up to ${format(running)}. This activation becomes one feature-map cell.`;
-  await fly(scoreEl,outputEl,format(running),'sum',0,520);
-  if(epoch!==animationEpoch) return;
-  outputEl.classList.remove('pending');
-  if(step<8) outputEl.classList.add('current');
-  outputEl.querySelector('.cell-value').textContent=format(running);
-  outputEl.tabIndex=0; outputEl.setAttribute('role','button'); outputEl.setAttribute('aria-label',`Activation ${format(running)} at row ${Math.floor(step/3)+1}, column ${step%3+1}`);
-  paintActivation(outputEl,running,Math.max(...results().map(item=>Math.abs(item.sum)),1));
-  inputGrid.querySelectorAll('.window').forEach(cell=>cell.classList.remove('window'));
-}
-function showStep(flashReceptiveField=false) {
-  clearTimeout(highlightTimer);
-  if(detailMode&&hasRun) return animateDetail();
-  ++animationEpoch;
-  const shouldFlash=flashReceptiveField&&hasRun&&step<8;
-  render(false,shouldFlash);
-  if(shouldFlash) highlightTimer=setTimeout(()=>inputGrid.querySelectorAll('.window').forEach(cell=>cell.classList.remove('window')),650);
-}
-function stopAuto() { clearInterval(timer); clearTimeout(highlightTimer); timer=null; highlightTimer=null; document.querySelector('#autoBtn').textContent='Auto play'; inputGrid.querySelectorAll('.window').forEach(cell=>cell.classList.remove('window')); }
-function reset() { stopAuto(); ++animationEpoch; step=0; hasRun=false; showStep(); }
-document.querySelector('#prevBtn').addEventListener('click',()=>{ stopAuto(); ++animationEpoch; if(step===0) hasRun=false; else step--; showStep(true); });
-document.querySelector('#nextBtn').addEventListener('click',()=>{ stopAuto(); ++animationEpoch; if(!hasRun) hasRun=true; else step=Math.min(8,step+1); showStep(true); });
-document.querySelector('#resetBtn').addEventListener('click',reset);
-function setInputView(view) {
-  if(detailMode && view==='image') return;
-  inputView=view;
-  document.querySelector('#imageViewBtn').classList.toggle('active',view==='image');
-  document.querySelector('#pixelViewBtn').classList.toggle('active',view==='pixels');
-  ++animationEpoch; render();
-}
-document.querySelector('#imageViewBtn').addEventListener('click',()=>setInputView('image'));
-document.querySelector('#pixelViewBtn').addEventListener('click',()=>setInputView('pixels'));
-document.querySelector('#detailBtn').addEventListener('click',()=>{
-  detailMode=!detailMode;
-  const button=document.querySelector('#detailBtn');
-  button.setAttribute('aria-pressed',String(detailMode));
-  button.textContent=`Detail mode: ${detailMode?'On':'Off'}`;
-  document.querySelector('#autoBtn').disabled=detailMode;
-  document.querySelector('#imageViewBtn').disabled=detailMode;
-  if(detailMode) {
-    inputView='pixels';
-    document.querySelector('#imageViewBtn').classList.remove('active');
-    document.querySelector('#pixelViewBtn').classList.add('active');
-  }
-  showStep();
-});
-document.querySelector('#autoBtn').addEventListener('click',()=>{
-  if(timer) return stopAuto();
-  if(!hasRun||step===8) step=0;
-  hasRun=true;
-  document.querySelector('#autoBtn').textContent='Pause'; render(false,true);
-  timer=setInterval(()=>{ if(step===8) return stopAuto(); step++; render(false,true); },850);
-});
-imageSelect.addEventListener('change',reset);
-filterSelect.addEventListener('change',reset);
-render();
+function scheduleNext(){clearTimeout(state.timer);if(!state.playing)return;if(state.scene===scenes.length-1){setPlaying(false);return}state.timer=setTimeout(()=>renderScene(state.scene+1),scenes[state.scene].duration)}
+function setPlaying(value){state.playing=value;clearTimeout(state.timer);state.timer=null;$('#playBtn').textContent=value?'Pause':'Play';$('#playBtn').setAttribute('aria-pressed',String(value));if(value)scheduleNext()}
+function move(delta){setPlaying(false);renderScene(state.scene+delta)}
+$('#prevBtn').addEventListener('click',()=>move(-1));$('#nextBtn').addEventListener('click',()=>move(1));$('#playBtn').addEventListener('click',()=>setPlaying(!state.playing));$('#restartBtn').addEventListener('click',()=>{setPlaying(false);renderScene(0)});
+document.addEventListener('keydown',event=>{if(event.target.matches('button,[role="button"]'))return;if(event.key==='ArrowRight')move(1);if(event.key==='ArrowLeft')move(-1);if(event.key===' '){event.preventDefault();setPlaying(!state.playing)}});document.addEventListener('visibilitychange',()=>{if(document.hidden){setPlaying(false);cancelSceneAnimations();completeSceneAnimation(scenes[state.scene])}});
+renderScene(0,false);
 </script>
 </body>
 </html>
