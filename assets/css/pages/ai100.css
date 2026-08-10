@@ -1,5 +1,61 @@
 :root {
   --bg2:    #ffffff;
+  --accordion-body-padding: 0 16px 16px;
+  --accordion-grid-top-padding: 16px;
+}
+
+.ai-tools-label {
+  margin: 34px 0 14px;
+  color: var(--text3);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.ai-tools-stack { margin-bottom: 0; }
+.ai-tools-neural { order: 1; }
+.ai-tools-cnn { order: 2; }
+.ai-tools-rl { order: 3; }
+
+.ai-tool-accordion {
+  border: 1px solid #c9dfd1;
+  box-shadow: 0 4px 14px rgba(23, 64, 39, .07);
+}
+
+.ai-tool-accordion .cat-header-inner {
+  min-height: 76px;
+}
+
+.ai-tool-accordion .cat-icon {
+  background: var(--teal-l);
+  color: var(--teal);
+}
+
+.ai-tool-accordion .cat-name,
+.ai-tool-accordion .cat-tagline,
+.ai-tool-accordion .cat-tool-count {
+  display: block;
+}
+
+.ai-tool-accordion .cat-name { color: var(--text); }
+.ai-tool-accordion .cat-tagline { color: var(--text2); opacity: 1; }
+.ai-tool-accordion .cat-tool-count {
+  width: max-content;
+  background: var(--teal-l);
+  color: var(--teal);
+}
+
+.ai-tool-accordion .cat-chevron { color: var(--teal); }
+.ai-tool-accordion .tools-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ai-q-icon {
+  font-family: Georgia, serif;
+  font-size: 22px;
+  font-weight: 700;
 }
 
 .upcoming-banner {
@@ -55,6 +111,12 @@
 }
 
 @media (max-width: 720px) {
+  .ai-tool-accordion .tools-grid { grid-template-columns: 1fr; }
+  .ai-tool-accordion .cat-header-inner { min-height: 70px; }
+  .ai-tool-accordion .cat-icon { width: 46px; min-height: 50px; }
+  .ai-tool-accordion .cat-title-area { padding: 11px 10px; }
+  .ai-tool-accordion .cat-name { font-size: 14px; }
+
   .upcoming-banner {
     padding: 14px;
     gap: 10px;

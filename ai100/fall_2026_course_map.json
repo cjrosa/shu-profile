@@ -1,0 +1,34 @@
+{
+  "course": "AI-100",
+  "term": "Fall 2026",
+  "source": "Instructor-provided syllabus schedule",
+  "tool_order": [
+    { "order": 1, "class": 7, "date": "2026-09-22", "topic": "Reinforcement Learning: Q-Tables", "tool": "q_table_playground.html", "override": "Instructor-requested featured-first placement" },
+    { "order": 2, "class": 2, "date": "2026-09-03", "topic": "Introduction to Perceptrons", "tool": "perceptron_playground.html" },
+    { "order": 3, "class": 3, "date": "2026-09-08", "topic": "Neural Networks", "tool": "neural_network_explorer.html" },
+    { "order": 4, "class": 3, "date": "2026-09-08", "topic": "Convolutional Neural Networks", "tool": "cnn_visualizer.html" },
+    { "order": 5, "class": 5, "date": "2026-09-15", "topic": "Computer Vision Applications", "tool": "cnn_long_tail_lab.html" },
+    { "order": 6, "class": 6, "date": "2026-09-17", "topic": "Reinforcement Learning", "tool": "reinforcement_learning_playground.html" }
+  ],
+  "topic_sequence": [
+    "Welcome and introduction to AI-100",
+    "Human-in-the-Loop AI and Responsible AI; Introduction to Perceptrons",
+    "Neural Networks and Convolutional Neural Networks",
+    "Computer Vision and CNNs",
+    "Computer Vision Applications",
+    "Reinforcement Learning",
+    "Reinforcement Learning",
+    "AI Infrastructure: GPUs, Data Centers and Energy",
+    "AI Ethics, Governance and Society",
+    "Machine Learning",
+    "Natural Language Processing",
+    "Large Language Models",
+    "Capabilities and Limitations of Large Language Models",
+    "Reasoning Models and Deliberative AI",
+    "Building AI Assistants",
+    "AI Evaluation and Responsible Use",
+    "AI Agents and Tool Use",
+    "AI Workflows, MCP and Emerging Capabilities",
+    "Final Project Workshops and Presentation"
+  ]
+}
