@@ -6,6 +6,7 @@
 .aix-node:hover circle,.aix-node:focus circle{stroke-width:4;filter:drop-shadow(0 4px 7px rgba(36,87,214,.25))}
 .aix-node:focus{outline:none}
 .aix-node.input text{font-size:18px}
+.aix-layer-labels text{fill:var(--aix-muted);font-size:12px;font-weight:800;letter-spacing:.04em;text-anchor:middle;text-transform:uppercase}
 .aix-pattern-meter-bg{fill:#dbe4f7;stroke:none}
 .aix-pattern-meter-fill{fill:var(--aix-blue);stroke:none}
 .aix-connection.updated{animation:aixWeightUpdate .75s ease}
