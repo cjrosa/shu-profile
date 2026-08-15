@@ -11,6 +11,7 @@
 @media(max-width:800px){.canvas{min-height:600px}.training-layout,.sandbox-grid{grid-template-columns:1fr}.recap{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:540px){.shell{width:min(100% - 18px,1180px);padding-top:16px}.chapter{padding:9px 5px;text-align:center;font-size:8px}.chapter:before,.scene-count{display:none}.story-head{padding:15px}.canvas{min-height:670px;padding:16px 11px}.controls{align-items:stretch;flex-direction:column}.control-group{display:grid;grid-template-columns:1fr 1fr}.progress{max-width:none}.applicant-grid,.input-scene,.stats,.compare{grid-template-columns:1fr 1fr}.network{height:430px}.recap{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+.chapter-bar .chapter{border-radius:0}
 </style>
 <style>.input-icon{font-size:20px}.feature-symbol{margin-right:4px;font-size:1.15em}.node.input text{font-size:17px}.node.output circle{fill:#fff;stroke:var(--muted)}.node.output text{fill:var(--ink)}.explain{border:1px solid #b9ddeb;border-left:4px solid var(--blue);text-align:left;line-height:1.45}.explain strong{color:var(--ink)}.connection.unweighted{pointer-events:none;stroke-dasharray:520;stroke-dashoffset:520;animation:drawConnection .55s ease forwards;animation-delay:var(--draw-delay)}.flow-token{fill:#fff;stroke:var(--green);stroke-width:2;filter:drop-shadow(0 0 4px #57a979);pointer-events:none}.flow-token.backward{fill:var(--red);stroke:#fff;filter:drop-shadow(0 0 4px var(--red))}@keyframes drawConnection{to{stroke-dashoffset:0}}.applicant{max-width:940px}.applicant-grid,.input-scene{grid-template-columns:repeat(5,1fr);max-width:940px}.input-card:nth-child(5){animation-delay:.6s}@media(max-width:800px){.applicant-grid,.input-scene{grid-template-columns:repeat(3,1fr)}}@media(max-width:540px){.applicant-grid,.input-scene{grid-template-columns:repeat(2,1fr)}}</style>
 <style>
@@ -37,7 +38,7 @@
     <header class="story-head"><div><div class="scene-kicker" id="sceneKicker"></div><h2 class="scene-title" id="sceneTitle"></h2><p class="scene-copy" id="sceneCopy"></p></div><span class="scene-count" id="sceneCount"></span></header>
     <div class="canvas"><div id="sceneContent"></div></div>
   </section>
-  <div class="controls"><div class="control-group"><button id="prevBtn">← Back</button><button id="restartBtn">Restart</button></div><div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="1"><div class="progress-fill" id="progressFill"></div></div><button class="primary" id="nextBtn">Next →</button></div>
+  <div class="controls"><div class="control-group"><button id="prevBtn">← Previous</button><button class="primary" id="nextBtn">Next →</button></div><div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="1"><div class="progress-fill" id="progressFill"></div></div><div class="control-group"><button id="restartBtn">Restart</button></div></div>
   <div class="sr-only" id="liveStatus" aria-live="polite"></div>
 </main>
 <script>
