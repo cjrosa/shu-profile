@@ -30,7 +30,7 @@
 }
 .hero-inner {
   position: relative; z-index: 2;
-  max-width: 960px; margin: 0 auto;
+  max-width: var(--content-max-width); margin: 0 auto;
   display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: center;
 }
 .hero-left { display: flex; flex-direction: column; gap: 0; }
@@ -120,7 +120,7 @@
 
 /* -- Main -- */
 .main {
-  max-width: 960px; margin: 0 auto; padding: 20px 40px 80px;
+  max-width: calc(var(--content-max-width) + 80px); margin: 0 auto; padding: 20px 40px 80px;
 }
 .section-label {
   font-family: -apple-system, sans-serif;
