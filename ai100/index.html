@@ -88,7 +88,7 @@
       </button>
     </div>
     <div class="search-hint-row">
-      <span class="search-hint">Powered by Claude &nbsp;&middot;&nbsp; answers scoped to AI100 topics &nbsp;&middot;&nbsp; tool recommendations coming later</span>
+      <span class="search-hint">Powered by Claude &nbsp;&middot;&nbsp; answers scoped to AI100 topics &nbsp;&middot;&nbsp; recommends tools when relevant</span>
       <button id="btn-last-result" class="search-last-btn" onclick="openAiDrawer(null)" style="display:none">
         <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4h14M1 8h10M1 12h6"/></svg>
         Last result
@@ -456,6 +456,22 @@
 <script>
 const PROXY_URL = 'https://red-union-6b9e.crosa.workers.dev';
 
+const TOOLS = [
+  { name:'Perceptron Playground', file:'perceptron_playground.html?v=20260730-1', cat:'Neural Network Foundations', desc:'Explore how a simple artificial neuron combines inputs, trust weights, and a threshold to make a decision.', keywords:['perceptron','artificial neuron','weighted input','weights','threshold','binary classification','yes or no'] },
+  { name:'Neural Network Explorer', file:'neural_network_explorer.html?v=20260729-1', cat:'Neural Network Foundations', desc:'Build a neural network concept by concept and see how signals, layers, and training work together.', keywords:['neural network','neural networks','hidden layer','input layer','output layer','activation','training','backpropagation','deep learning'] },
+  { name:'Q-Table Explorer', file:'q_table_playground.html?v=20260810-35', cat:'Reinforcement Learning', desc:'Learn how Q-tables represent action values and calculate a reinforcement-learning update step by step.', keywords:['q-table','q table','q-value','q value','bellman equation','bellman update','state action value','tabular reinforcement'] },
+  { name:'DQN Explorer', file:'dqn_explorer.html?v=20260815-1', cat:'Reinforcement Learning', desc:'Connect Q-learning to deep neural networks through frames, replay memory, targets, and action selection.', keywords:['dqn','deep q-network','deep q network','experience replay','replay memory','epsilon-greedy','epsilon greedy','bellman target','atari','breakout'] },
+  { name:'Reinforcement Learning Playground', file:'reinforcement_learning_playground.html?v=20260731-1', cat:'Reinforcement Learning', desc:'Watch an agent learn a grid world through actions, rewards, trial and error, and policy improvement.', keywords:['reinforcement learning','agent','reward','policy','grid world','gridworld','trial and error','exploration','exploitation'] },
+  { name:'NLP & RNN Visualizer', file:'nlp_rnn_visualizer.html?v=20260812-1', cat:'Natural Language Processing', desc:'Follow text through tokens, word vectors, semantic space, and recurrent neural-network memory.', keywords:['nlp','natural language processing','rnn','recurrent neural network','token','tokenization','embedding','word vector','semantic','sentiment','sequence'] },
+  { name:'CNN Visualizer', file:'cnn_visualizer.html?v=20260806-22', cat:'Computer Vision', desc:'Explore how convolutional neural networks use filters and feature maps to recognize visual patterns.', keywords:['cnn','convolutional neural network','convolution','filter','kernel','feature map','pooling','computer vision','image classification'] },
+  { name:'CNN Long-Tail Lab', file:'cnn_long_tail_lab.html?v=20260809-1', cat:'Computer Vision & Responsible AI', desc:'Investigate class imbalance, rare classes, per-class performance, and balanced sampling in CNNs.', keywords:['long tail','long-tail','class imbalance','imbalanced data','rare class','minority class','balanced sampling','per-class','bias','fairness','overall accuracy'] },
+];
+
+const VIEWER_COURSE = 'AI100';
+const VIEWER_LABEL = 'Foundations of Artificial Intelligence';
+const VIEWER_BACK = 'ai100/index.html';
+const VIEWER_TOOL_PREFIX = 'ai100';
+
 let aiHistory = [], currentDrawerSize = 'default', cachedDrawerHTML = '', cachedQuestion = '';
 const LAST_RESULT_STORAGE_KEY = 'ai100.aiLastResult.v1';
 
@@ -491,6 +507,34 @@ function syncLastResultButton() {
 
 loadLastResultCache();
 
+function recommendTool(q, a) {
+  const text = (q + ' ' + a).toLowerCase();
+  let best = null, bestScore = 0;
+  for (const t of TOOLS) {
+    const score = t.keywords.filter(k => text.includes(k)).length;
+    if (score > bestScore) { bestScore = score; best = t; }
+  }
+  return bestScore >= 1 ? best : null;
+}
+
+function renderToolCard(tool) {
+  const toolPath = tool.file.includes('/') ? tool.file : `${VIEWER_TOOL_PREFIX}/${tool.file}`;
+  const href = `../viewer.html?tool=${encodeURIComponent(toolPath)}&course=${encodeURIComponent(VIEWER_COURSE)}&label=${encodeURIComponent(VIEWER_LABEL)}&name=${encodeURIComponent(tool.name)}&back=${encodeURIComponent(VIEWER_BACK)}`;
+  return `<a class="ai-tool-rec" href="${href}">
+    <div class="ai-tool-rec-header">
+      <span class="ai-tool-rec-badge">Recommended Tool</span>
+      <span class="ai-tool-rec-layer">${tool.cat}</span>
+    </div>
+    <div class="ai-tool-rec-body">
+      <div class="ai-tool-rec-name">${tool.name}</div>
+      <div class="ai-tool-rec-desc">${tool.desc}</div>
+    </div>
+    <div class="ai-tool-rec-footer">
+      <span class="ai-tool-rec-cta">Open tool <svg class="ai-tool-rec-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+    </div>
+  </a>`;
+}
+
 function appendMessage(html, cls) {
   const body = document.getElementById('ai-drawer-body');
   const div = document.createElement('div');
@@ -512,7 +556,8 @@ Rules:
 - Keep answers concise: 2-4 short paragraphs maximum.
 - You may use markdown when helpful: headings, bold, italics, links, inline code, fenced code blocks, and simple lists.
 - If the question is outside AI100 scope, politely redirect to foundations-level context.
-- End with a single line exactly as "TOOL:none".`;
+- End with a single line starting "TOOL:" naming the single most relevant tool from this list when applicable, or "TOOL:none" when no tool applies:
+  Perceptron Playground, Neural Network Explorer, Q-Table Explorer, DQN Explorer, Reinforcement Learning Playground, NLP & RNN Visualizer, CNN Visualizer, CNN Long-Tail Lab`;
 
   const response = await fetch(PROXY_URL, {
     method: 'POST',
@@ -530,8 +575,24 @@ Rules:
 function parseResponse(raw) {
   const lines = raw.split('\n');
   const toolLineRegex = /^\s*(?:[-*+]\s+|\d+\.\s+|>\s+)?(?:\*\*|__)?tool\s*:\s*(.+?)(?:\*\*|__)?\s*$/i;
+  const toolLine = [...lines].reverse().find(l => toolLineRegex.test(l));
+  const toolMatch = toolLine ? toolLine.match(toolLineRegex) : null;
+  const rawToolName = toolMatch ? toolMatch[1].trim() : null;
+  const normalizedToolName = (rawToolName || '')
+    .replace(/^["'`*_\s]+|["'`*_.\s]+$/g, '')
+    .toLowerCase();
   const answer = lines.filter(l => !toolLineRegex.test(l)).join('\n').trim();
-  return { answer };
+
+  const tool = normalizedToolName && normalizedToolName !== 'none'
+    ? TOOLS.find(t => t.name.toLowerCase() === normalizedToolName)
+      || TOOLS.find(t => t.name.toLowerCase().includes(normalizedToolName) || normalizedToolName.includes(t.name.toLowerCase()))
+      || null
+    : null;
+
+  const recommendedTool = normalizedToolName === 'none'
+    ? null
+    : tool || recommendTool(rawToolName || '', answer);
+  return { answer, tool: recommendedTool };
 }
 
 async function handleSearch() {
@@ -550,9 +611,10 @@ async function handleSearch() {
 
   try {
     const raw = await callClaude(aiHistory);
-    const { answer } = parseResponse(raw);
+    const { answer, tool } = parseResponse(raw);
     aiHistory.push({ role: 'assistant', content: raw });
     loadingDiv.innerHTML = `<div class="ai-answer-text">${SHUMarkdown.renderAssistantMarkdown(answer)}</div>`;
+    if (tool) appendMessage(renderToolCard(tool), '');
     cachedDrawerHTML = document.getElementById('ai-drawer-body').innerHTML;
     cachedQuestion = q;
     saveLastResultCache();
@@ -580,9 +642,10 @@ async function sendFollowUp() {
 
   try {
     const raw = await callClaude(aiHistory);
-    const { answer } = parseResponse(raw);
+    const { answer, tool } = parseResponse(raw);
     aiHistory.push({ role: 'assistant', content: raw });
     loadingDiv.innerHTML = `<div class="ai-answer-text">${SHUMarkdown.renderAssistantMarkdown(answer)}</div>`;
+    if (tool) appendMessage(renderToolCard(tool), '');
     cachedDrawerHTML = document.getElementById('ai-drawer-body').innerHTML;
     cachedQuestion = aiHistory[0]?.content || cachedQuestion;
     saveLastResultCache();
