@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Classes &amp; Inheritance</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f7f9fb;color:#17212b;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.app{max-width:1180px;margin:0 auto;padding:20px}.intro{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:16px}.eyebrow{margin:0 0 4px;color:#0f6e56;font-size:.75rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase}.intro h1{margin:0;font-size:clamp(1.35rem,3vw,2rem);line-height:1.15}.intro p{max-width:560px;margin:4px 0 0;color:#596774;font-size:.9rem}.tabs{display:flex;gap:6px;padding:5px;margin-bottom:16px;border:1px solid #d7dee5;border-radius:10px;background:#fff;overflow-x:auto}.tab{flex:1;min-width:145px;border:0;border-radius:7px;background:transparent;color:#52616f;padding:10px 14px;font:inherit;font-weight:650;cursor:pointer}.tab[aria-selected="true"]{background:#e6f4ef;color:#075443;box-shadow:inset 0 0 0 1px #a9d7c8}.tab:focus-visible,.control:focus-visible{outline:3px solid #90bfee;outline-offset:2px}.workspace{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr);gap:16px}.panel{min-width:0;border:1px solid #d7dee5;border-radius:12px;background:#fff;box-shadow:0 2px 8px rgba(31,45,61,.05);overflow:hidden}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:10px 14px;border-bottom:1px solid #e3e8ed;background:#fbfcfd}.panel-title{font-size:.82rem;font-weight:750;color:#344250}.step-count{font-size:.75rem;color:#687886;font-variant-numeric:tabular-nums}.code{margin:0;min-height:485px;padding:14px 0 18px;overflow:auto;background:#17212b;color:#dce6ed;font:13px/1.65 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;tab-size:4}.line{display:block;min-height:1.65em;padding:0 18px 0 0;white-space:pre;transition:opacity .22s,background-color .22s,box-shadow .22s}.line::before{content:attr(data-line);display:inline-block;width:42px;margin-right:14px;color:#71808d;text-align:right;user-select:none}.line.dim{opacity:.34}.line.active{background:#263c4a;box-shadow:inset 4px 0 #49b997}.kw{color:#e9a6ff}.fn{color:#8ecfff}.str{color:#f3ce7d}.num{color:#ffad87}.cm{color:#81919c;font-style:italic}.self{color:#7de2c1}.side{display:grid;grid-template-rows:auto 1fr}.diagram{display:grid;gap:10px;padding:14px}.node{position:relative;border:1px solid #ccd6df;border-radius:9px;padding:11px 12px;background:#fbfcfd;transition:opacity .22s,transform .22s,border-color .22s,background .22s}.node-title{display:flex;align-items:center;gap:7px;margin-bottom:4px;font-size:.8rem;font-weight:750}.node p{margin:0;color:#5c6975;font-size:.78rem;line-height:1.45}.node.dim{opacity:.28}.node.active{border-color:#42a889;background:#edf8f4;transform:translateX(4px)}.node .kind{display:inline-flex;align-items:center;justify-content:center;min-width:21px;height:21px;border:1px solid currentColor;border-radius:5px;font:700 .68rem ui-monospace,monospace}.node.inherited{border-left:5px solid #2782bd}.node.added{border-left:5px double #258965}.node.overridden{border-left:5px dashed #a05b11}.legend{display:none;flex-wrap:wrap;gap:10px;padding:0 14px 12px;color:#596774;font-size:.72rem}.legend.show{display:flex}.legend span::before{content:"";display:inline-block;width:14px;height:9px;margin-right:5px;vertical-align:-1px}.legend .inh::before{border-left:4px solid #2782bd}.legend .add::before{border-left:4px double #258965}.legend .over::before{border-left:4px dashed #a05b11}.lesson{margin-top:16px;border:1px solid #c7dcd5;border-radius:12px;background:#f0f8f5;padding:15px 16px}.lesson h2{margin:0 0 5px;color:#075443;font-size:1rem}.lesson p{margin:0;color:#344e46;font-size:.88rem;line-height:1.55}.mapping{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.map-chip{border:1px solid #b8d4ca;border-radius:999px;background:#fff;padding:5px 9px;color:#35574d;font:700 .72rem ui-monospace,monospace}.controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}.control-group{display:flex;gap:8px}.control{border:1px solid #aebbc6;border-radius:7px;background:#fff;color:#263746;padding:9px 14px;font:650 .82rem inherit;cursor:pointer}.control.primary{border-color:#0f6e56;background:#0f6e56;color:#fff}.control:hover:not(:disabled){filter:brightness(.96)}.control:disabled{opacity:.4;cursor:not-allowed}.shortcut{color:#697986;font-size:.75rem}kbd{border:1px solid #cbd4dc;border-bottom-width:2px;border-radius:4px;background:#fff;padding:1px 5px;font:inherit}@media(max-width:760px){.app{padding:12px}.intro{display:block}.workspace{grid-template-columns:1fr}.code{min-height:390px;max-height:480px}.shortcut{display:none}.controls{align-items:stretch}.control-group{flex:1}.control{flex:1}.node.active{transform:none}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+/* CS112 scene shell — follows the AI-100 Explorer visual language. */
+:root{--course:#ce1141;--course-dark:#a50d33;--course-soft:#fae6ec;--ink:#172033;--muted:#647087;--line:#dce3ee;--page:#f7f9fc}
+body{background:var(--page);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.app{width:min(1180px,calc(100% - 28px));max-width:none;padding:24px 0 38px}.intro{display:block;max-width:980px;margin:0 0 16px}.eyebrow{margin:0;color:var(--course);font-size:11px;font-weight:800;letter-spacing:.13em}.intro h1{margin:5px 0 6px;font-size:clamp(27px,4vw,39px);letter-spacing:-.035em}.intro p{max-width:760px;margin:0;color:var(--muted);font-size:14px;line-height:1.55}.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:20px 0 12px;padding:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}.tab{position:relative;min-width:0;border:0;border-right:1px solid var(--line);border-radius:0;padding:11px 12px 11px 38px;background:#fff;color:var(--muted);font-size:11px;font-weight:750;text-align:left}.tab:last-child{border-right:0}.tab::before{content:attr(data-number);position:absolute;left:12px;top:9px;display:grid;place-items:center;width:19px;height:19px;border-radius:50%;background:#edf1f4;color:var(--muted);font-size:9px}.tab[aria-selected="true"]{background:var(--course-soft);color:var(--course-dark);box-shadow:none}.tab[aria-selected="true"]::before{background:var(--course);color:#fff}.tab:focus-visible,.control:focus-visible,.tip-button:focus-visible{outline:3px solid rgba(206,17,65,.25);outline-offset:2px}.story{min-height:0;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 10px 34px rgba(95,14,34,.07);overflow:hidden}.story-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding:18px 20px 14px;border-bottom:1px solid var(--line)}.scene-kicker{color:var(--course);font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.scene-title{margin:3px 0;font-size:clamp(18px,2.5vw,25px);letter-spacing:-.02em}.scene-copy{max-width:900px;margin:0;color:var(--muted);font-size:12px;line-height:1.5}.scene-count{color:var(--muted);font-size:11px;font-weight:800;white-space:nowrap}.canvas{min-height:0;padding:22px}.workspace{animation:sceneIn .28s ease}@keyframes sceneIn{from{opacity:0;transform:translateY(5px)}}.panel{box-shadow:none}.code{height:390px;min-height:0;max-height:390px;overflow:auto;scrollbar-color:var(--course) #27313c;scrollbar-width:thin}.code::-webkit-scrollbar{width:10px;height:10px}.code::-webkit-scrollbar-track{background:#27313c}.code::-webkit-scrollbar-thumb{border:2px solid #27313c;border-radius:8px;background:var(--course)}.line.active{background:#40232d;box-shadow:inset 4px 0 var(--course)}.node.active{border-color:var(--course);background:var(--course-soft)}.tip-button{min-height:0;margin-top:9px;padding:5px 8px;border:1px solid #efafbf;border-radius:7px;background:#fff;color:var(--course-dark);font-size:10px;font-weight:800}.tip-button:hover{border-color:var(--course);background:var(--course-soft)}.tip-button[aria-pressed="true"]{border-color:var(--course);background:var(--course);color:#fff}.tip-icon{display:inline-grid;place-items:center;width:16px;height:16px;margin-right:4px;border:1px solid currentColor;border-radius:50%;font-size:9px}.tip-note{display:none;margin:12px 0 0;padding:10px 12px;border-left:4px solid var(--course);border-radius:0 9px 9px 0;background:var(--course-soft);color:#6f1730;font-size:11px;line-height:1.5}.tip-note.show{display:block}.tip-note code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-weight:700}.mapping{margin:14px 0 0}.map-chip{border-color:#efafbf;color:var(--course-dark)}.controls{margin-top:12px}.control{min-height:40px;border-color:var(--line);font-weight:750}.control:hover:not(:disabled){border-color:var(--course);color:var(--course)}.control.primary{border-color:var(--course);background:var(--course);color:#fff}.control.primary:hover:not(:disabled){border-color:var(--course-dark);background:var(--course-dark);color:#fff}.progress{flex:1;max-width:390px;height:5px;border-radius:99px;background:#e5e8ed;overflow:hidden}.progress-fill{height:100%;background:var(--course);transition:width .3s}.lesson{margin:0;padding:0;border:0;background:transparent}.lesson h2,.lesson p{display:none}@media(max-width:760px){.app{width:min(100% - 20px,1180px);padding:17px 0 28px}.tabs{grid-template-columns:1fr}.tab{border-right:0;border-bottom:1px solid var(--line)}.tab:last-child{border-bottom:0}.story-head{padding:15px;display:block}.scene-count{display:block;margin-top:8px}.canvas{padding:12px}.code{height:320px;max-height:320px}.controls{flex-wrap:wrap}.progress{order:3;max-width:none;width:100%}}
+.node.has-tip{padding-right:54px}.tip-button{position:absolute;top:10px;right:10px;display:grid;place-items:center;width:32px;height:32px;margin:0;padding:0;border-color:#9cc6eb;background:#eaf4fd;color:#165f99;box-shadow:0 3px 0 #c8e0f4}.tip-button:hover{border-color:#277bb8;background:#dceefa;color:#104f80}.tip-button[aria-pressed="true"]{border-color:#277bb8;background:#277bb8;color:#fff;box-shadow:0 3px 0 #155b8d}.tip-button::before{content:"";position:absolute;top:50%;right:calc(100% + 3px);z-index:21;border:5px solid transparent;border-left-color:#172033;opacity:0;transform:translateY(-50%);pointer-events:none}.tip-button::after{content:attr(data-tooltip);position:absolute;top:50%;right:calc(100% + 12px);z-index:20;padding:6px 9px;border-radius:6px;background:#172033;color:#fff;box-shadow:0 5px 14px rgba(0,0,0,.22);font-size:10px;font-weight:700;line-height:1.25;white-space:nowrap;opacity:0;transform:translateY(-50%) translateX(3px);transition:opacity .15s,transform .15s;pointer-events:none}.tip-button:hover::before,.tip-button:hover::after,.tip-button:focus-visible::before,.tip-button:focus-visible::after{opacity:1}.tip-button:hover::after,.tip-button:focus-visible::after{transform:translateY(-50%) translateX(0)}.tip-icon{width:18px;height:18px;margin:0;border:0;border-radius:0;vertical-align:0;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.tip-note{border-left-color:#277bb8;background:#eaf4fd;color:#174f78}.tip-note code{color:#104f80}.tip-note a{color:#0f5f9b;font-weight:800;text-underline-offset:2px}
+.structure-scroll{height:390px;min-height:0;max-height:390px;overflow:auto;scrollbar-color:var(--course) #eef1f4;scrollbar-width:thin}.structure-scroll::-webkit-scrollbar{width:10px;height:10px}.structure-scroll::-webkit-scrollbar-track{background:#eef1f4}.structure-scroll::-webkit-scrollbar-thumb{border:2px solid #eef1f4;border-radius:8px;background:var(--course)}@media(max-width:760px){.structure-scroll{height:320px;max-height:320px}}
+.tip-button{border-color:#82b7e3;background:linear-gradient(145deg,#f4faff,#dceeff);box-shadow:0 3px 0 #b8d8f1,0 5px 12px rgba(39,123,184,.16);transition:transform .15s,box-shadow .15s,background .15s}.tip-button:hover{transform:translateY(-1px);background:linear-gradient(145deg,#fff8d7,#dceeff);box-shadow:0 4px 0 #9bc5e6,0 7px 15px rgba(39,123,184,.2)}.tip-icon{width:20px;height:20px;overflow:visible}.tip-rays{fill:none;stroke:#efa900;stroke-width:2;stroke-linecap:round}.tip-bulb{fill:#ffd75e;stroke:#236b9f;stroke-width:1.8}.tip-base{fill:none;stroke:#236b9f;stroke-width:1.9;stroke-linecap:round}.tip-button[aria-pressed="true"] .tip-rays{stroke:#ffe28a}.tip-button[aria-pressed="true"] .tip-bulb{fill:#ffd75e;stroke:#fff}.tip-button[aria-pressed="true"] .tip-base{stroke:#fff}
+.panel-actions{display:flex;align-items:center;gap:10px}.copy-button{display:inline-flex;align-items:center;gap:5px;min-height:30px;padding:0 9px;border:1px solid #c7d2dc;border-radius:7px;background:#fff;color:#445463;font-size:10px;font-weight:800}.copy-button:hover{border-color:var(--course);color:var(--course)}.copy-button svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.copy-button.copied{border-color:#2c8a63;background:#e9f7f1;color:#176143}
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="intro">
+    <div><p class="eyebrow">CS112 · Foundations</p><h1>From Functions to Classes</h1></div>
+    <p>Follow one bank account as its data and behavior move into an object, then see how a specialized account inherits and extends it.</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Python classes lesson">
+    <button class="tab" id="tab-functions" role="tab" aria-selected="true" aria-controls="lesson-panel" data-tab="functions" data-number="1">Functions</button>
+    <button class="tab" id="tab-class" role="tab" aria-selected="false" aria-controls="lesson-panel" data-tab="class" data-number="2" tabindex="-1">Build a Class</button>
+    <button class="tab" id="tab-inheritance" role="tab" aria-selected="false" aria-controls="lesson-panel" data-tab="inheritance" data-number="3" tabindex="-1">Inheritance</button>
+  </div>
+
+  <section id="lesson-panel" role="tabpanel" aria-labelledby="tab-functions">
+    <section class="story">
+      <header class="story-head" aria-live="polite" aria-atomic="true">
+        <div><div class="scene-kicker" id="structure-label">IMPORTS</div><h2 class="scene-title" id="lesson-title">Import a helper</h2><p class="scene-copy" id="lesson-copy"></p></div>
+        <span class="scene-count" id="step-count">Scene 1 of 4</span>
+      </header>
+      <div class="canvas"><div class="workspace">
+      <section class="panel" aria-label="Python code">
+        <div class="panel-head"><span class="panel-title" id="code-title">Procedural bank account</span><button class="copy-button" id="copy-code" type="button" aria-live="polite"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span>Copy code</span></button></div>
+        <pre class="code" id="code-block" aria-label="Python example code"></pre>
+      </section>
+      <section class="panel side" aria-label="Program structure">
+        <div class="panel-head"><span class="panel-title">Program structure</span><span class="step-count">Model</span></div>
+        <div class="structure-scroll" id="structure-scroll"><div class="diagram" id="diagram"></div><div class="legend" id="legend"><span class="inh">Inherited</span><span class="add">Added</span><span class="over">Overridden</span></div></div>
+      </section>
+      </div><div class="mapping" id="mapping"></div><div class="tip-note" id="tip-note" role="note"></div></div>
+    </section>
+    <nav class="controls" aria-label="Lesson steps">
+      <button class="control" id="reset" type="button">Reset</button>
+      <div class="progress" aria-hidden="true"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="control-group"><button class="control" id="previous" type="button">Previous</button><button class="control primary" id="next" type="button">Next</button></div>
+    </nav>
+  </section>
+</main>
+<script>
+const lessons={
+functions:{title:'Procedural bank account',steps:[
+ {label:'IMPORTS',title:'Import a helper',copy:'The import sits at the top because every part of the program may use Decimal for precise money values.',groups:['imports']},
+ {label:'DATA',title:'Store account data',copy:'Two ordinary variables hold the account owner and balance. They are related in our minds, but Python does not yet group them together.',groups:['data']},
+ {label:'FUNCTIONS',title:'Define behavior with functions',copy:'Each function receives the values it needs. A function that changes the balance returns the new value to its caller.',groups:['functions']},
+ {label:'MAIN',title:'Run the program',copy:'The main section passes the variables into each function and saves each returned balance. The data and functions remain separate.',groups:['main']}
+],code:[
+ ['imports','<span class="kw">from</span> decimal <span class="kw">import</span> Decimal'],['imports',''],
+ ['data','owner = <span class="str">"Maya"</span>'],['data','balance = Decimal(<span class="str">"100.00"</span>)'],['data',''],
+ ['functions','<span class="kw">def</span> <span class="fn">deposit</span>(balance, amount):'],['functions','    <span class="kw">return</span> balance + amount'],['functions',''],['functions','<span class="kw">def</span> <span class="fn">withdraw</span>(balance, amount):'],['functions','    <span class="kw">if</span> amount &lt;= balance:'],['functions','        <span class="kw">return</span> balance - amount'],['functions','    <span class="kw">return</span> balance'],['functions',''],['functions','<span class="kw">def</span> <span class="fn">display_account</span>(owner, balance):'],['functions','    <span class="kw">return</span> f<span class="str">"{owner}: ${balance}"</span>'],['functions',''],
+ ['main','<span class="cm"># Program starts here</span>'],['main','balance = deposit(balance, Decimal(<span class="str">"25.00"</span>))'],['main','balance = withdraw(balance, Decimal(<span class="str">"10.00"</span>))'],['main','print(display_account(owner, balance))']
+],nodes:[['imports','I','Imports','Decimal helper'],['data','D','Account data','owner and balance variables'],['functions','ƒ','Functions','deposit · withdraw · display_account'],['main','▶','Main section','pass variables · save results · print']]},
+class:{title:'Object-oriented bank account',steps:[
+ {label:'CLASS SHELL',title:'Create the class boundary',copy:'The class gives the account data and its related behavior one named home.',groups:['shell'],maps:['separate variables + functions → one BankAccount object']},
+ {label:'CONSTRUCTOR',title:'Initialize each object',copy:'__init__ runs when an object is created. self refers to that particular object, so each account owns its own attributes.',groups:['init'],maps:['owner and balance → self.owner and self.balance']},
+ {label:'METHODS',title:'Move functions into the class',copy:'The functions become methods. self gives each method access to the object’s own balance.',groups:['methods'],maps:['deposit(balance, amount) → deposit(self, amount)']},
+ {label:'DUNDER METHOD',title:'Give the object a readable string',copy:'Python calls __str__ when print receives an object, replacing the separate display function.',groups:['str'],maps:['display_account(owner, balance) → __str__(self)']},
+ {label:'MAIN',title:'Create and use an instance',copy:'main constructs one BankAccount, then sends messages to it with method-call syntax. The final balance is still $115.00.',groups:['main'],maps:['balance = deposit(balance, amount) → account.deposit(amount)']}
+],code:[
+ ['imports','<span class="kw">from</span> decimal <span class="kw">import</span> Decimal'],['imports',''],['shell','<span class="kw">class</span> <span class="fn">BankAccount</span>:'],
+ ['init','    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="self">self</span>, owner, balance):'],['init','        <span class="self">self</span>.owner = owner'],['init','        <span class="self">self</span>.balance = balance'],['init',''],
+ ['methods','    <span class="kw">def</span> <span class="fn">deposit</span>(<span class="self">self</span>, amount):'],['methods','        <span class="self">self</span>.balance += amount'],['methods',''],['methods','    <span class="kw">def</span> <span class="fn">withdraw</span>(<span class="self">self</span>, amount):'],['methods','        <span class="kw">if</span> amount &lt;= <span class="self">self</span>.balance:'],['methods','            <span class="self">self</span>.balance -= amount'],['methods',''],
+ ['str','    <span class="kw">def</span> <span class="fn">__str__</span>(<span class="self">self</span>):'],['str','        <span class="kw">return</span> f<span class="str">"{self.owner}: ${self.balance}"</span>'],['str',''],
+ ['main','<span class="cm"># Program starts here</span>'],['main','account = BankAccount(<span class="str">"Maya"</span>, Decimal(<span class="str">"100.00"</span>))'],['main','account.deposit(Decimal(<span class="str">"25.00"</span>))'],['main','account.withdraw(Decimal(<span class="str">"10.00"</span>))'],['main','print(account)']
+],nodes:[['shell','C','BankAccount class','One home for state and behavior'],['init','①','__init__','owner · balance · self'],['methods','M','Methods','deposit · withdraw'],['str','S','__str__','readable printed form'],['main','▶','Main section','construct · call methods · print']]},
+inheritance:{title:'BankAccount → SavingsAccount',steps:[
+ {label:'PARENT CLASS',title:'Start with the parent',copy:'BankAccount is the parent class. SavingsAccount will reuse its constructor, deposit, and withdraw behavior.',groups:['parent']},
+ {label:'SUBCLASS',title:'Declare a child class',copy:'Putting BankAccount in parentheses makes SavingsAccount a subclass. It begins with the parent’s behavior.',groups:['child'],maps:['SavingsAccount is a BankAccount']},
+ {label:'SUPER + NEW STATE',title:'Extend the constructor',copy:'super().__init__ asks BankAccount to initialize owner and balance. The subclass then adds its own interest_rate attribute.',groups:['init'],maps:['inherited state + interest_rate']},
+ {label:'NEW METHOD',title:'Add specialized behavior',copy:'add_interest exists only on savings accounts. It works alongside the inherited deposit and withdraw methods.',groups:['added'],maps:['added: add_interest()']},
+ {label:'OVERRIDE',title:'Override a parent method',copy:'SavingsAccount defines its own __str__. This replaces the inherited version for savings objects while keeping the same method name.',groups:['override'],maps:['overridden: __str__()']},
+ {label:'MAIN',title:'Call methods through the class instance',copy:'Once functions belong to a class, we call them methods through an instance. Here, savings is a SavingsAccount instance: savings.deposit(...) calls an inherited method, savings.add_interest() calls its specialized method, and print(savings) calls its overridden __str__.',groups:['main'],maps:['instance.method(...)','savings.deposit(...) → inherited','savings.add_interest() → added','print(savings) → overridden __str__']}
+],code:[
+ ['parent','<span class="kw">class</span> <span class="fn">BankAccount</span>:'],['parent','    <span class="cm"># __init__, deposit, withdraw, __str__</span>'],['parent','    ...'],['parent',''],
+ ['child','<span class="kw">class</span> <span class="fn">SavingsAccount</span>(BankAccount):'],
+ ['init','    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="self">self</span>, owner, balance, rate):'],['init','        <span class="fn">super</span>().__init__(owner, balance)'],['init','        <span class="self">self</span>.interest_rate = rate'],['init',''],
+ ['added','    <span class="kw">def</span> <span class="fn">add_interest</span>(<span class="self">self</span>):'],['added','        interest = <span class="self">self</span>.balance * <span class="self">self</span>.interest_rate'],['added','        <span class="self">self</span>.deposit(interest)'],['added',''],
+ ['override','    <span class="kw">def</span> <span class="fn">__str__</span>(<span class="self">self</span>):'],['override','        <span class="kw">return</span> f<span class="str">"Savings · {self.owner}: ${self.balance}"</span>'],['override',''],
+ ['main','<span class="cm"># Program starts here</span>'],['main','savings = SavingsAccount('],['main','    <span class="str">"Maya"</span>, Decimal(<span class="str">"100.00"</span>), Decimal(<span class="str">"0.05"</span>)'],['main',')'],['main','savings.deposit(Decimal(<span class="str">"25.00"</span>))  <span class="cm"># inherited method</span>'],['main','savings.add_interest()                 <span class="cm"># added method</span>'],['main','print(savings)                         <span class="cm"># calls overridden __str__</span>']
+],nodes:[['parent','P','BankAccount','INHERITED · owner · balance · deposit · withdraw','inherited'],['child','C','SavingsAccount','Child of BankAccount','added'],['init','①','Extended __init__','INHERITED setup + ADDED rate','added'],['added','+','add_interest','ADDED method','added'],['override','↻','__str__','OVERRIDDEN method','overridden'],['main','▶','Main section','create instance · call methods · print']]}
+};
+
+const state={tab:'functions',steps:{functions:0,class:0,inheritance:0},tips:{functions:null,class:null,inheritance:null}};
+lessons.class.steps.push({
+ label:'WHAT COMES NEXT?',
+ title:'But "bank account" is too generic',
+ copy:'Real banks offer checking accounts, savings accounts, and certificates of deposit. They share the basic idea of a bank account, but each has different rules and behavior. How can we model those differences without rebuilding everything they have in common?',
+ groups:['transition'],
+ maps:['SavingsAccount IS A KIND OF BankAccount','CheckingAccount IS A KIND OF BankAccount','CDAccount IS A KIND OF BankAccount']
+});
+lessons.class.code.push(
+ ['transition',''],
+ ['transition','<span class="cm"># One shared idea, several specialized kinds:</span>'],
+ ['transition','<span class="cm"># CheckingAccount | SavingsAccount | CDAccount</span>']
+);
+lessons.class.nodes.push(['transition','?','One idea, specialized kinds','Checking | Savings | CD']);
+const copySources={
+ functions:[
+  'from decimal import Decimal','',
+  'owner = "Maya"','balance = Decimal("100.00")','',
+  'def deposit(balance, amount):','    return balance + amount','',
+  'def withdraw(balance, amount):','    if amount <= balance:','        return balance - amount','    return balance','',
+  'def display_account(owner, balance):','    return f"{owner}: ${balance}"','',
+  '# Program starts here','balance = deposit(balance, Decimal("25.00"))','balance = withdraw(balance, Decimal("10.00"))','print(display_account(owner, balance))'
+ ].join('\n'),
+ class:[
+  'from decimal import Decimal','',
+  'class BankAccount:','    def __init__(self, owner, balance):','        self.owner = owner','        self.balance = balance','',
+  '    def deposit(self, amount):','        self.balance += amount','',
+  '    def withdraw(self, amount):','        if amount <= self.balance:','            self.balance -= amount','',
+  '    def __str__(self):','        return f"{self.owner}: ${self.balance}"','',
+  '# Program starts here','account = BankAccount("Maya", Decimal("100.00"))','account.deposit(Decimal("25.00"))','account.withdraw(Decimal("10.00"))','print(account)'
+ ].join('\n'),
+ inheritance:[
+  'from decimal import Decimal','',
+  'class BankAccount:','    def __init__(self, owner, balance):','        self.owner = owner','        self.balance = balance','',
+  '    def deposit(self, amount):','        self.balance += amount','',
+  '    def withdraw(self, amount):','        if amount <= self.balance:','            self.balance -= amount','',
+  '    def __str__(self):','        return f"{self.owner}: ${self.balance}"','',
+  'class SavingsAccount(BankAccount):','    def __init__(self, owner, balance, rate):','        super().__init__(owner, balance)','        self.interest_rate = rate','',
+  '    def add_interest(self):','        interest = self.balance * self.interest_rate','        self.deposit(interest)','',
+  '    def __str__(self):','        return f"Savings | {self.owner}: ${self.balance}"','',
+  '# Program starts here','savings = SavingsAccount(','    "Maya", Decimal("100.00"), Decimal("0.05")',')','savings.deposit(Decimal("25.00"))','savings.add_interest()','print(savings)'
+ ].join('\n')
+};
+const els={code:document.getElementById('code-block'),diagram:document.getElementById('diagram'),structureScroll:document.getElementById('structure-scroll'),count:document.getElementById('step-count'),label:document.getElementById('structure-label'),title:document.getElementById('lesson-title'),copy:document.getElementById('lesson-copy'),mapping:document.getElementById('mapping'),tipNote:document.getElementById('tip-note'),codeTitle:document.getElementById('code-title'),panel:document.getElementById('lesson-panel'),legend:document.getElementById('legend'),progress:document.getElementById('progress-fill'),prev:document.getElementById('previous'),next:document.getElementById('next')};
+const tipDetails={
+ main:'<strong>Why use this?</strong> <code>if __name__ == "__main__":</code> runs this section only when the file is started directly. Python skips it when another file imports this code, so the classes and functions can be reused without running the example.',
+ init:'<strong><code>__init__</code> is a special method.</strong> Python calls it after creating a new object so the object can receive its starting attributes. <a href="https://docs.python.org/3/reference/datamodel.html#object.__init__" target="_blank" rel="noopener noreferrer">Official Python documentation: <code>object.__init__</code></a>.',
+ str:'<strong><code>__str__</code> is a special method.</strong> Python calls it when <code>str()</code> or <code>print()</code> needs a friendly, readable version of an object. It must return a string. <a href="https://docs.python.org/3/reference/datamodel.html#object.__str__" target="_blank" rel="noopener noreferrer">Official Python documentation: <code>object.__str__</code></a>.'
+};
+function tipKindForGroup(group){return group==='main'?'main':group==='init'?'init':group==='str'||group==='override'?'str':null}
+let codeScrollFrame=0,structureScrollFrame=0;
+
+function scrollActiveCode(){
+ cancelAnimationFrame(codeScrollFrame);
+ codeScrollFrame=requestAnimationFrame(()=>{
+  const active=[...els.code.querySelectorAll('.line.active')];
+  if(!active.length)return;
+  const codeBox=els.code.getBoundingClientRect();
+  const firstBox=active[0].getBoundingClientRect();
+  const lastBox=active[active.length-1].getBoundingClientRect();
+  const activeCenter=(firstBox.top+lastBox.bottom)/2;
+  const viewportCenter=(codeBox.top+codeBox.bottom)/2;
+  const target=Math.max(0,Math.min(els.code.scrollHeight-els.code.clientHeight,els.code.scrollTop+activeCenter-viewportCenter));
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  els.code.scrollTo({top:target,behavior:reduced?'auto':'smooth'});
+ });
+}
+
+function scrollActiveStructure(){
+ cancelAnimationFrame(structureScrollFrame);
+ structureScrollFrame=requestAnimationFrame(()=>{
+  const active=els.diagram.querySelector('.node.active');
+  if(!active)return;
+  const viewport=els.structureScroll.getBoundingClientRect();
+  const card=active.getBoundingClientRect();
+  const target=Math.max(0,Math.min(els.structureScroll.scrollHeight-els.structureScroll.clientHeight,els.structureScroll.scrollTop+(card.top+card.bottom-viewport.top-viewport.bottom)/2));
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  els.structureScroll.scrollTo({top:target,behavior:reduced?'auto':'smooth'});
+ });
+}
+
+function getCompleteCopySource(){
+ const source=copySources[state.tab];
+ if(state.tips[state.tab]!=='main')return `${source}\n`;
+ const marker='# Program starts here';
+ const markerIndex=source.indexOf(marker);
+ const before=source.slice(0,markerIndex);
+ const mainLines=source.slice(markerIndex+marker.length).replace(/^\n/,'').split('\n').map(line=>`    ${line}`).join('\n');
+ return `${before}if __name__ == "__main__":\n${mainLines}\n`;
+}
+
+async function copyCompleteCode(){
+ const text=getCompleteCopySource(),button=document.getElementById('copy-code'),label=button.querySelector('span');
+ try{
+  if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text)}
+  else{const area=document.createElement('textarea');area.value=text;area.setAttribute('readonly','');area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();if(!document.execCommand('copy'))throw new Error('Copy unavailable');area.remove()}
+  button.classList.add('copied');label.textContent='Copied!';setTimeout(()=>{button.classList.remove('copied');label.textContent='Copy code'},1600);
+ }catch(error){label.textContent='Copy failed';setTimeout(()=>{label.textContent='Copy code'},1600)}
+}
+
+function render(){
+ const lesson=lessons[state.tab],index=state.steps[state.tab],step=lesson.steps[index];
+ const activeGroup=step.groups[0],tipKind=tipKindForGroup(activeGroup),showTip=Boolean(tipKind)&&state.tips[state.tab]===tipKind,showMainTip=tipKind==='main'&&showTip;
+ let codeLines=lesson.code;
+ if(showMainTip){
+  let guardAdded=false;
+  codeLines=[];
+  lesson.code.forEach(([group,html])=>{
+   if(group!=='main'){codeLines.push([group,html]);return}
+   if(!guardAdded){codeLines.push(['main','<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:']);guardAdded=true}
+   if(html.includes('Program starts here'))return;
+   codeLines.push(['main',`    ${html}`]);
+  });
+ }
+ els.codeTitle.textContent=lesson.title;els.count.textContent=`Scene ${index+1} of ${lesson.steps.length}`;els.label.textContent=step.label;els.title.textContent=step.title;els.copy.textContent=step.copy;els.progress.style.width=`${((index+1)/lesson.steps.length)*100}%`;
+ els.code.innerHTML=codeLines.map(([group,html],i)=>`<span class="line ${step.groups.includes(group)?'active':'dim'}" data-line="${i+1}">${html||' '}</span>`).join('');
+ els.diagram.innerHTML=lesson.nodes.map(([group,icon,title,copy,kind])=>{const nodeTip=group===activeGroup?tipKindForGroup(group):null;const tipLabel=`${showTip?'Hide':'Show'} ${nodeTip==='main'?'main-guard':`__${nodeTip}__`} tip`;return `<div class="node ${step.groups.includes(group)?'active':'dim'} ${kind||''} ${nodeTip?'has-tip':''}"><div class="node-title"><span class="kind">${icon}</span>${title}</div><p>${copy}</p>${nodeTip?`<button class="tip-button" type="button" data-concept-tip="${nodeTip}" data-tooltip="${tipLabel}" aria-pressed="${showTip}" aria-label="${tipLabel}"><svg class="tip-icon" aria-hidden="true" viewBox="0 0 24 24"><path class="tip-rays" d="M12 1V3M4.2 4.2l1.5 1.5M19.8 4.2l-1.5 1.5M2 12h2M20 12h2"/><path class="tip-bulb" d="M8.4 14.5A7 7 0 1 1 15.6 14.5C14.6 15.2 14 16.1 14 17h-4c0-.9-.6-1.8-1.6-2.5Z"/><path class="tip-base" d="M9.5 19h5M10.5 22h3"/></svg></button>`:''}</div>`}).join('');
+ const tipButton=els.diagram.querySelector('[data-concept-tip]');if(tipButton)tipButton.addEventListener('click',()=>{state.tips[state.tab]=showTip?null:tipKind;render();els.diagram.querySelector('[data-concept-tip]')?.focus()});
+ els.tipNote.innerHTML=showTip?tipDetails[tipKind]:'';els.tipNote.classList.toggle('show',showTip);
+ els.mapping.innerHTML=(step.maps||[]).map(text=>`<span class="map-chip">${text}</span>`).join('');
+ const atStart=index===0,atEnd=index===lesson.steps.length-1;
+ els.legend.classList.toggle('show',state.tab==='inheritance');
+ els.prev.disabled=atStart&&state.tab==='functions';
+ els.next.disabled=atEnd&&state.tab==='inheritance';
+ els.next.textContent=state.tab==='functions'&&atEnd?'Build a class >':state.tab==='class'&&atEnd?'Explore inheritance >':'Next';
+ scrollActiveCode();scrollActiveStructure();
+}
+function setTab(name,focus=false){state.tab=name;document.querySelectorAll('.tab').forEach(tab=>{const active=tab.dataset.tab===name;tab.setAttribute('aria-selected',active);tab.tabIndex=active?0:-1;if(active&&focus)tab.focus()});els.panel.setAttribute('aria-labelledby',`tab-${name}`);render()}
+function move(delta){
+ const max=lessons[state.tab].steps.length-1,index=state.steps[state.tab];
+ if(delta>0&&state.tab==='functions'&&index===max){state.steps.class=0;setTab('class');return}
+ if(delta>0&&state.tab==='class'&&index===max){state.steps.inheritance=0;setTab('inheritance');return}
+ if(delta<0&&state.tab==='class'&&index===0){state.steps.functions=lessons.functions.steps.length-1;setTab('functions');return}
+ if(delta<0&&state.tab==='inheritance'&&index===0){state.steps.class=lessons.class.steps.length-1;setTab('class');return}
+ state.steps[state.tab]=Math.max(0,Math.min(max,index+delta));render()
+}
+document.querySelectorAll('.tab').forEach(tab=>{tab.addEventListener('click',()=>setTab(tab.dataset.tab));tab.addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const tabs=[...document.querySelectorAll('.tab')],i=tabs.indexOf(tab);let target=e.key==='Home'?0:e.key==='End'?tabs.length-1:(i+(e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;setTab(tabs[target].dataset.tab,true)})});
+els.prev.addEventListener('click',()=>move(-1));els.next.addEventListener('click',()=>move(1));document.getElementById('reset').addEventListener('click',()=>{state.steps[state.tab]=0;state.tips[state.tab]=null;render()});
+document.getElementById('copy-code').addEventListener('click',copyCompleteCode);
+document.addEventListener('keydown',e=>{if(e.target.matches('button')||e.altKey||e.ctrlKey||e.metaKey)return;if(e.key==='ArrowLeft')move(-1);if(e.key==='ArrowRight')move(1)});
+render();
+</script>
+</body>
+</html>
