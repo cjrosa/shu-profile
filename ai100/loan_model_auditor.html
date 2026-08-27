@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI-100 Machine Learning Lab</title>
+<link rel="stylesheet" href="../assets/css/components/ai-ml-lab.css?v=20260827-8">
+</head>
+<body>
+<main class="ml-app">
+  <header class="ml-intro">
+    <div>
+      <div class="ml-eyebrow">AI-100 · Machine Learning Lab</div>
+      <h1 id="labTitle">Loading lab…</h1>
+      <p id="labDescription"></p>
+    </div>
+    <div class="ml-actions">
+      <button class="ml-btn" id="instructorToggle" type="button">Instructor cues</button>
+      <button class="ml-btn warn" id="resetLab" type="button">Reset lab</button>
+    </div>
+  </header>
+
+  <section class="ml-learning-brief" aria-label="Learning brief">
+    <div><strong>What you’ll learn</strong><span id="learnBrief"></span></div>
+    <div><strong>What you’ll do</strong><span id="doBrief"></span></div>
+  </section>
+
+  <nav class="ml-modebar" aria-label="Lab modes">
+    <div class="ml-modes">
+      <button class="ml-mode active" data-mode="learn" type="button">Learn</button>
+      <button class="ml-mode" data-mode="notebook" type="button">Notebook</button>
+      <button class="ml-mode" data-mode="explore" type="button">Explore</button>
+      <button class="ml-mode" data-mode="challenge" type="button">Challenge</button>
+    </div>
+    <div class="ml-progress-label" id="modeProgress">Build the mental model</div>
+  </nav>
+
+  <section data-view="learn" class="ml-panel">
+    <div class="ml-scene-shell">
+      <aside class="ml-scene-nav" id="sceneNav" aria-label="Learning scenes"></aside>
+      <div class="ml-scene-main">
+        <header class="ml-scene-head">
+          <div class="ml-actions" style="justify-content:space-between">
+            <div>
+              <div class="ml-scene-kicker" id="sceneKicker"></div>
+              <h2 id="sceneTitle"></h2>
+            </div>
+            <span class="ml-scene-count" id="sceneCount"></span>
+          </div>
+          <p id="sceneCopy"></p>
+          <div class="instructor-only ml-cue"><strong>Instructor cue:</strong> <span id="instructorCue"></span></div>
+        </header>
+        <div class="ml-progress" aria-hidden="true"><i id="sceneProgress"></i></div>
+        <div class="ml-scene-visual" id="sceneVisual"></div>
+        <footer class="ml-scene-actions">
+          <button class="ml-btn" id="sceneBack" type="button">← Back</button>
+          <button class="ml-btn primary" id="sceneNext" type="button">Next →</button>
+        </footer>
+      </div>
+    </div>
+  </section>
+
+  <section data-view="notebook" hidden>
+    <div class="ml-notebook-layout">
+      <div class="ml-panel ml-notebook">
+        <div class="ml-panel-head">
+          <div><h2>AI-100 Python Simulator</h2><span>Course-scoped Python practice · not a full Python runtime</span></div>
+          <div class="ml-toolbar">
+            <button class="ml-btn primary" id="runAll" type="button">Run all</button>
+            <button class="ml-btn" id="restartNotebook" type="button">Restart</button>
+          </div>
+        </div>
+        <div class="ml-simulator-note"><strong>Type the code yourself.</strong> The simulator supports the Pandas, plotting, and scikit-learn patterns used in this lab. It accepts ordinary spacing, straight quotes, and your own variable names where practical.</div>
+        <div class="ml-cells" id="cells"></div>
+      </div>
+      <aside class="ml-side">
+        <section class="ml-panel ml-task-panel">
+          <div class="ml-panel-head"><h2>Task list</h2><span id="taskProgress">0 complete</span></div>
+          <div class="ml-task-sidebar" id="taskList"></div>
+        </section>
+        <section class="ml-panel">
+          <div class="ml-panel-head"><h2>Keep your work</h2><span>Optional real-Python extensions</span></div>
+          <div class="ml-panel-head" style="border:0">
+            <div class="ml-actions">
+              <button class="ml-btn" id="downloadPy" type="button">Download .py</button>
+              <button class="ml-btn" id="downloadIpynb" type="button">Download .ipynb</button>
+              <a class="ml-btn" href="data/Loans.csv" download>Download Loans.csv</a>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </section>
+
+  <section data-view="explore" hidden>
+    <div class="ml-explore-grid">
+      <section class="ml-panel">
+        <div class="ml-panel-head"><h2>Change one thing</h2><span>Observe before concluding</span></div>
+        <div class="ml-controls" id="exploreControls"></div>
+      </section>
+      <section class="ml-panel">
+        <div class="ml-panel-head"><h2 id="exploreTitle">Explore</h2><span>Same embedded course data</span></div>
+        <div class="ml-panel-head" style="border:0"><div class="ml-metric-grid" id="exploreMetrics"></div></div>
+        <div class="ml-chart" id="exploreChart"><div id="exploreChartMount"></div></div>
+      </section>
+    </div>
+  </section>
+
+  <section data-view="challenge" hidden>
+    <div class="ml-panel">
+      <div class="ml-panel-head"><h2>Challenge and reflection</h2><span>Explain, don’t just calculate</span></div>
+      <div class="ml-challenge-grid" id="challengeArea"></div>
+    </div>
+  </section>
+
+  <p class="ml-footer-note">Runs locally in your browser. No code, answers, or student information are uploaded.</p>
+  <article class="ml-print-record" id="printRecord"></article>
+</main>
+<div class="ml-toast" id="mlToast" role="status" aria-live="polite"></div>
+<script src="../assets/js/ai100/loan-auditor-config.js?v=20260827-2"></script>
+<script src="../assets/js/components/ai-ml-lab.js?v=20260827-14"></script>
+</body>
+</html>

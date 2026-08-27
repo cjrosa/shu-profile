@@ -18,7 +18,8 @@
 .ai-tools-neural { order: 1; }
 .ai-tools-cnn { order: 2; }
 .ai-tools-rl { order: 3; }
-.ai-tools-nlp { order: 4; }
+.ai-tools-ml { order: 4; }
+.ai-tools-nlp { order: 5; }
 
 .ai-tool-accordion {
   border: 1px solid #c9dfd1;

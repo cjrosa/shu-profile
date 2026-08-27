@@ -156,8 +156,8 @@
   <div class="ai-tools-label">Interactive Tools</div>
   <div class="ds-stack ai-tools-stack">
 
-    <section class="cat-accordion ai-tool-accordion ai-tools-neural open" id="acc-ai-neural">
-      <button class="cat-header" type="button" onclick="toggleToolGroup('acc-ai-neural')" aria-expanded="true" aria-controls="body-ai-neural">
+    <section class="cat-accordion ai-tool-accordion ai-tools-neural" id="acc-ai-neural">
+      <button class="cat-header" type="button" onclick="toggleToolGroup('acc-ai-neural')" aria-expanded="false" aria-controls="body-ai-neural">
         <span class="cat-header-inner">
           <span class="cat-icon" aria-hidden="true">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="4" cy="6" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="12" cy="8" r="2"/><circle cx="12" cy="16" r="2"/><circle cx="20" cy="12" r="2"/><path d="M6 6.5l4 1M6 17.5l4-1M14 8.5l4 2.5M14 15.5l4-2.5M6 7l4 7M6 17l4-7"/></svg>
@@ -224,6 +224,77 @@
         </div>
       </div>
     </section>
+
+
+    <section class="cat-accordion ai-tool-accordion ai-tools-cnn" id="acc-ai-cnn">
+      <button class="cat-header" type="button" onclick="toggleToolGroup('acc-ai-cnn')" aria-expanded="false" aria-controls="body-ai-cnn">
+        <span class="cat-header-inner">
+          <span class="cat-icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="9" y="15" width="6" height="6" rx="1"/><path d="M9 6h6M6 9v3h6v3M18 9v3h-6"/></svg>
+          </span>
+          <span class="cat-title-area">
+            <span class="cat-name">Convolutional Neural Networks &amp; Computer Vision</span>
+            <span class="cat-tagline">Visual features, filters, classification, and responsible evaluation</span>
+            <span class="cat-tool-count">2 Tools</span>
+          </span>
+          <span class="cat-chevron" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></span>
+        </span>
+      </button>
+      <div class="cat-body" id="body-ai-cnn">
+        <div class="tools-grid">
+
+    <a class="tool-card" data-course-order="1" data-course-class="3" data-course-date="2026-09-08" data-course-topic="Convolutional Neural Networks" href="../viewer.html?tool=ai100%2Fcnn_visualizer.html%3Fv%3D20260806-22&amp;course=AI100&amp;label=Foundations%20of%20Artificial%20Intelligence&amp;name=CNN%20Visualizer&amp;back=ai100/index.html" style="border:0.5px solid var(--teal-m);">
+      <div class="tool-card-header">
+        <div class="tool-icon" style="background:var(--teal-l);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="9" y="15" width="6" height="6" rx="1"/><path d="M9 6h6M6 9v3h6v3M18 9v3h-6"/></svg>
+        </div>
+        <div>
+          <div class="tool-subtitle" style="color:var(--teal);">Convolutional Neural Networks</div>
+          <div class="tool-title">CNN Visualizer</div>
+        </div>
+      </div>
+      <div class="tool-body">
+        <p class="tool-desc">Explore how convolutional neural networks (CNN) identify visual patterns by applying filters and combining simple features into increasingly complex representations.</p>
+        <div class="tool-features">
+          <div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Step through convolution filters</div>
+          <div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Watch feature maps form layer by layer</div>
+          <div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Connect learned features to predictions</div>
+        </div>
+      </div>
+      <div class="tool-footer">
+        <span class="tool-cta" style="color:var(--teal);">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+        <span class="tool-tag" style="background:var(--teal-l);color:var(--teal);">Interactive</span>
+      </div>
+    </a>
+
+    <a class="tool-card" data-course-order="2" data-course-class="5" data-course-date="2026-09-15" data-course-topic="Computer Vision Applications" href="../viewer.html?tool=ai100%2Fcnn_long_tail_lab.html%3Fv%3D20260809-1&amp;course=AI100&amp;label=Foundations%20of%20Artificial%20Intelligence&amp;name=CNN%20Long-Tail%20Lab&amp;back=ai100/index.html" style="border:0.5px solid var(--teal-m);">
+      <div class="tool-card-header">
+        <div class="tool-icon" style="background:var(--teal-l);">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V8M10 20V5M16 20V11M22 20V16"/><path d="M2 20h21"/><circle cx="4" cy="6" r="2"/><circle cx="10" cy="3" r="2"/><circle cx="16" cy="9" r="2"/><circle cx="22" cy="14" r="2"/></svg>
+        </div>
+        <div>
+          <div class="tool-subtitle" style="color:var(--teal);">Convolutional Neural Networks &amp; Responsible AI</div>
+          <div class="tool-title">CNN Long-Tail Lab</div>
+        </div>
+      </div>
+      <div class="tool-body">
+        <p class="tool-desc">See how a CNN can score well overall while repeatedly missing rare classes, then test how balanced sampling changes the result.</p>
+        <div class="tool-features">
+          <div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Wildlife, traffic, and health scenarios</div>
+          <div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Compare overall and per-class performance</div>
+          <div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Explore imbalance and sampling tradeoffs</div>
+        </div>
+      </div>
+      <div class="tool-footer">
+        <span class="tool-cta" style="color:var(--teal);">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+        <span class="tool-tag" style="background:var(--teal-l);color:var(--teal);">Interactive</span>
+      </div>
+    </a>
+
+        </div>
+      </div>
+    </section>
+
 
     <section class="cat-accordion ai-tool-accordion ai-tools-rl" id="acc-ai-rl">
       <button class="cat-header" type="button" onclick="toggleToolGroup('acc-ai-rl')" aria-expanded="false" aria-controls="body-ai-rl">
@@ -310,6 +381,51 @@
       </div>
     </section>
 
+
+    <section class="cat-accordion ai-tool-accordion ai-tools-ml" id="acc-ai-ml">
+      <button class="cat-header" type="button" onclick="toggleToolGroup('acc-ai-ml')" aria-expanded="false" aria-controls="body-ai-ml">
+        <span class="cat-header-inner">
+          <span class="cat-icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V8M10 19V4M16 19v-7M22 19V9"/><path d="M2 19h21"/><circle cx="4" cy="6" r="2"/><circle cx="10" cy="2" r="2"/><circle cx="16" cy="10" r="2"/><circle cx="22" cy="7" r="2"/></svg>
+          </span>
+          <span class="cat-title-area">
+            <span class="cat-name">Machine Learning Labs</span>
+            <span class="cat-tagline">Data, regression, classification, clustering, and typed Python practice</span>
+            <span class="cat-tool-count">4 Tools</span>
+          </span>
+          <span class="cat-chevron" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></span>
+        </span>
+      </button>
+      <div class="cat-body" id="body-ai-ml"><div class="tools-grid">
+
+        <a class="tool-card" data-course-order="1" href="../viewer.html?tool=ai100%2Fdata_detective.html%3Fv%3D20260827-1&amp;course=AI100&amp;label=Foundations%20of%20Artificial%20Intelligence&amp;name=Data%20Detective&amp;back=ai100/index.html" style="border:0.5px solid var(--teal-m);">
+          <div class="tool-card-header"><div class="tool-icon" style="background:var(--teal-l);"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.6"><path d="M4 5h16v14H4zM4 10h16M10 5v14"/></svg></div><div><div class="tool-subtitle" style="color:var(--teal);">Data &amp; Visualization</div><div class="tool-title">Data Detective</div></div></div>
+          <div class="tool-body"><p class="tool-desc">Type Python to inspect fish data, build visualizations, and turn patterns into careful evidence-based claims.</p><div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Guided scenes and mock Jupyter notebook</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Pandas and Seaborn practice</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Correlation versus causation</div></div></div>
+          <div class="tool-footer"><span class="tool-cta" style="color:var(--teal);">Open tool →</span><span class="tool-tag" style="background:var(--teal-l);color:var(--teal);">Python Lab</span></div>
+        </a>
+
+        <a class="tool-card" data-course-order="2" href="../viewer.html?tool=ai100%2Ffish_predictor.html%3Fv%3D20260827-1&amp;course=AI100&amp;label=Foundations%20of%20Artificial%20Intelligence&amp;name=Fish%20Predictor&amp;back=ai100/index.html" style="border:0.5px solid var(--teal-m);">
+          <div class="tool-card-header"><div class="tool-icon" style="background:var(--teal-l);"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.6"><path d="M3 18 9 12l4 3 8-10"/><path d="M16 5h5v5"/></svg></div><div><div class="tool-subtitle" style="color:var(--teal);">Supervised Learning</div><div class="tool-title">Fish Predictor</div></div></div>
+          <div class="tool-body"><p class="tool-desc">Train regression models, protect test data, compare errors, and see when model complexity becomes overfitting.</p><div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Linear and random-forest regression</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>MAE, RMSE, and residuals</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Reproducible train/test split</div></div></div>
+          <div class="tool-footer"><span class="tool-cta" style="color:var(--teal);">Open tool →</span><span class="tool-tag" style="background:var(--teal-l);color:var(--teal);">Python Lab</span></div>
+        </a>
+
+        <a class="tool-card" data-course-order="3" href="../viewer.html?tool=ai100%2Floan_model_auditor.html%3Fv%3D20260827-1&amp;course=AI100&amp;label=Foundations%20of%20Artificial%20Intelligence&amp;name=Loan%20Model%20Auditor&amp;back=ai100/index.html" style="border:0.5px solid var(--teal-m);">
+          <div class="tool-card-header"><div class="tool-icon" style="background:var(--teal-l);"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.6"><path d="M12 3 4 7v5c0 5 3 8 8 9 5-1 8-4 8-9V7z"/><path d="m8 12 3 3 5-6"/></svg></div><div><div class="tool-subtitle" style="color:var(--teal);">Classification &amp; Responsible AI</div><div class="tool-title">Loan Model Auditor</div></div></div>
+          <div class="tool-body"><p class="tool-desc">Build a classifier, expose false approvals and denials, and audit why a headline accuracy score is not enough.</p><div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Missing data and class imbalance</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Confusion matrix and error consequences</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Fairness and deployment boundaries</div></div></div>
+          <div class="tool-footer"><span class="tool-cta" style="color:var(--teal);">Open tool →</span><span class="tool-tag" style="background:var(--teal-l);color:var(--teal);">Audit Lab</span></div>
+        </a>
+
+        <a class="tool-card" data-course-order="4" href="../viewer.html?tool=ai100%2Fhidden_patterns_lab.html%3Fv%3D20260827-1&amp;course=AI100&amp;label=Foundations%20of%20Artificial%20Intelligence&amp;name=Hidden%20Patterns%20Lab&amp;back=ai100/index.html" style="border:0.5px solid var(--teal-m);">
+          <div class="tool-card-header"><div class="tool-icon" style="background:var(--teal-l);"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.6"><circle cx="6" cy="7" r="2"/><circle cx="10" cy="11" r="2"/><circle cx="17" cy="6" r="2"/><circle cx="18" cy="15" r="2"/><circle cx="7" cy="18" r="2"/></svg></div><div><div class="tool-subtitle" style="color:var(--teal);">Unsupervised Learning</div><div class="tool-title">Hidden Patterns Lab</div></div></div>
+          <div class="tool-body"><p class="tool-desc">Hide species labels, cluster fish by measurement, and test why discovered groups are not automatically true categories.</p><div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Scaling, distance, and centroids</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Interactive choice of k</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Clusters versus known labels</div></div></div>
+          <div class="tool-footer"><span class="tool-cta" style="color:var(--teal);">Open tool →</span><span class="tool-tag" style="background:var(--teal-l);color:var(--teal);">Python Lab</span></div>
+        </a>
+
+      </div></div>
+    </section>
+
+
     <section class="cat-accordion ai-tool-accordion ai-tools-nlp" id="acc-ai-nlp">
       <button class="cat-header" type="button" onclick="toggleToolGroup('acc-ai-nlp')" aria-expanded="false" aria-controls="body-ai-nlp">
         <span class="cat-header-inner">
@@ -343,75 +459,6 @@
             </div>
             <div class="tool-footer"><span class="tool-cta" style="color:var(--teal);">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span><span class="tool-tag" style="background:var(--teal-l);color:var(--teal);">Interactive</span></div>
           </a>
-        </div>
-      </div>
-    </section>
-
-    <section class="cat-accordion ai-tool-accordion ai-tools-cnn" id="acc-ai-cnn">
-      <button class="cat-header" type="button" onclick="toggleToolGroup('acc-ai-cnn')" aria-expanded="false" aria-controls="body-ai-cnn">
-        <span class="cat-header-inner">
-          <span class="cat-icon" aria-hidden="true">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="9" y="15" width="6" height="6" rx="1"/><path d="M9 6h6M6 9v3h6v3M18 9v3h-6"/></svg>
-          </span>
-          <span class="cat-title-area">
-            <span class="cat-name">Convolutional Neural Networks &amp; Computer Vision</span>
-            <span class="cat-tagline">Visual features, filters, classification, and responsible evaluation</span>
-            <span class="cat-tool-count">2 Tools</span>
-          </span>
-          <span class="cat-chevron" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></span>
-        </span>
-      </button>
-      <div class="cat-body" id="body-ai-cnn">
-        <div class="tools-grid">
-
-    <a class="tool-card" data-course-order="1" data-course-class="3" data-course-date="2026-09-08" data-course-topic="Convolutional Neural Networks" href="../viewer.html?tool=ai100%2Fcnn_visualizer.html%3Fv%3D20260806-22&amp;course=AI100&amp;label=Foundations%20of%20Artificial%20Intelligence&amp;name=CNN%20Visualizer&amp;back=ai100/index.html" style="border:0.5px solid var(--teal-m);">
-      <div class="tool-card-header">
-        <div class="tool-icon" style="background:var(--teal-l);">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="9" y="15" width="6" height="6" rx="1"/><path d="M9 6h6M6 9v3h6v3M18 9v3h-6"/></svg>
-        </div>
-        <div>
-          <div class="tool-subtitle" style="color:var(--teal);">Convolutional Neural Networks</div>
-          <div class="tool-title">CNN Visualizer</div>
-        </div>
-      </div>
-      <div class="tool-body">
-        <p class="tool-desc">Explore how convolutional neural networks (CNN) identify visual patterns by applying filters and combining simple features into increasingly complex representations.</p>
-        <div class="tool-features">
-          <div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Step through convolution filters</div>
-          <div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Watch feature maps form layer by layer</div>
-          <div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Connect learned features to predictions</div>
-        </div>
-      </div>
-      <div class="tool-footer">
-        <span class="tool-cta" style="color:var(--teal);">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
-        <span class="tool-tag" style="background:var(--teal-l);color:var(--teal);">Interactive</span>
-      </div>
-    </a>
-
-    <a class="tool-card" data-course-order="2" data-course-class="5" data-course-date="2026-09-15" data-course-topic="Computer Vision Applications" href="../viewer.html?tool=ai100%2Fcnn_long_tail_lab.html%3Fv%3D20260809-1&amp;course=AI100&amp;label=Foundations%20of%20Artificial%20Intelligence&amp;name=CNN%20Long-Tail%20Lab&amp;back=ai100/index.html" style="border:0.5px solid var(--teal-m);">
-      <div class="tool-card-header">
-        <div class="tool-icon" style="background:var(--teal-l);">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V8M10 20V5M16 20V11M22 20V16"/><path d="M2 20h21"/><circle cx="4" cy="6" r="2"/><circle cx="10" cy="3" r="2"/><circle cx="16" cy="9" r="2"/><circle cx="22" cy="14" r="2"/></svg>
-        </div>
-        <div>
-          <div class="tool-subtitle" style="color:var(--teal);">Convolutional Neural Networks &amp; Responsible AI</div>
-          <div class="tool-title">CNN Long-Tail Lab</div>
-        </div>
-      </div>
-      <div class="tool-body">
-        <p class="tool-desc">See how a CNN can score well overall while repeatedly missing rare classes, then test how balanced sampling changes the result.</p>
-        <div class="tool-features">
-          <div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Wildlife, traffic, and health scenarios</div>
-          <div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Compare overall and per-class performance</div>
-          <div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Explore imbalance and sampling tradeoffs</div>
-        </div>
-      </div>
-      <div class="tool-footer">
-        <span class="tool-cta" style="color:var(--teal);">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
-        <span class="tool-tag" style="background:var(--teal-l);color:var(--teal);">Interactive</span>
-      </div>
-    </a>
-
         </div>
       </div>
     </section>
@@ -457,6 +504,10 @@
 const PROXY_URL = 'https://red-union-6b9e.crosa.workers.dev';
 
 const TOOLS = [
+  { name:'Data Detective', file:'data_detective.html?v=20260827-1', cat:'Machine Learning Labs', desc:'Type Python to inspect data, build visualizations, and make careful evidence-based claims.', keywords:['data','pandas','seaborn','visualization','histogram','scatterplot','correlation','feature','label'] },
+  { name:'Fish Predictor', file:'fish_predictor.html?v=20260827-1', cat:'Machine Learning Labs', desc:'Train and evaluate regression models on unseen fish using reproducible Python workflows.', keywords:['machine learning','regression','train test','linear regression','random forest','mae','rmse','overfitting'] },
+  { name:'Loan Model Auditor', file:'loan_model_auditor.html?v=20260827-1', cat:'Machine Learning Labs', desc:'Build and responsibly audit a classification model using confusion matrices and error consequences.', keywords:['classification','classifier','loan','confusion matrix','precision','recall','fairness','responsible ai','missing data'] },
+  { name:'Hidden Patterns Lab', file:'hidden_patterns_lab.html?v=20260827-1', cat:'Machine Learning Labs', desc:'Explore clustering, scaling, centroids, and the limits of unsupervised patterns.', keywords:['clustering','cluster','k-means','kmeans','unsupervised','centroid','scaling'] },
   { name:'Perceptron Playground', file:'perceptron_playground.html?v=20260730-1', cat:'Neural Network Foundations', desc:'Explore how a simple artificial neuron combines inputs, trust weights, and a threshold to make a decision.', keywords:['perceptron','artificial neuron','weighted input','weights','threshold','binary classification','yes or no'] },
   { name:'Neural Network Explorer', file:'neural_network_explorer.html?v=20260729-1', cat:'Neural Network Foundations', desc:'Build a neural network concept by concept and see how signals, layers, and training work together.', keywords:['neural network','neural networks','hidden layer','input layer','output layer','activation','training','backpropagation','deep learning'] },
   { name:'Q-Table Explorer', file:'q_table_playground.html?v=20260810-35', cat:'Reinforcement Learning', desc:'Learn how Q-tables represent action values and calculate a reinforcement-learning update step by step.', keywords:['q-table','q table','q-value','q value','bellman equation','bellman update','state action value','tabular reinforcement'] },
