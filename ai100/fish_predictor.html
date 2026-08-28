@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AI-100 Machine Learning Lab</title>
-<link rel="stylesheet" href="../assets/css/components/ai-ml-lab.css?v=20260827-11">
+<link rel="stylesheet" href="../assets/css/components/ai-ml-lab.css?v=20260828-13">
 </head>
 <body>
 <main class="ml-app">
@@ -15,7 +15,7 @@
       <p id="labDescription"></p>
     </div>
     <div class="ml-actions">
-      <button class="ml-btn" id="instructorToggle" type="button">Instructor cues</button>
+      <span id="instructorToggle" hidden aria-hidden="true"></span>
       <button class="ml-btn warn" id="resetLab" type="button">Reset lab</button>
     </div>
   </header>
@@ -30,7 +30,6 @@
       <button class="ml-mode active" data-mode="learn" type="button">Learn</button>
       <button class="ml-mode" data-mode="notebook" type="button">Notebook</button>
       <button class="ml-mode" data-mode="explore" type="button">Explore</button>
-      <button class="ml-mode" data-mode="challenge" type="button">Challenge</button>
     </div>
     <div class="ml-progress-label" id="modeProgress">Build the mental model</div>
   </nav>
@@ -48,7 +47,7 @@
             <span class="ml-scene-count" id="sceneCount"></span>
           </div>
           <p id="sceneCopy"></p>
-          <div class="instructor-only ml-cue"><strong>Instructor cue:</strong> <span id="instructorCue"></span></div>
+          <div class="ml-cue"><strong>Think about:</strong> <span id="instructorCue"></span></div>
         </header>
         <div class="ml-progress" aria-hidden="true"><i id="sceneProgress"></i></div>
         <div class="ml-scene-visual" id="sceneVisual"></div>
@@ -107,18 +106,11 @@
     </div>
   </section>
 
-  <section data-view="challenge" hidden>
-    <div class="ml-panel">
-      <div class="ml-panel-head"><h2>Challenge and reflection</h2><span>Explain, don’t just calculate</span></div>
-      <div class="ml-challenge-grid" id="challengeArea"></div>
-    </div>
-  </section>
-
   <p class="ml-footer-note">Runs locally in your browser. No code, answers, or student information are uploaded.</p>
   <article class="ml-print-record" id="printRecord"></article>
 </main>
 <div class="ml-toast" id="mlToast" role="status" aria-live="polite"></div>
-<script src="../assets/js/ai100/fish-predictor-config.js?v=20260827-2"></script>
-<script src="../assets/js/components/ai-ml-lab.js?v=20260827-19"></script>
+<script src="../assets/js/ai100/fish-predictor-config.js?v=20260828-3"></script>
+<script src="../assets/js/components/ai-ml-lab.js?v=20260828-19"></script>
 </body>
 </html>
