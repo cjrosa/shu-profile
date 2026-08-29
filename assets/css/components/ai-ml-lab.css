@@ -118,3 +118,10 @@
 .ml-notebook-layout{grid-template-columns:minmax(0,var(--ml-notebook-primary,60%)) 14px minmax(280px,1fr);gap:0}.ml-notebook-divider{position:relative;width:14px;min-width:14px;padding:0;border:0;background:transparent;cursor:col-resize;touch-action:none}.ml-notebook-divider:before{content:'';position:absolute;top:0;bottom:0;left:6px;width:2px;border-radius:99px;background:var(--ml-line);transition:background .15s,width .15s,left .15s}.ml-notebook-divider span{position:sticky;top:45%;display:block;width:8px;height:42px;margin:auto;border:1px solid #a8c7b4;border-radius:99px;background:#fff;box-shadow:0 2px 8px rgba(25,64,48,.12)}.ml-notebook-divider span:after{content:'⋮';position:absolute;inset:50% auto auto 50%;color:var(--ml-green);font-size:16px;font-weight:900;line-height:1;transform:translate(-50%,-54%)}.ml-notebook-divider:hover:before,.ml-notebook-divider.dragging:before,.ml-notebook-divider:focus-visible:before{left:5px;width:4px;background:var(--ml-green)}.ml-notebook-divider.dragging span{border-color:var(--ml-green);background:var(--ml-green-soft)}
 @media(max-width:900px){.ml-notebook-layout{grid-template-columns:1fr;gap:14px}.ml-notebook-divider{display:none}}
 @media print{body{background:#fff}.ml-app>*{display:none!important}.ml-print-record{display:block!important;color:#111}.ml-print-record h1{font-family:Georgia,serif}.ml-print-record table{width:100%;border-collapse:collapse}.ml-print-record th,.ml-print-record td{padding:7px;border:1px solid #bbb;text-align:left;font-size:10pt}.ml-print-record pre{white-space:pre-wrap;font-size:8pt}.ml-print-record .record-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.ml-print-record section{break-inside:avoid}}
+.ml-cell-card.open .ml-cell-chevron{display:none}
+.ml-cell.focused .ml-code{flex:0 1 auto;height:clamp(260px,48vh,560px);min-height:260px}
+.ml-cell.focused .ml-cell-actions{flex:0 0 auto;min-height:45px}
+.ml-cells.ml-cell-focus .ml-cell.focused{min-height:0}
+.ml-cell.focused .ml-cell-card{min-height:0}
+.ml-cell.focused .ml-cell-body{display:block;flex:none}
+.ml-predict-machine{box-shadow:none}
