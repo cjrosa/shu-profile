@@ -125,3 +125,9 @@
 .ml-cell.focused .ml-cell-card{min-height:0}
 .ml-cell.focused .ml-cell-body{display:block;flex:none}
 .ml-predict-machine{box-shadow:none}
+.ml-branch-tree{overflow:visible}
+.ml-branch-tree li.chosen:before,.ml-branch-tree li.chosen:after{border-color:#b8c6bf}
+.ml-branch-tree li.chosen>ul:before{border-color:var(--ml-green)}
+.ml-branch-tree li.chosen:first-child:after{border-color:var(--ml-green)}
+.ml-branch-tree li.chosen:last-child:before{border-color:var(--ml-green)}
+.ml-branch-tree li>ul>li{flex:1 1 0;width:50%}
