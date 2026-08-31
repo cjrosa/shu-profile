@@ -105,8 +105,20 @@
   </div>
 
   <div class="section-label">General Interactive Tools</div>
-  <div class="general-tools">
-    <div class="tools-grid">
+  <div class="layer-accordion general" id="acc-general">
+    <button class="layer-header" onclick="toggleLayer('acc-general')" aria-expanded="false">
+      <div class="layer-header-inner">
+        <div class="layer-num"><span class="lnum">G</span><span class="llbl">Tools</span></div>
+        <div class="layer-title-area">
+          <div class="layer-name">General Tools</div>
+          <div class="layer-tagline">Cross-Layer Concepts &middot; Performance &middot; Analysis &middot; Simulations</div>
+          <span class="layer-tool-count">1 Tool</span>
+        </div>
+        <div class="layer-chevron"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></div>
+      </div>
+    </button>
+    <div class="layer-body">
+      <div class="tools-grid">
       <a class="tool-card" href="../viewer.html?tool=cs339/network_performance_explorer.html&amp;course=CS339&amp;label=Computer%20Networks&amp;name=Network%20Performance%20Explorer&amp;back=cs339/index.html">
         <div class="tool-card-header">
           <div class="tool-icon blue">
@@ -115,16 +127,17 @@
           <div><div class="tool-subtitle blue">Delay &amp; Performance</div><div class="tool-title">Network Performance Explorer</div></div>
         </div>
         <div class="tool-body">
-          <p class="tool-desc">Explore how packet size and link capacity determine transmission delay, with live unit conversion and animated packet serialization.</p>
+          <p class="tool-desc">Explore the four sources of network delay with live formulas, shared parameters, and animations showing where each delay occurs.</p>
           <div class="tool-features">
-            <div class="tool-feature"><div class="tool-feature-dot blue"></div>Transmission delay formula: L / R</div>
-            <div class="tool-feature"><div class="tool-feature-dot blue"></div>Packet size and link-rate unit conversion</div>
-            <div class="tool-feature"><div class="tool-feature-dot blue"></div>Animated bits entering the link</div>
-            <div class="tool-feature"><div class="tool-feature-dot blue"></div>Built to expand to propagation, queueing, and nodal delay</div>
+            <div class="tool-feature"><div class="tool-feature-dot blue"></div>Processing and output-queue delay</div>
+            <div class="tool-feature"><div class="tool-feature-dot blue"></div>Transmission delay with capacity-scaled link</div>
+            <div class="tool-feature"><div class="tool-feature-dot blue"></div>Propagation delay by distance and medium</div>
+            <div class="tool-feature"><div class="tool-feature-dot blue"></div>Combined nodal-delay calculation</div>
           </div>
         </div>
         <div class="tool-footer"><span class="tool-cta blue">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span><span class="tool-tag blue">Interactive</span></div>
       </a>
+      </div>
     </div>
   </div>
 

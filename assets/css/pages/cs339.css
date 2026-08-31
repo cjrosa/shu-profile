@@ -128,6 +128,18 @@
 .general-tools .tools-grid { padding-top: 0; }
 .general-tools .tool-card { border: 0.5px solid #F2C0CC; }
 
+/* General cross-layer tools accordion */
+.layer-accordion.general {
+  background: #FFFFFF;
+  margin-bottom: 48px;
+}
+.layer-accordion.general .layer-num { background: var(--red); color: white; }
+.layer-accordion.general .layer-name { color: var(--red); }
+.layer-accordion.general .layer-tagline { color: var(--red-m); }
+.layer-accordion.general .layer-tool-count { background: var(--red-l); color: var(--red-m); }
+.layer-accordion.general .layer-chevron svg { stroke: var(--red-m); }
+.layer-accordion.general .tool-card { border: 0.5px solid #F2C0CC; }
+
 @media (max-width: 1000px) {
   .tools-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
