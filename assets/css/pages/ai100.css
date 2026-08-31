@@ -71,6 +71,10 @@
   color: white;
 }
 
+.upcoming-banner[hidden] {
+  display: none;
+}
+
 .upcoming-icon-box {
   width: 52px;
   height: 52px;

@@ -65,10 +65,10 @@
       element.dataset.currentStatus = status;
     });
 
-    document.querySelectorAll('[data-show-while-semester-upcoming]').forEach(function (element) {
-      const isUpcoming = statusFor(element.dataset.showWhileSemesterUpcoming, today) === 'Upcoming';
-      element.hidden = !isUpcoming;
-      element.setAttribute('aria-hidden', String(!isUpcoming));
+    document.querySelectorAll('[data-show-unless-semester-current]').forEach(function (element) {
+      const isVisible = statusFor(element.dataset.showUnlessSemesterCurrent, today) !== 'Current';
+      element.hidden = !isVisible;
+      element.setAttribute('aria-hidden', String(!isVisible));
     });
   }
 
