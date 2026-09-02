@@ -118,14 +118,15 @@
   </div>
 
   <div style="font-family:-apple-system,sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:20px;">Course Topics</div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+  <div class="course-topic-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
 
     <div style="background:white;border:1px solid var(--border2);border-radius:12px;padding:20px 22px;box-shadow:var(--shadow);">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
         <div style="width:36px;height:36px;border-radius:9px;background:#E8F1FB;display:flex;align-items:center;justify-content:center;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A5CA8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 17.5a4.5 4.5 0 0 0-1.2-8.84A6 6 0 0 0 7.3 8.8 4 4 0 0 0 7 16.8h13"/></svg>
         </div>
-        <div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">Cloud Concepts</div>
+        <div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">Cloud Concepts &amp; Benefits</div>
+        <span class="az900-topic-badge" title="This topic relates to the Microsoft Azure Fundamentals exam">AZ-900</span>
       </div>
       <p style="font-family:-apple-system,sans-serif;font-size:12px;color:var(--text2);line-height:1.65;">IaaS, PaaS, SaaS service models. Public, private, and hybrid cloud. The shared responsibility model and the economic case for cloud adoption.</p>
     </div>
@@ -136,6 +137,7 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         </div>
         <div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">Azure Architecture</div>
+        <span class="az900-topic-badge" title="This topic relates to the Microsoft Azure Fundamentals exam">AZ-900</span>
       </div>
       <p style="font-family:-apple-system,sans-serif;font-size:12px;color:var(--text2);line-height:1.65;">Regions, availability zones, resource groups, and subscriptions. Azure Resource Manager and the management hierarchy.</p>
     </div>
@@ -146,6 +148,7 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E65100" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
         </div>
         <div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">Compute &amp; Storage</div>
+        <span class="az900-topic-badge" title="This topic relates to the Microsoft Azure Fundamentals exam">AZ-900</span>
       </div>
       <p style="font-family:-apple-system,sans-serif;font-size:12px;color:var(--text2);line-height:1.65;">Virtual Machines, App Service, Azure Functions. Blob, File, Queue storage with redundancy options, tiers, and lifecycle management.</p>
     </div>
@@ -156,8 +159,23 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C62828" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
         <div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">Identity &amp; Security</div>
+        <span class="az900-topic-badge" title="This topic relates to the Microsoft Azure Fundamentals exam">AZ-900</span>
       </div>
       <p style="font-family:-apple-system,sans-serif;font-size:12px;color:var(--text2);line-height:1.65;">Azure Active Directory, RBAC, MFA, and Conditional Access. Microsoft Defender for Cloud and Azure Policy for compliance governance. Key Vault for secrets, keys, and certificate management.</p>
+    </div>
+
+    <div style="background:white;border:1px solid var(--border2);border-radius:12px;padding:20px 22px;box-shadow:var(--shadow);">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+        <div style="width:36px;height:36px;border-radius:9px;background:#FFF8E1;display:flex;align-items:center;justify-content:center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B8860B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7h8a4 4 0 0 1 4 4v1"/><polyline points="17,9 20,12 23,9"/><path d="M16 17H8a4 4 0 0 1-4-4v-1"/><polyline points="7,15 4,12 1,15"/></svg>
+        </div>
+        <div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">Migration &amp; Data Movement</div>
+        <div class="topic-badge-stack">
+          <span class="az900-topic-badge" title="This topic relates to the Microsoft Azure Fundamentals exam">AZ-900</span>
+          <span class="pending-topic-badge" title="Course content for this topic is pending">Pending</span>
+        </div>
+      </div>
+      <p style="font-family:-apple-system,sans-serif;font-size:12px;color:var(--text2);line-height:1.65;">Azure Migrate and Azure Data Box for migration planning and transfer. AzCopy, Azure Storage Explorer, and Azure File Sync for moving and synchronizing files.</p>
     </div>
 
     <div style="background:white;border:1px solid var(--border2);border-radius:12px;padding:20px 22px;box-shadow:var(--shadow);">
@@ -166,6 +184,7 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="18" r="3"/><circle cx="19" cy="18" r="3"/><line x1="10" y1="7" x2="7" y2="15"/><line x1="14" y1="7" x2="17" y2="15"/><line x1="8" y1="18" x2="16" y2="18"/></svg>
         </div>
         <div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">Networking</div>
+        <span class="az900-topic-badge" title="This topic relates to the Microsoft Azure Fundamentals exam">AZ-900</span>
       </div>
       <p style="font-family:-apple-system,sans-serif;font-size:12px;color:var(--text2);line-height:1.65;">Virtual Networks, NSGs, VPN Gateway, and Load Balancer. Azure DNS, Application Gateway, and ExpressRoute connectivity options.</p>
     </div>
@@ -176,6 +195,7 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         </div>
         <div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">Cost Management</div>
+        <span class="az900-topic-badge" title="This topic relates to the Microsoft Azure Fundamentals exam">AZ-900</span>
       </div>
       <p style="font-family:-apple-system,sans-serif;font-size:12px;color:var(--text2);line-height:1.65;">Azure pricing models, TCO Calculator, and budgets. Cost optimization strategies, resource tagging, and governance for billing control.</p>
     </div>
@@ -186,6 +206,7 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A5CA8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
         </div>
         <div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">Web Services</div>
+        <span class="az900-topic-badge" title="This topic relates to the Microsoft Azure Fundamentals exam">AZ-900</span>
       </div>
       <p style="font-family:-apple-system,sans-serif;font-size:12px;color:var(--text2);line-height:1.65;">Azure App Service, Azure Functions, and Logic Apps. Building, deploying, and integrating cloud-native web services and serverless workflows.</p>
     </div>
@@ -196,6 +217,7 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7B1FA2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9,12 11,14 15,10"/></svg>
         </div>
         <div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">Governance</div>
+        <span class="az900-topic-badge" title="This topic relates to the Microsoft Azure Fundamentals exam">AZ-900</span>
       </div>
       <p style="font-family:-apple-system,sans-serif;font-size:12px;color:var(--text2);line-height:1.65;">Azure Policy for compliance enforcement and guardrails. Defining, assigning, and evaluating policies to ensure resources stay within organizational standards.</p>
     </div>
@@ -215,7 +237,8 @@
         <div style="width:36px;height:36px;border-radius:9px;background:#E0F7FA;display:flex;align-items:center;justify-content:center;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00838F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
         </div>
-        <div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">Monitoring</div>
+        <div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">Monitoring &amp; Service Health</div>
+        <span class="az900-topic-badge" title="This topic relates to the Microsoft Azure Fundamentals exam">AZ-900</span>
       </div>
       <p style="font-family:-apple-system,sans-serif;font-size:12px;color:var(--text2);line-height:1.65;">Azure Monitor for metrics and alerts, Log Analytics for querying telemetry with KQL, and Dashboards for unified operational visibility across resources and services.</p>
     </div>
@@ -225,7 +248,8 @@
         <div style="width:36px;height:36px;border-radius:9px;background:#FFF8E1;display:flex;align-items:center;justify-content:center;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F57F17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7h8a4 4 0 0 1 4 4v1"/><polyline points="17,9 20,12 23,9"/><path d="M16 17H8a4 4 0 0 1-4-4v-1"/><polyline points="7,15 4,12 1,15"/></svg>
         </div>
-        <div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">DevOps</div>
+        <div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">Management, Deployment &amp; DevOps</div>
+        <span class="az900-topic-badge" title="Infrastructure as code relates to the Microsoft Azure Fundamentals exam">AZ-900</span>
       </div>
       <p style="font-family:-apple-system,sans-serif;font-size:12px;color:var(--text2);line-height:1.65;">Continuous integration and delivery with Azure DevOps and GitHub Actions. Infrastructure as code, container workflows, automated testing, and reliable cloud deployment practices.</p>
     </div>

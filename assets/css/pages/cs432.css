@@ -54,3 +54,69 @@
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
 }
+.az900-topic-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 3px 8px;
+  border: 1px solid rgba(0, 120, 212, 0.28);
+  border-radius: 999px;
+  background: rgba(0, 120, 212, 0.09);
+  color: #0067b8;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.course-topic-grid > div {
+  position: relative;
+  padding-bottom: 54px !important;
+}
+
+.course-topic-grid .az900-topic-badge {
+  position: absolute;
+  right: 22px;
+  bottom: 20px;
+}
+
+.pending-topic-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 3px 8px;
+  border: 1px solid #9a6f08;
+  border-radius: 999px;
+  background: #b8860b;
+  color: #fff8e1;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.topic-badge-stack {
+  position: absolute;
+  right: 22px;
+  bottom: 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+.topic-badge-stack .az900-topic-badge {
+  position: static;
+}
+
+.topic-badge-stack .az900-topic-badge,
+.topic-badge-stack .pending-topic-badge {
+  justify-content: center;
+}
