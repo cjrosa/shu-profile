@@ -96,19 +96,30 @@ inheritance:{title:'BankAccount → SavingsAccount',steps:[
 };
 
 const state={tab:'functions',steps:{functions:0,class:0,inheritance:0},tips:{functions:null,class:null,inheritance:null}};
-lessons.class.steps.push({
- label:'WHAT COMES NEXT?',
- title:'But "bank account" is too generic',
- copy:'Real banks offer checking accounts, savings accounts, and certificates of deposit. They share the basic idea of a bank account, but each has different rules and behavior. How can we model those differences without rebuilding everything they have in common?',
- groups:['transition'],
- maps:['SavingsAccount IS A KIND OF BankAccount','CheckingAccount IS A KIND OF BankAccount','CDAccount IS A KIND OF BankAccount']
+lessons.functions.steps.push({
+ label:'REVIEW',
+ title:'Review the complete procedural program',
+ copy:'See the full program together before moving on. The account data and the functions work together, but they still remain separate.',
+ groups:[],
+ review:true,
+ maps:['data stays in variables','behavior stays in functions','Next: group them in a class']
 });
-lessons.class.code.push(
- ['transition',''],
- ['transition','<span class="cm"># One shared idea, several specialized kinds:</span>'],
- ['transition','<span class="cm"># CheckingAccount | SavingsAccount | CDAccount</span>']
-);
-lessons.class.nodes.push(['transition','?','One idea, specialized kinds','Checking | Savings | CD']);
+lessons.class.steps.push({
+ label:'REVIEW',
+ title:'Review the complete class',
+ copy:'See the full class together before moving on. BankAccount now keeps its state and behavior in one reusable object.',
+ groups:[],
+ review:true,
+ maps:['state + behavior → one object','Next: specialize it with inheritance']
+});
+lessons.inheritance.steps.push({
+ label:'REVIEW',
+ title:'Review the complete inheritance example',
+ copy:'See the full parent and child design together. SavingsAccount reuses BankAccount, adds interest behavior, and customizes its printed form.',
+ groups:[],
+ review:true,
+ maps:['inherited: deposit() + withdraw()','added: interest_rate + add_interest()','overridden: __str__()']
+});
 const copySources={
  functions:[
   'from decimal import Decimal','',
@@ -197,7 +208,7 @@ async function copyCompleteCode(){
 
 function render(){
  const lesson=lessons[state.tab],index=state.steps[state.tab],step=lesson.steps[index];
- const activeGroup=step.groups[0],tipKind=tipKindForGroup(activeGroup),showTip=Boolean(tipKind)&&state.tips[state.tab]===tipKind,showMainTip=tipKind==='main'&&showTip;
+ const isReview=Boolean(step.review),activeGroup=step.groups[0],tipKind=tipKindForGroup(activeGroup),showTip=!isReview&&Boolean(tipKind)&&state.tips[state.tab]===tipKind,showMainTip=tipKind==='main'&&showTip;
  let codeLines=lesson.code;
  if(showMainTip){
   let guardAdded=false;
@@ -210,8 +221,8 @@ function render(){
   });
  }
  els.codeTitle.textContent=lesson.title;els.count.textContent=`Scene ${index+1} of ${lesson.steps.length}`;els.label.textContent=step.label;els.title.textContent=step.title;els.copy.textContent=step.copy;els.progress.style.width=`${((index+1)/lesson.steps.length)*100}%`;
- els.code.innerHTML=codeLines.map(([group,html],i)=>`<span class="line ${step.groups.includes(group)?'active':'dim'}" data-line="${i+1}">${html||' '}</span>`).join('');
- els.diagram.innerHTML=lesson.nodes.map(([group,icon,title,copy,kind])=>{const nodeTip=group===activeGroup?tipKindForGroup(group):null;const tipLabel=`${showTip?'Hide':'Show'} ${nodeTip==='main'?'main-guard':`__${nodeTip}__`} tip`;return `<div class="node ${step.groups.includes(group)?'active':'dim'} ${kind||''} ${nodeTip?'has-tip':''}"><div class="node-title"><span class="kind">${icon}</span>${title}</div><p>${copy}</p>${nodeTip?`<button class="tip-button" type="button" data-concept-tip="${nodeTip}" data-tooltip="${tipLabel}" aria-pressed="${showTip}" aria-label="${tipLabel}"><svg class="tip-icon" aria-hidden="true" viewBox="0 0 24 24"><path class="tip-rays" d="M12 1V3M4.2 4.2l1.5 1.5M19.8 4.2l-1.5 1.5M2 12h2M20 12h2"/><path class="tip-bulb" d="M8.4 14.5A7 7 0 1 1 15.6 14.5C14.6 15.2 14 16.1 14 17h-4c0-.9-.6-1.8-1.6-2.5Z"/><path class="tip-base" d="M9.5 19h5M10.5 22h3"/></svg></button>`:''}</div>`}).join('');
+ els.code.innerHTML=codeLines.map(([group,html],i)=>`<span class="line ${isReview?'':step.groups.includes(group)?'active':'dim'}" data-line="${i+1}">${html||' '}</span>`).join('');
+ els.diagram.innerHTML=lesson.nodes.map(([group,icon,title,copy,kind])=>{const nodeTip=!isReview&&group===activeGroup?tipKindForGroup(group):null;const tipLabel=`${showTip?'Hide':'Show'} ${nodeTip==='main'?'main-guard':`__${nodeTip}__`} tip`;return `<div class="node ${isReview?'':step.groups.includes(group)?'active':'dim'} ${kind||''} ${nodeTip?'has-tip':''}"><div class="node-title"><span class="kind">${icon}</span>${title}</div><p>${copy}</p>${nodeTip?`<button class="tip-button" type="button" data-concept-tip="${nodeTip}" data-tooltip="${tipLabel}" aria-pressed="${showTip}" aria-label="${tipLabel}"><svg class="tip-icon" aria-hidden="true" viewBox="0 0 24 24"><path class="tip-rays" d="M12 1V3M4.2 4.2l1.5 1.5M19.8 4.2l-1.5 1.5M2 12h2M20 12h2"/><path class="tip-bulb" d="M8.4 14.5A7 7 0 1 1 15.6 14.5C14.6 15.2 14 16.1 14 17h-4c0-.9-.6-1.8-1.6-2.5Z"/><path class="tip-base" d="M9.5 19h5M10.5 22h3"/></svg></button>`:''}</div>`}).join('');
  const tipButton=els.diagram.querySelector('[data-concept-tip]');if(tipButton)tipButton.addEventListener('click',()=>{state.tips[state.tab]=showTip?null:tipKind;render();els.diagram.querySelector('[data-concept-tip]')?.focus()});
  els.tipNote.innerHTML=showTip?tipDetails[tipKind]:'';els.tipNote.classList.toggle('show',showTip);
  els.mapping.innerHTML=(step.maps||[]).map(text=>`<span class="map-chip">${text}</span>`).join('');
