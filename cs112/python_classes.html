@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Python Classes &amp; Inheritance</title>
+<title>Python Classes, Inheritance &amp; Composition</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f7f9fb;color:#17212b;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.app{max-width:1180px;margin:0 auto;padding:20px}.intro{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:16px}.eyebrow{margin:0 0 4px;color:#0f6e56;font-size:.75rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase}.intro h1{margin:0;font-size:clamp(1.35rem,3vw,2rem);line-height:1.15}.intro p{max-width:560px;margin:4px 0 0;color:#596774;font-size:.9rem}.tabs{display:flex;gap:6px;padding:5px;margin-bottom:16px;border:1px solid #d7dee5;border-radius:10px;background:#fff;overflow-x:auto}.tab{flex:1;min-width:145px;border:0;border-radius:7px;background:transparent;color:#52616f;padding:10px 14px;font:inherit;font-weight:650;cursor:pointer}.tab[aria-selected="true"]{background:#e6f4ef;color:#075443;box-shadow:inset 0 0 0 1px #a9d7c8}.tab:focus-visible,.control:focus-visible{outline:3px solid #90bfee;outline-offset:2px}.workspace{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr);gap:16px}.panel{min-width:0;border:1px solid #d7dee5;border-radius:12px;background:#fff;box-shadow:0 2px 8px rgba(31,45,61,.05);overflow:hidden}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:10px 14px;border-bottom:1px solid #e3e8ed;background:#fbfcfd}.panel-title{font-size:.82rem;font-weight:750;color:#344250}.step-count{font-size:.75rem;color:#687886;font-variant-numeric:tabular-nums}.code{margin:0;min-height:485px;padding:14px 0 18px;overflow:auto;background:#17212b;color:#dce6ed;font:13px/1.65 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;tab-size:4}.line{display:block;min-height:1.65em;padding:0 18px 0 0;white-space:pre;transition:opacity .22s,background-color .22s,box-shadow .22s}.line::before{content:attr(data-line);display:inline-block;width:42px;margin-right:14px;color:#71808d;text-align:right;user-select:none}.line.dim{opacity:.34}.line.active{background:#263c4a;box-shadow:inset 4px 0 #49b997}.kw{color:#e9a6ff}.fn{color:#8ecfff}.str{color:#f3ce7d}.num{color:#ffad87}.cm{color:#81919c;font-style:italic}.self{color:#7de2c1}.side{display:grid;grid-template-rows:auto 1fr}.diagram{display:grid;gap:10px;padding:14px}.node{position:relative;border:1px solid #ccd6df;border-radius:9px;padding:11px 12px;background:#fbfcfd;transition:opacity .22s,transform .22s,border-color .22s,background .22s}.node-title{display:flex;align-items:center;gap:7px;margin-bottom:4px;font-size:.8rem;font-weight:750}.node p{margin:0;color:#5c6975;font-size:.78rem;line-height:1.45}.node.dim{opacity:.28}.node.active{border-color:#42a889;background:#edf8f4;transform:translateX(4px)}.node .kind{display:inline-flex;align-items:center;justify-content:center;min-width:21px;height:21px;border:1px solid currentColor;border-radius:5px;font:700 .68rem ui-monospace,monospace}.node.inherited{border-left:5px solid #2782bd}.node.added{border-left:5px double #258965}.node.overridden{border-left:5px dashed #a05b11}.legend{display:none;flex-wrap:wrap;gap:10px;padding:0 14px 12px;color:#596774;font-size:.72rem}.legend.show{display:flex}.legend span::before{content:"";display:inline-block;width:14px;height:9px;margin-right:5px;vertical-align:-1px}.legend .inh::before{border-left:4px solid #2782bd}.legend .add::before{border-left:4px double #258965}.legend .over::before{border-left:4px dashed #a05b11}.lesson{margin-top:16px;border:1px solid #c7dcd5;border-radius:12px;background:#f0f8f5;padding:15px 16px}.lesson h2{margin:0 0 5px;color:#075443;font-size:1rem}.lesson p{margin:0;color:#344e46;font-size:.88rem;line-height:1.55}.mapping{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.map-chip{border:1px solid #b8d4ca;border-radius:999px;background:#fff;padding:5px 9px;color:#35574d;font:700 .72rem ui-monospace,monospace}.controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}.control-group{display:flex;gap:8px}.control{border:1px solid #aebbc6;border-radius:7px;background:#fff;color:#263746;padding:9px 14px;font:650 .82rem inherit;cursor:pointer}.control.primary{border-color:#0f6e56;background:#0f6e56;color:#fff}.control:hover:not(:disabled){filter:brightness(.96)}.control:disabled{opacity:.4;cursor:not-allowed}.shortcut{color:#697986;font-size:.75rem}kbd{border:1px solid #cbd4dc;border-bottom-width:2px;border-radius:4px;background:#fff;padding:1px 5px;font:inherit}@media(max-width:760px){.app{padding:12px}.intro{display:block}.workspace{grid-template-columns:1fr}.code{min-height:390px;max-height:480px}.shortcut{display:none}.controls{align-items:stretch}.control-group{flex:1}.control{flex:1}.node.active{transform:none}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 /* CS112 scene shell — follows the AI-100 Explorer visual language. */
 :root{--course:#ce1141;--course-dark:#a50d33;--course-soft:#fae6ec;--ink:#172033;--muted:#647087;--line:#dce3ee;--page:#f7f9fc}
-body{background:var(--page);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.app{width:min(1180px,calc(100% - 28px));max-width:none;padding:24px 0 38px}.intro{display:block;max-width:980px;margin:0 0 16px}.eyebrow{margin:0;color:var(--course);font-size:11px;font-weight:800;letter-spacing:.13em}.intro h1{margin:5px 0 6px;font-size:clamp(27px,4vw,39px);letter-spacing:-.035em}.intro p{max-width:760px;margin:0;color:var(--muted);font-size:14px;line-height:1.55}.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:20px 0 12px;padding:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}.tab{position:relative;min-width:0;border:0;border-right:1px solid var(--line);border-radius:0;padding:11px 12px 11px 38px;background:#fff;color:var(--muted);font-size:11px;font-weight:750;text-align:left}.tab:last-child{border-right:0}.tab::before{content:attr(data-number);position:absolute;left:12px;top:9px;display:grid;place-items:center;width:19px;height:19px;border-radius:50%;background:#edf1f4;color:var(--muted);font-size:9px}.tab[aria-selected="true"]{background:var(--course-soft);color:var(--course-dark);box-shadow:none}.tab[aria-selected="true"]::before{background:var(--course);color:#fff}.tab:focus-visible,.control:focus-visible,.tip-button:focus-visible{outline:3px solid rgba(206,17,65,.25);outline-offset:2px}.story{min-height:0;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 10px 34px rgba(95,14,34,.07);overflow:hidden}.story-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding:18px 20px 14px;border-bottom:1px solid var(--line)}.scene-kicker{color:var(--course);font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.scene-title{margin:3px 0;font-size:clamp(18px,2.5vw,25px);letter-spacing:-.02em}.scene-copy{max-width:900px;margin:0;color:var(--muted);font-size:12px;line-height:1.5}.scene-count{color:var(--muted);font-size:11px;font-weight:800;white-space:nowrap}.canvas{min-height:0;padding:22px}.workspace{animation:sceneIn .28s ease}@keyframes sceneIn{from{opacity:0;transform:translateY(5px)}}.panel{box-shadow:none}.code{height:390px;min-height:0;max-height:390px;overflow:auto;scrollbar-color:var(--course) #27313c;scrollbar-width:thin}.code::-webkit-scrollbar{width:10px;height:10px}.code::-webkit-scrollbar-track{background:#27313c}.code::-webkit-scrollbar-thumb{border:2px solid #27313c;border-radius:8px;background:var(--course)}.line.active{background:#40232d;box-shadow:inset 4px 0 var(--course)}.node.active{border-color:var(--course);background:var(--course-soft)}.tip-button{min-height:0;margin-top:9px;padding:5px 8px;border:1px solid #efafbf;border-radius:7px;background:#fff;color:var(--course-dark);font-size:10px;font-weight:800}.tip-button:hover{border-color:var(--course);background:var(--course-soft)}.tip-button[aria-pressed="true"]{border-color:var(--course);background:var(--course);color:#fff}.tip-icon{display:inline-grid;place-items:center;width:16px;height:16px;margin-right:4px;border:1px solid currentColor;border-radius:50%;font-size:9px}.tip-note{display:none;margin:12px 0 0;padding:10px 12px;border-left:4px solid var(--course);border-radius:0 9px 9px 0;background:var(--course-soft);color:#6f1730;font-size:11px;line-height:1.5}.tip-note.show{display:block}.tip-note code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-weight:700}.mapping{margin:14px 0 0}.map-chip{border-color:#efafbf;color:var(--course-dark)}.controls{margin-top:12px}.control{min-height:40px;border-color:var(--line);font-weight:750}.control:hover:not(:disabled){border-color:var(--course);color:var(--course)}.control.primary{border-color:var(--course);background:var(--course);color:#fff}.control.primary:hover:not(:disabled){border-color:var(--course-dark);background:var(--course-dark);color:#fff}.progress{flex:1;max-width:390px;height:5px;border-radius:99px;background:#e5e8ed;overflow:hidden}.progress-fill{height:100%;background:var(--course);transition:width .3s}.lesson{margin:0;padding:0;border:0;background:transparent}.lesson h2,.lesson p{display:none}@media(max-width:760px){.app{width:min(100% - 20px,1180px);padding:17px 0 28px}.tabs{grid-template-columns:1fr}.tab{border-right:0;border-bottom:1px solid var(--line)}.tab:last-child{border-bottom:0}.story-head{padding:15px;display:block}.scene-count{display:block;margin-top:8px}.canvas{padding:12px}.code{height:320px;max-height:320px}.controls{flex-wrap:wrap}.progress{order:3;max-width:none;width:100%}}
+body{background:var(--page);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.app{width:min(1180px,calc(100% - 28px));max-width:none;padding:24px 0 38px}.intro{display:block;max-width:980px;margin:0 0 16px}.eyebrow{margin:0;color:var(--course);font-size:11px;font-weight:800;letter-spacing:.13em}.intro h1{margin:5px 0 6px;font-size:clamp(27px,4vw,39px);letter-spacing:-.035em}.intro p{max-width:760px;margin:0;color:var(--muted);font-size:14px;line-height:1.55}.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:20px 0 12px;padding:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}.tab{position:relative;min-width:0;border:0;border-right:1px solid var(--line);border-radius:0;padding:11px 12px 11px 38px;background:#fff;color:var(--muted);font-size:11px;font-weight:750;text-align:left}.tab:last-child{border-right:0}.tab::before{content:attr(data-number);position:absolute;left:12px;top:9px;display:grid;place-items:center;width:19px;height:19px;border-radius:50%;background:#edf1f4;color:var(--muted);font-size:9px}.tab[aria-selected="true"]{background:var(--course-soft);color:var(--course-dark);box-shadow:none}.tab[aria-selected="true"]::before{background:var(--course);color:#fff}.tab:focus-visible,.control:focus-visible,.tip-button:focus-visible{outline:3px solid rgba(206,17,65,.25);outline-offset:2px}.story{min-height:0;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 10px 34px rgba(95,14,34,.07);overflow:hidden}.story-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding:18px 20px 14px;border-bottom:1px solid var(--line)}.scene-kicker{color:var(--course);font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.scene-title{margin:3px 0;font-size:clamp(18px,2.5vw,25px);letter-spacing:-.02em}.scene-copy{max-width:900px;margin:0;color:var(--muted);font-size:12px;line-height:1.5}.scene-count{color:var(--muted);font-size:11px;font-weight:800;white-space:nowrap}.canvas{min-height:0;padding:22px}.workspace{animation:sceneIn .28s ease}@keyframes sceneIn{from{opacity:0;transform:translateY(5px)}}.panel{box-shadow:none}.code{height:390px;min-height:0;max-height:390px;overflow:auto;scrollbar-color:var(--course) #27313c;scrollbar-width:thin}.code::-webkit-scrollbar{width:10px;height:10px}.code::-webkit-scrollbar-track{background:#27313c}.code::-webkit-scrollbar-thumb{border:2px solid #27313c;border-radius:8px;background:var(--course)}.line.active{background:#40232d;box-shadow:inset 4px 0 var(--course)}.node.active{border-color:var(--course);background:var(--course-soft)}.tip-button{min-height:0;margin-top:9px;padding:5px 8px;border:1px solid #efafbf;border-radius:7px;background:#fff;color:var(--course-dark);font-size:10px;font-weight:800}.tip-button:hover{border-color:var(--course);background:var(--course-soft)}.tip-button[aria-pressed="true"]{border-color:var(--course);background:var(--course);color:#fff}.tip-icon{display:inline-grid;place-items:center;width:16px;height:16px;margin-right:4px;border:1px solid currentColor;border-radius:50%;font-size:9px}.tip-note{display:none;margin:12px 0 0;padding:10px 12px;border-left:4px solid var(--course);border-radius:0 9px 9px 0;background:var(--course-soft);color:#6f1730;font-size:11px;line-height:1.5}.tip-note.show{display:block}.tip-note code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-weight:700}.mapping{margin:14px 0 0}.map-chip{border-color:#efafbf;color:var(--course-dark)}.controls{margin-top:12px}.control{min-height:40px;border-color:var(--line);font-weight:750}.control:hover:not(:disabled){border-color:var(--course);color:var(--course)}.control.primary{border-color:var(--course);background:var(--course);color:#fff}.control.primary:hover:not(:disabled){border-color:var(--course-dark);background:var(--course-dark);color:#fff}.progress{flex:1;max-width:390px;height:5px;border-radius:99px;background:#e5e8ed;overflow:hidden}.progress-fill{height:100%;background:var(--course);transition:width .3s}.lesson{margin:0;padding:0;border:0;background:transparent}.lesson h2,.lesson p{display:none}@media(max-width:760px){.app{width:min(100% - 20px,1180px);padding:17px 0 28px}.tabs{grid-template-columns:1fr}.tab{border-right:0;border-bottom:1px solid var(--line)}.tab:last-child{border-bottom:0}.story-head{padding:15px;display:block}.scene-count{display:block;margin-top:8px}.canvas{padding:12px}.code{height:320px;max-height:320px}.controls{flex-wrap:wrap}.progress{order:3;max-width:none;width:100%}}
 .node.has-tip{padding-right:54px}.tip-button{position:absolute;top:10px;right:10px;display:grid;place-items:center;width:32px;height:32px;margin:0;padding:0;border-color:#9cc6eb;background:#eaf4fd;color:#165f99;box-shadow:0 3px 0 #c8e0f4}.tip-button:hover{border-color:#277bb8;background:#dceefa;color:#104f80}.tip-button[aria-pressed="true"]{border-color:#277bb8;background:#277bb8;color:#fff;box-shadow:0 3px 0 #155b8d}.tip-button::before{content:"";position:absolute;top:50%;right:calc(100% + 3px);z-index:21;border:5px solid transparent;border-left-color:#172033;opacity:0;transform:translateY(-50%);pointer-events:none}.tip-button::after{content:attr(data-tooltip);position:absolute;top:50%;right:calc(100% + 12px);z-index:20;padding:6px 9px;border-radius:6px;background:#172033;color:#fff;box-shadow:0 5px 14px rgba(0,0,0,.22);font-size:10px;font-weight:700;line-height:1.25;white-space:nowrap;opacity:0;transform:translateY(-50%) translateX(3px);transition:opacity .15s,transform .15s;pointer-events:none}.tip-button:hover::before,.tip-button:hover::after,.tip-button:focus-visible::before,.tip-button:focus-visible::after{opacity:1}.tip-button:hover::after,.tip-button:focus-visible::after{transform:translateY(-50%) translateX(0)}.tip-icon{width:18px;height:18px;margin:0;border:0;border-radius:0;vertical-align:0;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.tip-note{border-left-color:#277bb8;background:#eaf4fd;color:#174f78}.tip-note code{color:#104f80}.tip-note a{color:#0f5f9b;font-weight:800;text-underline-offset:2px}
 .structure-scroll{height:390px;min-height:0;max-height:390px;overflow:auto;scrollbar-color:var(--course) #eef1f4;scrollbar-width:thin}.structure-scroll::-webkit-scrollbar{width:10px;height:10px}.structure-scroll::-webkit-scrollbar-track{background:#eef1f4}.structure-scroll::-webkit-scrollbar-thumb{border:2px solid #eef1f4;border-radius:8px;background:var(--course)}@media(max-width:760px){.structure-scroll{height:320px;max-height:320px}}
 .tip-button{border-color:#82b7e3;background:linear-gradient(145deg,#f4faff,#dceeff);box-shadow:0 3px 0 #b8d8f1,0 5px 12px rgba(39,123,184,.16);transition:transform .15s,box-shadow .15s,background .15s}.tip-button:hover{transform:translateY(-1px);background:linear-gradient(145deg,#fff8d7,#dceeff);box-shadow:0 4px 0 #9bc5e6,0 7px 15px rgba(39,123,184,.2)}.tip-icon{width:20px;height:20px;overflow:visible}.tip-rays{fill:none;stroke:#efa900;stroke-width:2;stroke-linecap:round}.tip-bulb{fill:#ffd75e;stroke:#236b9f;stroke-width:1.8}.tip-base{fill:none;stroke:#236b9f;stroke-width:1.9;stroke-linecap:round}.tip-button[aria-pressed="true"] .tip-rays{stroke:#ffe28a}.tip-button[aria-pressed="true"] .tip-bulb{fill:#ffd75e;stroke:#fff}.tip-button[aria-pressed="true"] .tip-base{stroke:#fff}
@@ -19,13 +19,14 @@ body{background:var(--page);color:var(--ink);font-family:-apple-system,BlinkMacS
 <main class="app">
   <header class="intro">
     <div><p class="eyebrow">CS112 · Foundations</p><h1>From Functions to Classes</h1></div>
-    <p>Follow one bank account as its data and behavior move into an object, then see how a specialized account inherits and extends it.</p>
+    <p>Follow one bank account as its data and behavior move into an object, then explore inheritance and composition as two ways to reuse behavior.</p>
   </header>
 
   <div class="tabs" role="tablist" aria-label="Python classes lesson">
     <button class="tab" id="tab-functions" role="tab" aria-selected="true" aria-controls="lesson-panel" data-tab="functions" data-number="1">Functions</button>
     <button class="tab" id="tab-class" role="tab" aria-selected="false" aria-controls="lesson-panel" data-tab="class" data-number="2" tabindex="-1">Build a Class</button>
     <button class="tab" id="tab-inheritance" role="tab" aria-selected="false" aria-controls="lesson-panel" data-tab="inheritance" data-number="3" tabindex="-1">Inheritance</button>
+    <button class="tab" id="tab-composition" role="tab" aria-selected="false" aria-controls="lesson-panel" data-tab="composition" data-number="4" tabindex="-1">Composition</button>
   </div>
 
   <section id="lesson-panel" role="tabpanel" aria-labelledby="tab-functions">
@@ -80,7 +81,7 @@ class:{title:'Object-oriented bank account',steps:[
 ],nodes:[['shell','C','BankAccount class','One home for state and behavior'],['init','①','__init__','owner · balance · self'],['methods','M','Methods','deposit · withdraw'],['str','S','__str__','readable printed form'],['main','▶','Main section','construct · call methods · print']]},
 inheritance:{title:'BankAccount → SavingsAccount',steps:[
  {label:'PARENT CLASS',title:'Start with the parent',copy:'BankAccount is the parent class. SavingsAccount will reuse its constructor, deposit, and withdraw behavior.',groups:['parent']},
- {label:'SUBCLASS',title:'Declare a child class',copy:'Putting BankAccount in parentheses makes SavingsAccount a subclass. It begins with the parent’s behavior.',groups:['child'],maps:['SavingsAccount is a BankAccount']},
+ {label:'SUBCLASS',title:'Declare a child class',copy:'Inheritance models an is-a relationship: a SavingsAccount is a BankAccount. Putting BankAccount in parentheses makes SavingsAccount a subclass that begins with the parent behavior.',groups:['child'],maps:['is-a: inheritance','SavingsAccount is a BankAccount']},
  {label:'SUPER + NEW STATE',title:'Extend the constructor',copy:'super().__init__ asks BankAccount to initialize owner and balance. The subclass then adds its own interest_rate attribute.',groups:['init'],maps:['inherited state + interest_rate']},
  {label:'NEW METHOD',title:'Add specialized behavior',copy:'add_interest exists only on savings accounts. It works alongside the inherited deposit and withdraw methods.',groups:['added'],maps:['added: add_interest()']},
  {label:'OVERRIDE',title:'Override a parent method',copy:'SavingsAccount defines its own __str__. This replaces the inherited version for savings objects while keeping the same method name.',groups:['override'],maps:['overridden: __str__()']},
@@ -95,7 +96,233 @@ inheritance:{title:'BankAccount → SavingsAccount',steps:[
 ],nodes:[['parent','P','BankAccount','INHERITED · owner · balance · deposit · withdraw','inherited'],['child','C','SavingsAccount','Child of BankAccount','added'],['init','①','Extended __init__','INHERITED setup + ADDED rate','added'],['added','+','add_interest','ADDED method','added'],['override','↻','__str__','OVERRIDDEN method','overridden'],['main','▶','Main section','create instance · call methods · print']]}
 };
 
-const state={tab:'functions',steps:{functions:0,class:0,inheritance:0},tips:{functions:null,class:null,inheritance:null}};
+lessons.composition={
+ "title": "BankAccount has an InterestPolicy",
+ "steps": [
+  {
+   "label": "COMPONENT",
+   "title": "Give interest its own class",
+   "copy": "InterestPolicy holds a rate and calculates interest. It focuses on one job, so an account can use it as a component.",
+   "groups": [
+    "policy"
+   ],
+   "maps": [
+    "policy: rate + calculation"
+   ]
+  },
+  {
+   "label": "COMPOSITION",
+   "title": "An account has an interest policy",
+   "copy": "BankAccount does not inherit from InterestPolicy. Its constructor creates a policy object and stores it in self.interest_policy. This is composition: a has-a relationship where a BankAccount has an InterestPolicy object.",
+   "groups": [
+    "init"
+   ],
+   "maps": [
+    "inheritance: is-a",
+    "composition: has-a"
+   ]
+  },
+  {
+   "label": "ACCOUNT BEHAVIOR",
+   "title": "Keep account responsibilities together",
+   "copy": "The account owns its balance and deposit method. The policy owns the interest calculation. Each class has a clear responsibility.",
+   "groups": [
+    "deposit"
+   ],
+   "maps": [
+    "account: balance + deposits"
+   ]
+  },
+  {
+   "label": "DELEGATION",
+   "title": "Ask the component to do its job",
+   "copy": "add_interest delegates the calculation to self.interest_policy.interest_for(self.balance), then deposits the result. The account coordinates the work without duplicating the interest formula.",
+   "groups": [
+    "delegate"
+   ],
+   "maps": [
+    "policy calculates interest",
+    "account deposits the result"
+   ]
+  },
+  {
+   "label": "MAIN",
+   "title": "Use the composed account",
+   "copy": "Maya starts with $100.00 and deposits $25.00. The contained policy calculates 5% of $125.00. Adding $6.25 in interest produces a balance of $131.25.",
+   "groups": [
+    "main"
+   ],
+   "maps": [
+    "$125.00 ? 0.05 = $6.25",
+    "final balance: $131.25"
+   ]
+  },
+  {
+   "label": "REVIEW",
+   "title": "Choose the relationship that fits",
+   "copy": "SavingsAccount is a BankAccount in the inheritance example. Here, BankAccount has an InterestPolicy and delegates a task to it. Use inheritance for a specialized kind of object; use composition to assemble objects with separate responsibilities.",
+   "groups": [],
+   "review": true,
+   "maps": [
+    "is-a: inheritance",
+    "has-a: composition",
+    "delegation ? call a component method"
+   ]
+  }
+ ],
+ "code": [
+  [
+   "policy",
+   "<span class=\"kw\">from</span> decimal <span class=\"kw\">import</span> Decimal"
+  ],
+  [
+   "policy",
+   ""
+  ],
+  [
+   "policy",
+   "<span class=\"kw\">class</span> InterestPolicy:"
+  ],
+  [
+   "policy",
+   "    <span class=\"kw\">def</span> __init__(self, rate):"
+  ],
+  [
+   "policy",
+   "        self.rate = rate"
+  ],
+  [
+   "policy",
+   ""
+  ],
+  [
+   "policy",
+   "    <span class=\"kw\">def</span> interest_for(self, balance):"
+  ],
+  [
+   "policy",
+   "        <span class=\"kw\">return</span> balance * self.rate"
+  ],
+  [
+   "policy",
+   ""
+  ],
+  [
+   "init",
+   "<span class=\"kw\">class</span> BankAccount:"
+  ],
+  [
+   "init",
+   "    <span class=\"kw\">def</span> __init__(self, owner, balance, rate):"
+  ],
+  [
+   "init",
+   "        self.owner = owner"
+  ],
+  [
+   "init",
+   "        self.balance = balance"
+  ],
+  [
+   "init",
+   "        self.interest_policy = InterestPolicy(rate)"
+  ],
+  [
+   "init",
+   ""
+  ],
+  [
+   "deposit",
+   "    <span class=\"kw\">def</span> deposit(self, amount):"
+  ],
+  [
+   "deposit",
+   "        self.balance += amount"
+  ],
+  [
+   "deposit",
+   ""
+  ],
+  [
+   "delegate",
+   "    <span class=\"kw\">def</span> add_interest(self):"
+  ],
+  [
+   "delegate",
+   "        interest = self.interest_policy.interest_for(self.balance)"
+  ],
+  [
+   "delegate",
+   "        self.deposit(interest)"
+  ],
+  [
+   "delegate",
+   ""
+  ],
+  [
+   "main",
+   "# Program starts here"
+  ],
+  [
+   "main",
+   "account = BankAccount("
+  ],
+  [
+   "main",
+   "    \"Maya\", Decimal(\"100.00\"), Decimal(\"0.05\")"
+  ],
+  [
+   "main",
+   ")"
+  ],
+  [
+   "main",
+   "account.deposit(Decimal(\"25.00\"))"
+  ],
+  [
+   "main",
+   "account.add_interest()"
+  ],
+  [
+   "main",
+   "print(f\"{account.owner}: ${account.balance:.2f}\")"
+  ]
+ ],
+ "nodes": [
+  [
+   "policy",
+   "P",
+   "InterestPolicy",
+   "Component: rate + interest_for(balance)"
+  ],
+  [
+   "init",
+   "C",
+   "BankAccount contains a policy",
+   "self.interest_policy ? InterestPolicy object"
+  ],
+  [
+   "deposit",
+   "B",
+   "Account state and behavior",
+   "owner ? balance ? deposit(amount)"
+  ],
+  [
+   "delegate",
+   "?",
+   "Delegate the calculation",
+   "policy calculates; account deposits"
+  ],
+  [
+   "main",
+   "?",
+   "Main section",
+   "create account ? deposit ? add interest ? print"
+  ]
+ ]
+};
+
+const state={tab:'functions',steps:{functions:0,class:0,inheritance:0,composition:0},tips:{functions:null,class:null,inheritance:null,composition:null}};
 lessons.functions.steps.push({
  label:'REVIEW',
  title:'Review the complete procedural program',
@@ -115,7 +342,7 @@ lessons.class.steps.push({
 lessons.inheritance.steps.push({
  label:'REVIEW',
  title:'Review the complete inheritance example',
- copy:'See the full parent and child design together. SavingsAccount reuses BankAccount, adds interest behavior, and customizes its printed form.',
+ copy:'Inheritance expresses an is-a relationship: a SavingsAccount is a BankAccount. It reuses BankAccount, adds interest behavior, and customizes its printed form.',
  groups:[],
  review:true,
  maps:['inherited: deposit() + withdraw()','added: interest_rate + add_interest()','overridden: __str__()']
@@ -149,6 +376,7 @@ const copySources={
   '# Program starts here','savings = SavingsAccount(','    "Maya", Decimal("100.00"), Decimal("0.05")',')','savings.deposit(Decimal("25.00"))','savings.add_interest()','print(savings)'
  ].join('\n')
 };
+copySources.composition="from decimal import Decimal\n\nclass InterestPolicy:\n    def __init__(self, rate):\n        self.rate = rate\n\n    def interest_for(self, balance):\n        return balance * self.rate\n\nclass BankAccount:\n    def __init__(self, owner, balance, rate):\n        self.owner = owner\n        self.balance = balance\n        self.interest_policy = InterestPolicy(rate)\n\n    def deposit(self, amount):\n        self.balance += amount\n\n    def add_interest(self):\n        interest = self.interest_policy.interest_for(self.balance)\n        self.deposit(interest)\n\n# Program starts here\naccount = BankAccount(\n    \"Maya\", Decimal(\"100.00\"), Decimal(\"0.05\")\n)\naccount.deposit(Decimal(\"25.00\"))\naccount.add_interest()\nprint(f\"{account.owner}: ${account.balance:.2f}\")";
 const els={code:document.getElementById('code-block'),diagram:document.getElementById('diagram'),structureScroll:document.getElementById('structure-scroll'),count:document.getElementById('step-count'),label:document.getElementById('structure-label'),title:document.getElementById('lesson-title'),copy:document.getElementById('lesson-copy'),mapping:document.getElementById('mapping'),tipNote:document.getElementById('tip-note'),codeTitle:document.getElementById('code-title'),panel:document.getElementById('lesson-panel'),legend:document.getElementById('legend'),progress:document.getElementById('progress-fill'),prev:document.getElementById('previous'),next:document.getElementById('next')};
 const tipDetails={
  main:'<strong>Why use this?</strong> <code>if __name__ == "__main__":</code> runs this section only when the file is started directly. Python skips it when another file imports this code, so the classes and functions can be reused without running the example.',
@@ -206,6 +434,10 @@ async function copyCompleteCode(){
  }catch(error){label.textContent='Copy failed';setTimeout(()=>{label.textContent='Copy code'},1600)}
 }
 
+function emphasizeRelationships(text){
+ return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\b(is-a|has-a)\b/g,'<strong>$1</strong>');
+}
+
 function render(){
  const lesson=lessons[state.tab],index=state.steps[state.tab],step=lesson.steps[index];
  const isReview=Boolean(step.review),activeGroup=step.groups[0],tipKind=tipKindForGroup(activeGroup),showTip=!isReview&&Boolean(tipKind)&&state.tips[state.tab]===tipKind,showMainTip=tipKind==='main'&&showTip;
@@ -220,17 +452,17 @@ function render(){
    codeLines.push(['main',`    ${html}`]);
   });
  }
- els.codeTitle.textContent=lesson.title;els.count.textContent=`Scene ${index+1} of ${lesson.steps.length}`;els.label.textContent=step.label;els.title.textContent=step.title;els.copy.textContent=step.copy;els.progress.style.width=`${((index+1)/lesson.steps.length)*100}%`;
+ els.codeTitle.textContent=lesson.title;els.count.textContent=`Scene ${index+1} of ${lesson.steps.length}`;els.label.textContent=step.label;els.title.textContent=step.title;els.copy.innerHTML=emphasizeRelationships(step.copy);els.progress.style.width=`${((index+1)/lesson.steps.length)*100}%`;
  els.code.innerHTML=codeLines.map(([group,html],i)=>`<span class="line ${isReview?'':step.groups.includes(group)?'active':'dim'}" data-line="${i+1}">${html||' '}</span>`).join('');
  els.diagram.innerHTML=lesson.nodes.map(([group,icon,title,copy,kind])=>{const nodeTip=!isReview&&group===activeGroup?tipKindForGroup(group):null;const tipLabel=`${showTip?'Hide':'Show'} ${nodeTip==='main'?'main-guard':`__${nodeTip}__`} tip`;return `<div class="node ${isReview?'':step.groups.includes(group)?'active':'dim'} ${kind||''} ${nodeTip?'has-tip':''}"><div class="node-title"><span class="kind">${icon}</span>${title}</div><p>${copy}</p>${nodeTip?`<button class="tip-button" type="button" data-concept-tip="${nodeTip}" data-tooltip="${tipLabel}" aria-pressed="${showTip}" aria-label="${tipLabel}"><svg class="tip-icon" aria-hidden="true" viewBox="0 0 24 24"><path class="tip-rays" d="M12 1V3M4.2 4.2l1.5 1.5M19.8 4.2l-1.5 1.5M2 12h2M20 12h2"/><path class="tip-bulb" d="M8.4 14.5A7 7 0 1 1 15.6 14.5C14.6 15.2 14 16.1 14 17h-4c0-.9-.6-1.8-1.6-2.5Z"/><path class="tip-base" d="M9.5 19h5M10.5 22h3"/></svg></button>`:''}</div>`}).join('');
  const tipButton=els.diagram.querySelector('[data-concept-tip]');if(tipButton)tipButton.addEventListener('click',()=>{state.tips[state.tab]=showTip?null:tipKind;render();els.diagram.querySelector('[data-concept-tip]')?.focus()});
  els.tipNote.innerHTML=showTip?tipDetails[tipKind]:'';els.tipNote.classList.toggle('show',showTip);
- els.mapping.innerHTML=(step.maps||[]).map(text=>`<span class="map-chip">${text}</span>`).join('');
+ els.mapping.innerHTML=(step.maps||[]).map(text=>`<span class="map-chip">${emphasizeRelationships(text)}</span>`).join('');
  const atStart=index===0,atEnd=index===lesson.steps.length-1;
  els.legend.classList.toggle('show',state.tab==='inheritance');
  els.prev.disabled=atStart&&state.tab==='functions';
- els.next.disabled=atEnd&&state.tab==='inheritance';
- els.next.textContent=state.tab==='functions'&&atEnd?'Build a class >':state.tab==='class'&&atEnd?'Explore inheritance >':'Next';
+ els.next.disabled=atEnd&&state.tab==='composition';
+ els.next.textContent=state.tab==='functions'&&atEnd?'Build a class >':state.tab==='class'&&atEnd?'Explore inheritance >':state.tab==='inheritance'&&atEnd?'Explore composition >':'Next';
  scrollActiveCode();scrollActiveStructure();
 }
 function setTab(name,focus=false){state.tab=name;document.querySelectorAll('.tab').forEach(tab=>{const active=tab.dataset.tab===name;tab.setAttribute('aria-selected',active);tab.tabIndex=active?0:-1;if(active&&focus)tab.focus()});els.panel.setAttribute('aria-labelledby',`tab-${name}`);render()}
@@ -238,6 +470,8 @@ function move(delta){
  const max=lessons[state.tab].steps.length-1,index=state.steps[state.tab];
  if(delta>0&&state.tab==='functions'&&index===max){state.steps.class=0;setTab('class');return}
  if(delta>0&&state.tab==='class'&&index===max){state.steps.inheritance=0;setTab('inheritance');return}
+ if(delta>0&&state.tab==='inheritance'&&index===max){state.steps.composition=0;setTab('composition');return}
+ if(delta<0&&state.tab==='composition'&&index===0){state.steps.inheritance=lessons.inheritance.steps.length-1;setTab('inheritance');return}
  if(delta<0&&state.tab==='class'&&index===0){state.steps.functions=lessons.functions.steps.length-1;setTab('functions');return}
  if(delta<0&&state.tab==='inheritance'&&index===0){state.steps.class=lessons.class.steps.length-1;setTab('class');return}
  state.steps[state.tab]=Math.max(0,Math.min(max,index+delta));render()
