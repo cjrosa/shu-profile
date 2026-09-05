@@ -328,3 +328,4 @@
  .ml-loan-atmosphere i,.ml-loan-files article,.ml-loan-transit:after,.ml-loan-transit>i,.ml-score-ring,.ml-score-signal i,.ml-threshold-console>i b,.ml-human-checkpoint,.ml-outcome-doors article{animation:none!important}
  .ml-loan-files article{opacity:1;transform:none}.ml-loan-transit>i{display:none}.ml-threshold-console>i b{left:50%}
 }
+.ml-output{overflow:visible;white-space:normal!important}.ml-output-text{display:block;max-width:100%;margin:0;overflow-x:auto;font:inherit;line-height:inherit;white-space:pre}.ml-output .ml-coach,.ml-output .ml-hint{white-space:normal}

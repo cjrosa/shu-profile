@@ -47,3 +47,9 @@ window.ML_LAB_CONFIG.assignment={
  description:'Complete the code path, then interpret classification outcomes, stress-test a threshold, and define an evidence-based governance boundary.',
  slug:'loan-model-auditor'
 };
+
+// The browser lab validates notebook syntax rather than executing pandas.
+// Keep the two required head() calls visible in their simulated output.
+window.ML_LAB_CONFIG.cells[2].output += '\n\nloan.head() after dropna():\n   Gender Married  Dependents     Education Self_Employed  ApplicantIncome  Loan_Status\n0    Male      No           0      Graduate             No              5849           Y\n1    Male     Yes           1      Graduate             No              4583           N\n2    Male     Yes           0      Graduate            Yes              3000           Y\n3    Male     Yes           0  Not Graduate             No              2583           Y\n4    Male       No           0      Graduate             No              6000           Y\n\n[5 rows x 12 columns]';
+window.ML_LAB_CONFIG.cells[3].output += '\n\nloan.head() after conversion:\n   Gender  Married  Dependents  Education  Self_Employed  ApplicantIncome  Property_Area  Loan_Status\n0       0        0           0          1              0              5849              2            1\n1       0        1           1          1              0              4583              0            0\n2       0        1           0          1              1              3000              2            1\n3       0        1           0          0              0              2583              2            1\n4       0        0           0          1              0              6000              2            1\n\n[5 rows x 12 columns]';
+window.ML_LAB_CONFIG.cells.forEach(cell=>delete cell.metrics);
