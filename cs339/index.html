@@ -112,13 +112,29 @@
         <div class="layer-title-area">
           <div class="layer-name">General Tools</div>
           <div class="layer-tagline">Cross-Layer Concepts &middot; Performance &middot; Analysis &middot; Simulations</div>
-          <span class="layer-tool-count">1 Tool</span>
+          <span class="layer-tool-count">2 Tools</span>
         </div>
         <div class="layer-chevron"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></div>
       </div>
     </button>
     <div class="layer-body">
       <div class="tools-grid">
+      <a class="tool-card" href="../viewer.html?tool=cs339/packet_queueing_delay.html&amp;course=CS339&amp;label=Computer%20Networks&amp;name=Traffic%20Intensity%20Explorer&amp;back=cs339/index.html">
+        <div class="tool-card-header">
+          <div class="tool-icon blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CE1141" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M5 18c10 0 12-2 13-14"/><path d="M20 3v18" stroke-dasharray="2 3"/></svg></div>
+          <div><div class="tool-subtitle blue">Traffic Intensity &amp; Delay</div><div class="tool-title">Traffic Intensity Explorer</div></div>
+        </div>
+        <div class="tool-body">
+          <p class="tool-desc">Watch packets queue and transmit in a live simulation, then compare measured waiting time with the animated traffic-intensity graph.</p>
+          <div class="tool-features">
+            <div class="tool-feature"><div class="tool-feature-dot blue"></div>Adjust packet arrivals and packet length</div>
+            <div class="tool-feature"><div class="tool-feature-dot blue"></div>Compare transmission-rate presets</div>
+            <div class="tool-feature"><div class="tool-feature-dot blue"></div>Live FIFO queue and measured waiting time</div>
+            <div class="tool-feature"><div class="tool-feature-dot blue"></div>Traffic bursts, queue capacity, and packet loss</div>
+          </div>
+        </div>
+        <div class="tool-footer"><span class="tool-cta blue">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span><span class="tool-tag blue">Interactive</span></div>
+      </a>
       <a class="tool-card" href="../viewer.html?tool=cs339/network_performance_explorer.html&amp;course=CS339&amp;label=Computer%20Networks&amp;name=Network%20Performance%20Explorer&amp;back=cs339/index.html">
         <div class="tool-card-header">
           <div class="tool-icon blue">
@@ -631,6 +647,9 @@ const PROXY_URL = 'https://red-union-6b9e.crosa.workers.dev';
 
 // -- Tool registry for recommendations ------------------------
 const TOOLS = [
+  { name:'Traffic Intensity Explorer', file:'packet_queueing_delay.html', layer:'General &mdash; Network Performance',
+    desc:'Simulate live FIFO packet traffic, bursts, and overload; compare measured queueing delay with the theoretical graph and queue-length history.',
+    keywords:['queueing','queuing','queue','delay','traffic intensity','arrival rate','packet length','link rate','bandwidth','capacity','overload','la/r','m/d/1','simulation','fifo','traffic burst','waiting time'] },
   { name:'Network Performance Explorer', file:'network_performance_explorer.html', layer:'General &mdash; Network Performance',
     desc:'Explore transmission delay with packet length, link rate, unit conversion, and animated serialization.',
     keywords:['delay','transmission delay','latency','packet length','link rate','bandwidth','performance','serialization','l/r'] },
