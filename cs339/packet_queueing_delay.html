@@ -96,7 +96,7 @@ function update(){
  const m=metrics(state), capacity=state.rate/m.bits;
  // Anchor the slider to the default packet size so changing L cannot move its thumb.
  $('arrival').max=Math.ceil(Math.max(1.5*state.rate/(defaults.bytes*8),state.arrival));$('arrival').value=state.arrival;$('arrival-number').value=state.arrival;
- $('length').value=state.bytes;$('length-value').textContent=fmt(state.bytes)+' bytes';$('bits').textContent='L = '+fmt(m.bits)+' bits';
+ $('length').value=state.bytes;$('length-value').textContent=fmt(state.bytes)+' bytes';$('bits').textContent='L = '+fmt(state.bytes)+' bytes × 8 bits/byte = '+fmt(m.bits)+' bits';
  $('capacity').textContent='Link capacity: '+fmt(capacity,2)+' packets/s. Packet length does not rescale this slider.';
  document.querySelectorAll('.rate').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.rate)===state.rate)));
  $('bit-rate').textContent=bitRate(state.arrival*m.bits);$('link-rate').textContent=bitRate(state.rate);$('intensity').textContent=fmt(m.rho,5)+' ('+fmt(m.rho*100,2)+'%)';
