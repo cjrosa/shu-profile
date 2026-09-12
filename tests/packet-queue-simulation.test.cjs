@@ -13,6 +13,19 @@ test('Poisson scheduling, FIFO order, and waiting time measured at service start
   close(q.waitSum,.5);assert.equal(q.started,2);assert.equal(q.length,0);
 });
 
+test('instantaneous traffic gauge follows actual arrivals and decays between them',()=>{
+  const q=new Queue({arrival:1,bytes:1000,rate:8000},()=>1-Math.exp(-.5));
+  assert.equal(q.instantaneousLoad,0);
+  q.step();
+  const afterArrival=q.instantaneousLoad;
+  assert.ok(afterArrival>0);
+  q.moveTo(q.time+q.trafficTimeConstant);
+  close(q.instantaneousLoad,afterArrival/Math.E);
+  q.configure({...q.params,arrival:0});
+  q.moveTo(q.time+10*q.trafficTimeConstant);
+  assert.ok(q.instantaneousLoad<afterArrival/1000);
+});
+
 test('link changes apply to remaining bits; packet size changes only affect future arrivals',()=>{
   const q=new Queue({arrival:1,bytes:1000,rate:8000},()=>1-Math.exp(-.5));
   q.step();q.advance(.75);close(q.active.remaining,6000);

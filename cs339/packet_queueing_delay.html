@@ -11,17 +11,23 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
 <link rel="stylesheet" href="../assets/css/pages/packet-queue-simulation.css">
 </head>
 <body>
-<header><div><div class="eyebrow">CS-339 · Network performance</div><h1>Traffic Intensity Explorer</h1><p>Why does a small increase in traffic cause a large increase in waiting time?</p></div></header>
+<header><div><div class="eyebrow">CS-339 · Network performance</div><h1>Traffic Intensity Explorer</h1><p><strong>Why does a small increase in traffic cause a large increase in waiting time?</strong> Packets wait whenever the link is busy. As traffic approaches capacity, waiting time rises sharply; above capacity, the queue fills and newly arriving packets are dropped.</p></div></header>
 <main>
 <div class="stats" aria-label="Current calculated values">
 <div class="stat"><span>Arrival bit rate · La</span><strong id="bit-rate"></strong></div>
 <div class="stat"><span>Transmission rate · R</span><strong id="link-rate"></strong></div>
 <div class="stat"><span>Traffic intensity · ρ = La/R</span><strong id="intensity"></strong></div>
-<div class="stat"><span>Average queueing delay · Wq</span><strong id="delay"></strong></div>
+<div class="stat delay-stat"><span>Average queueing delay · Wq</span><strong id="delay"></strong><button class="insight-button" id="delay-insight" type="button" aria-haspopup="dialog" aria-controls="delay-calculation" aria-label="More insight: show the queueing delay calculation" title="More insight"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4"/><path d="M8.5 15a6 6 0 1 1 7 0c-1 .7-1.5 1.6-1.5 3h-4c0-1.4-.5-2.3-1.5-3Z"/></svg></button></div>
 </div>
+<dialog class="calculation-dialog" id="delay-calculation" aria-labelledby="calculation-title">
+<div class="calculation-head"><div><span class="eyebrow">Queueing delay</span><h2 id="calculation-title">How Wq is calculated</h2></div><button id="calculation-close" type="button" aria-label="Close calculation">×</button></div>
+<div class="calculation-formula">Wq = <span class="fraction"><span>(L/R)ρ</span><span>2(1 − ρ)</span></span></div>
+<div class="calculation-steps" id="calculation-steps"></div>
+<p class="calculation-note">This M/D/1 estimate is the average time a packet waits before transmission. It does not include transmission or propagation delay.</p>
+</dialog>
 <div class="workspace">
 <section class="panel controls"><h2>Explore the parameters</h2>
-<div class="field"><label for="arrival">Arrival Rate (a) - packets/second</label><input id="arrival" type="range" min="0" max="12500" step="any" value="4166.666666666667" aria-label="Average packet arrival rate in packets per second"><input id="arrival-number" type="number" min="0" step="any" value="4166.666666666667" aria-label="Exact average packet arrival rate in packets per second"><p class="hint" id="capacity"></p></div>
+<div class="field"><label for="arrival">Arrival Rate (a) - packets/second</label><input id="arrival" type="range" min="0" max="12500" step="1" value="4167" aria-label="Average packet arrival rate in packets per second"><input id="arrival-number" type="number" min="0" step="1" value="4167" aria-label="Exact average packet arrival rate in packets per second"><p class="hint" id="capacity"></p></div>
 <div class="field"><div class="field-head"><label for="length">Packet length</label><output class="value" id="length-value" for="length"></output></div><input id="length" type="range" min="64" max="1500" step="1" value="1500"><p class="hint" id="bits"></p></div>
 <fieldset class="field"><legend>Transmission rate · R</legend><div class="rates"><button class="rate" data-rate="10000000" aria-pressed="false"><strong>10 Mbps</strong><span>Ethernet</span></button><button class="rate" data-rate="100000000" aria-pressed="true"><strong>100 Mbps</strong><span>Fast Ethernet</span></button><button class="rate" data-rate="1000000000" aria-pressed="false"><strong>1 Gbps</strong><span>Gigabit Ethernet</span></button><button class="rate" data-rate="10000000000" aria-pressed="false"><strong>10 Gbps</strong><span>Fiber link</span></button></div><p class="hint">Illustrative link configurations; actual capacity depends on the network.</p></fieldset>
 <button id="reset" class="reset">Reset to defaults</button></section>
@@ -30,31 +36,40 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
 <button id="tab-intensity" role="tab" aria-selected="true" aria-controls="intensity-panel" tabindex="0">Intensity graph</button>
 <button id="tab-simulation" role="tab" aria-selected="false" aria-controls="simulation-panel" tabindex="-1">Live queue</button>
 </div>
-<section class="panel graph-panel" id="intensity-panel" role="tabpanel" aria-labelledby="tab-intensity" tabindex="0"><div class="graph-head"><h2>Average delay vs. traffic intensity</h2><span class="badge" id="status"></span></div>
+<section class="panel graph-panel" id="intensity-panel" role="tabpanel" aria-labelledby="tab-intensity" tabindex="0"><div class="graph-head"><h2>How Traffic Intensity Affects Queueing Delay</h2><span class="badge" id="status"></span></div>
 <div class="formula">Traffic intensity <strong>ρ = La / R</strong><br><span id="substitution"></span></div>
 <svg id="graph" viewBox="0 0 700 410" role="img" aria-labelledby="graph-title graph-description"><title id="graph-title">Average queueing delay versus traffic intensity</title><desc id="graph-description"></desc><defs><clipPath id="plot-clip"><rect x="80" y="30" width="590" height="300"/></clipPath></defs><g id="axes"></g><g clip-path="url(#plot-clip)"><path id="curve" fill="none" stroke="#bf2f49" stroke-width="3.5"/><line id="guide" stroke="#4d88bd" stroke-dasharray="4 4"/><circle id="point" r="6" fill="#4d88bd" stroke="white" stroke-width="2"/><path id="overflow" d="M-7 8 L0 0 L7 8 M0 0 L0 20" fill="none" stroke="#4d88bd" stroke-width="3"/></g><g id="overload"><path d="M-8 8 L0 -7 L8 8 Z" fill="#bf2f49"/><text id="overload-label" y="30" text-anchor="middle">Over capacity</text></g><text x="375" y="382" text-anchor="middle">Traffic intensity · ρ = La/R</text><text transform="translate(19 180) rotate(-90)" text-anchor="middle">Average queueing delay (ms)</text></svg>
 <p class="hint">Dashed line: capacity (ρ = 1). An upward arrow means the delay exceeds the graph’s scale.</p><p class="explanation" id="explanation"></p><p id="summary" class="sr-only" aria-live="polite" aria-atomic="true"></p>
 </section></div></div>
-<section class="panel model">
-<h2>The key idea</h2>
-<p>Packets wait when the link is busy. As arriving traffic approaches the link’s capacity, waiting time rises sharply. If traffic keeps arriving faster than the link can transmit it, the queue fills up and newly arriving packets are dropped.</p>
-<p>Queueing delay is the time spent waiting before transmission begins.</p>
-<details><summary>Optional details: how the delay is estimated</summary>
-<p>The numerical estimate uses an M/D/1 model: random Poisson arrivals, fixed packet length, one transmitting server, and unlimited buffering. For ρ &lt; 1: <strong>Wq = (L/R)ρ / [2(1 − ρ)]</strong>. L is measured in bits and R in bits/second; multiply the result by 1,000 to get milliseconds.</p>
-<p>This excludes transmission and propagation delay. At or above capacity, this model has no finite steady-state average delay. The live simulation uses a finite waiting queue and drops new arrivals when it is full. Its measured delay includes only packets that begin transmission; the unlimited-buffer prediction does not account for these losses.</p>
-<p>The vertical scale fits the delay at ρ = 0.98 for the selected L and R, and stays fixed when only arrival rate changes. <a href="https://ocw-preview.odl.mit.edu/courses/6-262-discrete-stochastic-processes-spring-2011/a7bf41d8764f2d0fd7fc0810f823ec2c_pOhZUJ5BQXk.pdf" target="_blank" rel="noopener">Queueing model reference · MIT</a></p>
-</details></section>
 </main>
 <script src="../assets/js/packet-queue-simulation.js"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
-const defaults = {arrival:0.5 * 1e8 / (1500 * 8), bytes:1500, rate:1e8};
+const defaults = {arrival:4167, bytes:1500, rate:1e8};
 let state = {...defaults}, displayed = null, frame = 0, summaryTimer;
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
 const fmt = (n, digits=2) => n.toLocaleString('en-US',{maximumFractionDigits:digits});
 const bitRate = n => n >= 1e9 ? fmt(n/1e9,3)+' Gbps' : n >= 1e6 ? fmt(n/1e6,3)+' Mbps' : fmt(n,3)+' bps';
 function metrics(s){const bits=s.bytes*8, service=bits/s.rate*1000, rho=s.arrival*bits/s.rate;return {bits,service,rho,delay:rho<1?service*rho/(2*(1-rho)):Infinity};}
+function updateDelayCalculation(m){
+ const transmission=m.bits/state.rate*1000;
+ if(m.rho>=1){
+  $('calculation-steps').innerHTML=`<div><span>Traffic intensity</span><strong>ρ = ${fmt(m.rho,5)}</strong></div><p class="calculation-warning">Because ρ ≥ 1, traffic arrives as fast as or faster than the link can transmit it. The estimated average delay is unbounded.</p>`;
+  return;
+ }
+ $('calculation-steps').innerHTML=`
+  <div><span>Packet transmission time · L/R</span><strong>${fmt(m.bits)} bits ÷ ${fmt(state.rate)} bits/s = ${fmt(transmission,8)} ms</strong></div>
+  <div><span>Traffic intensity · ρ</span><strong>${fmt(m.rho,5)}</strong></div>
+  <div><span>Substitute</span><strong>(${fmt(transmission,8)} ms × ${fmt(m.rho,5)}) ÷ [2 × (1 − ${fmt(m.rho,5)})]</strong></div>
+  <div class="calculation-result"><span>Average queueing delay · Wq</span><strong>${fmt(m.delay,8)} ms</strong></div>`;
+}
+function fitSingleLine(element, normalSize=16, minimumSize=10){
+ element.style.fontSize=normalSize+'px';
+ if(!element.clientWidth)return;
+ const fitted=Math.max(minimumSize,Math.min(normalSize,normalSize*element.clientWidth/element.scrollWidth));
+ element.style.fontSize=fitted.toFixed(2)+'px';
+}
 function draw(v){
  displayed = {...v};
  const xmax=Math.max(1.5,v.rho*1.08), ymax=v.scale, x=r=>80+590*r/xmax, y=d=>330-300*d/ymax;
@@ -80,22 +95,25 @@ function animate(target){
 function update(){
  const m=metrics(state), capacity=state.rate/m.bits;
  // Anchor the slider to the default packet size so changing L cannot move its thumb.
- $('arrival').max=Math.max(1.5*state.rate/(defaults.bytes*8),state.arrival);$('arrival').value=state.arrival;$('arrival-number').value=state.arrival;
+ $('arrival').max=Math.ceil(Math.max(1.5*state.rate/(defaults.bytes*8),state.arrival));$('arrival').value=state.arrival;$('arrival-number').value=state.arrival;
  $('length').value=state.bytes;$('length-value').textContent=fmt(state.bytes)+' bytes';$('bits').textContent='L = '+fmt(m.bits)+' bits';
  $('capacity').textContent='Link capacity: '+fmt(capacity,2)+' packets/s. Packet length does not rescale this slider.';
  document.querySelectorAll('.rate').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.rate)===state.rate)));
  $('bit-rate').textContent=bitRate(state.arrival*m.bits);$('link-rate').textContent=bitRate(state.rate);$('intensity').textContent=fmt(m.rho,5)+' ('+fmt(m.rho*100,2)+'%)';
- $('delay').textContent=Number.isFinite(m.delay)?fmt(m.delay,8)+' ms':'At capacity or overloaded \u2014 an unlimited queue cannot keep up.';
+ $('delay').textContent=Number.isFinite(m.delay)?fmt(m.delay,8)+' ms':'Overloaded \u2014 delay is unbounded.';
+ fitSingleLine($('delay'));
+ updateDelayCalculation(m);
  $('substitution').textContent=fmt(m.bits)+' bits × '+fmt(state.arrival,4)+' packets/s ÷ '+fmt(state.rate)+' bits/s = '+fmt(m.rho,5);
  const overloaded=m.rho>=1;
- $('status').textContent=overloaded?(m.rho===1?'At capacity':'Over capacity'):m.rho>=.8?'Approaching capacity':m.rho<.3?'Low traffic':'Stable traffic';$('status').classList.toggle('danger',overloaded);
+ $('status').textContent=overloaded?(m.rho===1?'At capacity':'Over capacity'):m.rho>=.8?'Approaching capacity':m.rho<.3?'Low traffic':'Stable traffic';
+ $('status').className='badge intensity-status '+(overloaded?'intensity-over':m.rho>=.8?'intensity-near':'intensity-stable');
  $('explanation').textContent=overloaded?'At or above capacity, arriving work meets or exceeds what the link can serve. There is no finite steady-state average queueing delay.':m.rho>=.8?'As traffic intensity approaches 1, the link has little spare capacity. Small increases in arrivals cause sharply increasing average waiting time.':m.rho<.3?'With traffic intensity near zero, the link has plenty of spare capacity and average queueing delay is small.':'The link can serve the average arriving load. Increasing arrivals or packet length raises the waiting time; increasing transmission rate lowers it.';
  const summary='Traffic intensity '+fmt(m.rho,5)+'. Average queueing delay: '+$('delay').textContent+'. '+$('explanation').textContent;
  $('graph-description').textContent=summary;clearTimeout(summaryTimer);summaryTimer=setTimeout(()=>{$('summary').textContent=summary;},350);
  animate({rho:m.rho,service:m.service,scale:m.service*.98/(2*.02)});
  if (typeof syncQueueSimulation === 'function') syncQueueSimulation();
 }
-function setArrival(value){if(Number.isFinite(value)&&value>=0&&value<=1e12){state.arrival=value;update();}}
+function setArrival(value){if(Number.isFinite(value)&&value>=0&&value<=1e12){state.arrival=Math.round(value);update();}}
  $('arrival').addEventListener('input',e=>setArrival(Number(e.target.value)));
  $('arrival-number').max=1e12;
  $('arrival-number').addEventListener('input',e=>{if(e.target.value!==''&&e.target.validity.valid)setArrival(e.target.valueAsNumber);});
@@ -104,6 +122,10 @@ function setArrival(value){if(Number.isFinite(value)&&value>=0&&value<=1e12){sta
  document.querySelectorAll('.rate').forEach(b=>b.addEventListener('click',()=>{state.rate=Number(b.dataset.rate);update();}));
  $('reset').addEventListener('click',()=>{state={...defaults};update();});
  motion.addEventListener('change',()=>update());
+ window.addEventListener('resize',()=>fitSingleLine($('delay')));
+ $('delay-insight').addEventListener('click',()=>$('delay-calculation').showModal());
+ $('calculation-close').addEventListener('click',()=>$('delay-calculation').close());
+ $('delay-calculation').addEventListener('click',event=>{if(event.target===$('delay-calculation'))$('delay-calculation').close();});
  update();
 </script>
 <script src="../assets/js/packet-queue-simulation-ui.js"></script>

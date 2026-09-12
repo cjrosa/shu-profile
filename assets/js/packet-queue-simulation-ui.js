@@ -17,12 +17,10 @@ simulationPanel.innerHTML = `
   </div>
   <span class="badge" id="sim-state">Paused</span>
   </div>
-  <p class="hint">Use the shared arrival, packet-length, and link-rate controls while traffic flows. Gold packets are waiting; the red packet at the right is next to transmit.</p>
-  <div class="sim-caption"><span id="sim-clock"></span><span id="sim-scale"></span></div>
   <div class="sim-visuals">
   <div class="sim-scene" tabindex="0" role="img" aria-label="Packets arrive, wait in a FIFO queue, transmit one at a time, and depart" id="sim-scene">
     <div class="sim-flow">
-      <div class="sim-lane"><div class="sim-track"><i class="sim-packet" id="sim-incoming"></i></div></div>
+      <div class="sim-lane sim-input-lane"><div class="sim-gauge" id="sim-gauge" role="img" aria-label="Recent traffic intensity 0 percent"><svg viewBox="0 0 80 50" aria-hidden="true"><path d="M14 34 A26 26 0 0 1 37.3 8.1" class="gauge-low"/><path d="M37.3 8.1 A26 26 0 0 1 53 11.5" class="gauge-near"/><path d="M53 11.5 A26 26 0 0 1 66 34" class="gauge-over"/><line id="sim-gauge-needle" x1="40" y1="34" x2="40" y2="13"/><circle cx="40" cy="34" r="3"/><text id="sim-gauge-value" x="40" y="47" text-anchor="middle">ρ 0.00</text></svg></div><div class="sim-track"><i class="sim-packet" id="sim-incoming"></i></div></div>
       <div class="sim-queue-bay" id="sim-queue-bay"><span class="sim-queue-label">Waiting queue <small id="sim-occupancy">0 / 20 packets</small></span><div class="sim-queue" id="sim-queue"></div><p class="sim-queue-note" id="sim-overflow"></p><span class="sim-drop" id="sim-drop" aria-hidden="true"></span></div>
       <div class="sim-connector" aria-hidden="true"></div>
       <div class="sim-server"><span class="sim-link-label">Transmitting link</span><strong id="sim-serving">Link idle</strong><div class="sim-progress"><div id="sim-progress"></div></div><small id="sim-remaining"></small></div>
@@ -36,17 +34,14 @@ simulationPanel.innerHTML = `
       <g id="sim-mini-plot"></g>
     </svg>
     <div class="sim-mini-legend"><span><i class="mini-predicted"></i>Predicted</span><span><i class="mini-measured"></i>Measured</span></div>
-    <p id="sim-mini-readout"></p>
   </section>
   </div>
-  <div class="stats sim-stats"><div class="stat"><span>Packets waiting</span><strong id="sim-count"></strong></div><div class="stat"><span>Packets transmitted</span><strong id="sim-transmitted"></strong></div><div class="stat"><span>Measured average waiting time</span><strong id="sim-measured"></strong></div><div class="stat"><span>Predicted delay (unlimited queue)</span><strong id="sim-theory"></strong></div><div class="stat sim-loss"><span>Packets dropped</span><strong id="sim-dropped"></strong></div><div class="stat sim-loss"><span>Loss rate ? dropped / arrivals</span><strong id="sim-loss-rate"></strong></div></div>
-  <p class="sim-notice">Measured delay averages packets that have <strong>begun transmission</strong>, excluding time spent transmitting. Short runs fluctuate. Parameter changes leave a backlog and mix measurements from different conditions; Restart begins a fresh comparison. The graph predicts an unlimited queue. This simulation has a finite queue: arrivals are dropped when all waiting spaces are occupied. Even a brief burst can cause losses.</p>
-  <p id="sim-message" role="status" aria-live="polite"></p>
+  <div class="stats sim-stats"><div class="stat"><span>Packets waiting</span><strong id="sim-count"></strong></div><div class="stat"><span>Packets transmitted</span><strong id="sim-transmitted"></strong></div><div class="stat"><span>Measured average waiting time</span><strong id="sim-measured"></strong></div><div class="stat"><span>Predicted delay (unlimited queue)</span><strong id="sim-theory"></strong></div><div class="stat sim-loss"><span>Packets dropped</span><strong id="sim-dropped"></strong></div><div class="stat sim-loss"><span>Loss rate · dropped / arrivals</span><strong id="sim-loss-rate"></strong></div></div>
   <div class="sim-history"><h3>Queue length over simulated time</h3><svg viewBox="0 0 900 230" role="img" aria-labelledby="sim-chart-title sim-chart-desc"><title id="sim-chart-title">Waiting packets over time</title><desc id="sim-chart-desc"></desc><g id="sim-history-plot"></g></svg><p class="hint">Rolling window: 200 baseline transmission times (24 ms). Sampled every 0.06 ms. Dashed markers show parameter changes.</p><div class="sim-marker-list" id="sim-markers"></div></div>`;
 $('explorer-views').append(simulationPanel);
 const queueSim = new PacketQueueSimulation(state);
 let simPlaying = false, simSpeed = 1, simFrame = 0, simLastWall = null;
-let simNotice = 'Ready. Press Play to begin.', lastQueueCount = -1;
+let lastQueueCount = -1;
 let lastChartWall = -Infinity;
 
 function syncQueueSimulation() {
@@ -54,20 +49,17 @@ function syncQueueSimulation() {
   if (changed.length) {
     const names = {arrival:'Arrival rate', bytes:'Packet length', rate:'Link rate'};
     queueSim.configure(state, changed.map(key=>names[key]).join(' + ') + ' changed');
-    simNotice = 'Parameters changed. Existing packets keep their lengths; the backlog and measured average are preserved.';
   }
   renderSimulation(true);
 }
-function pauseSimulation(message) {
+function pauseSimulation() {
   simPlaying = false; simLastWall = null;
   cancelAnimationFrame(simFrame);
-  if (message) simNotice = message;
   renderSimulation(true);
 }
 function syncRestoredParameters() {
   if (state.arrival !== queueSim.params.arrival) {
     state.arrival = queueSim.params.arrival;
-    simNotice = 'Burst ended. The previous arrival rate is restored; watch the backlog drain.';
     update();
   }
 }
@@ -129,23 +121,24 @@ function renderMiniIntensity() {
   if(measured!==null) svg+=marker(measured,'#4d88bd',true);
   $('sim-mini-plot').innerHTML=svg;
   const load='Load: '+fmt(m.rho*100,1)+'%';
-  const detail=m.rho>=1?'No finite predicted delay.':measured===null?'Press Play to see measured delay.':'Measured: '+measured.toFixed(2)+' ms';
-  $('sim-mini-readout').textContent=load+' · '+detail;
   $('sim-mini-description').textContent=load+'. '+(m.rho<1?'Predicted delay '+fmt(m.delay,6)+' ms. ':'No finite predicted delay. ')+(measured===null?'No measured samples yet.':'Measured average delay since restart '+fmt(measured,6)+' ms.');
 }
 function renderSimulation(forceChart=false, wall=performance.now()) {
-  const currentLoad = state.arrival * state.bytes * 8 / state.rate;
+  const gaugeLoad=queueSim.instantaneousLoad;
+  const gaugeAngle=-90+Math.min(1,gaugeLoad/1.5)*180;
+  $('sim-gauge-needle').setAttribute('transform',`rotate(${gaugeAngle} 40 34)`);
+  $('sim-gauge-value').textContent='ρ '+fmt(gaugeLoad,2);
+  $('sim-gauge').setAttribute('aria-label','Recent measured traffic intensity '+fmt(gaugeLoad*100,1)+' percent');
   document.querySelectorAll('[data-load]').forEach(button => {
-    const selected = !queueSim.burst && Math.abs(currentLoad - Number(button.dataset.load)) < 1e-9;
+    const presetArrival = Math.round(Number(button.dataset.load) * state.rate / (state.bytes * 8));
+    const selected = !queueSim.burst && state.arrival === presetArrival;
     button.setAttribute('aria-pressed', String(selected));
   });
   $('sim-burst').setAttribute('aria-pressed', String(Boolean(queueSim.burst)));
   $('sim-play').textContent=simPlaying?'Pause':'Play';
   $('sim-play').dataset.tooltip=simPlaying?'Pause simulation':'Play simulation';
   $('sim-play').disabled=false;
-  $('sim-state').textContent=simPlaying?(queueSim.length>=queueSim.capacity?'Running ? Queue full':'Running'):'Paused';
-  $('sim-clock').textContent='Simulated elapsed time: '+fmt(queueSim.time*1000,4)+' ms';
-  $('sim-scale').textContent=`${simSpeed}×: 1 screen second = ${fmt(queueSim.baseline*4*simSpeed*1000,3)} ms simulated`;
+  $('sim-state').textContent=simPlaying?'Running':'Paused';
   $('sim-count').textContent=fmt(queueSim.length,0);
   $('sim-occupancy').textContent=`FIFO · ${queueSim.length} / ${queueSim.capacity} packets`;
   $('sim-queue-bay').classList.toggle('is-full', queueSim.length >= queueSim.capacity);
@@ -158,7 +151,8 @@ function renderSimulation(forceChart=false, wall=performance.now()) {
   $('sim-transmitted').textContent=fmt(queueSim.transmitted,0);
   $('sim-measured').textContent=queueSim.started?(queueSim.waitSum/queueSim.started*1000).toFixed(2)+' ms':'No samples yet';
   const prediction=metrics(state).delay;
-  $('sim-theory').textContent=Number.isFinite(prediction)?fmt(prediction,8)+' ms':'At capacity or overloaded \u2014 an unlimited queue cannot keep up.';
+  $('sim-theory').textContent=Number.isFinite(prediction)?fmt(prediction,8)+' ms':'Overloaded \u2014 delay is unbounded.';
+  fitSingleLine($('sim-theory'),15,10);
   if (lastQueueCount!==queueSim.length) {
     $('sim-queue').innerHTML=queueSim.length?'<i></i>'.repeat(Math.min(20,queueSim.length)):'<span class="sim-queue-empty">Queue empty</span>';
     $('sim-overflow').textContent=queueSim.length>20?'+ '+fmt(queueSim.length-20,0)+' more waiting':'Front of queue →';
@@ -175,20 +169,17 @@ function renderSimulation(forceChart=false, wall=performance.now()) {
     $(id).style.left=(motion.matches?50:Math.min(1,age)*70)+'%';
   }
   $('sim-scene').setAttribute('aria-label',`${queueSim.length} of ${queueSim.capacity} queue spaces occupied, ${p?'packet '+p.id+' transmitting':'link idle'}, ${queueSim.transmitted} packets transmitted, ${queueSim.dropped} packets dropped.`);
-  const message=queueSim.burst?'Traffic burst active for 20 baseline transmission times (2.4 simulated ms). The previous arrival rate will return automatically. Manual parameter changes cancel restoration.':simNotice;
-  if ($('sim-message').textContent!==message) $('sim-message').textContent=message;
   if(forceChart||wall-lastChartWall>=100){renderHistory();renderMiniIntensity();lastChartWall=wall;}
 }
 $('sim-play').addEventListener('click',()=>{
-  if(simPlaying){pauseSimulation('Paused. Press Play to resume.');return;}
+  if(simPlaying){pauseSimulation();return;}
   if(document.hidden)return;
-  simPlaying=true;simLastWall=null;simNotice='Traffic is flowing. Change the load or link rate to explore the queue.';
+  simPlaying=true;simLastWall=null;
   renderSimulation(true);simFrame=requestAnimationFrame(simulationTick);
 });
 function restartSimulation(){
   simPlaying=false;cancelAnimationFrame(simFrame);simLastWall=null;
   queueSim.restart(state);lastQueueCount=-1;
-  simNotice='Simulation restarted with an empty queue and fresh measurements. Press Play to begin.';
   renderSimulation(true);
 }
 $('sim-restart').addEventListener('click',restartSimulation);
@@ -214,7 +205,7 @@ document.querySelectorAll('[data-load]').forEach(button=>button.addEventListener
 $('sim-burst').addEventListener('click',()=>{
   queueSim.startBurst();state.arrival=queueSim.params.arrival;update();
 });
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&simPlaying)pauseSimulation('Paused because the tab was hidden. Press Play to resume.');});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&simPlaying)pauseSimulation();});
 const viewTabs = [$('tab-intensity'), $('tab-simulation')];
 function setupSimulationTooltips() {
   const toolbar = simulationPanel.querySelector('.sim-toolbar');
@@ -262,14 +253,14 @@ function setupSimulationTooltips() {
   viewTabs.forEach(tab => tab.addEventListener('click', hide));
 }
 function selectExplorerView(index) {
-  if (index === 0 && simPlaying) pauseSimulation('Paused while viewing the intensity graph. Press Play to resume.');
+  if (index === 0 && simPlaying) pauseSimulation();
   viewTabs.forEach((tab, i) => {
     tab.setAttribute('aria-selected', String(i === index));
     tab.tabIndex = i === index ? 0 : -1;
   });
   $('intensity-panel').hidden = index !== 0;
   simulationPanel.hidden = index !== 1;
-  if (index === 1) renderSimulation(true);
+  if (index === 1) requestAnimationFrame(()=>renderSimulation(true));
 }
 viewTabs.forEach((tab, index) => {
   tab.addEventListener('click', () => selectExplorerView(index));
@@ -285,4 +276,5 @@ viewTabs.forEach((tab, index) => {
   });
 });
 setupSimulationTooltips();
+new ResizeObserver(()=>fitSingleLine($('sim-theory'),15,10)).observe($('sim-theory').parentElement);
 renderSimulation(true);

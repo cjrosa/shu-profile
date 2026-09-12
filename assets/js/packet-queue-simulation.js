@@ -5,6 +5,7 @@
     constructor(params, random = Math.random, capacity = 20) {
       this.random = random;
       this.baseline = 1500 * 8 / 1e8;
+      this.trafficTimeConstant = 20 * this.baseline;
       this.capacity = capacity;
       this.restart(params);
     }
@@ -15,6 +16,7 @@
       this.queue = []; this.head = 0; this.active = null;
       this.arrived = 0; this.transmitted = 0; this.started = 0; this.waitSum = 0;
       this.dropped = 0; this.lastDrop = null;
+      this.recentBitRate = 0;
       this.nextArrival = this.arrivalTime();
       this.burst = null;
       this.lastArrival = null; this.lastDeparture = null;
@@ -36,7 +38,7 @@
     }
     startBurst() {
       const restore = this.burst ? this.burst.restore : this.params.arrival;
-      this.configure({...this.params, arrival:1.5 * this.params.rate / (this.params.bytes * 8)}, 'Burst starts', false);
+      this.configure({...this.params, arrival:Math.round(1.5 * this.params.rate / (this.params.bytes * 8))}, 'Burst starts', false);
       this.burst = {restore, end:this.time + 20 * this.baseline};
     }
     begin(packet) {
@@ -49,6 +51,9 @@
         this.active ? this.time + this.active.remaining / this.params.rate : Infinity,
         this.burst ? this.burst.end : Infinity);
     }
+    get instantaneousLoad() {
+      return this.recentBitRate / this.params.rate;
+    }
     moveTo(time) {
       // Sample queue length independently of frame rate and event frequency.
       const earliest = time - 200 * this.baseline;
@@ -59,7 +64,9 @@
         this.nextSample += this.baseline / 2;
       }
       if (this.nextSample <= time) this.nextSample = time + Math.max(this.baseline / 2, Math.abs(time) * Number.EPSILON);
-      if (this.active) this.active.remaining = Math.max(0, this.active.remaining - (time - this.time) * this.params.rate);
+      const elapsed = time - this.time;
+      this.recentBitRate *= Math.exp(-elapsed / this.trafficTimeConstant);
+      if (this.active) this.active.remaining = Math.max(0, this.active.remaining - elapsed * this.params.rate);
       this.time = time;
       const cutoff = time - 200 * this.baseline;
       while (this.history.length > 1 && this.history[1].time < cutoff) this.history.shift();
@@ -87,6 +94,7 @@
         }
       } else {
         const packet = {id:++this.arrived, arrival:this.time, bits:this.params.bytes * 8};
+        this.recentBitRate += packet.bits / this.trafficTimeConstant;
         this.lastArrival = {time:this.time, id:packet.id};
         if (!this.active) this.begin(packet);
         else if (this.length < this.capacity) this.queue.push(packet);
