@@ -51,14 +51,14 @@ function routerQueue(x,y,amounts,capacity,loss){
 }
 function diagram(){const s=sim(),p=s.params,b=s.prediction().bottlenecks;let svg='<title>Network capacity, throughput, and queues</title>';
   if(!active){svg+=link(105,145,370,145,s.lastOut[0],colors[0],b.includes('Server link'))+link(430,145,745,145,p.rc,colors[0],b.includes('Client link'));
-    svg+=node(75,145,'Server')+node(400,145,'Router',true)+node(775,145,'Client');svg+=text(230,115,`Rₛ = ${p.rs} Mbps`)+text(600,115,`R꜀ = ${p.rc} Mbps`);svg+=buffer(400,225,s.clients[0],20,colors[0],'Queue',s.time-s.lastClientDrop<0.75);
+    svg+=node(75,145,'Server')+node(400,145,'Router',true)+node(775,145,'Client');svg+=text(230,115,`Rₛ = ${p.rs} Mbps`,'font-weight="700"')+text(600,115,`R꜀ = ${p.rc} Mbps`,'font-weight="700"');svg+=buffer(400,225,s.clients[0],20,colors[0],'Queue',s.time-s.lastClientDrop<0.75);
   }else{
     const top=65,gap=85,middle=top+(p.n-1)*gap/2;
     const queueTop=Math.max(top+(p.n-1)*gap+55,middle+65);
     $('network').setAttribute('viewBox',`0 15 850 ${queueTop+60-15}`);
     // One physical backbone, with interleaved colors representing equal shares.
     svg+=link(284,middle,549,middle,0,colors[0],b.includes('Shared link'));
-    svg+=text(416,middle-36,`Shared link R = ${p.r} Mbps`)+text(416,middle-17,`Each share: ${fmt(p.r/p.n)} Mbps`);
+    svg+=text(416,middle-36,`Shared link R = ${p.r} Mbps`,'font-weight="700"')+text(416,middle-17,`Each share: ${fmt(p.r/p.n)} Mbps`,'font-weight="700"');
     for(let i=0;i<p.n;i++){
       const y=top+i*gap,c=colors[i];
       svg+=link(80,y,224,middle,s.lastOut[i],c,b.includes('Server link'));
@@ -66,7 +66,7 @@ function diagram(){const s=sim(),p=s.params,b=s.prediction().bottlenecks;let svg
       svg+=link(609,middle,780,y,p.rc,c,b.includes('Client link'));
       svg+=node(50,y,'S'+(i+1))+node(810,y,'C'+(i+1));
       // Place labels below each sloping access link at the label's horizontal position.
-      svg+=text(130,y+(middle-y)*50/144+24,`R_s ${p.rs} Mbps`)+text(720,y+(middle-y)*60/171+24,`R_c ${p.rc} Mbps`);
+      svg+=text(130,y+(middle-y)*50/144+24,`R_s ${p.rs} Mbps`,'font-weight="700"')+text(720,y+(middle-y)*60/171+24,`R_c ${p.rc} Mbps`,'font-weight="700"');
     }
     svg+=node(254,middle,'Router 2',true)+node(579,middle,'Router 1',true);
     svg+=routerQueue(579,queueTop,s.core,Math.floor(20/p.n)*p.n,s.time-s.lastCoreDrop<0.75);
