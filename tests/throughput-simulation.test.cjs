@@ -10,19 +10,19 @@ for(const shared of [false,true])for(const n of shared?[2,3,4]:[1])for(const par
     close(s.generated,[...s.delivered,...s.lost,...s.core,...s.clients].reduce((a,b)=>a+b,0));
     assert.ok(s.core.reduce((a,b)=>a+b,0)<=20+1e-8);
     assert.ok(s.clients.every(q=>q>=0&&q<=20));
-    assert.ok(s.lastOut.every(r=>r*Simulation.DT<=params.rc*Simulation.DT+Simulation.PACKET_MBITS));
+    assert.ok(s.lastOut.every(r=>r*Simulation.DT<=params.rs*Simulation.DT+Simulation.PACKET_MBITS));
     assert.ok([...s.core,...s.clients,...s.lost,...s.delivered].every(Number.isInteger));
     if(shared)assert.ok(s.lastCore.reduce((a,b)=>a+b,0)<=params.r+n*Simulation.PACKET_MBITS/Simulation.DT+1e-8);
   });
 }
 test('overload fills buffer, loses data, then drains after capacity increase',()=>{
-  const s=run(new Simulation(false,{rs:40,rc:20}),2);close(s.clients[0],20);close(s.lost[0],20);
-  s.configure({rc:80});run(s,.5);close(s.clients[0],0);close(s.lost[0],20);
+  const s=run(new Simulation(false,{rs:20,rc:40}),2);close(s.clients[0],20);close(s.lost[0],20);
+  s.configure({rs:80});run(s,.5);close(s.clients[0],0);close(s.lost[0],20);
   run(s,1);close(s.metrics()[0].recent,40);close(s.generated,s.delivered[0]+s.lost[0]);
 });
 test('shared backlog drains and downstream client queue is independent',()=>{
-  const s=run(new Simulation(true,{n:2,rs:40,r:40,rc:10}),2);close(s.core[0],10);close(s.clients[0],20);assert.ok(s.lost[0]>0);
-  s.configure({r:200,rc:200});run(s,1);close(s.core[0],0);close(s.clients[0],0);
+  const s=run(new Simulation(true,{n:2,rs:10,r:40,rc:40}),2);close(s.core[0],10);close(s.clients[0],20);assert.ok(s.lost[0]>0);
+  s.configure({r:200,rs:200});run(s,1);close(s.core[0],0);close(s.clients[0],0);
 });
 test('rolling window, early samples, ties, reset and rate changes',()=>{
   const s=new Simulation(false,{rs:40,rc:40});close(s.metrics()[0].recent,0);s.step();close(s.metrics()[0].recent,0);

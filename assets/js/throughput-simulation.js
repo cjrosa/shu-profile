@@ -2,8 +2,8 @@
 'use strict';
 const DT=0.02, BUFFER=20, PACKET_MBITS=1;
 class ThroughputSimulation {
-  constructor(shared=false, params={}) {this.shared=shared;this.params={rs:40,rc:80,r:100,n:shared?2:1,...params};this.reset();}
-  reset(){this.time=0;this.steps=0;this.core=Array(this.params.n).fill(0);this.clients=Array(this.params.n).fill(0);this.delivered=this.clients.slice();this.lost=this.clients.slice();this.generated=0;this.history=[];this.lastCore=this.clients.slice();this.lastOut=this.clients.slice();this.lastLoss=this.clients.slice();this.sourceCredit=this.clients.slice();this.coreCredit=this.clients.slice();this.clientCredit=this.clients.slice();}
+  constructor(shared=false, params={}) {this.shared=shared;const n=shared?(params.n??2):1;this.params={rs:40,rc:40,r:40*n,n,...params};this.reset();}
+  reset(){this.time=0;this.steps=0;this.core=Array(this.params.n).fill(0);this.clients=Array(this.params.n).fill(0);this.delivered=this.clients.slice();this.lost=this.clients.slice();this.lastCoreDrop=-Infinity;this.lastClientDrop=-Infinity;this.generated=0;this.history=[];this.lastCore=this.clients.slice();this.lastOut=this.clients.slice();this.lastLoss=this.clients.slice();this.sourceCredit=this.clients.slice();this.coreCredit=this.clients.slice();this.clientCredit=this.clients.slice();}
   configure(params){const old=this.params.n;Object.assign(this.params,params);if(!this.shared)this.params.n=1;if(old!==this.params.n)this.reset();}
   prediction(){const p=this.params;const terms=[['Server link',p.rs],['Client link',p.rc]];if(this.shared)terms.push(['Shared link',p.r/p.n]);const rate=Math.min(...terms.map(t=>t[1]));return {rate,bottlenecks:terms.filter(t=>Math.abs(t[1]-rate)<1e-8).map(t=>t[0])};}
   // Fixed-size teaching packets. Fractional transmission work carries across steps.
@@ -17,10 +17,10 @@ class ThroughputSimulation {
   }
   step(){const p=this.params;const sample=[];
     for(let i=0;i<p.n;i++){
-      this.sourceCredit[i]+=p.rs*DT/PACKET_MBITS;const packets=Math.floor(this.sourceCredit[i]+1e-9);this.sourceCredit[i]-=packets;const incoming=packets*PACKET_MBITS;this.generated+=incoming;let arrival=incoming,loss=0;
-      if(this.shared){const a=this.serve(this.core[i],incoming,p.r/p.n,BUFFER/p.n,this.coreCredit,i);this.core[i]=a.queue;arrival=a.sent;loss+=a.lost;}
+      this.sourceCredit[i]+=p.rc*DT/PACKET_MBITS;const packets=Math.floor(this.sourceCredit[i]+1e-9);this.sourceCredit[i]-=packets;const incoming=packets*PACKET_MBITS;this.generated+=incoming;let arrival=incoming,loss=0;
+      if(this.shared){const a=this.serve(this.core[i],incoming,p.r/p.n,BUFFER/p.n,this.coreCredit,i);this.core[i]=a.queue;arrival=a.sent;loss+=a.lost;if(a.lost>0)this.lastCoreDrop=this.time;}
       this.lastCore[i]=arrival/DT;
-      const b=this.serve(this.clients[i],arrival,p.rc,BUFFER,this.clientCredit,i);this.clients[i]=b.queue;loss+=b.lost;
+      const b=this.serve(this.clients[i],arrival,p.rs,BUFFER,this.clientCredit,i);this.clients[i]=b.queue;loss+=b.lost;if(b.lost>0)this.lastClientDrop=this.time;
       this.delivered[i]+=b.sent;this.lost[i]+=loss;this.lastOut[i]=b.sent/DT;this.lastLoss[i]=loss/DT;sample.push(b.sent);
     }
     this.time=++this.steps*DT;this.history.push(sample);if(this.history.length>50)this.history.shift();

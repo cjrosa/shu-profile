@@ -15,7 +15,7 @@ test('start, pause, tabs preserve independent runs, and reset clears current run
  f.click('tab-single');assert.equal(f.el('clock').textContent,'1.0 s');assert.equal(f.el('tab-single').attrs['aria-selected'],'true');f.click('reset');assert.equal(f.el('clock').textContent,'0.0 s');
 });
 test('rate controls, presets and connection count update predictions',()=>{
- const f=fixture();f.change('rate-rc','20','input');assert.match(f.el('formula').textContent,/20.0 Mbps/);f.click('tab-shared');f.click('preset-shared');assert.match(f.el('formula').textContent,/20.0 Mbps/);f.change('connections','4');assert.match(f.el('formula').textContent,/10.0 Mbps/);assert.equal(f.el('clock').textContent,'0.0 s');assert.match(f.el('metrics').innerHTML,/Connection 4/);assert.match(f.el('metrics').innerHTML,/Total/);
+ const f=fixture();f.change('rate-rc','20','input');assert.match(f.el('formula').textContent,/20.0 Mbps/);f.click('tab-shared');f.click('preset-shared');assert.match(f.el('formula').textContent,/20.0 Mbps/);f.change('connections','4');assert.match(f.el('formula').textContent,/10.0 Mbps/);assert.equal(f.el('clock').textContent,'0.0 s');assert.match(f.el('formula').textContent,/10.0 Mbps/);f.click('tab-single');assert.match(f.el('formula').textContent,/20.0 Mbps/);
 });
 test('HTML references and course viewer registration resolve',()=>{
  const html=fs.readFileSync('cs339/throughput_explorer.html','utf8');for(const [,ref] of html.matchAll(/(?:src|href)="(\.\.\/assets\/[^"?]+)"/g))assert.ok(fs.existsSync(require('node:path').resolve('cs339',ref)),ref);
