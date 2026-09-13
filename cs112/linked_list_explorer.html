@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Linked List Explorer · CS-112</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f7f9fb;color:#17212b;font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}.app{max-width:1350px;margin:auto;padding:16px 24px}h1{font-size:clamp(26px,4vw,36px);margin:0}h2{font-size:19px;margin:0 0 12px}p{margin:6px 0 16px}.eyebrow{color:#0f6e56;font-weight:750;font-size:13px;letter-spacing:.08em}.muted{color:#596774}button,input,select{font:inherit}button,select,input{border:1px solid #bac8d0;border-radius:7px;padding:9px 12px;background:white;color:inherit}button{cursor:pointer;font-weight:650}button:hover:enabled{background:#e6f4ef}button:disabled{opacity:.45;cursor:default}button[aria-pressed=true],.primary{background:#0f6e56;color:white;border-color:#0f6e56}:focus-visible{outline:3px solid #247cc2;outline-offset:3px}.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:16px 0}.panel{background:white;border:1px solid #d7dee5;border-radius:12px;padding:18px}.workspace{display:block;margin-top:14px;padding:0;overflow:hidden;min-width:0}.diagram-scroll{overflow-x:auto}.diagram{display:block;width:100%;max-width:1000px;height:auto;margin:auto}.diagram text{font-family:ui-monospace,Consolas,monospace}.diagram .box{fill:#f7f9fb;stroke:#a9b9c6;stroke-width:1.5}.diagram .current{fill:#e3f4ff;stroke:#1672a6;stroke-width:3}.diagram .fresh{fill:#e6f4ef;stroke:#0f6e56;stroke-width:3}.diagram .link{fill:none;stroke:#5a6978;stroke-width:2}.diagram .label{font-size:13px;fill:#596774}.diagram .value{font-size:19px;fill:#17212b}.diagram .ref{font-size:14px;fill:#075443;font-weight:bold}.legend{font-size:14px;color:#596774}.explanation{min-height:0;border-left:4px solid #0f6e56;padding:10px 14px;background:#edf8f4;margin-top:12px}.metrics{display:flex;flex-wrap:wrap;gap:16px;margin:12px 0;font-size:14px}.code{background:#17212b;color:#dce6ed;border-radius:8px;padding:14px 0;margin:0;overflow:auto;font:14px/1.8 ui-monospace,Consolas,monospace;min-height:265px}.line{display:block;padding:0 14px;white-space:pre}.line-number{color:#91a0ae;display:inline-block;min-width:28px;user-select:none}.controls{margin:0;padding:12px 16px;background:#f1f5f4;border-bottom:1px solid #d7dee5}.error{color:#a12929;font-weight:650}.error:empty{display:none}.field{display:flex;flex-direction:column;gap:4px}.field input{max-width:100%}#list{width:300px}#argument{width:120px}.guide-copy{max-width:900px}.comparison{margin-top:18px;overflow-x:auto}table{border-collapse:collapse;width:100%;text-align:left}th,td{padding:10px;border-bottom:1px solid #d7dee5}th{font-size:14px}.array{display:flex;gap:0;margin:12px 0}.cell{border:1px solid #9fadb9;padding:6px 16px;text-align:center;background:#f5f8fa}.cell small{display:block;color:#596774}.notice{font-size:14px;color:#596774;margin-top:16px}label.check{display:flex;gap:8px;align-items:center}input[type=checkbox]{width:18px;height:18px}details{margin-top:18px}summary{cursor:pointer;font-weight:650}output{overflow-wrap:anywhere} [hidden]{display:none!important}@media(max-width:850px){.workspace{grid-template-columns:1fr}.app{padding:14px}.code{min-height:180px}.panel{padding:14px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+.topic-area{padding:12px 16px}.topic-area .toolbar{margin:8px 0}.guide-copy{margin:8px 0;max-width:none}#guide>.toolbar{display:inline-flex;margin:0 0 4px}#guide>.toolbar button{padding:5px 10px;font-size:14px}#topic-notes{margin-top:8px;font-size:14px}#topic-notes>summary{color:#596774;font-weight:500}.comparison{margin-top:12px}.view-panel{padding:12px 16px;min-width:0}.view-panel .legend{margin:0;font-size:13px}.code{min-height:300px;max-height:65vh;font-size:16px}.trace-status{padding:8px 16px;border-top:1px solid #d7dee5;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;font-size:14px}.trace-status .metrics{margin:0}.diagram .current,.diagram .fresh{animation:highlight-in .25s ease-out}@keyframes highlight-in{from{opacity:.55}to{opacity:1}}@media(max-width:600px){.app{padding:10px}.controls{gap:6px;padding:8px}.controls button,.controls select{padding:7px 9px}.view-panel{padding:8px}.diagram{min-width:480px}.topic-area{padding:10px}#lesson{max-width:100%}.code{font-size:14px}}@media(prefers-reduced-motion:reduce){}
+</style>
+</head>
+<body>
+<main class="app">
+<div class="eyebrow">CS-112 · MODULE 3A</div><h1>Linked List Explorer</h1>
+
+<div class="toolbar" aria-label="Learning mode"><button id="guided" aria-pressed="true">Guided walkthrough</button><button id="explore" aria-pressed="false">Explore</button></div>
+<section class="panel topic-area" aria-label="Topic and explanation">
+<section id="guide"><label for="lesson">Lecture topic</label> <select id="lesson"></select><p id="guide-copy" class="guide-copy"></p><div class="toolbar"><button id="previous-topic">Previous topic</button><button id="next-topic">Next topic</button></div></section>
+<section id="sandbox" hidden>
+<div class="toolbar"><label class="field" for="list">Starting values<input id="list" value="10, 20, 30" placeholder="Leave blank for an empty list" aria-describedby="list-help error"></label><button id="load">Load list</button><label class="check"><input id="tail" type="checkbox">Maintain a tail reference</label></div>
+<p id="list-help" class="notice">Up to 10 integers, separated by commas. Blank creates an empty list. Duplicate values are allowed.</p>
+<div class="toolbar"><label class="field">Operation<select id="operation"><option value="traverse">Traverse</option><option value="index">Look up index</option><option value="prepend">Insert at head</option><option value="remove">Remove head</option><option value="append">Append</option></select></label><label class="field" id="arg-field"> <span id="arg-label">Value</span><input id="argument" value="40" inputmode="numeric" aria-describedby="error"></label><button id="run" class="primary">Start operation</button></div>
+</section>
+<div id="error" class="error" role="alert"></div>
+<div id="explanation" class="explanation" role="status" aria-live="polite"></div>
+<div id="array-model" hidden><strong>Array comparison ? Python list <code>items</code></strong><div id="array-cells" class="array"></div><p id="array-caption" class="notice"></p></div>
+<details id="topic-notes"><summary>Topic notes and comparisons</summary><details class="comparison"><summary>Arrays and singly linked lists</summary><table><thead><tr><th>Operation</th><th>Array</th><th>Linked list</th></tr></thead><tbody><tr><td>Access by index</td><td>O(1)</td><td>O(n), sequential access</td></tr><tr><td>Insert / delete at front</td><td>O(n), shift elements</td><td>O(1), change references</td></tr><tr><td>Traverse all values</td><td>O(n)</td><td>O(n)</td></tr><tr><td>Append</td><td>O(1) amortized for a dynamic array</td><td>O(n) head only; O(1) with tail</td></tr><tr><td>Delete final node</td><td>O(1) for a dynamic array without shrinking</td><td>O(n), even with tail: find the predecessor</td></tr></tbody></table><p class="notice">Worst-case linked-list costs. Index 0 itself takes O(1). Insertion after a known node is O(1); finding that node can take O(n). Counters show next-reference hops and structural reference assignments, excluding constructor initialization and local variables. They are not timings.</p></details></details>
+</section>
+<section class="workspace panel" aria-label="Animation workspace">
+<div class="toolbar controls" role="group" aria-label="Animation controls"><button id="back">Back</button><button id="play">Play</button><button id="next" class="primary">Next step</button><button id="reset">Reset</button><label>Speed <select id="speed"><option value="1800">Slow</option><option value="1000" selected>Normal</option><option value="450">Fast</option></select></label><span id="progress"></span></div>
+<section id="list-panel" class="view-panel" aria-label="Linked list mechanics" tabindex="0">
+<div class="diagram-scroll"><svg id="diagram" class="diagram" viewBox="0 0 740 310" role="img" aria-labelledby="svg-title svg-desc"></svg></div>
+<p class="legend">Conceptual memory model. Existing boxes stay in place; arrows determine list order.</p>
+</section>
+
+<div class="trace-status"><div class="metrics"><span id="cost"></span><span id="hops"></span><span id="writes"></span></div><div>Output: <output id="output">?</output></div></div>
+</section>
+<details id="operation-example" class="panel"><summary>Python example: <span id="example-title"></span></summary><p class="notice">Static reference for this operation. Assumes a Node class with value and next attributes, and a LinkedList with head. Tail variants also maintain tail.</p><pre class="code"><code id="example-code"></code></pre></details>
+</main>
+<script src="../assets/js/linked-list-model.js"></script>
+<script>
+'use strict';
+const M=LinkedListModel,$=id=>document.getElementById(id),esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const topics=[
+ {title:'1. Why linked lists?',text:'Arrays support direct indexed access, but front insertion and deletion shift elements. Linked lists change references instead.',kind:'array'},
+ {title:'2. Nodes and references',text:'A node holds a value and a next reference. Head identifies the first node; None marks the end.',kind:'structure'},
+ {title:'3. Traverse the list',text:'Visit every node by repeatedly following next. Stop when current is None.',op:'traverse'},
+ {title:'4. Look up index 2',text:'Count from zero while following references. Linked lists cannot compute a node address from an index.',op:'index',arg:2},
+ {title:'5. Insert at the head',text:'Connect the new node to the old head before moving head. No existing values shift.',op:'prepend',arg:5},
+ {title:'6. Remove the head',text:'Move head to the second node. The old first node is no longer reachable through the list.',op:'remove'},
+ {title:'7. Append with head only',text:'Walk to the final node, then connect a new node. Finding the final node costs O(n).',op:'append',arg:40},
+ {title:'8. Append with a tail',text:'A maintained tail reference makes append O(1). Tail deletion still needs an O(n) walk to find the preceding node.',op:'append',arg:40,tail:true}
+];
+let mode='guided',topic=0,base=M.create([10,20,30]),initial=M.copy(base),trace=null,step=0,timer=null,tail=false;
+function pause(){if(timer!==null)clearTimeout(timer);timer=null;$('play').textContent='Play';}
+function comparisonTrace(){
+ const original=M.create([10,20,30]),frames=[],code=[];
+ let array=[10,20,30];
+ function add(frame,line,text,index=null,caption='Array and linked list hold the same values.'){
+  let active=code.indexOf(line);if(active<0){active=code.length;code.push(line);}
+  frames.push({...M.copy(frame),active,text,array:[...array],arrayIndex:index,arrayCaption:caption});
+ }
+ const blank={state:original,current:null,newNode:null,hops:0,writes:0,output:[]};
+ add(blank,'items = [10, 20, 30]  # Python list (dynamic array)','Define items as a Python list, backed by a dynamic array. The separate linked list also contains 10, 20, 30.');
+ add({...blank,output:[30]},'items[2]','The array reads slot 2 directly. This statement does not change the linked list.',2,'Direct access: select index 2 in O(1).');
+ add(blank,'index = 2','Set the requested linked-list index to 2. Head refers to the first node shown in the diagram.');
+ const lookup=M.trace(original,'index',2);
+ for(const f of lookup.frames.slice(1,-1))add(f,lookup.code[f.active].replace('self.head','head'),f.text,null,'The linked list follows next references to reach index 2: O(n) worst case.');
+ array=[10,20,30,null];
+ add(blank,'items.insert(0, 5)','Array insertion first makes room at the end. The next steps illustrate the shifts inside insert().',3,'Conceptual shifts inside items.insert(0, 5), assuming capacity is available.');
+ for(let i=2;i>=0;i--){array[i+1]=array[i];array[i]=null;add(blank,'items.insert(0, 5)','Shift array value '+array[i+1]+' from slot '+i+' to slot '+(i+1)+'. Linked-list nodes stay in place.',i+1,'Array front insertion shifts all 3 existing values: O(n).');}
+ array[0]=5;add(blank,'items.insert(0, 5)','Store 5 in array slot 0. Now perform the equivalent linked-list insertion.',0,'Array insertion is complete: 5, 10, 20, 30.');
+ add(blank,'value = 5','Set the value for the new linked-list node to 5.');
+ const insert=M.trace(original,'prepend',5);
+ for(const f of insert.frames.slice(1,-1))add(f,insert.code[f.active].replaceAll('self.head','head'),f.text,null,'The array is finished. Linked-list insertion changes references without shifting existing nodes.');
+ add(insert.frames.at(-1),'# Both structures now contain 5, 10, 20, 30','Both contain the same sequence. The array shifted 3 values; the linked list changed 2 references.',null,'Front insertion: array O(n); linked list O(1).');
+ return {frames,code,result:insert.result,complexity:null};
+}
+function staticTrace(kind){
+ if(kind==='array')return comparisonTrace();
+ const state=M.create([10,20,30]);state.head=null;state.nodes.forEach(n=>n.next=null);
+ const frames=[];
+ const add=text=>frames.push({state:M.copy(state),text,current:null,newNode:null,hops:0,writes:frames.length,output:[]});
+ add('Three separate nodes each hold a value and a next reference. None means no next node.');
+ state.head='N1';add('Head now identifies N1 as the first node.');
+ state.nodes[0].next='N2';add('Connect N1 to N2 by changing N1?s next reference.');
+ state.nodes[1].next='N3';add('Connect N2 to N3. N3 ends the chain with next = None.');
+ return {frames,result:state,complexity:null};
+}
+function mechanicsTrace(t){
+ const signature=f=>JSON.stringify([f.state,f.current,f.newNode,f.hops,f.writes,f.output,f.array,f.arrayIndex]);
+ t.frames=t.frames.filter((f,i,a)=>i===0||i===a.length-1||signature(f)!==signature(a[i-1]));
+ return t;
+}
+function startGuide(){pause();tail=!!topics[topic].tail;const t=topics[topic];base=M.create([10,20,30]);trace=mechanicsTrace(t.op?M.trace(base,t.op,t.arg,tail):staticTrace(t.kind));step=0;$('lesson').value=topic;$('guide-copy').textContent=t.text;$('previous-topic').disabled=topic===0;$('next-topic').disabled=topic===topics.length-1;$('array-model').hidden=t.kind!=='array';render();}
+function diagram(f){
+ const s=f.state,positions=new Map(s.nodes.map((n,i)=>[n.id,{x:32+((n.slot??i)%3)*235,y:72+Math.floor((n.slot??i)/3)*155}]));const height=Math.max(240,(Math.floor(Math.max(0,...s.nodes.map((n,i)=>n.slot??i))/3)+1)*155+65);
+ const ref=x=>x||'None';let parts=['<title id="svg-title">Linked list reference diagram</title><desc id="svg-desc">'+esc('head → '+ref(s.head)+(tail?', tail → '+ref(s.tail):'')+'. '+s.nodes.map(n=>n.id+' contains '+n.value+'; next → '+ref(n.next)).join('. ')+'. current → '+ref(f.current))+'</desc><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#5a6978"/></marker></defs>'];
+ parts.push('<text x="32" y="25" class="ref">head → '+esc(ref(s.head))+(tail?'     tail → '+esc(ref(s.tail)):'')+'</text><text x="32" y="47" class="label">current → '+esc(ref(f.current))+(f.newNode?'     new_node → '+esc(f.newNode):'')+'</text>');
+ for(const n of s.nodes){const p=positions.get(n.id);if(n.next&&positions.has(n.next)){const q=positions.get(n.next);let path;if(p.y===q.y&&q.x>p.x)path=`M${p.x+180} ${p.y+40} L${q.x} ${q.y+40}`;else path=`M${p.x+140} ${p.y+72} C${p.x+140} ${p.y+120},${q.x+40} ${q.y+120},${q.x+40} ${q.y+72}`;parts.push('<path class="link" marker-end="url(#arrow)" d="'+path+'"/>');}}
+ for(const n of s.nodes){const p=positions.get(n.id);parts.push(`<g transform="translate(${p.x} ${p.y})"><text class="label" y="-9">${esc(n.id)}${f.current===n.id?' · current':''}${f.newNode===n.id?' · new':''}</text><rect class="box ${f.current===n.id?'current':f.newNode===n.id?'fresh':''}" width="180" height="72" rx="8"/><line x1="78" y1="0" x2="78" y2="72" stroke="#bac8d0"/><text class="label" x="10" y="21">value</text><text class="value" x="10" y="51"${String(n.value).length>5?' textLength="60" lengthAdjust="spacingAndGlyphs"':''}>${esc(n.value)}</text><text class="label" x="90" y="21">next</text><text class="value" x="90" y="51">${esc(ref(n.next))}</text></g>`);}
+ if(!s.nodes.length)parts.push('<text x="32" y="110" class="value">Empty list · head is None</text>');$('diagram').setAttribute('viewBox',`0 0 740 ${height}`);$('diagram').innerHTML=parts.join('');
+}
+const examples={
+ traverse:['Traversal','def traverse(self):\n    current = self.head\n    while current is not None:\n        print(current.value)\n        current = current.next'],
+ index:['Index lookup','def get(self, index):\n    if index < 0:\n        raise IndexError("index out of bounds")\n    current = self.head\n    for _ in range(index):\n        if current is None:\n            raise IndexError("index out of bounds")\n        current = current.next\n    if current is None:\n        raise IndexError("index out of bounds")\n    return current.value'],
+ prepend:['Insert at head','def prepend(self, value):\n    new_node = Node(value)\n    new_node.next = self.head\n    self.head = new_node'],
+ remove:['Delete head','def remove_head(self):\n    if self.head is not None:\n        self.head = self.head.next'],
+ append:['Append (head only)','def append(self, value):\n    new_node = Node(value)\n    if self.head is None:\n        self.head = new_node\n        return\n    current = self.head\n    while current.next is not None:\n        current = current.next\n    current.next = new_node']
+};
+function updateExample(){
+ const op=mode==='guided'?topics[topic].op:$('operation').value;
+ $('operation-example').hidden=!op;
+ if(!op)return;
+ let [title,code]=examples[op];
+ if(tail){
+  if(op==='append'){title='Append (with tail)';code='def append(self, value):\n    new_node = Node(value)\n    if self.head is None:\n        self.head = new_node\n    else:\n        self.tail.next = new_node\n    self.tail = new_node';}
+  if(op==='prepend')code+='\n    if self.tail is None:\n        self.tail = new_node';
+  if(op==='remove')code+='\n    if self.head is None:\n        self.tail = None';
+ }
+ $('example-title').textContent=title;$('example-code').textContent=code;
+}
+function render(){const f=trace.frames[step];diagram(f);
+ if(f.array){$('array-cells').innerHTML=f.array.map((v,i)=>'<div class="cell"'+(i===f.arrayIndex?' style="background:#e6f4ef;border-color:#0f6e56;box-shadow:inset 0 -3px #0f6e56"':'')+'>'+(v===null?'?':esc(v))+'<small>index '+i+'</small></div>').join('');$('array-caption').textContent=f.arrayCaption;}
+ updateExample();$('explanation').textContent=f.text;$('output').textContent=f.output.length?f.output.join(', '):'—';$('cost').textContent=trace.complexity?'Worst case: '+trace.complexity:'Concept walkthrough';$('hops').textContent='Next hops: '+f.hops;$('writes').textContent='Reference writes: '+f.writes;$('progress').textContent=`Step ${step+1} of ${trace.frames.length}`;$('back').disabled=step===0;$('next').disabled=step===trace.frames.length-1;$('play').disabled=step===trace.frames.length-1;if(step===trace.frames.length-1){pause();if(mode==='explore')base=M.copy(trace.result);}}
+function next(){if(step<trace.frames.length-1){step++;render();}}
+function schedule(){timer=setTimeout(()=>{timer=null;next();if(step<trace.frames.length-1){$('play').textContent='Pause';schedule();}},Number($('speed').value));}
+function ready(){pause();trace={code:['# Choose an operation, then select Start operation'],frames:[{state:M.copy(base),active:0,text:'Choose an operation to trace on this list.',current:null,newNode:null,hops:0,writes:0,output:[]}],result:M.copy(base),complexity:null};step=0;render();}
+function fields(){const op=$('operation').value;$('arg-field').hidden=!['index','prepend','append'].includes(op);$('arg-label').textContent=op==='index'?'Index (zero-based)':'Value';}
+function attempt(fn){$('error').textContent='';try{fn();}catch(e){$('error').textContent=e.message;}}
+$('lesson').innerHTML=topics.map((t,i)=>'<option value="'+i+'">'+t.title+'</option>').join('');
+$('lesson').onchange=()=>{topic=Number($('lesson').value);startGuide();};$('previous-topic').onclick=()=>{topic--;startGuide();};$('next-topic').onclick=()=>{topic++;startGuide();};
+function switchMode(m){pause();mode=m;$('error').textContent='';$('guided').setAttribute('aria-pressed',m==='guided');$('explore').setAttribute('aria-pressed',m==='explore');$('guide').hidden=m!=='guided';$('sandbox').hidden=m!=='explore';if(m==='guided')startGuide();else{base=M.create([10,20,30]);initial=M.copy(base);$('list').value='10, 20, 30';tail=$('tail').checked;$('array-model').hidden=true;fields();ready();}}
+$('guided').onclick=()=>switchMode('guided');$('explore').onclick=()=>switchMode('explore');
+$('load').onclick=()=>attempt(()=>{const v=M.parse($('list').value);base=M.create(v);initial=M.copy(base);ready();});
+$('tail').onchange=()=>{tail=$('tail').checked;ready();};$('operation').onchange=()=>{fields();$('error').textContent='';ready();};
+$('run').onclick=()=>attempt(()=>{pause();const op=$('operation').value;let arg;if(['index','prepend','append'].includes(op)){const v=M.parse($('argument').value);if(v.length!==1)throw Error('Enter one integer.');arg=v[0];}const result=M.trace(base,op,arg,tail);trace=mechanicsTrace(result);step=0;render();});
+$('back').onclick=()=>{pause();if(step>0){step--;render();}};$('next').onclick=()=>{pause();next();};$('play').onclick=()=>{if(timer!==null)pause();else{$('play').textContent='Pause';schedule();}};$('speed').onchange=()=>{if(timer!==null){pause();$('play').textContent='Pause';schedule();}};
+$('reset').onclick=()=>{pause();$('error').textContent='';if(mode==='guided')startGuide();else{base=M.copy(initial);ready();}};
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
+
+
+startGuide();
+</script>
+</body>
+</html>
