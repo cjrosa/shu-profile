@@ -103,6 +103,7 @@ function normalizeNotebookProgress(){
  state.completed=completed;
  state.pastesUsed=Number.isInteger(state.pastesUsed)?Math.max(0,Math.min(PASTE_LIMIT,state.pastesUsed)):0;
 }
+let exploreWasComplete=null,exploreHighlightTimer;
 function refreshNotebookProgress(){
  qa('.ml-cell').forEach((cell,i)=>{
   const locked=!taskAvailable(i),editor=q('.ml-code',cell);
@@ -115,7 +116,15 @@ function refreshNotebookProgress(){
  const complete=notebookComplete(),explore=q('[data-mode="explore"]');
  explore.setAttribute('aria-disabled',String(!complete));explore.setAttribute('aria-describedby','exploreTooltip');
  q('#exploreTooltip').textContent=complete?'Explore the completed lab.':'Complete all Notebook tasks in order to unlock Explore.';
- q('.ml-explore-lock',explore).hidden=complete;
+ if(complete&&exploreWasComplete===false){
+  clearTimeout(exploreHighlightTimer);
+  explore.classList.add('ml-explore-unlocked');
+  exploreHighlightTimer=setTimeout(()=>explore.classList.remove('ml-explore-unlocked'),2400);
+  toast('Notebook complete! Explore is now available.');
+ }else if(!complete){
+  clearTimeout(exploreHighlightTimer);explore.classList.remove('ml-explore-unlocked');
+ }
+ exploreWasComplete=complete;
  q('#notebookRequirement').textContent=complete?'':'Complete Notebook tasks in order to unlock Explore.';
  const remaining=PASTE_LIMIT-state.pastesUsed;
  q('#pasteBudget').textContent=remaining?remaining+' paste'+(remaining===1?'':'s')+' left':'Typing only';
