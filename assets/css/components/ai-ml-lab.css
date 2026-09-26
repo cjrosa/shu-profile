@@ -396,3 +396,25 @@
 .ml-copy-tooltip{position:absolute;right:0;bottom:calc(100% + 8px);z-index:30;width:max-content;padding:7px 9px;border-radius:6px;background:#171b19;color:#fff;font-size:10px;font-weight:500;line-height:1.4;white-space:nowrap;box-shadow:0 5px 16px rgba(0,0,0,.24);visibility:hidden;opacity:0;transition:opacity .15s;pointer-events:none}
 .ml-copy-tooltip::after{content:'';position:absolute;right:8px;top:100%;border:5px solid transparent;border-top-color:#171b19}
 .ml-copy-code:hover .ml-copy-tooltip,.ml-copy-code:focus-visible .ml-copy-tooltip{visibility:visible;opacity:1}
+
+.ml-scatter-legend button.ml-legend-muted{opacity:.35}
+
+.ml-definition-help{position:relative;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;margin:-4px 0 -4px 3px;padding:3px;vertical-align:middle;border:0;border-radius:4px;background:transparent;color:var(--ml-green-dark);cursor:help}
+.ml-definition-help>svg{width:18px;height:18px;fill:#f4c542;stroke:#111;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.ml-definition-help:focus-visible{outline:2px solid var(--ml-blue);outline-offset:2px}
+.ml-hist-reading .ml-definition-tooltip{position:absolute;right:0;bottom:calc(100% + 8px);z-index:30;width:250px;max-width:calc(100vw - 70px);padding:9px 11px;border-radius:7px;background:#171b19;color:#fff;font-size:11px;font-weight:400;line-height:1.5;text-align:left;box-shadow:0 5px 16px rgba(0,0,0,.24);visibility:hidden;opacity:0;transition:opacity .15s}
+.ml-definition-tooltip::before{content:'';position:absolute;left:0;right:0;top:100%;height:10px}
+.ml-definition-tooltip::after{content:'';position:absolute;right:7px;top:100%;border:5px solid transparent;border-top-color:#171b19}
+.ml-definition-help:hover .ml-definition-tooltip,.ml-definition-help:focus .ml-definition-tooltip{visibility:visible;opacity:1}
+
+#assignmentDownloadDialog{width:min(360px,calc(100% - 28px))}
+#assignmentDownloadDialog form{padding:16px}
+#assignmentDownloadDialog h2{font-size:17px;margin:0 0 6px}
+#assignmentDownloadDialog p{margin:0 0 12px}
+.ml-assignment-name-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ml-assignment-name-fields>div{min-width:0}
+#assignmentDownloadDialog input{min-width:0;margin:0;padding:8px 9px}
+#assignmentDownloadDialog .ml-actions{margin-top:14px;gap:8px}
+#assignmentDownloadDialog [data-download-error]{min-height:0;margin:8px 0 0}
+#assignmentDownloadDialog [data-download-error]:empty{margin:0}
+@media(max-width:380px){.ml-assignment-name-fields{grid-template-columns:1fr;gap:10px}}
