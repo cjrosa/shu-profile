@@ -371,3 +371,20 @@
 .ml-mode.ml-explore-unlocked{background:var(--ml-green-soft);color:var(--ml-green-dark);box-shadow:0 0 0 2px var(--ml-green);animation:ml-explore-unlock 1.2s ease-in-out 2}
 @keyframes ml-explore-unlock{0%,100%{box-shadow:0 0 0 2px var(--ml-green)}50%{box-shadow:0 0 0 6px transparent;background:#fff}}
 @media(prefers-reduced-motion:reduce){.ml-mode.ml-explore-unlocked{animation:none}}
+
+/* Consistent learning sections inside Notebook task accordions. */
+.ml-task-section{min-width:0}
+.ml-task-section+.ml-task-section{margin-top:14px;padding-top:12px;border-top:1px solid var(--ml-line)}
+.ml-task-section h3{margin:0 0 7px;color:var(--task-accent);font-size:11px;font-weight:800;line-height:1.4}
+.ml-task-section p,.ml-task-section li{color:var(--ml-muted);font-size:11px;line-height:1.55}
+.ml-task-section p{margin:0}
+.ml-task-section ul{margin:0;padding-left:17px}
+.ml-task-section li+li{margin-top:6px}
+.ml-task-section .ml-type-code{max-width:100%;overflow-x:auto;white-space:pre;overflow-wrap:normal;padding-right:36px}
+.ml-task-section .ml-task-code-wrap{min-width:0}
+@media(max-width:600px){.ml-task-details{padding-left:12px}}
+
+.ml-scatter-legend button{display:inline-flex;align-items:center;min-height:0;padding:2px 0;border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--ml-ink);font:inherit;font-size:10px;line-height:1.3;cursor:pointer}
+.ml-scatter-legend button[aria-pressed="false"]{opacity:.4}
+.ml-scatter-legend button:focus-visible{outline:2px solid var(--ml-blue);outline-offset:2px}
+.ml-scatter-filter-status{margin:0 0 10px;color:var(--ml-muted);font-size:11px;line-height:1.5}
