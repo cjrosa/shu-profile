@@ -56,3 +56,5 @@ test('invalid or unavailable name storage does not block the download form',()=>
  const f=fixture();f.context.localStorage={getItem(){throw Error('blocked')},setItem(){throw Error('blocked')}};
  f.context.downloadNamedEvidenceAssignment();f.field('#assignmentFirstName').value='Alex';f.field('#assignmentLastName').value='Smith';f.field('#assignmentFirstName').oninput();f.field('form').onsubmit({preventDefault(){}});assert.equal(f.anchor.clicked,true);
 });
+
+test('Data Detective TXT includes attempts per question and marks historical counts unavailable',async()=>{const f=fixture();f.context.C.id='data_detective';f.context.guidedExploreState=()=>({answers:{one:0},justifications:{one:'Most fish are light; a few are heavy.'},attempts:{one:2}});f.context.saveEvidenceAssignment('Alex','Smith');assert.match(await f.blob.text(),/Attempts: 2/);f.context.guidedExploreState=()=>({answers:{one:0},justifications:{one:'Existing explanation.'}});f.context.saveEvidenceAssignment('Alex','Smith');assert.match(await f.blob.text(),/Attempts: Not recorded/);});
