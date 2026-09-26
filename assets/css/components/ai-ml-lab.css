@@ -352,11 +352,15 @@
 .ml-mode[data-mode="explore"]{position:relative}
 #pasteInstructorDialog{padding:20px}
 #pasteInstructorDialog form{padding:0}
-#pasteInstructorDialog h2{margin-bottom:16px}
-#pasteInstructorDialog [data-instructor-fill]{margin-bottom:8px}
-#pasteInstructorDialog hr{border:0;border-top:1px solid var(--ml-line);margin:18px 0}
-#pasteInstructorDialog .ml-instructor-footer{justify-content:flex-end;margin-top:18px}
-#pasteInstructorDialog [data-paste-grant-status]{margin:10px 0 0;min-height:17px}
+#pasteInstructorDialog h2{margin:0 0 14px}
+#pasteInstructorDialog .ml-actions{margin:0;gap:8px}
+#pasteInstructorDialog [data-instructor-fill]{margin:0}
+#pasteInstructorDialog [data-paste-grants]>p{margin:8px 0 0}
+#pasteInstructorDialog hr{border:0;border-top:1px solid var(--ml-line);margin:16px 0}
+#pasteInstructorDialog [data-paste-grants]>[data-paste-balance]{margin:0 0 10px}
+#pasteInstructorDialog .ml-instructor-footer{justify-content:flex-end;margin-top:16px}
+#pasteInstructorDialog [data-paste-grants]>[data-paste-grant-status]{margin:10px 0 0;min-height:0}
+#pasteInstructorDialog [data-paste-grants]>[data-paste-grant-status]:empty{margin:0}
 
 .ml-task-details{padding-left:12px}
 .ml-task-code-wrap{position:relative}
