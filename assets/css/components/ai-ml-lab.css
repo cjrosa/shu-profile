@@ -349,7 +349,7 @@
 .ml-cell.locked .ml-code{background:#f1f3f2;cursor:not-allowed}
 .ml-mode:disabled,.ml-cell [data-run]:disabled{opacity:.55;cursor:not-allowed}
 
-.ml-mode[data-mode="explore"]{position:relative}
+.ml-mode[data-mode="explore"],.ml-mode[data-mode="notebook"]{position:relative}
 #pasteInstructorDialog{padding:20px}
 #pasteInstructorDialog form{padding:0}
 #pasteInstructorDialog h2{margin:0 0 14px}
@@ -420,3 +420,22 @@
 @media(max-width:380px){.ml-assignment-name-fields{grid-template-columns:1fr;gap:10px}}
 
 .ml-python-setup-note{margin:12px 16px 0;color:var(--ml-muted);font-size:11px;line-height:1.5}
+
+/* Mirror Learn's row comparison while linking model colors to their charts. */
+.ml-model-comparison{width:100%;table-layout:fixed;border-spacing:0;margin:6px 0 10px;border:1px solid var(--ml-line);border-radius:12px;overflow:hidden;color:var(--ml-ink)}
+.ml-model-comparison caption{text-align:left;color:var(--ml-muted);font-size:11px;padding:0 4px 5px}
+.ml-model-comparison th,.ml-model-comparison td{padding:7px 12px;text-align:left}
+.ml-model-comparison thead th{background:#eaf1ed;font-size:13px;vertical-align:middle}
+.ml-model-comparison thead th:first-child{width:30%}
+.ml-model-comparison thead span{display:block;margin-top:2px;font-size:10px;font-weight:600;color:var(--ml-muted)}
+.ml-model-comparison tbody th,.ml-model-comparison td{border-top:1px solid var(--ml-line);background:var(--model-tint)}
+.ml-model-comparison tbody th{border-left:4px solid var(--model-color);font-size:13px}
+.ml-model-comparison td{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums}
+.ml-model-comparison td em{font-size:12px;font-weight:400;color:var(--ml-muted)}
+.ml-model-identity{display:flex;align-items:center;gap:8px}
+.ml-model-identity svg{flex:0 0 24px;width:24px;height:24px;fill:var(--model-tint);stroke:var(--model-color);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ml-comparison-bar{position:relative;display:block;padding:4px 8px;isolation:isolate;white-space:nowrap}
+.ml-comparison-bar i{position:absolute;inset:0 auto 0 0;z-index:-1;border-radius:5px;background:var(--model-color);opacity:.3}
+@media(max-width:620px){.ml-model-comparison th,.ml-model-comparison td{padding:6px}.ml-model-comparison tbody th{font-size:11px}.ml-model-comparison td{font-size:14px}.ml-model-identity{flex-direction:column;align-items:flex-start;gap:4px}.ml-model-identity svg{flex-basis:25px;width:25px;height:25px}.ml-model-comparison thead span{font-size:9px}.ml-comparison-bar{padding:4px}}
+
+.ml-model-best{display:inline-block;margin-left:5px;font-size:9px;font-weight:600;color:#61508f}
