@@ -6,10 +6,10 @@ new MutationObserver(()=>{if(window.ML_LAB_CONFIG?.id!=='data_detective')return;
 'use strict';
 const q=(s,r=document)=>r.querySelector(s),qa=(s,r=document)=>[...r.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const state={mode:'learn',scene:0,unlocked:0,executions:0,pastesUsed:0,completed:new Set(),hints:new Set(),answers:{},reflection:'',explore:{},savedCodes:[],migrated:false,layoutSplit:60};
+const state={mode:'learn',scene:0,unlocked:0,executions:0,pastesUsed:0,extraPastes:0,completed:new Set(),hints:new Set(),answers:{},reflection:'',explore:{},savedCodes:[],migrated:false,layoutSplit:60};
 let C;
 let focusedNotebookCell=null,notebookFocusScroll=0,loanIntroTimer=null;
-function store(){try{localStorage.setItem('ai100.ml.'+C.id,JSON.stringify({revision:C.revision||1,pastesUsed:state.pastesUsed,scene:state.scene,unlocked:state.unlocked,completed:[...state.completed],hints:[...state.hints],answers:state.answers,reflection:state.reflection,explore:state.explore,layoutSplit:state.layoutSplit,codes:qa('.ml-code').map(x=>x.value)}))}catch(_){}}
+function store(){try{localStorage.setItem('ai100.ml.'+C.id,JSON.stringify({revision:C.revision||1,pastesUsed:state.pastesUsed,extraPastes:state.extraPastes,scene:state.scene,unlocked:state.unlocked,completed:[...state.completed],hints:[...state.hints],answers:state.answers,reflection:state.reflection,explore:state.explore,layoutSplit:state.layoutSplit,codes:qa('.ml-code').map(x=>x.value)}))}catch(_){}}
 function restore(){
  try{
   const key='ai100.ml.'+C.id,x=JSON.parse(localStorage.getItem(key)||'null');
@@ -95,13 +95,54 @@ function visual(scene){
 }
 function renderScene(){const s=C.scenes[state.scene],steps=q('#sceneNav');steps.innerHTML=C.scenes.map((x,i)=>`<button class="ml-scene-step ${i===state.scene?'active':''} ${i<state.scene?'done':''}" data-index="${i+1}" data-scene="${i}" ${i>state.unlocked?'disabled':''}>${esc(x.short||x.title)}</button>`).join('');qa('[data-scene]',steps).forEach(b=>b.onclick=()=>{state.scene=+b.dataset.scene;renderScene();store()});q('#sceneKicker').textContent=`Learn · Scene ${state.scene+1}`;q('#sceneTitle').textContent=s.title;q('#sceneCopy').textContent=s.copy;q('#sceneCount').textContent=`Scene ${state.scene+1} of ${C.scenes.length}`;q('#sceneProgress').style.width=`${(state.scene+1)/C.scenes.length*100}%`;q('#sceneVisual').innerHTML=visual(s);startLoanIntroAnimation(s);q('#sceneBack').disabled=state.scene===0;q('#sceneNext').textContent=state.scene===C.scenes.length-1?'Open notebook →':'Next →';q('#instructorCue').textContent=s.cue||C.instructorCue;}
 const PASTE_LIMIT=3;
+function pasteAllowance(){return PASTE_LIMIT+(state.extraPastes||0)}
+function bindPasteInstructorMenu(){
+ const badge=q('.ml-paste-budget');
+ badge.setAttribute('aria-haspopup','dialog');
+ const open=event=>{event.preventDefault();openInstructorMenu()};
+ badge.addEventListener('contextmenu',open);
+ badge.addEventListener('keydown',event=>{if(event.key==='ContextMenu'||(event.shiftKey&&event.key==='F10'))open(event)});
+}
+function openInstructorMenu(){
+ let dialog=q('#pasteInstructorDialog');
+ if(!dialog){
+  document.body.insertAdjacentHTML('beforeend',`<dialog class="ml-password-dialog" id="pasteInstructorDialog" aria-labelledby="pasteInstructorTitle"><h2 id="pasteInstructorTitle">Instructor tools</h2><form data-paste-auth><p>Enter the instructor password to manage this lab.</p><label for="pasteInstructorPassword">Password</label><input id="pasteInstructorPassword" type="password" autocomplete="off" required><div class="ml-actions"><button class="ml-btn primary" type="submit">Unlock menu</button><button class="ml-btn" type="button" data-paste-cancel>Cancel</button></div><p class="ml-password-error" aria-live="polite"></p></form><form data-paste-grants hidden><div class="ml-actions"><button class="ml-btn" type="button" data-instructor-fill>Fill all code</button></div><p>Fill every Notebook cell, then run each task in order.</p><hr><p data-paste-balance></p><div class="ml-actions"><button class="ml-btn" type="button" data-paste-return>Give 1 paste</button></div><div class="ml-actions ml-instructor-footer"><button class="ml-btn" type="button" data-paste-cancel>Done</button></div><p data-paste-grant-status role="status"></p></form></dialog>`);
+  dialog=q('#pasteInstructorDialog');
+  let authorized=false;
+  const balance=()=>{q('[data-paste-balance]',dialog).textContent=(pasteAllowance()-state.pastesUsed)+' pastes remaining in this lab.'};
+  const grant=amount=>{
+   if(!authorized||!grantPastes(amount))return;
+   balance();q('[data-paste-grant-status]',dialog).textContent=amount+' paste'+(amount===1?'':'s')+' added.';
+  };
+  q('[data-paste-auth]',dialog).onsubmit=event=>{
+   event.preventDefault();const password=q('#pasteInstructorPassword',dialog);
+   if(password.value!=='SHUAI'){q('.ml-password-error',dialog).textContent='Incorrect password.';password.select();return}
+   authorized=true;password.value='';q('[data-paste-auth]',dialog).hidden=true;q('[data-paste-grants]',dialog).hidden=false;
+   balance();q('[data-paste-return]',dialog).focus();
+  };
+  q('[data-paste-return]',dialog).onclick=()=>grant(1);
+  q('[data-instructor-fill]',dialog).onclick=()=>{if(!authorized)return;fillAllCode();q('[data-paste-grant-status]',dialog).textContent='All cells filled. Run each task in order.'};
+  q('[data-paste-grants]',dialog).onsubmit=event=>event.preventDefault();
+  qa('[data-paste-cancel]',dialog).forEach(button=>button.onclick=()=>dialog.close());
+  dialog.addEventListener('close',()=>{authorized=false;q('#pasteInstructorPassword',dialog).value='';q('.ml-paste-budget').focus()});
+ }
+ q('[data-paste-auth]',dialog).hidden=false;q('[data-paste-grants]',dialog).hidden=true;
+ q('#pasteInstructorPassword',dialog).value='';
+ q('.ml-password-error',dialog).textContent='';q('[data-paste-grant-status]',dialog).textContent='';
+ dialog.showModal();q('#pasteInstructorPassword',dialog).focus();
+}
+function grantPastes(amount){
+ if(!Number.isSafeInteger(amount)||amount<1||amount>100)return false;
+ state.extraPastes=(state.extraPastes||0)+amount;refreshNotebookProgress();store();return true;
+}
 function taskAvailable(index){for(let i=0;i<index;i++)if(!state.completed.has(i))return false;return true}
 function notebookComplete(){return C.cells.every((_,i)=>state.completed.has(i))}
 function normalizeNotebookProgress(){
  const completed=new Set();
  for(let i=0;i<C.cells.length&&state.completed.has(i);i++)completed.add(i);
  state.completed=completed;
- state.pastesUsed=Number.isInteger(state.pastesUsed)?Math.max(0,Math.min(PASTE_LIMIT,state.pastesUsed)):0;
+ state.extraPastes=Number.isSafeInteger(state.extraPastes)?Math.max(0,state.extraPastes):0;
+ state.pastesUsed=Number.isSafeInteger(state.pastesUsed)?Math.max(0,Math.min(pasteAllowance(),state.pastesUsed)):0;
 }
 let exploreWasComplete=null,exploreHighlightTimer;
 function refreshNotebookProgress(){
@@ -126,7 +167,7 @@ function refreshNotebookProgress(){
  }
  exploreWasComplete=complete;
  q('#notebookRequirement').textContent=complete?'':'Complete Notebook tasks in order to unlock Explore.';
- const remaining=PASTE_LIMIT-state.pastesUsed;
+ const remaining=pasteAllowance()-state.pastesUsed;
  q('#pasteBudget').textContent=remaining?remaining+' paste'+(remaining===1?'':'s')+' left':'Typing only';
  qa('[data-paste-token]').forEach((token,i)=>token.classList.toggle('spent',i>=remaining));
  q('.ml-paste-budget').classList.toggle('exhausted',remaining===0);
@@ -154,7 +195,7 @@ function openNotebookTask(index){
 function pasteCode(editor,index,text){
  if(!taskAvailable(index)){toast('Complete the earlier tasks first.');return}
  if(!text)return;
- if(state.pastesUsed>=PASTE_LIMIT){toast('No pastes remaining. Type the Python code to continue.');return}
+ if(state.pastesUsed>=pasteAllowance()){toast('No pastes remaining. Type the Python code to continue.');return}
  editor.setRangeText(text,editor.selectionStart,editor.selectionEnd,'end');
  state.pastesUsed++;invalidateNotebookFrom(index);store();
 }
@@ -259,8 +300,7 @@ function init(){C=window.ML_LAB_CONFIG;if(!C)throw new Error('ML_LAB_CONFIG is r
 document.addEventListener('DOMContentLoaded',init);
 function fillAllCode(){invalidateNotebookFrom(0);qa('.ml-code').forEach((cell,i)=>{cell.value=typingGuide(i);updateChecklist(cell.closest('.ml-cell'),i)});refreshNotebookProgress();store();toast('All code cells filled. Run cells to see their outputs.')}
 function applyNotebookTaskTitles(){const titlesByLab={data_detective:['Welcome','Load data','Inspect data','Build histogram','Compare species','Plot relationship'],fish_predictor:['Load and preview data','Remove unused columns','Split data','Separate features and labels','Train linear model','Train decision tree','Train random forest','Train neural network','Compare four models'],loan_model_auditor:['Open and preview the data','Visualize the data','Remove incomplete rows','Change text to number codes','Separate inputs and answers','Train the number prediction model','Round predictions and check accuracy','Use a repeatable classifier','Check matches and mistakes']},titles=titlesByLab[C.id];if(!titles)return;qa('[data-sidebar-task]').forEach((task,i)=>{const heading=q('.ml-task-copy strong',task);if(heading)heading.textContent=`Task ${i+1} — ${titles[i]}`});qa('.ml-cell').forEach((cell,i)=>{const heading=q('.ml-cell-toggle strong',cell);if(heading)heading.textContent=`Code cell ${i+1} — ${titles[i]}`})}
-function openFillDialog(){let dialog=q('#fillCodeDialog');if(!dialog){document.body.insertAdjacentHTML('beforeend',`<dialog class="ml-password-dialog" id="fillCodeDialog"><form method="dialog"><h2>Instructor access</h2><p>Enter the password to fill every notebook cell.</p><label for="fillCodePassword">Password</label><input id="fillCodePassword" type="password" autocomplete="off"><div class="ml-actions"><button class="ml-btn" value="cancel" type="button" data-fill-cancel>Cancel</button><button class="ml-btn primary" type="submit">Fill all code</button></div><div class="ml-password-error" aria-live="polite"></div></form></dialog>`);dialog=q('#fillCodeDialog');q('[data-fill-cancel]',dialog).onclick=()=>dialog.close();q('form',dialog).onsubmit=e=>{e.preventDefault();const input=q('#fillCodePassword'),error=q('.ml-password-error',dialog);if(input.value!=='SHUAI'){error.textContent='Incorrect password. Code was not filled.';input.select();return}error.textContent='';dialog.close();fillAllCode()}}q('#fillCodePassword').value='';q('.ml-password-error',dialog).textContent='';dialog.showModal();setTimeout(()=>q('#fillCodePassword').focus(),0)}
-document.addEventListener('DOMContentLoaded',()=>{q('#fillAll').onclick=openFillDialog;applyNotebookTaskTitles()});
+document.addEventListener('DOMContentLoaded',()=>{q('#instructorTools').onclick=openInstructorMenu;bindPasteInstructorMenu();applyNotebookTaskTitles()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&focusedNotebookCell!=null){e.preventDefault();focusNotebookCell(null)}});
 function renderOutput(o,index,code){if(typeof o==='function')o=o(state,code);if(!o)o='Cell ran successfully.';const cell=q(`[data-cell="${index}"]`);if(cell)updateChecklist(cell,index);let text=typeof o==='object'?o.text||'':o;if(C.id==='fish_predictor'&&index===0)text='Loaded Fish.csv: 159 rows × 6 columns\\n\\n   ID Species  Weight  Length  Height  Width\\n0   1  Roach    27.0    19.0  6.4752  3.3516\\n1   2  Perch     5.9     7.5  2.1120  1.4080\\n2   3  Smelt     6.7     9.3  1.7388  1.0476\\n3   4  Smelt     7.0    10.1  1.7284  1.1484\\n4   5  Smelt     7.5    10.0  1.9720  1.1600\\n\\n[5 rows x 6 columns]\\n\\nDisplayed the first 5 fish.';else if(C.id==='loan_model_auditor'&&index===0)text='Loaded Loans.csv: 614 rows × 12 columns\\n\\n  Gender Married Dependents Education Self_Employed ApplicantIncome … Loan_Status\\n0 Male   No      0          Graduate  No            5849            … Y\\n1 Male   Yes     1          Graduate  No            4583            … N\\n2 Male   Yes     0          Graduate  Yes           3000            … Y\\n3 Male   Yes     0          Not Graduate No         2583            … Y\\n4 Male   No      0          Graduate  No            6000            … Y\\n\\n[5 rows × 12 columns]\\n\\n'+text;return esc(text).replace(/\\n/g,'<br>')+`<span class="ml-coach"><strong>Success:</strong> ${esc(C.cells[index].success||'The visual workspace has been updated.')}</span>`}
 const renderOutputInline=renderOutput;

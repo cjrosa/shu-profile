@@ -350,6 +350,13 @@
 .ml-mode:disabled,.ml-cell [data-run]:disabled{opacity:.55;cursor:not-allowed}
 
 .ml-mode[data-mode="explore"]{position:relative}
+#pasteInstructorDialog{padding:20px}
+#pasteInstructorDialog form{padding:0}
+#pasteInstructorDialog h2{margin-bottom:16px}
+#pasteInstructorDialog [data-instructor-fill]{margin-bottom:8px}
+#pasteInstructorDialog hr{border:0;border-top:1px solid var(--ml-line);margin:18px 0}
+#pasteInstructorDialog .ml-instructor-footer{justify-content:flex-end;margin-top:18px}
+#pasteInstructorDialog [data-paste-grant-status]{margin:10px 0 0;min-height:17px}
 
 .ml-task-details{padding-left:12px}
 .ml-task-code-wrap{position:relative}

@@ -9,7 +9,7 @@ function fixture(config,storage=new Map()){
  const context={document,window:{},MutationObserver:class{observe(){}},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},setTimeout:()=>0,clearTimeout(){},queueMicrotask,confirm:()=>true,location:{reload(){}},config};
  vm.createContext(context);
  // Expose closure functions only in this fixture. Chart rendering is outside progression tests.
- vm.runInContext(source.replace(/\}\)\(\);\s*$/,`C=config;updateMetrics=()=>{};renderExplore=()=>{};globalThis.lab={state,restore,store,taskAvailable,notebookComplete,refreshNotebookProgress,invalidateNotebookFrom,evaluate,fillAllCode,pasteCode,bindCodeInsertion,setMode,reset,typingGuide};})();`),context);
+ vm.runInContext(source.replace(/\}\)\(\);\s*$/,`C=config;updateMetrics=()=>{};renderExplore=()=>{};globalThis.lab={state,restore,store,grantPastes,pasteAllowance,taskAvailable,notebookComplete,refreshNotebookProgress,invalidateNotebookFrom,evaluate,fillAllCode,pasteCode,bindCodeInsertion,setMode,reset,typingGuide};})();`),context);
  return {lab:context.lab,cells,document,storage,modes};
 }
 function simple(){return {id:'test',cells:Array.from({length:3},()=>({requires:['print\\s*\\('],output:'ok'}))}}
@@ -41,6 +41,15 @@ test('paste budget, replacement, blocked/empty insertion, paired events, reload 
 });
 test('legacy saves retain only consecutive completion and keep code',()=>{
  const storage=new Map([['ai100.ml.test',JSON.stringify({completed:[0,2],codes:['one','two','three']})]]),f=fixture(simple(),storage);f.lab.restore();assert.deepEqual([...f.lab.state.completed],[0]);assert.equal(f.lab.state.savedCodes[2],'three');assert.equal(f.lab.state.pastesUsed,0);
+});
+test('instructor grants expand the saved allowance and Reset lab clears them',()=>{
+ const f=fixture(simple()),{lab,cells}=f;lab.state.pastesUsed=3;
+ assert.equal(lab.grantPastes(1),true);assert.equal(lab.pasteAllowance(),4);
+ lab.pasteCode(cells[0].querySelector('.ml-code'),0,'returned');assert.equal(lab.state.pastesUsed,4);
+ assert.equal(lab.grantPastes(5),true);assert.equal(lab.pasteAllowance(),9);
+ for(const invalid of [0,-1,1.5,101,NaN])assert.equal(lab.grantPastes(invalid),false);
+ const restored=fixture(simple(),f.storage);restored.lab.restore();assert.equal(restored.lab.pasteAllowance(),9);assert.equal(restored.lab.state.pastesUsed,4);
+ restored.lab.reset();const fresh=fixture(simple(),f.storage);fresh.lab.restore();assert.equal(fresh.lab.pasteAllowance(),3);assert.equal(fresh.lab.state.pastesUsed,0);
 });
 for(const name of ['data-detective','fish-predictor','hidden-patterns','loan-auditor'])test(name+' instructor snippets pass existing validation in order',()=>{
  const context={window:{}};vm.createContext(context);vm.runInContext(fs.readFileSync('assets/js/ai100/'+name+'-config.js','utf8'),context);
