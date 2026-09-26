@@ -418,3 +418,5 @@
 #assignmentDownloadDialog [data-download-error]{min-height:0;margin:8px 0 0}
 #assignmentDownloadDialog [data-download-error]:empty{margin:0}
 @media(max-width:380px){.ml-assignment-name-fields{grid-template-columns:1fr;gap:10px}}
+
+.ml-python-setup-note{margin:12px 16px 0;color:var(--ml-muted);font-size:11px;line-height:1.5}
