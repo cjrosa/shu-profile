@@ -51,5 +51,63 @@ explore:{tasks:[
  {id:'claim',title:'Evaluate the claim',objective:'Match the strength of a claim to the evidence.',directions:'Choose the defensible claim, then justify it using something visible in the chart.',kind:'claim',question:'Which claim is supported by the evidence?',options:['Longer fish in this dataset tend to weigh more.','Increasing a fish’s length causes a predictable weight gain.','All fish species follow exactly the same length–weight rule.'],feedback:['Correct. This claim describes the association and limits it to the observed dataset.','The chart is observational and cannot establish cause.','The colored groups and vertical spread do not support one exact rule for every species.'],completion:'Choose the sample-limited claim and explain why the evidence supports it.',evidence:'A careful claim describes the upward association, names the dataset, and avoids causal certainty.'}
 ]},
 challenges:[{title:'Read the evidence',prompt:'The Length–Weight points slope upward. Which claim is best supported?',options:['Longer fish in this sample tend to weigh more.','Increasing any fish’s length will always cause a fixed weight gain.','Species has no relationship to either measurement.'],feedback:['Correct: this describes an association in the observed sample.','That is a causal and universal claim the chart cannot establish.','The colored groups visibly differ, so this claim ignores evidence.']}],reflection:'Write one evidence-based sentence about the chart and one limitation of that claim.'};
-window.ML_LAB_CONFIG.explore.tasks.forEach((task,index)=>task.correct=[1,0,0][index]);
-window.ML_LAB_CONFIG.assignment={heading:'Data Detective: Evidence Investigation',dataset:'Fish.csv (159 observed fish)',description:'Analyze distributions, relationships, and supported claims.',slug:'data-detective'};
+window.ML_LAB_CONFIG.explore.tasks.push(...[
+  {
+    "id": "loading-library",
+    "title": "Identify the loading library",
+    "objective": "Identify the library used to load Fish.csv.",
+    "directions": "Recall the import and read_csv() commands from the notebook, then explain your answer.",
+    "question": "What library did we use for loading data?",
+    "options": [
+      "Pandas",
+      "Seaborn",
+      "Matplotlib"
+    ],
+    "feedback": [
+      "Correct. Pandas uses pd.read_csv() to load Fish.csv into a table.",
+      "Seaborn creates charts; Pandas loads the data.",
+      "Matplotlib supports plotting; we used Pandas to load the data."
+    ],
+    "completion": "Select Pandas and explain how it was used.",
+    "evidence": "We imported pandas as pd and used pd.read_csv(\"Fish.csv\") to load the data into a table.",
+    "visual": {
+      "title": "Notebook: Load data",
+      "subtitle": "Review the data-loading step",
+      "headline": "From a CSV file to a table",
+      "copy": "import pandas as pd; fish = pd.read_csv(\"Fish.csv\")"
+    },
+    "kind": "notebook",
+    "explanationLabel": "Explain your answer using what you did in the notebook."
+  },
+  {
+    "id": "seaborn-purpose",
+    "title": "Explain the purpose of Seaborn",
+    "objective": "Identify how Seaborn helps us examine data.",
+    "directions": "Recall the three plots you created in the notebook, then explain your answer.",
+    "question": "The Seaborn library helps us do what?",
+    "options": [
+      "Load CSV files into tables",
+      "Create charts to visualize data",
+      "Train prediction models"
+    ],
+    "feedback": [
+      "Pandas loaded the CSV file; Seaborn visualized the data.",
+      "Correct. Seaborn created the histogram, bar plot, and scatterplot to visualize the data.",
+      "We used Seaborn to create charts, not to train prediction models."
+    ],
+    "completion": "Select Create charts to visualize data and explain your answer.",
+    "evidence": "Seaborn helped us visualize distributions with a histogram, compare species with a bar plot, and examine relationships with a scatterplot.",
+    "visual": {
+      "title": "Notebook: Visualize data",
+      "subtitle": "Review the plotting steps",
+      "headline": "Three charts for examining the fish data",
+      "copy": "sb.histplot() showed the weight distribution, sb.barplot() compared species, and sb.scatterplot() showed the relationship between length and weight."
+    },
+    "kind": "notebook",
+    "explanationLabel": "Explain your answer using what you did in the notebook."
+  }
+]);
+window.ML_LAB_CONFIG.reviewLabel="Review";
+window.ML_LAB_CONFIG.explore.tasks.forEach((task,index)=>task.correct=[1,0,0,0,1][index]);
+window.ML_LAB_CONFIG.explore.tasks.unshift(...window.ML_LAB_CONFIG.explore.tasks.splice(3,2));
+window.ML_LAB_CONFIG.assignment={heading:'Data Detective: Review Questions',dataset:'Fish.csv (159 observed fish)',description:'Review data-loading and visualization libraries, distributions, relationships, and supported claims.',slug:'data-detective'};

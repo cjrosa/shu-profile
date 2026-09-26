@@ -24,9 +24,9 @@
     <div class="ml-modes">
       <button class="ml-mode active" data-mode="learn" type="button">Learn</button>
       <button class="ml-mode" data-mode="notebook" type="button">Notebook</button>
-      <button class="ml-mode" data-mode="explore" type="button" aria-disabled="true" aria-describedby="exploreTooltip">Explore<span class="ml-explore-tooltip" id="exploreTooltip" role="tooltip">Complete all Notebook tasks in order to unlock Explore.</span></button>
+      <button class="ml-mode" data-mode="explore" type="button" aria-disabled="true" aria-describedby="exploreTooltip">Review<span class="ml-explore-tooltip" id="exploreTooltip" role="tooltip">Complete all Notebook tasks in order to unlock Review.</span></button>
     </div>
-    <p class="ml-notebook-requirement" id="notebookRequirement">Complete Notebook tasks in order to unlock Explore.</p>
+    <p class="ml-notebook-requirement" id="notebookRequirement">Complete Notebook tasks in order to unlock Review.</p>
     <div class="ml-progress-label" id="modeProgress">Build the mental model</div>
   </nav>
 
@@ -98,7 +98,7 @@
         <div class="ml-controls" id="exploreControls"></div>
       </section>
       <section class="ml-panel">
-        <div class="ml-panel-head"><h2 id="exploreTitle">Explore</h2><span>Same embedded course data</span></div>
+        <div class="ml-panel-head"><h2 id="exploreTitle">Review</h2><span>Same embedded course data</span></div>
         <div class="ml-panel-head" style="border:0"><div class="ml-metric-grid" id="exploreMetrics"></div></div>
         <div class="ml-chart" id="exploreChart"><div id="exploreChartMount"></div></div>
       </section>
@@ -109,8 +109,8 @@
   <article class="ml-print-record" id="printRecord"></article>
 </main>
 <div class="ml-toast" id="mlToast" role="status" aria-live="polite"></div>
-<script src="../assets/js/ai100/data-detective-config.js?v=20260926-9"></script>
+<script src="../assets/js/ai100/data-detective-config.js?v=20260926-12"></script>
 <script>window.ML_LAB_CONFIG.plotPoints=fishPlotPoints;</script>
-<script src="../assets/js/components/ai-ml-lab.js?v=20260926-16"></script>
+<script src="../assets/js/components/ai-ml-lab.js?v=20260926-19"></script>
 </body>
 </html>
