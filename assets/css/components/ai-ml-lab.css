@@ -392,3 +392,7 @@
 .ml-scatter-legend button[aria-pressed="false"]{opacity:.4}
 .ml-scatter-legend button:focus-visible{outline:2px solid var(--ml-blue);outline-offset:2px}
 .ml-scatter-filter-status{margin:0 0 10px;color:var(--ml-muted);font-size:11px;line-height:1.5}
+
+.ml-copy-tooltip{position:absolute;right:0;bottom:calc(100% + 8px);z-index:30;width:max-content;padding:7px 9px;border-radius:6px;background:#171b19;color:#fff;font-size:10px;font-weight:500;line-height:1.4;white-space:nowrap;box-shadow:0 5px 16px rgba(0,0,0,.24);visibility:hidden;opacity:0;transition:opacity .15s;pointer-events:none}
+.ml-copy-tooltip::after{content:'';position:absolute;right:8px;top:100%;border:5px solid transparent;border-top-color:#171b19}
+.ml-copy-code:hover .ml-copy-tooltip,.ml-copy-code:focus-visible .ml-copy-tooltip{visibility:visible;opacity:1}
