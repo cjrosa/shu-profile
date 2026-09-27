@@ -68,6 +68,7 @@ for(const name of ['data-detective','fish-predictor','hidden-patterns','loan-aud
  for(const mode of ['notebook','explore']){lab.setMode(mode);assert.equal(lab.state.mode,'learn')}
  cells[0].querySelector('.ml-code').value=config.cells[0].code||'print("ok")';assert.equal(lab.evaluate(cells[0],0),false);
  assert.equal(lab.completeLearn(),false);lab.state.scene=config.scenes.length-1;lab.refreshNotebookProgress();assert.equal(lab.taskAvailable(0),false);
+ if(config.id==='loan_model_auditor'){assert.equal(lab.completeLearn(),false);lab.state.governanceComplete=true;}
  assert.equal(lab.completeLearn(),true);assert.equal(lab.state.mode,'notebook');assert.equal(modes[1].attrs['aria-disabled'],'false');
  lab.state.scene=0;lab.setMode('learn');assert.equal(lab.taskAvailable(0),true);
  const restored=fixture(config,f.storage);restored.lab.restore();assert.equal(restored.lab.state.learnComplete,true);

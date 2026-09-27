@@ -608,3 +608,35 @@
 .ml-review-readiness.ml-readiness-flash{animation:ml-readiness-flash 1.5s ease-out}
 @keyframes ml-readiness-flash{0%,35%{background:#fff1b8;box-shadow:0 0 0 4px rgba(229,169,29,.4)}100%{background:transparent;box-shadow:0 0 0 0 rgba(229,169,29,0)}}
 @media(prefers-reduced-motion:reduce){.ml-review-readiness.ml-readiness-flash{animation:none;outline:2px solid #e5a91d;outline-offset:3px}}
+
+/* Shared Loan visuals retain Learn proportions inside Notebook and Review. */
+.ml-shared-audit,.ml-review-threshold-visual,.ml-supporting-visual{width:100%;container-type:inline-size}
+.ml-score-heading{margin-top:22px}
+.ml-loan-matrix .ml-confusion-layout{grid-template-columns:minmax(62px,.65fr) repeat(2,minmax(0,1fr))}
+.ml-loan-matrix .ml-confusion-layout article{padding-top:28px}
+.ml-loan-matrix .ml-confusion-layout article:nth-of-type(odd) .ml-definition-tooltip{left:0;right:auto}
+.ml-loan-matrix .ml-confusion-layout article:nth-of-type(odd) .ml-outcome-help{left:7px;right:auto}
+.ml-loan-matrix .ml-confusion-layout article:focus-within{z-index:2}
+.ml-loan-matrix .ml-confusion-layout article:hover{z-index:3}
+.ml-chart .ml-loan-card .ml-definition-help>svg{width:18px;height:18px;aspect-ratio:1}
+.ml-chart .ml-loan-card .ml-threshold-arrow{width:30px;height:30px;aspect-ratio:1}
+.ml-chart .ml-loan-card .ml-outcome-document{width:28px;height:28px;aspect-ratio:1}
+.ml-chart .ml-loan-card .ml-example-briefcase{width:30px;height:30px;aspect-ratio:1}
+.ml-chart .ml-loan-card .ml-governance-icon{width:24px;height:24px;aspect-ratio:1}
+.ml-review-threshold-visual .ml-threshold-results{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:14px}
+.ml-review-threshold-visual .ml-threshold-results article{background:#f9e5e3;border-color:#dca7a1}
+.ml-supporting-visual .ml-regressor-flow>div,.ml-supporting-visual .ml-project-score>div{border-radius:10px}
+.ml-supporting-visual .ml-baseline-compare{border:1px solid var(--ml-line);background:#fff}
+.ml-loan-metrics .ml-audit-metrics article>div{gap:8px;flex-wrap:wrap}
+.ml-loan-metrics .ml-metric-calc{overflow-wrap:anywhere}
+@container(max-width:440px){
+ .ml-audit-metrics,.ml-boundary-grid{grid-template-columns:1fr}
+ .ml-threshold-outcomes{grid-template-columns:1fr!important}
+ .ml-regressor-flow,.ml-project-score{grid-template-columns:1fr}
+ .ml-regressor-flow>i{transform:none}
+ .ml-example-identity,.ml-example-result{flex-wrap:wrap}
+ .ml-illustrative-note{flex-direction:column}
+ .ml-governance-groups{grid-template-columns:1fr}
+ .ml-governance-group,.ml-governance-group:last-child{grid-column:1/-1}
+ .ml-governance-group .ml-governance-loop{grid-template-columns:1fr!important}
+}
