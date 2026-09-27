@@ -171,18 +171,59 @@ function inputExplanation(){
  <aside class="ml-cluster-held-aside">${icon('<path d="M5 15h15l4 5h19v20H5Z"/><path d="M9 15V8h27v12M15 8V4h25v16M17 29h14"/>')}<div><h3>Species, Weight, and ID are not clustering inputs.</h3><p>These columns are in the dataset, but the model uses only <b>Length, Height, and Width</b>. <b>Species:</b> used later to compare known categories with the learned groups. <b>Weight:</b> outside this lab’s three chosen features. <b>ID:</b> identifies a row, not a fish’s size or shape.</p></div></aside>
  <div class="ml-cluster-task-contrast"><section><span class="ml-cluster-input-label">THIS LAB · UNSUPERVISED</span><h3>Discover groups</h3><p><b>Measurements → cluster number</b><br>No known answers are supplied during learning.</p></section><section><span class="ml-cluster-input-label">A DIFFERENT TASK · SUPERVISED</span><h3>Predict a known answer</h3><p>Train with measurements <b>and known weights or species</b>, then predict weight or species for another fish.</p></section></div>`;
 }
+// Later lessons reuse the visual sequence established by the overview and inputs.
+function lessonPresentation(kind,body){
+ const lessons={
+  'cluster-distance':{
+   cards:[['COMPARE','Start with measurements','Each point is one fish, described by Length, Height, and Width.','measure'],['MEASURE','Look at the gap','A shorter distance means the selected measurements are more alike.','distance'],['INTERPRET','Check all three features','Nearby points on this chart can still differ in Width.','inspect']],
+   activity:'Compare three real fish',prompt:'Follow the short and long lines, then compare the measurements below.',takeaway:'Similarity depends on the features.',detail:'Size and shape do not tell us habitat, behavior, or genetic relationships.'},
+  'cluster-scaling':{
+   cards:[['RAW FEATURES','Notice the spread','Length varies more than Width, so it can have more influence on raw distance.','measure'],['STANDARDIZE','Make scales comparable','Subtract each feature’s average and divide by its standard deviation.','scale'],['COMPARE','Watch the groups change','Use the same fish and k=3 to investigate the effect of scaling alone.','inspect']],
+   activity:'Try both measurement scales',prompt:'Switch between standardized and raw measurements. Compare the cluster counts.',takeaway:'Scaling changes what “nearby” means.',detail:'It puts features on comparable scales; it does not decide which features matter most.'},
+  'cluster-centers':{
+   cards:[['PEOPLE CHOOSE','Set the number of groups','The setting k requests a number of groups. This small example uses two.','groups'],['STARTING POINTS','Place the first centers','Centers begin at chosen positions. They are not species labels.','centers'],['MODEL LEARNS','Let the centers move','Assignments and averages improve the starting arrangement.','move']],
+   activity:'Explore two starting arrangements',prompt:'Assign the points, then try different starting centers and compare the first assignments.',takeaway:'A starting center is a starting guess.',detail:'The full-data demonstration tries ten starts and keeps the most compact result.'},
+  'cluster-steps':{
+   cards:[['01 · ASSIGN','Find the nearest center','Each point joins the group whose center is closest.','distance'],['02 · MOVE','Average each group','Move each center to the average of its assigned points.','move'],['03 · REPEAT','Check for stability','Repeat until the assignments stop changing.','repeat']],
+   activity:'Step through the learning loop',prompt:'Use the highlighted button to alternate between assigning points and moving centers.',takeaway:'The fish stay fixed. The centers learn.',detail:'Group membership can change as the centers move; the original measurements do not.'},
+  'cluster-choice':{
+   cards:[['HOLD STEADY','Keep the same fish','Use the same measurements and standardization for every comparison.','measure'],['CHANGE k','Request another partition','Try k=2, k=3, and k=5 to compare broader and finer groups.','groups'],['INTERPRET','Look beyond the count','More groups do not prove that there are more natural categories.','inspect']],
+   activity:'Compare different values of k',prompt:'Change the number of clusters. Look for changes in membership and group size.',takeaway:'People request k; the model does not discover it.',detail:'K-means favors compact groups and can miss curved, uneven, or overlapping patterns.'},
+  'cluster-species':{
+   cards:[['LEARN FIRST','Keep the groups fixed','The model has already grouped fish using only measurements.','groups'],['REVEAL','Bring back species','Now use the labels held aside to investigate what the groups mean.','reveal'],['COMPARE','Read the overlap','Read across a cluster row and down a species column to compare counts.','inspect']],
+   activity:'Compare clusters with known species',prompt:'Reveal species, then use the table to find a mixed cluster or a species split across groups.',takeaway:'Revealing species does not retrain the model.',detail:'A measurement group can contain several species, and a species can span several groups.'},
+  'cluster-claim':{
+   cards:[['DESCRIBE','Name the pattern','Use group counts and average measurements to describe the fish.','measure'],['LIMIT THE CLAIM','Separate groups from species','A cluster number is an identifier, not a biological explanation.','inspect'],['INVESTIGATE','Take it to the notebook','Compare choices, inspect the evidence, and explain what you found.','reveal']],
+   activity:'Build an evidence-based conclusion',prompt:'Use the group profiles below to support a claim about size and shape.',takeaway:'A useful pattern still needs interpretation.',detail:'Explain what the measurements support and what would be an overclaim.'}
+ };
+ const lesson=lessons[kind];if(!lesson)return body;
+ const drawings={
+  measure:'<path d="M5 7h14M5 12h10M5 17h6M5 5v4m7-4v4m7-4v4"/>',
+  distance:'<circle cx="5" cy="16" r="2"/><circle cx="19" cy="6" r="2"/><path d="m8 14 8-6M9 5h6m0 0v6"/>',
+  inspect:'<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6m-14-11 2 2 4-4"/>',
+  scale:'<path d="M5 4v16m14-16v16M2 7h6m8 10h6M10 12h4m-2-2v4"/>',
+  groups:'<ellipse cx="7" cy="8" rx="5" ry="6"/><ellipse cx="17" cy="16" rx="5" ry="6"/><path d="M5 7h4m-2-2v4m8 7h4m-2-2v4"/>',
+  centers:'<path d="M3 7h8M7 3v8m6 6h8m-4-4v8"/><circle cx="7" cy="7" r="5"/><circle cx="17" cy="17" r="5"/>',
+  move:'<circle cx="5" cy="17" r="3"/><path d="m9 13 9-9m-7 0h7v7M14 19h7m-3.5-3.5v7"/>',
+  repeat:'<path d="M4 10a8 8 0 0 1 14-5l3 3m0-6v6h-6M20 14a8 8 0 0 1-14 5l-3-3m0 6v-6h6"/>',
+  reveal:'<path d="M3 7h7l3 3h8v10H3ZM6 7V3h12v7m-11 5h10"/>'
+ };
+ const cards=lesson.cards.map(([label,title,copy,icon])=>`<section class="ml-cluster-input-panel"><svg class="ml-cluster-input-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${drawings[icon]}</svg><span class="ml-cluster-input-label">${esc(label)}</span><h3>${esc(title)}</h3><p>${esc(copy)}</p></section>`).join('');
+ return `<div class="ml-cluster-input-flow ml-cluster-lesson-flow">${cards}</div><section class="ml-cluster-activity" aria-label="${esc(lesson.activity)}"><header class="ml-cluster-activity-head"><span class="ml-cluster-overline">LOOK CLOSER</span><h3>${esc(lesson.activity)}</h3><p>${esc(lesson.prompt)}</p></header>${body}</section><div class="ml-cluster-overview-takeaway"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 18h6m-5 3h4M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 3H9c0-1 0-2-1-3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><p><strong>${esc(lesson.takeaway)}</strong>${esc(lesson.detail)}</p></div>`;
+}
 function scene(s){
  if(s.kind==='cluster-intro')return `<div class="ml-cluster-card ml-cluster-opening">${swimmingIntro()}</div>`;
  const model=result();let body='';
  if(s.kind==='cluster-overview')body=introExplanation();
  else if(s.kind==='cluster-inputs')body=inputExplanation();
- else if(s.kind==='cluster-distance')body=distanceExample()+`<div class="ml-callout">Similarity depends on the question. These features describe size and shape, not habitat, behavior, or genetic relationships.</div>`;
+ else if(s.kind==='cluster-distance')body=distanceExample();
  else if(s.kind==='cluster-scaling')body=scaleTable()+scaleControl('standardized')+'<div data-cluster-live></div>';
  else if(s.kind==='cluster-choice')body=kControl(3)+'<div data-cluster-live></div>';
  else if(s.kind==='cluster-centers'||s.kind==='cluster-steps')body=`<div class="ml-actions"><button class="ml-btn" data-cluster-action="restart" type="button">Restart example</button><button class="ml-btn" data-cluster-action="alternate" type="button">Try different starting centers</button><button class="ml-btn primary" data-cluster-action="step" type="button">Assign points →</button></div><div data-cluster-live></div><p data-cluster-status role="status" aria-live="polite"></p>`;
  else if(s.kind==='cluster-species')body='<button class="ml-btn primary" data-cluster-control="reveal" type="button" aria-pressed="false">Reveal species</button><div data-cluster-live></div>';
  else body=`<div class="ml-cluster-cards"><article><span>SUPPORTED</span><strong>Similar in these features</strong><p>These measurements form groups with different average size and shape. Species can overlap.</p></article><article><span>NOT ESTABLISHED</span><strong>New species or causes</strong><p>A group number does not identify a biological category or explain why fish differ. This activity explores the observed fish; it does not measure prediction accuracy on unseen fish.</p></article></div><div class="ml-cluster-workflow"><strong>Your notebook investigation</strong><p>Load with pandas → select features → scale → fit KMeans → count and describe → compare k → reveal species.</p></div>${summary(model)}`;
- return `<div class="ml-visual-card ml-cluster-card${s.kind==='cluster-overview'?' ml-cluster-overview':''}"><div class="ml-loan-heading ml-cluster-scene-heading"><span>${esc(s.cardKicker)}</span><strong>${esc(s.cardTitle)}</strong></div>${body}<div class="ml-definition"><strong>${esc(s.definition.term)}:</strong> ${esc(s.definition.text)}</div></div>`;
+ const presented=lessonPresentation(s.kind,body);
+ return `<div class="ml-visual-card ml-cluster-card${s.kind==='cluster-overview'?' ml-cluster-overview':''}${presented!==body?' ml-cluster-lesson':''}"><div class="ml-loan-heading ml-cluster-scene-heading"><span>${esc(s.cardKicker)}</span><strong>${esc(s.cardTitle)}</strong></div>${presented}<div class="ml-definition"><strong>${esc(s.definition.term)}:</strong> ${esc(s.definition.text)}</div></div>`;
 }
 function bindLearn(target,s){
  target.closest?.('.ml-scene-main')?.classList.toggle('ml-cluster-opener',s.kind==='cluster-intro');

@@ -115,3 +115,20 @@
 .ml-cluster-task-contrast section+section{border-left-color:var(--ml-blue)}.ml-cluster-task-contrast section+section .ml-cluster-input-label{color:#285f89}
 .ml-cluster-task-contrast h3{font-size:15px;margin:6px 0 8px}.ml-cluster-task-contrast p{margin-bottom:0}
 @media(max-width:760px){.ml-cluster-input-flow,.ml-cluster-task-contrast{grid-template-columns:1fr}.ml-cluster-held-aside{align-items:flex-start}}
+
+/* Scenes 4–10 carry the overview's illustrated cards into each investigation. */
+.ml-visual-card.ml-cluster-lesson{background:linear-gradient(140deg,#fff 0%,#f3f9f7 65%,#fff8ef 100%)}
+.ml-cluster-lesson-flow{margin-bottom:20px}
+.ml-cluster-lesson-flow .ml-cluster-input-panel{box-shadow:0 4px 12px rgba(25,64,48,.04);min-width:0}
+.ml-cluster-lesson-flow .ml-cluster-input-panel p{margin-bottom:0}
+.ml-cluster-activity{min-width:0;padding:20px;border:1px solid #c8ddd6;border-radius:14px;background:#fff;box-shadow:0 4px 12px rgba(25,64,48,.04)}
+.ml-cluster-activity-head{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--ml-line)}
+.ml-cluster-activity-head h3{margin:6px 0 8px;font-size:18px;line-height:1.35}
+.ml-cluster-activity-head p{margin:0}
+.ml-cluster-activity>.ml-actions{padding:12px;border:1px solid #cedce7;border-radius:10px;background:#edf4fa}
+.ml-cluster-activity>.ml-cluster-control{padding:12px 14px;border:1px solid #cedce7;border-radius:10px;background:#edf4fa}
+.ml-cluster-activity [data-cluster-status]{margin-bottom:0;padding:10px 12px;border-radius:8px;background:var(--ml-green-soft);color:var(--ml-green-dark);font-size:12px;font-weight:750}
+.ml-cluster-activity .ml-cluster-heading>span{font-size:9px;letter-spacing:.08em}
+.ml-cluster-activity .ml-cluster-heading>strong{font-size:15px}
+.ml-cluster-lesson>.ml-definition{margin-top:16px}
+@media(max-width:760px){.ml-cluster-activity{padding:14px}.ml-cluster-lesson-flow{gap:12px}.ml-cluster-lesson-flow .ml-cluster-input-panel{padding:15px}}
