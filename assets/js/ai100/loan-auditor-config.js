@@ -2,7 +2,7 @@ window.ML_LAB_CONFIG={
  id:"loan_model_auditor",
  revision:5,
  title:"Loan Evaluator",
- description:"Build a loan prediction model. Then check its mistakes and explain what its score can tell us.",
+ description:"Build a model to predict loan approval, examine its mistakes, and explore why accuracy alone doesn’t tell the whole story.",
  learn:"Learn how past decisions, missing information, uneven groups, test data, prediction cutoffs, and error scores affect a model. Ask whether its results are fair and who is responsible.",
  do:"Build the model, learn why results can change between runs, then use a repeatable model to check its predictions.",
  instructorCue:"Ask what the results show, what they leave out, and who is responsible.",
