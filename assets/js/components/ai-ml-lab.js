@@ -309,12 +309,44 @@ function openNotebookTask(index){
   q('.ml-task-details',task).hidden=!open;
  });
 }
+let pendingPaste=null;
 function pasteCode(editor,index,text){
+ if(pendingPaste)return;
  if(!taskAvailable(index)){toast('Complete the earlier tasks first.');return}
  if(!text)return;
  if(state.pastesUsed>=pasteAllowance()){toast('No pastes remaining. Type the Python code to continue.');return}
- editor.setRangeText(text,editor.selectionStart,editor.selectionEnd,'end');
- state.pastesUsed++;invalidateNotebookFrom(index);store();
+ let dialog=q('#pasteConfirmDialog');
+ if(!dialog){
+  document.body.insertAdjacentHTML('beforeend',`<dialog class="ml-password-dialog" id="pasteConfirmDialog" aria-labelledby="pasteConfirmTitle" aria-describedby="pasteConfirmDescription"><form><h2 id="pasteConfirmTitle">Use 1 paste?</h2><p id="pasteConfirmDescription"></p><div class="ml-actions"><button class="ml-btn primary" type="submit">Paste and use 1 paste</button><button class="ml-btn" type="button" data-confirm-paste-cancel autofocus>Cancel</button></div></form></dialog>`);
+  dialog=q('#pasteConfirmDialog');
+  const finish=()=>{
+   const request=pendingPaste;
+   pendingPaste=null;
+   if(dialog.open)dialog.close();
+   if(request){request.editor.focus();request.editor.setSelectionRange(request.start,request.end)}
+  };
+  q('[data-confirm-paste-cancel]',dialog).onclick=finish;
+  dialog.addEventListener('cancel',event=>{event.preventDefault();finish()});
+  dialog.addEventListener('close',()=>{if(!dialog.open)finish()});
+  q('form',dialog).onsubmit=event=>{
+   event.preventDefault();
+   const request=pendingPaste;
+   if(!request)return;
+   const {editor,index,text,value,start,end}=request;
+   if(!taskAvailable(index)||state.pastesUsed>=pasteAllowance()||editor.value!==value){
+    finish();toast('Paste canceled because the notebook changed. Try pasting again.');return;
+   }
+   // Clear the transaction before insertion to prevent repeated submission.
+   pendingPaste=null;
+   editor.setRangeText(text,start,end,'end');
+   state.pastesUsed++;invalidateNotebookFrom(index);store();
+   dialog.close();editor.focus();
+  };
+ }
+ pendingPaste={editor,index,text,value:editor.value,start:editor.selectionStart,end:editor.selectionEnd};
+ const remaining=pasteAllowance()-state.pastesUsed-1;
+ q('#pasteConfirmDescription',dialog).textContent=`This will use 1 paste. You will have ${remaining} paste${remaining===1?'':'s'} remaining.`;
+ dialog.showModal();q('[data-confirm-paste-cancel]',dialog).focus();
 }
 function bindCodeInsertion(editor,index){
  // Cancel native insertion; the paste event owns its entire transaction.

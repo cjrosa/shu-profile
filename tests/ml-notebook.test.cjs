@@ -1,16 +1,18 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync('assets/js/components/ai-ml-lab.js','utf8');
 function fixture(config,storage=new Map()){
- function element(){return {value:'',textContent:'',innerHTML:'',hidden:false,attrs:{},listeners:{},classList:{add(){},remove(){},toggle(){}},setAttribute(k,v){this.attrs[k]=v},addEventListener(k,f){this.listeners[k]=f},selectionStart:0,selectionEnd:0,setRangeText(t,a,b){this.value=this.value.slice(0,a)+t+this.value.slice(b);this.selectionStart=this.selectionEnd=a+t.length}}}
+ function element(){return {value:'',textContent:'',innerHTML:'',hidden:false,attrs:{},listeners:{},classList:{add(){},remove(){},toggle(){}},setAttribute(k,v){this.attrs[k]=v},addEventListener(k,f){this.listeners[k]=f},focus(){this.focused=true},setSelectionRange(a,b){this.selectionStart=a;this.selectionEnd=b},selectionStart:0,selectionEnd:0,setRangeText(t,a,b){this.value=this.value.slice(0,a)+t+this.value.slice(b);this.selectionStart=this.selectionEnd=a+t.length}}}
  const globals=new Map(),cells=config.cells.map(()=>{const parts=new Map();return {...element(),querySelector(s){if(!parts.has(s))parts.set(s,element());return parts.get(s)},querySelectorAll(){return []}}});
  cells.forEach(cell=>{const code=cell.querySelector('.ml-code');code.closest=()=>cell;cell.querySelector('.ml-output').querySelector=()=>element()});
  const modes=['learn','notebook','explore'].map(mode=>({...element(),dataset:{mode},querySelector:()=>element()}));
- const document={body:{},addEventListener(){},querySelector(s){const match=s.match(/^\[data-cell="(\d+)"\]$/);if(match)return cells[+match[1]];if(s.startsWith('[data-sidebar-task'))return null;if(s==='[data-mode="explore"]')return modes[2];if(s==='[data-mode="notebook"]')return modes[1];if(!globals.has(s))globals.set(s,element());return globals.get(s)},querySelectorAll(s){if(s==='.ml-cell')return cells;if(s==='.ml-code')return cells.map(c=>c.querySelector(s));if(s==='.ml-mode')return modes;return []}};
+ let dialog=null;
+ const parts=new Map(),part=s=>{if(!parts.has(s))parts.set(s,element());return parts.get(s)};
+ const document={body:{insertAdjacentHTML(){dialog={...element(),open:false,querySelector:part,showModal(){this.open=true},close(){this.open=false;this.listeners.close?.()}}}},addEventListener(){},querySelector(s){if(s==='#pasteConfirmDialog')return dialog;const match=s.match(/^\[data-cell="(\d+)"\]$/);if(match)return cells[+match[1]];if(s.startsWith('[data-sidebar-task'))return null;if(s==='[data-mode="explore"]')return modes[2];if(s==='[data-mode="notebook"]')return modes[1];if(!globals.has(s))globals.set(s,element());return globals.get(s)},querySelectorAll(s){if(s==='.ml-cell')return cells;if(s==='.ml-code')return cells.map(c=>c.querySelector(s));if(s==='.ml-mode')return modes;return []}};
  const context={document,window:{},MutationObserver:class{observe(){}},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},setTimeout:()=>0,clearTimeout(){},queueMicrotask,confirm:()=>true,location:{reload(){}},config};
  vm.createContext(context);
  // Expose closure functions only in this fixture. Chart rendering is outside progression tests.
  vm.runInContext(source.replace(/\}\)\(\);\s*$/,`C=config;updateMetrics=()=>{};renderExplore=()=>{};globalThis.lab={state,restore,store,grantPastes,pasteAllowance,taskAvailable,notebookComplete,refreshNotebookProgress,invalidateNotebookFrom,evaluate,fillAllCode,pasteCode,bindCodeInsertion,setMode,completeLearn,reset,typingGuide};})();`),context);
- return {lab:context.lab,cells,document,storage,modes};
+ return {lab:context.lab,cells,document,storage,modes,part,get dialog(){return dialog},accept(){part('form').onsubmit({preventDefault(){}})},cancel(){part('[data-confirm-paste-cancel]').onclick()}};
 }
 function simple(){return {id:'test',cells:Array.from({length:3},()=>({requires:['print\\s*\\('],output:'ok'}))}}
 function notebookFixture(config,storage){const f=fixture(config,storage);f.lab.state.learnComplete=true;return f}
@@ -30,8 +32,8 @@ test('paste budget, replacement, blocked/empty insertion, paired events, reload 
  const f=notebookFixture(simple()),{lab,cells}=f,e=cells[0].querySelector('.ml-code');lab.bindCodeInsertion(e,0);
  const event=(text,type)=>({inputType:type,data:text,clipboardData:{getData:()=>text},preventDefault(){this.prevented=true}});
  lab.pasteCode(e,0,'');lab.pasteCode(cells[1].querySelector('.ml-code'),1,'blocked');assert.equal(lab.state.pastesUsed,0);
- e.value='before';e.selectionStart=0;e.selectionEnd=6;e.listeners.paste(event('first'));e.listeners.beforeinput(event('first','insertFromPaste'));assert.equal(e.value,'first');assert.equal(lab.state.pastesUsed,1);
- await Promise.resolve();e.listeners.beforeinput(event(' second','insertFromPaste'));e.listeners.paste(event(' third'));assert.equal(lab.state.pastesUsed,3);
+ e.value='before';e.selectionStart=0;e.selectionEnd=6;e.listeners.paste(event('first'));e.listeners.beforeinput(event('first','insertFromPaste'));assert.equal(e.value,'before');assert.equal(lab.state.pastesUsed,0);f.accept();assert.equal(e.value,'first');assert.equal(lab.state.pastesUsed,1);
+ await Promise.resolve();e.listeners.beforeinput(event(' second','insertFromPaste'));f.accept();e.listeners.paste(event(' third'));f.accept();assert.equal(lab.state.pastesUsed,3);
  const saved=e.value;await Promise.resolve();e.listeners.paste(event(' fourth'));assert.equal(e.value,saved);
  const drop=event('drop');e.listeners.drop(drop);assert.equal(drop.prevented,true);
  // Undo/input never refunds previously accepted pastes.
@@ -46,7 +48,7 @@ test('legacy saves retain only consecutive completion and keep code',()=>{
 test('instructor grants expand the saved allowance and Reset lab clears them',()=>{
  const f=notebookFixture(simple()),{lab,cells}=f;lab.state.pastesUsed=3;
  assert.equal(lab.grantPastes(1),true);assert.equal(lab.pasteAllowance(),4);
- lab.pasteCode(cells[0].querySelector('.ml-code'),0,'returned');assert.equal(lab.state.pastesUsed,4);
+ lab.pasteCode(cells[0].querySelector('.ml-code'),0,'returned');f.accept();assert.equal(lab.state.pastesUsed,4);
  assert.equal(lab.grantPastes(5),true);assert.equal(lab.pasteAllowance(),9);
  for(const invalid of [0,-1,1.5,101,NaN])assert.equal(lab.grantPastes(invalid),false);
  const restored=notebookFixture(simple(),f.storage);restored.lab.restore();assert.equal(restored.lab.pasteAllowance(),9);assert.equal(restored.lab.state.pastesUsed,4);
@@ -74,4 +76,26 @@ for(const name of ['data-detective','fish-predictor','hidden-patterns','loan-aud
  const legacy=fixture(config,f.storage);legacy.lab.restore();assert.equal(legacy.lab.state.learnComplete,false);assert.equal(legacy.lab.state.completed.size,config.cells.length);assert.ok(legacy.lab.state.savedCodes[0]);assert.equal(legacy.lab.state.explore.answers.kept,0);legacy.lab.setMode('explore');assert.equal(legacy.lab.state.mode,'learn');
  legacy.lab.state.scene=config.scenes.length-1;legacy.lab.completeLearn();assert.equal(legacy.lab.notebookComplete(),true);
  legacy.lab.reset();const fresh=fixture(config,f.storage);fresh.lab.state.learnComplete=false;fresh.lab.restore();assert.equal(fresh.lab.state.learnComplete,false);
+});
+
+for(const action of ['cancel','escape','close'])test(action+' preserves code, selection, progress and storage',()=>{
+ const f=notebookFixture(simple()),e=f.cells[0].querySelector('.ml-code');e.value='original';e.selectionStart=1;e.selectionEnd=4;f.lab.state.completed.add(0);f.lab.store();const saved=[...f.storage];
+ f.lab.pasteCode(e,0,'replacement');assert.equal(f.dialog.open,true);assert.equal(f.part('[data-confirm-paste-cancel]').focused,true);assert.match(f.part('#pasteConfirmDescription').textContent,/2 pastes remaining/);
+ if(action==='cancel')f.cancel();else if(action==='escape')f.dialog.listeners.cancel({preventDefault(){}});else f.dialog.close();
+ assert.equal(e.value,'original');assert.equal(e.selectionStart,1);assert.equal(e.selectionEnd,4);assert.equal(e.focused,true);assert.equal(f.lab.state.pastesUsed,0);assert.equal(f.lab.state.completed.has(0),true);assert.deepEqual([...f.storage],saved);
+ f.accept();assert.equal(f.lab.state.pastesUsed,0);
+});
+test('only one pending paste commits once and the last paste is explicit',()=>{
+ const f=notebookFixture(simple()),e=f.cells[0].querySelector('.ml-code');f.lab.state.pastesUsed=2;e.value='abcd';e.selectionStart=1;e.selectionEnd=3;
+ f.lab.pasteCode(e,0,'X');assert.match(f.part('#pasteConfirmDescription').textContent,/0 pastes remaining/);f.lab.pasteCode(e,0,'ignored');e.selectionStart=0;e.selectionEnd=0;
+ f.accept();f.accept();assert.equal(e.value,'aXd');assert.equal(e.selectionStart,2);assert.equal(f.lab.state.pastesUsed,3);assert.equal(f.dialog.open,false);
+ const saved=notebookFixture(simple(),f.storage);saved.lab.restore();assert.equal(saved.lab.state.pastesUsed,3);
+});
+for(const reason of ['changed','locked','exhausted'])test('stale paste is discarded: '+reason,()=>{
+ const f=notebookFixture(simple()),e=f.cells[0].querySelector('.ml-code');e.value='original';f.lab.pasteCode(e,0,'X');
+ if(reason==='changed')e.value='new';if(reason==='locked')f.lab.state.learnComplete=false;if(reason==='exhausted')f.lab.state.pastesUsed=3;
+ f.accept();assert.equal(e.value,reason==='changed'?'new':'original');assert.equal(f.lab.state.pastesUsed,reason==='exhausted'?3:0);assert.equal(f.dialog.open,false);
+});
+test('empty, locked and exhausted pastes never open a dialog',()=>{
+ const f=notebookFixture(simple()),e=f.cells[0].querySelector('.ml-code');f.lab.pasteCode(e,0,'');f.lab.pasteCode(f.cells[1].querySelector('.ml-code'),1,'X');f.lab.state.pastesUsed=3;f.lab.pasteCode(e,0,'X');assert.equal(f.dialog,null);
 });
