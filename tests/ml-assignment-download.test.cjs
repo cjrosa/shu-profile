@@ -1,6 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync('assets/js/components/ai-ml-lab.js','utf8');
-const downloadSource=source.slice(source.indexOf('function downloadNamedEvidenceAssignment(){'),source.indexOf('function renderGuidedCompletion(){'));
+const evidenceSource=source.slice(source.indexOf('function taskEvidence('),source.indexOf('function renderGuidedTask('));
+const downloadSource=evidenceSource+source.slice(source.indexOf('function downloadNamedEvidenceAssignment(){'),source.indexOf('function renderGuidedCompletion(){'));
 
 function fixture(storage=new Map()){
  const fields=new Map();
@@ -58,3 +59,13 @@ test('invalid or unavailable name storage does not block the download form',()=>
 });
 
 test('Data Detective TXT includes attempts per question and marks historical counts unavailable',async()=>{const f=fixture();f.context.C.id='data_detective';f.context.guidedExploreState=()=>({answers:{one:0},justifications:{one:'Most fish are light; a few are heavy.'},attempts:{one:2}});f.context.saveEvidenceAssignment('Alex','Smith');assert.match(await f.blob.text(),/Attempts: 2/);f.context.guidedExploreState=()=>({answers:{one:0},justifications:{one:'Existing explanation.'}});f.context.saveEvidenceAssignment('Alex','Smith');assert.match(await f.blob.text(),/Attempts: Not recorded/);});
+
+test('Hidden Patterns assignment exports the settings and computed evidence the student observed',async()=>{
+ const f=fixture();f.context.window={};
+ for(const name of ['hidden-patterns-data','hidden-patterns','hidden-patterns-config'])vm.runInContext(fs.readFileSync('assets/js/ai100/'+name+'.js','utf8'),f.context);
+ f.context.C=f.context.window.ML_LAB_CONFIG;
+ const x={values:{scale:'raw',k:5,reveal:true},answers:{scaling:0,choice:1,limits:0},justifications:{scaling:'The groups changed after rescaling.',choice:'The same fish now form five groups.',limits:'The table shows several species sharing a cluster.'},observations:{}};
+ f.context.C.explore.tasks.forEach(t=>x.observations[t.id]=f.context.window.HiddenPatterns.evidence(t,x));
+ f.context.guidedExploreState=()=>x;f.context.saveEvidenceAssignment('Alex','Smith');const text=await f.blob.text();
+ assert.match(text,/Observed raw k=3/);assert.match(text,/Observed standardized k=5/);assert.match(text,/Species compared after fitting/);assert.match(text,/C0: 22/);assert.match(text,/Roach/);assert.match(text,/Alex Smith/);
+});

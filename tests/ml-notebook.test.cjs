@@ -10,12 +10,33 @@ function fixture(config,storage=new Map()){
  const document={body:{insertAdjacentHTML(){dialog={...element(),open:false,querySelector:part,showModal(){this.open=true},close(){this.open=false;this.listeners.close?.()}}}},addEventListener(){},querySelector(s){if(s==='#pasteConfirmDialog')return dialog;const match=s.match(/^\[data-cell="(\d+)"\]$/);if(match)return cells[+match[1]];if(s.startsWith('[data-sidebar-task'))return null;if(s==='[data-mode="explore"]')return modes[2];if(s==='[data-mode="notebook"]')return modes[1];if(!globals.has(s))globals.set(s,element());return globals.get(s)},querySelectorAll(s){if(s==='.ml-cell')return cells;if(s==='.ml-code')return cells.map(c=>c.querySelector(s));if(s==='.ml-mode')return modes;return []}};
  const context={document,window:{},MutationObserver:class{observe(){}},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},setTimeout:()=>0,clearTimeout(){},queueMicrotask,confirm:()=>true,location:{reload(){}},config};
  vm.createContext(context);
+ if(config.id==='hidden_patterns'){for(const asset of ['hidden-patterns-data','hidden-patterns'])vm.runInContext(fs.readFileSync('assets/js/ai100/'+asset+'.js','utf8'),context);config.cells.forEach((cell,i)=>cell.output=()=>context.window.HiddenPatterns.notebookOutput(i));}
+
  // Expose closure functions only in this fixture. Chart rendering is outside progression tests.
  vm.runInContext(source.replace(/\}\)\(\);\s*$/,`C=config;updateMetrics=()=>{};renderExplore=()=>{};globalThis.lab={state,restore,store,grantPastes,pasteAllowance,taskAvailable,notebookComplete,refreshNotebookProgress,invalidateNotebookFrom,evaluate,fillAllCode,pasteCode,bindCodeInsertion,setMode,completeLearn,reset,typingGuide};})();`),context);
  return {lab:context.lab,cells,document,storage,modes,part,get dialog(){return dialog},accept(){part('form').onsubmit({preventDefault(){}})},cancel(){part('[data-confirm-paste-cancel]').onclick()}};
 }
 function simple(){return {id:'test',cells:Array.from({length:3},()=>({requires:['print\\s*\\('],output:'ok'}))}}
 function notebookFixture(config,storage){const f=fixture(config,storage);f.lab.state.learnComplete=true;return f}
+test('Hidden Patterns opener insertion preserves existing notebook work and moves saved Learn positions once',()=>{
+ const ctx={window:{}};vm.createContext(ctx);vm.runInContext(fs.readFileSync('assets/js/ai100/hidden-patterns-config.js','utf8'),ctx);
+ const config=ctx.window.ML_LAB_CONFIG,key='ai100.ml.hidden_patterns';
+ const storage=new Map([[key,JSON.stringify({revision:2,scene:6,unlocked:8,learnComplete:true,codes:['saved code'],completed:[0],explore:{answers:{scaling:0}}})]]);
+ const f=fixture(config,storage);f.lab.restore();
+ assert.equal(f.lab.state.scene,7);assert.equal(f.lab.state.unlocked,9);assert.equal(f.lab.state.learnComplete,true);assert.equal(f.lab.state.completed.has(0),true);assert.equal(f.lab.state.savedCodes[0],'saved code');assert.equal(f.lab.state.explore.answers.scaling,0);
+ f.cells[0].querySelector('.ml-code').value=f.lab.state.savedCodes[0];f.lab.store();const restored=fixture(config,storage);restored.lab.restore();assert.equal(restored.lab.state.scene,7);assert.equal(restored.lab.state.unlocked,9);assert.equal(restored.lab.state.savedCodes[0],'saved code');
+});
+test('Hidden Patterns revision preserves matching code, clears obsolete evidence, and leaves other labs alone',()=>{
+ const ctx={window:{}};vm.createContext(ctx);vm.runInContext(fs.readFileSync('assets/js/ai100/hidden-patterns-config.js','utf8'),ctx);
+ const config=ctx.window.ML_LAB_CONFIG,key='ai100.ml.hidden_patterns',codes=['load','features','scale','fit','attach and means'];
+ const storage=new Map([[key,JSON.stringify({revision:1,codes,completed:[0,1,2,3,4],learnComplete:true,scene:4,unlocked:4,explore:{finished:true,answers:{limits:0}},pastesUsed:2})],['ai100.ml.fish_predictor','untouched']]);
+ const f=fixture(config,storage);f.lab.restore();const s=f.lab.state;
+ assert.deepEqual([...s.savedCodes],['load','features','scale','fit','','attach and means','','']);
+ assert.equal(s.completed.size,0);assert.equal(s.learnComplete,false);assert.equal(s.scene,0);assert.equal(s.unlocked,0);assert.deepEqual(Object.keys(s.explore),[]);assert.equal(s.migrationNotice,true);assert.equal(s.pastesUsed,2);
+ const fresh=fixture(config,storage);fresh.lab.restore();assert.deepEqual([...fresh.lab.state.savedCodes],[...s.savedCodes]);assert.equal(fresh.lab.state.migrated,false);assert.equal(fresh.lab.state.migrationNotice,true);
+ assert.equal(storage.get('ai100.ml.fish_predictor'),'untouched');
+ f.lab.reset();assert.equal(storage.has(key),false);assert.equal(storage.get('ai100.ml.fish_predictor'),'untouched');
+});
 test('ordered execution, Explore gating, invalidation and retained code',()=>{
  const f=notebookFixture(simple()),{lab,cells}=f;cells.forEach(c=>c.querySelector('.ml-code').value='print("ok")');
  lab.refreshNotebookProgress();assert.equal(cells[1].querySelector('.ml-code').readOnly,true);

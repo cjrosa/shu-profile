@@ -1,0 +1,73 @@
+/* Clustering visuals share the ML shell's colors, cards, typography and controls. */
+.ml-cluster-card{width:100%;min-width:0;color:var(--ml-ink)}
+.ml-scene-main.ml-cluster-opener #sceneCopy,.ml-scene-main.ml-cluster-opener .ml-cue{display:none}
+.ml-cluster-opening{padding:0;border:0;background:none}
+.ml-cluster-card p{font-size:12px;line-height:1.6;color:var(--ml-muted)}
+.ml-cluster-heading{display:grid;gap:5px;margin:16px 0 8px}
+.ml-cluster-heading>span,.ml-cluster-cards article>span{font-size:10px;font-weight:850;letter-spacing:.08em;color:var(--ml-green)}
+.ml-cluster-heading>strong{font-size:16px;line-height:1.4}
+.ml-cluster-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.ml-cluster-cards article,.ml-cluster-workflow{padding:15px;border:1px solid var(--ml-line);border-radius:10px;background:var(--ml-paper)}
+.ml-cluster-cards article{display:flow-root}
+.ml-cluster-card .ml-cluster-card-icon{float:right;width:34px;height:34px;margin:0 0 10px 12px;padding:4px;border-radius:8px;background:var(--ml-green-soft);color:var(--ml-green);fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ml-cluster-cards article:nth-child(2) .ml-cluster-card-icon{color:var(--ml-blue);background:var(--ml-blue-soft)}
+.ml-cluster-cards article:nth-child(3) .ml-cluster-card-icon{color:var(--ml-orange);background:var(--ml-orange-soft)}
+.ml-cluster-cards strong{display:block;font-size:16px;margin-top:7px}
+.ml-cluster-cards p{margin-bottom:0}
+.ml-cluster-workflow{margin-top:14px;border-left:3px solid var(--ml-green)}
+.ml-cluster-plot{margin:10px 0}
+.ml-cluster-card .ml-cluster-plot>svg,.ml-cluster-card .ml-cluster-demo{display:block;width:100%;height:auto;aspect-ratio:auto;max-height:none;background:var(--ml-paper);border:1px solid var(--ml-line);border-radius:10px}
+.ml-cluster-card svg text{fill:var(--ml-ink);font:12px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.ml-cluster-card .ml-cluster-center-label{font-weight:850;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}
+.ml-cluster-plot figcaption,.ml-cluster-card .ml-cluster-footnote{font-size:11px;line-height:1.5;color:var(--ml-muted);margin:8px 0}
+.ml-cluster-legend{display:flex;flex-wrap:wrap;gap:8px 16px;padding:8px 0;font-size:12px}
+.ml-cluster-legend>span{display:flex;align-items:center;gap:5px}
+.ml-cluster-card .ml-cluster-legend svg{width:20px;height:20px;flex:0 0 20px}
+.ml-cluster-table-wrap{max-width:100%;overflow-x:auto;margin:14px 0;border:1px solid var(--ml-line);border-radius:10px;background:var(--ml-paper)}
+.ml-cluster-table{width:100%;border-collapse:collapse;font-size:12px}
+.ml-cluster-table caption{text-align:left;padding:12px;font-weight:800;color:var(--ml-green-dark);background:var(--ml-green-soft)}
+.ml-cluster-table th,.ml-cluster-table td{padding:10px;text-align:right;border-bottom:1px solid var(--ml-line);white-space:nowrap}
+.ml-cluster-table th:first-child{text-align:left}
+.ml-cluster-table thead{background:#f0f5f2}
+.ml-cluster-table tbody tr:last-child>*{border-bottom:0}
+.ml-cluster-control{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12px;font-weight:800;margin:14px 0}
+.ml-cluster-control select{max-width:100%;padding:9px 12px;border:1px solid var(--ml-line);border-radius:9px;color:var(--ml-ink);background:var(--ml-paper)}
+.ml-cluster-baseline{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:8px 15px;border-left:3px solid var(--ml-blue);padding:12px;background:var(--ml-blue-soft);border-radius:9px;font-size:12px;line-height:1.5}
+.ml-cluster-card [data-cluster-status]{min-height:1.5em}
+.ml-cluster-card .ml-actions{margin-bottom:12px}
+/* Same underwater palette and glossy fish language as the Fish Predictor opening. */
+.ml-cluster-aquarium-scroll{overflow-x:auto;border-radius:20px;border:1px solid #b9dce4;background:#168bc5}
+.ml-cluster-card .ml-cluster-aquarium{display:block;width:100%;height:auto;aspect-ratio:auto;min-width:540px;overflow:hidden}
+.ml-cluster-card .ml-cluster-water-label{font-size:16px;font-weight:850;fill:#063854;letter-spacing:.06em}
+.ml-cluster-card .ml-cluster-water-sub{font-size:14px;fill:#063854}
+.ml-cluster-card .ml-cluster-water-footer{font-size:16px;font-weight:800;fill:#063854}
+.ml-cluster-card .ml-cluster-gate-title{font-size:18px;font-weight:850;fill:#155c34}
+.ml-cluster-card .ml-cluster-gate-detail{font-size:13px;fill:#315b78}
+.ml-cluster-model-case{filter:drop-shadow(0 8px 9px rgba(0,46,88,.27))}
+.ml-cluster-card .ml-cluster-model-eyebrow{font-size:9px;font-weight:850;letter-spacing:.065em;fill:#3977a8}
+.ml-cluster-card .ml-cluster-model-cycle{font-size:9px;font-weight:850;letter-spacing:.025em;fill:#155c34}
+.ml-cluster-card .ml-cluster-model-inputs{font-size:10px;fill:#315b78}
+.ml-cluster-model-halo{fill:var(--node-color);fill-opacity:.045;stroke:var(--node-color);stroke-opacity:.28;stroke-dasharray:3 4}
+.ml-cluster-model-link{fill:none;stroke:var(--node-color);stroke-width:1.3;stroke-opacity:.45}
+.ml-cluster-model-point{fill:#fff;stroke:var(--node-color);stroke-width:1.8}
+.ml-cluster-model-signal{fill:none;stroke:#13bde3;stroke-width:2.3;stroke-linecap:round;stroke-dasharray:2 16;filter:drop-shadow(0 0 3px #13bde3);animation:ml-cluster-model-flow 2.5s var(--node-delay) linear infinite}
+.ml-cluster-model-center{fill:var(--node-color);stroke:white;stroke-width:1.5;animation:ml-cluster-model-pulse 2.5s var(--node-delay) ease-in-out infinite}
+.ml-cluster-card .ml-cluster-group-label{font-size:14px;font-weight:800}
+.ml-cluster-swimmer{transform-box:view-box;transform-origin:0 0;transform:translate(var(--to-x),var(--to-y));color:var(--group-color);animation:ml-cluster-swim-in 24s var(--swim-delay) linear infinite both;filter:drop-shadow(0 4px 3px rgba(0,55,99,.2))}
+.ml-cluster-fish-body{fill:currentColor;stroke:rgba(4,65,96,.3);stroke-width:3}
+.ml-cluster-fish-tail,.ml-cluster-fish-fin{fill:currentColor;filter:brightness(.88)}
+.ml-cluster-fish-tail{transform-box:fill-box;transform-origin:right center;animation:ml-cluster-tail .24s var(--swim-delay) ease-in-out infinite alternate}
+.ml-cluster-intro-center{opacity:1}
+.ml-cluster-intro-bubble{animation:ml-cluster-bubble 6s var(--bubble-delay) ease-out infinite both}
+.ml-cluster-water-shine{animation:ml-cluster-water-drift 8s ease-in-out infinite alternate}
+.ml-cluster-seagrass{transform-box:view-box;animation:ml-cluster-grass-sway 1.8s var(--grass-delay) ease-in-out infinite alternate}
+.ml-cluster-intro-caption{margin:8px 0 16px}
+@keyframes ml-cluster-swim-in{0%{transform:translate(var(--from-x),var(--from-y)) scale(1);color:#83c9e3;opacity:0}6%{transform:translate(40px,var(--from-y)) scale(1);color:#83c9e3;opacity:1}20%{transform:translate(412px,214px) scale(1);color:#83c9e3;opacity:1}26%{color:var(--group-color)}32%{transform:translate(var(--to-x),var(--to-y)) scale(1);color:var(--group-color);opacity:1}48%{transform:translate(var(--to-x),var(--to-y)) scale(.85);color:var(--group-color);opacity:.95}80%{transform:translate(var(--depth-x),var(--depth-y)) scale(.4);color:var(--group-color);opacity:.55}94%{transform:translate(var(--depth-x),var(--depth-y)) scale(.16);color:var(--group-color);opacity:.15}100%{transform:translate(var(--depth-x),var(--depth-y)) scale(.06);color:var(--group-color);opacity:0}}
+@keyframes ml-cluster-tail{from{transform:scaleX(.8) skewY(-7deg)}to{transform:scaleX(1) skewY(7deg)}}
+@keyframes ml-cluster-bubble{0%{transform:translateY(0);opacity:0}15%{opacity:.7}100%{transform:translateY(-340px);opacity:0}}
+@keyframes ml-cluster-water-drift{from{transform:translateX(-35px);opacity:.08}to{transform:translateX(83px);opacity:.16}}
+@keyframes ml-cluster-grass-sway{from{transform:rotate(-5deg)}to{transform:rotate(10deg)}}
+@keyframes ml-cluster-model-flow{to{stroke-dashoffset:-36}}
+@keyframes ml-cluster-model-pulse{0%,100%{filter:drop-shadow(0 0 1px var(--node-color))}50%{filter:drop-shadow(0 0 5px var(--node-color))}}
+@media(max-width:600px){.ml-cluster-card{padding:12px}.ml-cluster-cards,.ml-cluster-baseline{grid-template-columns:1fr}.ml-cluster-table th,.ml-cluster-table td{padding:8px}.ml-cluster-control{align-items:flex-start;flex-direction:column}.ml-cluster-control select{width:100%}}
+@media(prefers-reduced-motion:reduce){.ml-cluster-card *{animation:none!important;transition:none!important;scroll-behavior:auto!important}.ml-cluster-stream-copy{display:none}.ml-cluster-intro-bubble{opacity:0}.ml-cluster-intro-center{opacity:1}}
