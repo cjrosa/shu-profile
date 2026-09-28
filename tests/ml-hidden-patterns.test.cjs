@@ -165,12 +165,25 @@ test('species details appear only after reveal and disappear again without losin
 });
 test('scaling scene explains spread and provides a plain transient hover legend',()=>{
  const {H,C}=fixture(),target=chartTarget();target.innerHTML=H.scene(C.scenes[4]);
- assert.doesNotMatch(target.innerHTML,/ml-cluster-table|Standardized standard deviation/);assert.match(target.innerHTML,/<strong>Standardized:<\/strong> measurements are put on comparable scales/);
+ assert.doesNotMatch(target.innerHTML,/ml-cluster-table|Standardized standard deviation/);assert.match(target.innerHTML,/<strong>Raw measurements:<\/strong> distances use the original centimeters/);
  H.bindLearn(target,C.scenes[4]);const live=target.querySelector('[data-cluster-live]'),chart=live.charts[0];
  assert.doesNotMatch(live.innerHTML,/ml-cluster-chart-side|data-clear-selection/);
  chart.legends[0].onpointerenter();assert.ok(chart.marks.some(m=>m.classList.values.has('dimmed')));
  chart.legends[0].onpointerleave();assert.ok(chart.marks.every(m=>!m.classList.values.has('dimmed')));
  chart.legends[1].onfocus();assert.ok(chart.marks.some(m=>m.classList.values.has('dimmed')));chart.legends[1].onblur();assert.ok(chart.marks.every(m=>!m.classList.values.has('dimmed')));
+});
+test('3D toggle preserves scaling and renders all fish; keyboard, drag, and reset change the view',()=>{
+ const {H,C}=fixture(),target=chartTarget();target.innerHTML=H.scene(C.scenes[4]);
+ const scale=[{value:'standardized',checked:true},{value:'raw',checked:false}],views=[{value:'2d',checked:true},{value:'3d',checked:false}];
+ const query=target.querySelectorAll.bind(target);target.querySelectorAll=sel=>sel==='[data-learn-scale]'?scale:sel==='[data-learn-view]'?views:query(sel);
+ H.bindLearn(target,C.scenes[4]);const live=target.querySelector('[data-cluster-live]');
+ assert.match(target.querySelector('[data-scaling-explanation]').innerHTML,/Raw measurements/);scale[0].checked=true;scale[0].onchange();views[1].checked=true;views[1].onchange();assert.match(live.innerHTML,/data-rotate-chart/);assert.match(live.innerHTML,/All axes in standardized units/);assert.equal((live.innerHTML.match(/data-point="fish-/g)||[]).length,159);assert.doesNotMatch(live.innerHTML,/NaN|undefined/);
+ const svg=live.querySelector('[data-rotate-chart]');svg.setPointerCapture=()=>{};
+ svg.onkeydown({key:'ArrowRight',preventDefault(){}});const rotated=svg.innerHTML;assert.match(rotated,/>Width</);
+ live.querySelector('[data-reset-camera]').onclick();assert.notEqual(svg.innerHTML,rotated);const original=svg.innerHTML;
+ let prevented=false;svg.onpointerdown({button:0,clientX:10,clientY:10,pointerId:1,preventDefault(){prevented=true}});assert.ok(prevented);svg.onpointermove({clientX:50,clientY:30});assert.notEqual(svg.innerHTML,original);svg.onpointerup();const stopped=svg.innerHTML;svg.onpointermove({clientX:90,clientY:90});assert.equal(svg.innerHTML,stopped);
+ scale[1].checked=true;scale[1].onchange();assert.match(live.innerHTML,/All axes in centimeters/);assert.doesNotMatch(live.innerHTML,/NaN|undefined/);
+ views[0].checked=true;views[0].onchange();assert.doesNotMatch(live.innerHTML,/data-rotate-chart/);assert.match(live.innerHTML,new RegExp(H.result(3,'raw').counts[0]+' fish'));
 });
 test('playback advances every 1.2 seconds, respects boundaries, and cleans up on visibility or scene changes',()=>{
  const {H,C,c}=fixture(),target=chartTarget(),timers=new Map(),events=new Map();let nextTimer=0,observer;

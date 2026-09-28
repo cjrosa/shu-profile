@@ -158,6 +158,10 @@
 .ml-cluster-mark.selected .ml-cluster-selection-ring{stroke:#a6641d;stroke-width:3}
 .ml-cluster-mark:focus-visible .ml-cluster-selection-ring{stroke:#172f26;stroke-width:3;stroke-dasharray:3 2}
 .ml-cluster-mark.dimmed{opacity:.2}
+.ml-cluster-center-halo{opacity:.35;transform-box:fill-box;transform-origin:center;pointer-events:none}
+.ml-cluster-mark:hover>.ml-cluster-center-halo,.ml-cluster-mark:focus-visible>.ml-cluster-center-halo,.ml-cluster-mark.group-highlighted>.ml-cluster-center-halo{animation:ml-center-breathe 1.6s ease-in-out infinite}
+@keyframes ml-center-breathe{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.55);opacity:.85}}
+@media(prefers-reduced-motion:reduce){.ml-cluster-mark:hover>.ml-cluster-center-halo,.ml-cluster-mark:focus-visible>.ml-cluster-center-halo,.ml-cluster-mark.group-highlighted>.ml-cluster-center-halo{animation:none;opacity:1;stroke-width:3}}
 .ml-cluster-mark text{pointer-events:none;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
 .ml-cluster-mark>path,.ml-cluster-mark>rect{pointer-events:none}
 .ml-cluster-chart-side .ml-cluster-table{font-size:11px}
@@ -182,6 +186,10 @@
 .ml-cluster-hover-chart .ml-cluster-distance-chart{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 18px;max-width:760px;align-items:center}
 .ml-cluster-hover-chart .ml-cluster-plot{min-width:0;margin:0}
 .ml-cluster-hover-chart .ml-cluster-legend{flex-direction:column;align-items:flex-start;gap:10px;padding:0}
+.ml-cluster-card .ml-cluster-legend-heading{position:relative;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:750;color:var(--ml-muted);cursor:help}
+.ml-cluster-card .ml-cluster-legend-heading>svg{width:17px;height:17px;flex:0 0 17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.ml-cluster-legend-hint{position:absolute;z-index:5;right:0;bottom:calc(100% + 8px);width:190px;max-width:65vw;padding:8px 10px;border-radius:7px;background:#171717;color:#fff;font-size:11px;font-weight:400;line-height:1.5;visibility:hidden;opacity:0;pointer-events:none}
+.ml-cluster-legend-heading:hover .ml-cluster-legend-hint,.ml-cluster-legend-heading:focus .ml-cluster-legend-hint{visibility:visible;opacity:1}
 .ml-cluster-hover-chart .ml-cluster-chart-help{grid-column:1/-1}
 .ml-cluster-hover-chart{margin-bottom:0}
 .ml-cluster-hover-chart .ml-cluster-plot figcaption{margin-bottom:0}
@@ -211,5 +219,13 @@
 .ml-cluster-scale-buttons span{display:block;padding:8px 10px;border-radius:6px;font-size:11px;font-weight:750;color:var(--ml-muted)}
 .ml-cluster-scale-buttons input:checked+span{background:var(--ml-green);color:#fff}
 .ml-cluster-scale-buttons input:focus-visible+span{outline:3px solid #b8860b;outline-offset:2px}
+.ml-cluster-activity-head:has(.ml-cluster-scale-buttons)>.ml-cluster-header-controls{grid-column:2;grid-row:1/span 3;display:flex;flex-wrap:wrap;gap:12px;align-items:start}
+.ml-cluster-card svg[data-rotate-chart]{touch-action:none;cursor:grab;outline-offset:3px;user-select:none;-webkit-user-select:none}
+.ml-cluster-card svg[data-rotate-chart] *{user-select:none;-webkit-user-select:none}
+.ml-cluster-card svg[data-rotate-chart]:active{cursor:grabbing}
+.ml-cluster-card svg[data-rotate-chart] .ml-cluster-mark{cursor:inherit}
+.ml-cluster-card svg[data-rotate-chart] text.ml-cluster-3d-tick{font-size:10px}
+.ml-cluster-card svg[data-rotate-chart] text.ml-cluster-axis-title{font-size:12px}
+@media(max-width:1100px){.ml-cluster-activity-head:has(.ml-cluster-scale-buttons)>.ml-cluster-header-controls{grid-column:1;grid-row:auto;margin-top:8px}.ml-cluster-activity-head:has(.ml-cluster-header-controls){grid-template-columns:1fr}}
 @media(max-width:900px){.ml-cluster-activity-head:has(.ml-cluster-scale-buttons){grid-template-columns:1fr;row-gap:6px}.ml-cluster-scale-buttons{grid-column:1;grid-row:auto;margin-top:8px}}
 @container(max-width:420px){.ml-cluster-chart-side{padding:12px}.ml-cluster-card .ml-cluster-plot svg text,.ml-cluster-card .ml-cluster-demo text{font-size:18px}}
