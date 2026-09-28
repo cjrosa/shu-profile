@@ -36,7 +36,7 @@
 @media(max-width:700px){.ml-cluster-feature-story{grid-template-columns:1fr;gap:12px}.ml-cluster-feature-art{max-width:300px;width:100%;margin:auto}.ml-cluster-overview-steps{grid-template-columns:1fr}.ml-cluster-overview-steps p{min-height:0}.ml-cluster-overview-steps .ml-cluster-card-sketch{max-width:220px;margin-left:auto;margin-right:auto}}
 .ml-cluster-workflow{margin-top:14px;border-left:3px solid var(--ml-green)}
 .ml-cluster-plot{margin:10px 0}
-.ml-cluster-card .ml-cluster-plot>svg,.ml-cluster-card .ml-cluster-demo{display:block;width:100%;height:auto;aspect-ratio:auto;max-height:none;background:var(--ml-paper);border:1px solid var(--ml-line);border-radius:10px}
+.ml-cluster-card .ml-cluster-plot>svg,.ml-cluster-card .ml-cluster-demo{display:block;width:100%;max-width:600px;height:auto;aspect-ratio:auto;max-height:none;margin-inline:auto;background:linear-gradient(145deg,#fff,#f3f9f7);border:1px solid var(--ml-line);border-radius:10px}
 .ml-cluster-card svg text{fill:var(--ml-ink);font:12px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 .ml-cluster-card .ml-cluster-center-label{font-weight:850;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}
 .ml-cluster-plot figcaption,.ml-cluster-card .ml-cluster-footnote{font-size:11px;line-height:1.5;color:var(--ml-muted);margin:8px 0}
@@ -132,3 +132,84 @@
 .ml-cluster-activity .ml-cluster-heading>strong{font-size:15px}
 .ml-cluster-lesson>.ml-definition{margin-top:16px}
 @media(max-width:760px){.ml-cluster-activity{padding:14px}.ml-cluster-lesson-flow{gap:12px}.ml-cluster-lesson-flow .ml-cluster-input-panel{padding:15px}}
+
+/* A chart stays at reading scale even in the wide Learn layout. */
+.ml-cluster-chart-container{container-type:inline-size;min-width:0;margin:14px 0}
+.ml-chart:has(.ml-cluster-card){background:#fff;background-image:none}
+.ml-cluster-chart-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+.ml-cluster-chart-main{min-width:0;width:100%;max-width:600px;margin-inline:auto}
+.ml-cluster-chart-main .ml-cluster-plot{margin-top:0}
+.ml-cluster-chart-side{min-width:0;width:100%;max-width:420px;justify-self:center;padding:12px;border:1px solid #cedce7;border-top:3px solid var(--ml-blue);border-radius:12px;background:linear-gradient(155deg,#fff,#edf4fa)}
+.ml-cluster-chart-side .ml-cluster-legend{padding-top:0;gap:6px}
+.ml-cluster-card .ml-cluster-legend-button{display:inline-flex;align-items:center;gap:5px;min-height:36px;padding:6px 8px;border:1px solid var(--ml-line);border-radius:8px;background:#fff;color:var(--ml-ink);font:inherit;font-size:12px;cursor:pointer}
+.ml-cluster-legend-button[aria-pressed="true"]{outline:2px solid var(--ml-blue);background:var(--ml-blue-soft)}
+.ml-cluster-card .ml-cluster-legend-button svg{width:18px;height:18px;aspect-ratio:1;flex:0 0 18px}
+.ml-cluster-inspector{margin-bottom:10px}
+.ml-cluster-inspector h4{font-size:14px;line-height:1.4;margin:0 0 10px}
+.ml-cluster-inspector p{margin:0}
+.ml-cluster-inspector dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin:0;font-size:12px;line-height:1.5}
+.ml-cluster-inspector dl>div{display:flex;flex-direction:column;gap:2px;padding:4px 0}
+.ml-cluster-inspector dt{color:var(--ml-muted)}
+.ml-cluster-inspector dd{margin:0;font-weight:750;font-variant-numeric:tabular-nums}
+.ml-cluster-card .ml-cluster-chart-help{font-size:11px;line-height:1.5;color:var(--ml-muted);margin:8px 0}
+.ml-cluster-mark{cursor:pointer;outline:none}
+.ml-cluster-hit{fill:transparent;pointer-events:all}
+.ml-cluster-selection-ring{fill:none;stroke:transparent;stroke-width:2;pointer-events:none}
+.ml-cluster-mark.selected .ml-cluster-selection-ring{stroke:#a6641d;stroke-width:3}
+.ml-cluster-mark:focus-visible .ml-cluster-selection-ring{stroke:#172f26;stroke-width:3;stroke-dasharray:3 2}
+.ml-cluster-mark.dimmed{opacity:.2}
+.ml-cluster-mark text{pointer-events:none;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
+.ml-cluster-mark>path,.ml-cluster-mark>rect{pointer-events:none}
+.ml-cluster-chart-side .ml-cluster-table{font-size:11px}
+.ml-cluster-chart-side .ml-cluster-table th,.ml-cluster-chart-side .ml-cluster-table td{padding:7px}
+@container(min-width:700px){.ml-cluster-chart-layout{grid-template-columns:minmax(0,600px) minmax(240px,320px);justify-content:center}}
+.ml-cluster-card .ml-cluster-table-wrap{width:fit-content;max-width:100%;margin:10px 0}
+.ml-cluster-card .ml-cluster-table{width:auto;font-size:11px}
+.ml-cluster-card .ml-cluster-table th,.ml-cluster-card .ml-cluster-table td{padding:6px 9px}
+.ml-cluster-card .ml-cluster-table caption{padding:8px 9px}
+.ml-cluster-measurement-details{margin-top:10px;border-top:1px solid var(--ml-line);padding-top:9px}
+.ml-cluster-measurement-details summary{cursor:pointer;color:var(--ml-green-dark);font-size:12px;font-weight:750}
+.ml-cluster-chart-side>[data-clear-selection]{padding:6px 9px;font-size:11px}
+.ml-cluster-distance-key{display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:6px}
+.ml-cluster-distance-key>span{display:inline-flex;align-items:center;gap:6px}
+.ml-cluster-distance-key i{width:22px;border-top:3px solid var(--ml-green)}
+.ml-cluster-distance-key>span+span i{border-color:var(--ml-blue);border-top-style:dashed}
+.ml-cluster-mark>.ml-cluster-hit{pointer-events:all}
+.ml-cluster-distance-chart{position:relative;max-width:600px;margin:auto}
+.ml-cluster-card .ml-cluster-distance .ml-cluster-plot>svg{background:none;border:0;border-radius:0;box-shadow:none}
+.ml-cluster-card .ml-cluster-hover-chart .ml-cluster-plot>svg{background:none;border:0;border-radius:0;box-shadow:none}
+.ml-cluster-hover-chart .ml-cluster-legend{justify-content:center;gap:8px 16px}
+.ml-cluster-hover-chart .ml-cluster-distance-chart{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 18px;max-width:760px;align-items:center}
+.ml-cluster-hover-chart .ml-cluster-plot{min-width:0;margin:0}
+.ml-cluster-hover-chart .ml-cluster-legend{flex-direction:column;align-items:flex-start;gap:10px;padding:0}
+.ml-cluster-hover-chart .ml-cluster-chart-help{grid-column:1/-1}
+.ml-cluster-hover-chart{margin-bottom:0}
+.ml-cluster-hover-chart .ml-cluster-plot figcaption{margin-bottom:0}
+@container(max-width:480px){.ml-cluster-hover-chart .ml-cluster-distance-chart{gap:8px}.ml-cluster-card .ml-cluster-hover-chart .ml-cluster-legend-button{font-size:10px;gap:3px}}
+.ml-cluster-card .ml-cluster-hover-chart .ml-cluster-legend-button{padding:3px 0;min-height:28px;border:0;border-radius:0;background:none;outline:none;font-weight:400}
+.ml-cluster-hover-chart .ml-cluster-legend-button:hover,.ml-cluster-hover-chart .ml-cluster-legend-button[aria-pressed="true"]{text-decoration:underline;text-underline-offset:4px}
+.ml-cluster-hover-chart .ml-cluster-legend-button:focus-visible{outline:2px solid var(--ml-blue);outline-offset:4px}
+.ml-cluster-chart-tooltip{position:absolute;z-index:3;top:70px;left:50%;transform:translateX(-50%);width:290px;max-width:calc(100% - 16px);padding:12px;border:1px solid #333;border-radius:10px;background:#171717;color:#fff;box-shadow:0 5px 18px #0004}
+.ml-cluster-chart-tooltip .ml-cluster-inspector dl{display:block}
+.ml-cluster-chart-tooltip .ml-cluster-inspector dl>div{flex-direction:row;justify-content:space-between;gap:8px;font-size:11px}
+.ml-cluster-chart-tooltip .ml-cluster-inspector h4{font-size:12px}
+.ml-cluster-chart-tooltip .ml-cluster-inspector dt{color:#d1d1d1}
+.ml-cluster-chart-tooltip .ml-cluster-inspector h4,.ml-cluster-chart-tooltip .ml-cluster-inspector dd{color:#fff}
+.ml-cluster-chart-tooltip .ml-btn{font-size:11px;padding:5px 8px;background:#292929;border-color:#666;color:#fff}
+.ml-cluster-chart-tooltip .ml-btn:hover{background:#444;border-color:#aaa}
+.ml-cluster-card .ml-cluster-plot svg text,.ml-cluster-card .ml-cluster-demo text{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px}
+.ml-cluster-card svg text.ml-cluster-axis-title{font-weight:750}
+.ml-cluster-scaling-tip{display:flex;align-items:center;gap:8px}
+.ml-cluster-card .ml-cluster-scaling-tip>svg{width:20px;height:20px;flex:0 0 20px;fill:#fff1bd;stroke:#946419;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ml-cluster-activity-head:has(.ml-cluster-scale-buttons){display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:20px;align-items:start}
+.ml-cluster-activity-head:has(.ml-cluster-scale-buttons)>:not(fieldset){grid-column:1}
+.ml-cluster-scale-buttons{grid-column:2;grid-row:1 / span 3;min-width:0;margin:0;padding:0;border:0}
+.ml-cluster-scale-buttons legend{margin-bottom:6px;font-size:11px;font-weight:750;color:var(--ml-muted)}
+.ml-cluster-scale-buttons>div{display:flex;gap:3px;padding:3px;border:1px solid var(--ml-line);border-radius:9px;background:#f3f6f4}
+.ml-cluster-scale-buttons label{position:relative;cursor:pointer}
+.ml-cluster-scale-buttons input{position:absolute;width:1px;height:1px;opacity:0}
+.ml-cluster-scale-buttons span{display:block;padding:8px 10px;border-radius:6px;font-size:11px;font-weight:750;color:var(--ml-muted)}
+.ml-cluster-scale-buttons input:checked+span{background:var(--ml-green);color:#fff}
+.ml-cluster-scale-buttons input:focus-visible+span{outline:3px solid #b8860b;outline-offset:2px}
+@media(max-width:900px){.ml-cluster-activity-head:has(.ml-cluster-scale-buttons){grid-template-columns:1fr;row-gap:6px}.ml-cluster-scale-buttons{grid-column:1;grid-row:auto;margin-top:8px}}
+@container(max-width:420px){.ml-cluster-chart-side{padding:12px}.ml-cluster-card .ml-cluster-plot svg text,.ml-cluster-card .ml-cluster-demo text{font-size:18px}}
