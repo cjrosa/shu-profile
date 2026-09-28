@@ -41,7 +41,7 @@ function restore(){
    localStorage.setItem(key,JSON.stringify(x));state.migrated=true;
   }
   if(C.id==='hidden_patterns'&&x.learnLayout!==(C.learnLayout||1)){
-   const moveScene=n=>Number.isInteger(n)&&n>0?Math.min(n+1,C.scenes.length-1):0;
+   const moveScene=n=>{if(!Number.isInteger(n)||n<0)return 0;if((x.learnLayout||1)<2&&n>0)n++;if((x.learnLayout||1)<3&&n>=6)n--;return Math.min(n,C.scenes.length-1)};
    x.scene=moveScene(x.scene);x.unlocked=moveScene(x.unlocked);x.learnLayout=C.learnLayout||1;
   }
   delete x.hints;Object.assign(state,x);state.governanceComplete=x.governanceComplete===true||!!(x.governanceReview?.accepted&&x.governanceReview?.walkthroughDone&&[0,1,2,3].every(i=>Array.isArray(x.governanceReview.checks)&&x.governanceReview.checks.includes(i)));state.governanceReview={accepted:false,step:0,walkthroughDone:false,checks:[]};state.learnComplete=x.learnComplete===true&&governanceReviewed();state.savedCodes=x.codes||[];state.completed=new Set(x.completed||[]);normalizeNotebookProgress();

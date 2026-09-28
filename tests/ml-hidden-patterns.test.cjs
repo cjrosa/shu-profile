@@ -74,7 +74,7 @@ test('teaching trace alternates assignments and means, leaves observations fixed
  assert.notDeepEqual(plain(trace[0].centers),plain(H.demo(true)[0].centers));
 });
 test('course scripts are accepted with comments and quote variations, but wrong inputs/assignments are rejected',()=>{
- const {H,C}=fixture();assert.equal(C.cells.length,8);assert.equal(C.scenes.length,10);
+ const {H,C}=fixture();assert.equal(C.cells.length,8);assert.equal(C.scenes.length,9);
  C.cells.forEach(cell=>{assert.equal(H.validate(cell.hint,cell.hint),'');assert.equal(H.validate('# A comment\n'+cell.hint.replaceAll('"',"'"),cell.hint),'')});
  for(const [i,from,to] of [[0,'Fish.csv','Other.csv'],[1,'Width','Species'],[1,'X =','Y ='],[2,'fit_transform(X)','fit_transform(fish)'],[3,'fit_predict(scaled)','fit_predict(X)'],[3,'n_clusters=3','n_clusters=7'],[4,'= clusters','= trial'],[5,'Height','Weight'],[6,'[2, 3, 5]','[2, 3, 7]'],[7,'"Species"','"Weight"']])assert.ok(H.validate(C.cells[i].hint.replace(from,to),C.cells[i].hint));
  assert.ok(H.validate('# '+C.cells[3].hint.replaceAll('\n','\n# '),C.cells[3].hint));
@@ -111,7 +111,7 @@ test('Review interactions record actual evidence, require a change, and survive 
 });
 test('Learn controls update their own workspace; step, restart, alternate and terminal states work',()=>{
  const {H,C}=fixture(),parts=new Map(),element=selector=>{if(!parts.has(selector))parts.set(selector,{innerHTML:'',textContent:'',disabled:false});return parts.get(selector)},target={querySelector:element};
- H.bindLearn(target,C.scenes[6]);const step=element('[data-cluster-action="step"]'),live=element('[data-cluster-live]');
+ H.bindLearn(target,{...C.scenes[5],kind:'cluster-steps'});const step=element('[data-cluster-action="step"]'),live=element('[data-cluster-live]');
  assert.match(live.innerHTML,/No assignments yet/);let n=0;while(!step.disabled&&n++<100)step.onclick();assert.ok(step.disabled);assert.match(live.innerHTML,/Stable:/);
  element('[data-cluster-action="restart"]').onclick();assert.equal(step.disabled,false);assert.match(live.innerHTML,/No assignments yet/);
  const first=live.innerHTML;element('[data-cluster-action="alternate"]').onclick();assert.notEqual(live.innerHTML,first);
@@ -155,7 +155,7 @@ function chartTarget(){
    for(const chunk of html.split(' data-chart>').slice(1)){
     const marks=Array.from(chunk.matchAll(/<g class="ml-cluster-mark"[^>]*data-point="([^"]+)" data-group="([^"]*)" data-details="([^"]*)"/g),m=>element({point:decode(m[1]),group:m[2],details:decode(m[3])}));
     const legends=Array.from(chunk.matchAll(/data-highlight="([^"]+)"/g),m=>element({highlight:m[1]}));
-    const inspector=chunk.includes('data-inspector')?element():null,clear=element(),tooltip=chunk.includes('data-chart-tooltip')?element():null;charts.push({marks,legends,inspector,clear,tooltip,querySelectorAll(sel){return sel==='[data-point]'?marks:legends},querySelector(sel){return sel==='[data-inspector]'?inspector:sel==='[data-chart-tooltip]'?tooltip:clear}});
+    const inspector=chunk.includes('data-inspector')?element():null,clear=element(),tooltip=chunk.includes('data-chart-tooltip')?element():null;if(tooltip&&chunk.includes('data-centers-only'))tooltip.setAttribute('data-centers-only','true');charts.push({marks,legends,inspector,clear,tooltip,querySelectorAll(sel){return sel==='[data-point]'?marks:legends},querySelector(sel){return sel==='[data-inspector]'?inspector:sel==='[data-chart-tooltip]'?tooltip:clear}});
    }
    const control=html.match(/data-cluster-control="(\w+)"/);if(control){const el=target.querySelector('[data-cluster-control]');el.dataset.clusterControl=control[1];el.value=control[1]==='k'?'3':'standardized';el.setAttribute('aria-pressed','false')}
   },get innerHTML(){return markup},
@@ -163,36 +163,41 @@ function chartTarget(){
   querySelector(sel){if(!controls.has(sel))controls.set(sel,sel==='[data-cluster-live]'?chartTarget():element());return controls.get(sel)}
  };return target;
 }
-test('inspection supports keyboard selection, group highlights, and updated fish assignments',()=>{
- const {H,C,rows}=fixture(),target=chartTarget();target.innerHTML=H.scene(C.scenes[7]);H.bindLearn(target,C.scenes[7]);
- const live=target.querySelector('[data-cluster-live]'),chart=live.charts[0],first=chart.marks[0];
- let prevented=false;first.onkeydown({key:'ArrowRight',preventDefault(){prevented=true}});assert.ok(prevented);assert.ok(chart.marks[1].focused);
- first.onkeydown({key:'Enter',preventDefault(){}});assert.match(chart.inspector.innerHTML,/Length|Width/);assert.ok(first.classList.values.has('selected'));
- assert.doesNotMatch(chart.inspector.innerHTML,/Species/);
- const control=target.querySelector('[data-cluster-control]');control.value='5';control.onchange();
- let next=live.charts[0];assert.ok(next.marks[0].classList.values.has('selected'));assert.match(next.inspector.innerHTML,new RegExp('C'+H.result(5).labels[0]));
- assert.equal(JSON.parse(next.marks[0].dataset.details).name,'Fish '+rows[0].ID);
- next.legends[0].onclick();assert.ok(next.marks.some(m=>m.classList.values.has('dimmed')));assert.equal(next.marks.length,164);
- next.legends[0].onclick();assert.ok(next.marks.every(m=>!m.classList.values.has('dimmed')));
- next.marks.at(-1).onclick();control.value='2';control.onchange();next=live.charts[0];assert.ok(next.marks.every(m=>!m.classList.values.has('selected')));
- next.legends[0].onclick();control.value='3';control.onchange();assert.ok(live.charts[0].marks.every(m=>!m.classList.values.has('dimmed')));
- live.charts[0].marks[0].onclick();live.charts[0].clear.onclick();assert.ok(live.charts[0].marks.every(m=>!m.classList.values.has('selected')));
+test('scene seven uses a plain hover legend and changing k updates all group counts',()=>{
+ const {H,C}=fixture(),target=chartTarget();target.innerHTML=H.scene(C.scenes[6]);H.bindLearn(target,C.scenes[6]);
+ assert.match(target.innerHTML,/ml-cluster-k-header/);
+ const live=target.querySelector('[data-cluster-live]'),control=target.querySelector('[data-cluster-control]');
+ for(const k of [2,3,4,5,6,7]){control.value=String(k);control.onchange();assert.equal(live.charts[0].legends.length,k);assert.equal(live.charts[0].marks.length,159+k);H.result(k).counts.forEach(n=>assert.ok(live.innerHTML.includes(n+' fish')));assert.doesNotMatch(live.innerHTML,/ml-cluster-chart-side|ml-cluster-baseline/);}
+ const chart=live.charts[0];chart.legends[0].onpointerenter();assert.ok(chart.marks.some(m=>m.classList.values.has('dimmed')));chart.legends[0].onpointerleave();assert.ok(chart.marks.every(m=>!m.classList.values.has('dimmed')));
+ const center=chart.marks.find(m=>m.dataset.point==='center-0');center.onpointerenter();assert.ok(chart.marks.filter(m=>m.dataset.group!=='0').every(m=>m.classList.values.has('dimmed')));assert.equal(chart.tooltip.hidden,true);center.onpointerleave();assert.ok(chart.marks.every(m=>!m.classList.values.has('dimmed')));assert.equal(chart.marks[0].onclick,undefined);
+ center.onclick();assert.equal(chart.tooltip.hidden,false);assert.match(chart.inspector.innerHTML,/Mean Length/);assert.match(chart.inspector.innerHTML,new RegExp(H.result(7).means[0][0].toFixed(2)+' cm'));
+ chart.clear.onclick();assert.equal(chart.tooltip.hidden,true);
 });
-test('species details appear only after reveal and disappear again without losing the selected fish',()=>{
- const {H,C}=fixture(),target=chartTarget();target.innerHTML=H.scene(C.scenes[8]);H.bindLearn(target,C.scenes[8]);
- const live=target.querySelector('[data-cluster-live]'),control=target.querySelector('[data-cluster-control]');live.charts[0].marks[0].onclick();
- assert.doesNotMatch(live.charts[0].marks[0].dataset.details,/Species/);control.onclick();
- assert.match(live.charts[0].inspector.innerHTML,/Species/);assert.ok(live.charts[0].marks[0].classList.values.has('selected'));
- control.onclick();assert.doesNotMatch(live.charts[0].inspector.innerHTML,/Species/);assert.doesNotMatch(live.charts[0].marks[0].dataset.details,/Species/);
+test('species cards reveal accurate counts without repeating the chart',()=>{
+ const {H,C}=fixture(),target=chartTarget();target.innerHTML=H.scene(C.scenes[7]);H.bindLearn(target,C.scenes[7]);
+ const live=target.querySelector('[data-cluster-live]'),control=target.querySelector('[data-cluster-control]'),model=H.result(),groups=H.overlap(model);
+ assert.doesNotMatch(live.innerHTML,/<svg|<table/);assert.equal((live.innerHTML.match(/<section/g)||[]).length,3);assert.match(live.innerHTML,/Species hidden/);
+ groups.species.forEach(name=>assert.ok(!live.innerHTML.includes(name)));const before=plain(model.labels);control.onclick();
+ groups.species.forEach((name,i)=>groups.counts.forEach(counts=>{if(counts[i])assert.ok(live.innerHTML.includes('<dt>'+name+'</dt><dd>'+counts[i]+'</dd>'))}));
+ assert.deepEqual(plain(H.result().labels),before);control.onclick();assert.match(live.innerHTML,/Species hidden/);groups.species.forEach(name=>assert.ok(!live.innerHTML.includes(name)));
 });
+
 test('scaling scene explains spread and provides a plain transient hover legend',()=>{
  const {H,C}=fixture(),target=chartTarget();target.innerHTML=H.scene(C.scenes[4]);
  assert.doesNotMatch(target.innerHTML,/ml-cluster-table|Standardized standard deviation/);assert.match(target.innerHTML,/<strong>Raw measurements:<\/strong> distances use the original centimeters/);
  H.bindLearn(target,C.scenes[4]);const live=target.querySelector('[data-cluster-live]'),chart=live.charts[0];
- assert.doesNotMatch(live.innerHTML,/ml-cluster-chart-side|data-clear-selection/);
+ assert.doesNotMatch(live.innerHTML,/ml-cluster-chart-side/);
  chart.legends[0].onpointerenter();assert.ok(chart.marks.some(m=>m.classList.values.has('dimmed')));
  chart.legends[0].onpointerleave();assert.ok(chart.marks.every(m=>!m.classList.values.has('dimmed')));
  chart.legends[1].onfocus();assert.ok(chart.marks.some(m=>m.classList.values.has('dimmed')));chart.legends[1].onblur();assert.ok(chart.marks.every(m=>!m.classList.values.has('dimmed')));
+});
+test('weight reveal reports computed cluster averages and ranges without changing groups',()=>{
+ const {H,C,rows}=fixture(),target=chartTarget(),radios=[{value:'species',checked:true},{value:'weight',checked:false}];
+ const query=target.querySelectorAll.bind(target);target.querySelectorAll=sel=>sel==='[data-cluster-attribute]'?radios:query(sel);
+ target.innerHTML=H.scene(C.scenes[7]);H.bindLearn(target,C.scenes[7]);const live=target.querySelector('[data-cluster-live]'),control=target.querySelector('[data-cluster-control]'),model=H.result(),before=plain(model.labels);
+ radios[1].checked=true;radios[1].onchange();assert.match(live.innerHTML,/Weight hidden/);assert.doesNotMatch(live.innerHTML,/Average weight/);control.onclick();
+ model.counts.forEach((_,j)=>{const values=rows.filter((r,i)=>model.labels[i]===j).map(r=>r.Weight);for(const value of [values.reduce((a,b)=>a+b,0)/values.length,Math.min(...values),Math.max(...values)])assert.ok(live.innerHTML.includes(value.toFixed(1)+' g'))});
+ assert.deepEqual(plain(H.result().labels),before);control.onclick();assert.match(live.innerHTML,/Weight hidden/);assert.doesNotMatch(live.innerHTML,/Average weight/);
 });
 test('3D toggle preserves scaling and renders all fish; keyboard, drag, and reset change the view',()=>{
  const {H,C}=fixture(),target=chartTarget();target.innerHTML=H.scene(C.scenes[4]);
@@ -210,7 +215,7 @@ test('3D toggle preserves scaling and renders all fish; keyboard, drag, and rese
 test('playback advances every 1.2 seconds, respects boundaries, and cleans up on visibility or scene changes',()=>{
  const {H,C,c}=fixture(),target=chartTarget(),timers=new Map(),events=new Map();let nextTimer=0,observer;
  Object.assign(c.window,{setInterval(fn,ms){assert.equal(ms,1200);timers.set(++nextTimer,fn);return nextTimer},clearInterval(id){timers.delete(id)},document:{hidden:false,body:{},addEventListener(k,fn){events.set(k,fn)},removeEventListener(k){events.delete(k)}},MutationObserver:class{constructor(fn){this.fn=fn;observer=this}observe(){}disconnect(){this.disconnected=true}}});
- target.innerHTML=H.scene(C.scenes[6]);H.bindLearn(target,C.scenes[6]);
+ target.innerHTML=H.scene({...C.scenes[5],kind:'cluster-steps'});H.bindLearn(target,{...C.scenes[5],kind:'cluster-steps'});
  const action=name=>target.querySelector('[data-cluster-action="'+name+'"]'),live=target.querySelector('[data-cluster-live]');
  assert.ok(action('back').disabled);live.charts[0].marks[4].onclick();action('play').onclick();assert.equal(timers.size,1);
  [...timers.values()][0]();assert.match(live.innerHTML,/Assign:/);assert.match(live.charts[0].inspector.innerHTML,/Example fish 5/);

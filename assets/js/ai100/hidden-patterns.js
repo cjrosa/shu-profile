@@ -88,27 +88,33 @@ function bindCharts(target,savedSelection){
   const selection=savedSelection||{};
   const marks=Array.from(chart.querySelectorAll('[data-point]')),legends=Array.from(chart.querySelectorAll('[data-highlight]'));
   const inspector=chart.querySelector('[data-inspector]'),tooltip=chart.querySelector('[data-chart-tooltip]');
+  const centersOnly=tooltip?.getAttribute?.('data-centers-only')==='true',interactive=centersOnly?marks.filter(mark=>mark.dataset.point.startsWith('center-')):marks;
   const paint=()=>{
    const selected=marks.find(mark=>mark.dataset.point===selection.key);
    if(!selected)selection.key=null;
    if(tooltip)tooltip.hidden=!selected;
-   marks.forEach(mark=>{const active=mark===selected;mark.classList.toggle('selected',active);mark.classList.toggle('group-highlighted',selection.cluster!=null&&mark.dataset.group===String(selection.cluster));mark.classList.toggle('dimmed',selection.cluster!=null&&mark.dataset.group!==String(selection.cluster));mark.setAttribute('aria-pressed',String(active));mark.tabIndex=active||(!selected&&mark===marks[0])?0:-1});
+   marks.forEach(mark=>{const active=mark===selected;mark.classList.toggle('selected',active);mark.classList.toggle('group-highlighted',selection.cluster!=null&&mark.dataset.group===String(selection.cluster));mark.classList.toggle('dimmed',selection.cluster!=null&&mark.dataset.group!==String(selection.cluster));mark.setAttribute('aria-pressed',String(active));mark.tabIndex=active||(!selected&&mark===interactive[0])?0:-1});
    legends.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.highlight===selection.cluster)));
    if(selected&&inspector){const info=JSON.parse(selected.dataset.details);inspector.innerHTML=`<h4>${esc(info.name)}</h4><dl>${info.details.map(([label,value])=>`<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl>`}
    else if(inspector)inspector.innerHTML=selection.cluster!=null?'<h4>Group highlighted</h4><p>Other groups are dimmed, not removed. Counts still include every fish.</p>':'<h4>Inspect the pattern</h4><p>Select a fish or center for its measurements and current group.</p>';
   };
-  marks.forEach((mark,index)=>{
+  interactive.forEach((mark,index)=>{
    if(!inspector)return;
+   if(centersOnly){
+    mark.setAttribute('role','button');
+    mark.onpointerenter=mark.onfocus=()=>{selection.cluster=mark.dataset.group;paint()};
+    mark.onpointerleave=mark.onblur=()=>{selection.cluster=null;paint()};
+   }
    mark.onclick=()=>{selection.key=mark.dataset.point;selection.cluster=null;paint()};
-   if(tooltip){mark.onpointerenter=mark.onfocus=mark.onclick;mark.onblur=()=>{selection.key=null;paint()}};
+   if(tooltip&&!centersOnly){mark.onpointerenter=mark.onfocus=mark.onclick;mark.onblur=()=>{selection.key=null;paint()}};
    mark.onkeydown=event=>{
     if(event.key==='Enter'||event.key===' '){event.preventDefault();mark.onclick();return}
     const direction=['ArrowRight','ArrowDown'].includes(event.key)?1:['ArrowLeft','ArrowUp'].includes(event.key)?-1:0;
-    if(direction||event.key==='Home'||event.key==='End'){event.preventDefault();const next=marks[event.key==='Home'?0:event.key==='End'?marks.length-1:(index+direction+marks.length)%marks.length];marks.forEach(m=>m.tabIndex=-1);next.tabIndex=0;next.focus()}
+    if(direction||event.key==='Home'||event.key==='End'){event.preventDefault();const next=interactive[event.key==='Home'?0:event.key==='End'?interactive.length-1:(index+direction+interactive.length)%interactive.length];marks.forEach(m=>m.tabIndex=-1);next.tabIndex=0;next.focus()}
     if(event.key==='Escape'){selection.key=null;selection.cluster=null;paint()}
    };
   });
-  if(tooltip){chart.onpointerleave=()=>{if(!chart.contains?.(root.document?.activeElement)){selection.key=null;paint()}}}
+  if(tooltip&&!centersOnly){chart.onpointerleave=()=>{if(!chart.contains?.(root.document?.activeElement)){selection.key=null;paint()}}}
   legends.forEach(button=>{
    if(tooltip||!inspector){const highlight=()=>{selection.key=null;selection.cluster=button.dataset.highlight;paint()},restore=()=>{selection.cluster=null;paint()};button.onpointerenter=button.onfocus=highlight;button.onpointerleave=button.onblur=restore;button.onclick=highlight;button.onkeydown=event=>{if(event.key==='Escape')restore()}}
    else button.onclick=()=>{selection.key=null;selection.cluster=selection.cluster===button.dataset.highlight?null:button.dataset.highlight;paint()};
@@ -126,6 +132,24 @@ function distanceExample(){
 }
 function table(caption,headers,body){return `<div class="ml-cluster-table-wrap" tabindex="0" role="region" aria-label="${esc(caption)}"><table class="ml-cluster-table"><caption>${esc(caption)}</caption><thead><tr>${headers.map(h=>`<th scope="col">${esc(h)}</th>`).join('')}</tr></thead><tbody>${body.map(row=>`<tr>${row.map((v,j)=>j?`<td>${esc(v)}</td>`:`<th scope="row">${esc(v)}</th>`).join('')}</tr>`).join('')}</tbody></table></div>`}
 function summary(model){return table('Group profiles · original measurements in cm',['Cluster','Fish','Mean Length','Mean Height','Mean Width'],model.means.map((p,j)=>['C'+j,model.counts[j],...p.map(v=>v.toFixed(2))]))}
+function speciesCards(model,revealed,attribute='species'){
+ const groups=revealed&&attribute==='species'?overlap(model):null;
+ return `<div class="ml-cluster-species-cards">${model.counts.map((count,j)=>{
+  let content='<p>'+ (attribute==='weight'?'Weight':'Species')+' hidden</p>';
+  if(revealed&&attribute==='weight'){
+   const weights=rows().filter((_,i)=>model.labels[i]===j).map(fish=>fish.Weight);
+   const mean=weights.reduce((a,b)=>a+b,0)/weights.length;
+   content=`<dl><div><dt>Average weight</dt><dd>${mean.toFixed(1)} g</dd></div><div><dt>Lightest</dt><dd>${Math.min(...weights).toFixed(1)} g</dd></div><div><dt>Heaviest</dt><dd>${Math.max(...weights).toFixed(1)} g</dd></div></dl>`;
+  }else if(revealed)content=`<dl>${groups.species.map((name,i)=>groups.counts[j][i]?`<div data-species="${esc(name)}" tabindex="0" aria-label="${esc(name)}: ${groups.counts[j][i]} fish in Cluster ${j}"><dt>${esc(name)}</dt><dd>${groups.counts[j][i]}</dd></div>`:'').join('')}</dl>`;
+  return `<section class="ml-cluster-species-card" style="--cluster-accent:${colors[j]}"><header><h4>Cluster ${j}</h4><span>${count} fish</span></header>${content}</section>`;
+ }).join('')}</div>`;
+}
+
+function bindSpeciesCards(target){
+ const entries=Array.from(target.querySelectorAll?.('[data-species]')||[]);
+ const highlight=name=>entries.forEach(entry=>{entry.classList.toggle('species-match',entry.dataset.species===name);entry.classList.toggle('species-dimmed',name!=null&&entry.dataset.species!==name)});
+ entries.forEach(entry=>{entry.onpointerenter=entry.onfocus=()=>highlight(entry.dataset.species);entry.onpointerleave=entry.onblur=()=>highlight(null);entry.onkeydown=event=>{if(event.key==='Escape')highlight(null)}});
+}
 function speciesTable(model){const o=overlap(model);return `<p>Read across a row to compare species within one cluster. Read down a column to see whether a species spans clusters. Counts sum to ${rows().length} fish.</p>`+table('Species revealed after clustering · counts of fish',['Cluster',...o.species,'Total'],o.counts.map((p,j)=>['C'+j,...p,model.counts[j]]))}
 function marker(x,y,j,size=4){
  const shape=j%7,c=colors[j]||'#61716b';
@@ -141,11 +165,11 @@ function scatter(model,{neutral=false,reveal=false,hoverLegend=false}={}){
  ${[0,10,20,30,40,50,60].map(v=>`<text x="${sx(v)}" y="285" text-anchor="middle">${v}</text>`).join('')}
  <path d="M58 40V264H618" stroke="#61716b" fill="none"/>
  ${rows().map((r,i)=>chartMark(sx(r.Length),sy(r.Height),'fish-'+r.ID,'Fish '+r.ID,[...features.map(f=>[f,r[f]+' cm']),['Assignment',neutral?'Not assigned':'C'+model.labels[i]],...(reveal?[['Species',r.Species]]:[])],neutral?null:model.labels[i],neutral?`<circle cx="${sx(r.Length)}" cy="${sy(r.Height)}" r="3.5" fill="#61716b"/>`:marker(sx(r.Length),sy(r.Height),model.labels[i]),i===0)).join('')}
- ${neutral?'':model.means.map((p,j)=>chartMark(sx(p[0]),sy(p[1]),'center-'+j,'C'+j+' center',[...features.map((f,d)=>['Mean '+f,p[d].toFixed(2)+' cm']),['Members',model.counts[j]],['Position','Group means in original units']],j,centerVisual(sx(p[0]),sy(p[1]),j))).join('')}
+ ${neutral?'':model.means.map((p,j)=>chartMark(sx(p[0]),sy(p[1]),'center-'+j,'C'+j+' center',[...features.map((f,d)=>['Mean '+f,p[d].toFixed(2)+' cm']),['Fish',model.counts[j]]],j,centerVisual(sx(p[0]),sy(p[1]),j))).join('')}
  <text class="ml-cluster-axis-title" x="338" y="311" text-anchor="middle">Length (cm)</text><text class="ml-cluster-axis-title" transform="translate(17 155) rotate(-90)" text-anchor="middle">Height (cm)</text></svg>
  <figcaption>Each mark is one fish. ${neutral?'Only two of the three input measurements are shown.':'Groups use Length, Height, and Width; this view shows two features in original units. + marks a group average.'}</figcaption></figure>`;
  const legend=neutral?'':chartLegend(model.counts.map((_,j)=>'C'+j),model.counts);
- if(hoverLegend)return `<div class="ml-cluster-chart-container ml-cluster-hover-chart"><div class="ml-cluster-distance-chart" data-chart>${graph.replace(/ role="button" tabindex="-?\d+" aria-pressed="false"/g,'')}${legend}</div></div>`;
+ if(hoverLegend)return `<div class="ml-cluster-chart-container ml-cluster-hover-chart"><div class="ml-cluster-distance-chart" data-chart>${graph.replace(/ role="button" tabindex="-?\d+" aria-pressed="false"/g,'')}${legend}<div class="ml-cluster-chart-tooltip" data-chart-tooltip data-centers-only="true" hidden><section class="ml-cluster-inspector" data-inspector role="status" aria-live="polite"></section><button class="ml-btn" type="button" data-clear-selection>Close</button></div></div></div>`;
  return chartFrame(graph,legend);
 }
 function fullPanel(model,{neutral=false,reveal=false,profiles=false,hoverLegend=false}={}){return `${scatter(model,{neutral,reveal,hoverLegend})}${profiles?summary(model):''}${reveal?speciesTable(model):''}`}
@@ -271,8 +295,8 @@ function lessonPresentation(kind,body){
    cards:[['HOLD STEADY','Keep the same fish','Use the same measurements and standardization for every comparison.','measure'],['CHANGE k','Request another partition','Try k=2, k=3, and k=5 to compare broader and finer groups.','groups'],['INTERPRET','Look beyond the count','More groups do not prove that there are more natural categories.','inspect']],
    activity:'Compare different values of k',prompt:'Change the number of clusters. Look for changes in membership and group size.',takeaway:'People request k; the model does not discover it.',detail:'K-means favors compact groups and can miss curved, uneven, or overlapping patterns.'},
   'cluster-species':{
-   cards:[['LEARN FIRST','Keep the groups fixed','The model has already grouped fish using only measurements.','groups'],['REVEAL','Bring back species','Now use the labels held aside to investigate what the groups mean.','reveal'],['COMPARE','Read the overlap','Read across a cluster row and down a species column to compare counts.','inspect']],
-   activity:'Compare clusters with known species',prompt:'Reveal species, then use the table to find a mixed cluster or a species split across groups.',takeaway:'Revealing species does not retrain the model.',detail:'A measurement group can contain several species, and a species can span several groups.'},
+   cards:[['LEARN FIRST','Keep the groups fixed','The model has already grouped fish using only measurements.','groups'],['REVEAL','Bring back more clues','Compare species or weight, which were held aside during learning.','reveal'],['COMPARE','See what groups share','Look for shared species or compare the weights within each group.','inspect']],
+   activity:'What do the groups have in common?',prompt:'Reveal species or weight to explore the same three groups.',takeaway:'Revealing more information does not change the groups.',detail:'Species and Weight were held aside during learning.'},
   'cluster-claim':{
    cards:[['DESCRIBE','Name the pattern','Use group counts and average measurements to describe the fish.','measure'],['LIMIT THE CLAIM','Separate groups from species','A cluster number is an identifier, not a biological explanation.','inspect'],['INVESTIGATE','Take it to the notebook','Compare choices, inspect the evidence, and explain what you found.','reveal']],
    activity:'Build an evidence-based conclusion',prompt:'Use the group profiles below to support a claim about size and shape.',takeaway:'A useful pattern still needs interpretation.',detail:'Explain what the measurements support and what would be an overclaim.'}
@@ -290,7 +314,7 @@ function lessonPresentation(kind,body){
   reveal:'<path d="M3 7h7l3 3h8v10H3ZM6 7V3h12v7m-11 5h10"/>'
  };
  const cards=lesson.cards.map(([label,title,copy,icon])=>`<section class="ml-cluster-input-panel"><svg class="ml-cluster-input-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${drawings[icon]}</svg><span class="ml-cluster-input-label">${esc(label)}</span><h3>${esc(title)}</h3><p>${esc(copy)}</p></section>`).join('');
- return `<div class="ml-cluster-input-flow ml-cluster-lesson-flow">${cards}</div><section class="ml-cluster-activity" aria-label="${esc(lesson.activity)}"><header class="ml-cluster-activity-head"><span class="ml-cluster-overline">LOOK CLOSER</span><h3>${esc(lesson.activity)}</h3><p>${esc(lesson.prompt)}</p>${kind==='cluster-scaling'?scaleButtons():''}</header>${body}</section><div class="ml-cluster-overview-takeaway"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 18h6m-5 3h4M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 3H9c0-1 0-2-1-3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><p><strong>${esc(lesson.takeaway)}</strong>${esc(lesson.detail)}</p></div>`;
+ return `<div class="ml-cluster-input-flow ml-cluster-lesson-flow">${cards}</div><section class="ml-cluster-activity" aria-label="${esc(lesson.activity)}"><header class="ml-cluster-activity-head"><span class="ml-cluster-overline">LOOK CLOSER</span><h3>${esc(lesson.activity)}</h3><p>${esc(lesson.prompt)}</p>${kind==='cluster-scaling'?scaleButtons():kind==='cluster-choice'?`<div class="ml-cluster-k-header">${kControl(3)}</div>`:''}</header>${body}</section><div class="ml-cluster-overview-takeaway"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 18h6m-5 3h4M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 3H9c0-1 0-2-1-3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><p><strong>${esc(lesson.takeaway)}</strong>${esc(lesson.detail)}</p></div>`;
 }
 function scene(s){
  if(s.kind==='cluster-intro')return `<div class="ml-cluster-card ml-cluster-opening">${swimmingIntro()}</div>`;
@@ -299,10 +323,10 @@ function scene(s){
  else if(s.kind==='cluster-inputs')body=inputExplanation();
  else if(s.kind==='cluster-distance')body=distanceExample();
  else if(s.kind==='cluster-scaling')body='<p class="ml-cluster-footnote ml-cluster-scaling-tip"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 18h6m-5 3h4M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 3H9c0-1 0-2-1-3Z"/></svg><span data-scaling-explanation role="status" aria-live="polite"><strong>Raw measurements:</strong> distances use the original centimeters. <strong>Length</strong> varies more than <strong>Width</strong>, so it can have more influence on the groups.</span></p><div data-cluster-live></div>';
- else if(s.kind==='cluster-choice')body=kControl(3)+'<div data-cluster-live></div>';
+ else if(s.kind==='cluster-choice')body='<div data-cluster-live></div>';
  else if(s.kind==='cluster-centers')body=`<div class="ml-cluster-step-message"><svg data-step-icon viewBox="0 0 24 24" aria-hidden="true" focusable="false"></svg><p data-cluster-status role="status" aria-live="polite"></p></div><div class="ml-cluster-guided-layout"><aside class="ml-cluster-guided-rail" aria-label="Learning steps">${[['Place centers','Reveal A and B.'],['Assign fish','Join the nearest center.'],['Move centers','Find each group\u2019s middle.'],['Repeat','Watch the groups settle.']].map(([title,copy],i)=>`${i===3?'<div class="ml-cluster-repeat-row">':String()}<button type="button" class="ml-cluster-guided-step" data-guided-step="${i}" ${i?'disabled':''}><span>${i+1}</span><strong>${title}</strong></button>${i===3?'<div class="ml-cluster-repeat-controls" data-repeat-controls hidden><button class="ml-btn" data-cluster-action="next" type="button" title="Next update" aria-label="Next update">Next</button><button class="ml-btn" data-cluster-action="play" type="button" aria-pressed="false">Play</button></div></div>':String()}`).join('')}<div class="ml-cluster-guided-tools"><button class="ml-btn" data-cluster-action="alternate" type="button">Change starting centers</button><button class="ml-btn" data-cluster-action="restart" type="button">Reset</button></div></aside><div class="ml-cluster-guided-chart"><div data-cluster-live></div></div></div>`;
  else if(s.kind==='cluster-steps')body=`<div class="ml-actions"><button class="ml-btn" data-cluster-action="restart" type="button">Reset</button><button class="ml-btn" data-cluster-action="back" type="button">Back</button><button class="ml-btn" data-cluster-action="play" type="button" aria-pressed="false">Play</button><button class="ml-btn" data-cluster-action="alternate" type="button">Try different starting centers</button><button class="ml-btn primary" data-cluster-action="step" type="button">Assign fish →</button></div><div data-cluster-live></div><p data-cluster-status role="status" aria-live="polite"></p>`;
- else if(s.kind==='cluster-species')body='<button class="ml-btn primary" data-cluster-control="reveal" type="button" aria-pressed="false">Reveal species</button><div data-cluster-live></div>';
+ else if(s.kind==='cluster-species')body='<div class="ml-cluster-reveal-controls"><fieldset class="ml-cluster-scale-buttons"><legend>Compare by</legend><div><label><input type="radio" name="cluster-attribute" value="species" data-cluster-attribute checked><span>Species</span></label><label><input type="radio" name="cluster-attribute" value="weight" data-cluster-attribute><span>Weight</span></label></div></fieldset><button class="ml-btn primary" data-cluster-control="reveal" type="button" aria-pressed="false">Reveal species</button></div><p class="ml-cluster-footnote" data-attribute-explanation></p><div data-cluster-live></div>';
  else body=`<div class="ml-cluster-cards"><article><span>SUPPORTED</span><strong>Similar in these features</strong><p>These measurements form groups with different average size and shape. Species can overlap.</p></article><article><span>NOT ESTABLISHED</span><strong>New species or causes</strong><p>A group number does not identify a biological category or explain why fish differ. This activity explores the observed fish; it does not measure prediction accuracy on unseen fish.</p></article></div><div class="ml-cluster-workflow"><strong>Your notebook investigation</strong><p>Load with pandas → select features → scale → fit KMeans → count and describe → compare k → reveal species.</p></div>${summary(model)}`;
  const presented=lessonPresentation(s.kind,body);
  return `<div class="ml-visual-card ml-cluster-card${s.kind==='cluster-overview'?' ml-cluster-overview':''}${presented!==body?' ml-cluster-lesson':''}${s.kind==='cluster-centers'?' ml-cluster-centers-scene':''}"><div class="ml-loan-heading ml-cluster-scene-heading"><span>${esc(s.cardKicker)}</span><strong>${esc(s.cardTitle)}</strong></div>${presented}<div class="ml-definition"><strong>${esc(s.definition.term)}:</strong> ${esc(s.definition.text)}</div></div>`;
@@ -389,8 +413,15 @@ function bindLearn(target,s){
   views.forEach(radio=>radio.onchange=()=>{if(radio.checked){view=radio.value;update(scale)}});
   update('raw');return;
  }
+ if(s.kind==='cluster-species'){
+  const control=target.querySelector('[data-cluster-control]'),model=result();let attribute='species',revealed=false;
+  const update=()=>{control.textContent=(revealed?'Hide ':'Reveal ')+attribute;control.setAttribute('aria-pressed',String(revealed));live.innerHTML=speciesCards(model,revealed,attribute);bindSpeciesCards(live);target.querySelector('[data-attribute-explanation]').textContent=attribute==='weight'?'Compare average weight and the lightest and heaviest fish in each group. Weight was not used to form the groups.':'Look for shared species across groups. Species names were not used to form the groups.'};
+  control.onclick=()=>{revealed=!revealed;update()};
+  for(const radio of target.querySelectorAll?.('[data-cluster-attribute]')||[])radio.onchange=()=>{if(radio.checked){attribute=radio.value;update()}};
+  update();return;
+ }
  const control=target.querySelector('[data-cluster-control]'),id=control.dataset.clusterControl;
- const update=()=>{const model=result(id==='k'?Number(control.value):3,id==='scale'?control.value:'standardized');live.innerHTML=(id==='scale'||id==='k'?comparison(model):'')+fullPanel(model,{hoverLegend:id==='scale',reveal:id==='reveal'&&control.getAttribute('aria-pressed')==='true'});bindCharts(live,selection)};
+ const update=()=>{const model=result(id==='k'?Number(control.value):3,id==='scale'?control.value:'standardized');live.innerHTML=s.kind==='cluster-species'?speciesCards(model,control.getAttribute('aria-pressed')==='true'):fullPanel(model,{hoverLegend:id==='scale'||id==='k',reveal:id==='reveal'&&control.getAttribute('aria-pressed')==='true'});bindCharts(live,selection);if(s.kind==='cluster-species')bindSpeciesCards(live)};
  if(id==='reveal')control.onclick=()=>{const revealed=control.getAttribute('aria-pressed')!=='true';control.setAttribute('aria-pressed',String(revealed));control.textContent=revealed?'Hide species':'Reveal species';update()};else control.onchange=()=>{resetModelSelection(selection);update()};update();
 }
 function review(target,task,state,onChange){
