@@ -199,7 +199,34 @@
 .ml-cluster-card .ml-cluster-distance .ml-cluster-plot>svg{background:none;border:0;border-radius:0;box-shadow:none}
 .ml-cluster-card .ml-cluster-hover-chart .ml-cluster-plot>svg{background:none;border:0;border-radius:0;box-shadow:none}
 .ml-cluster-centers-scene .ml-cluster-activity>.ml-actions{padding:0;border:0;background:none;gap:7px}
-.ml-cluster-centers-scene .ml-cluster-activity [data-cluster-status]{padding:8px 0 0;margin:0;background:none;border-radius:0;color:var(--ml-muted);font-weight:500}
+.ml-cluster-centers-scene .ml-cluster-activity [data-cluster-status]{padding:12px 14px;margin:12px 0 0;border:1px solid #cedce7;border-left:3px solid var(--ml-blue);background:#edf4fa;border-radius:9px;color:#315b78;font-weight:500;line-height:1.6;min-height:64px}
+.ml-cluster-step-message{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;margin:0 0 16px;border:1px solid #cedce7;border-left:3px solid var(--ml-blue);border-radius:9px;background:#edf4fa;color:#315b78}
+.ml-cluster-card .ml-cluster-step-message>svg{width:28px;height:28px;flex:0 0 28px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ml-cluster-centers-scene .ml-cluster-activity .ml-cluster-step-message [data-cluster-status]{padding:0;margin:0;min-height:0;border:0;background:none;border-radius:0;font-weight:400}
+.ml-cluster-step-message strong{font-weight:750}
+.ml-cluster-guided-layout{display:grid;grid-template-columns:190px minmax(0,1fr);gap:22px;align-items:start}
+.ml-cluster-guided-rail{display:grid;gap:6px;align-content:start;align-self:start}
+.ml-cluster-guided-step{display:grid;grid-template-columns:25px 1fr;gap:3px 8px;text-align:left;padding:12px 10px;border:1px solid var(--ml-line);border-radius:9px;background:#fff;color:var(--ml-ink);cursor:pointer}
+.ml-cluster-guided-step>span{grid-row:1/span 2;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--ml-green-soft);color:var(--ml-green);font-size:11px;font-weight:800}
+.ml-cluster-guided-step strong{font-size:12px}.ml-cluster-guided-step small{grid-column:2;color:var(--ml-muted);font-size:10px;line-height:1.4}
+.ml-cluster-guided-step{align-items:center;gap:7px;grid-template-columns:20px 1fr;padding:7px 9px;min-height:36px;border-radius:7px}
+.ml-cluster-guided-step>span{grid-row:auto}
+.ml-cluster-guided-step>span{width:20px;height:20px;font-size:10px}
+.ml-cluster-guided-step[aria-current="step"]{border-color:var(--ml-green);background:var(--ml-green-soft)}
+.ml-cluster-guided-step.complete>span{background:var(--ml-green);color:#fff}
+.ml-cluster-guided-step:disabled{opacity:.4;cursor:not-allowed}
+.ml-cluster-guided-tools{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.ml-cluster-guided-tools .ml-btn{padding:6px 8px;font-size:10px}
+.ml-cluster-guided-chart{min-width:0}.ml-cluster-guided-chart .ml-cluster-chart-container{margin-top:0}
+.ml-cluster-guided-chart .ml-cluster-hover-chart .ml-cluster-distance-chart{grid-template-columns:minmax(0,1fr);max-width:none;height:100%}
+.ml-cluster-guided-layout{align-items:stretch}
+.ml-cluster-guided-chart{display:flex;flex-direction:column}
+.ml-cluster-guided-chart>[data-cluster-live]{flex:1;display:flex}
+.ml-cluster-guided-chart .ml-cluster-chart-container{width:100%;margin:0}
+.ml-cluster-guided-chart .ml-cluster-plot{height:100%;display:flex;align-items:center}
+.ml-cluster-card .ml-cluster-guided-chart .ml-cluster-demo{width:100%;max-width:none;height:100%;min-height:310px}
+.ml-cluster-centers-scene [data-cluster-status]:empty{display:none}
+@media(max-width:760px){.ml-cluster-guided-layout{grid-template-columns:1fr;gap:14px}.ml-cluster-guided-rail{grid-template-columns:1fr 1fr}.ml-cluster-guided-tools{grid-column:1/-1}}
 .ml-cluster-hover-chart .ml-cluster-legend{justify-content:center;gap:8px 16px}
 .ml-cluster-hover-chart .ml-cluster-distance-chart{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 18px;max-width:760px;align-items:center}
 .ml-cluster-hover-chart .ml-cluster-plot{min-width:0;margin:0}

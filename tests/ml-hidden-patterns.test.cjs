@@ -111,7 +111,7 @@ test('Review interactions record actual evidence, require a change, and survive 
 });
 test('Learn controls update their own workspace; step, restart, alternate and terminal states work',()=>{
  const {H,C}=fixture(),parts=new Map(),element=selector=>{if(!parts.has(selector))parts.set(selector,{innerHTML:'',textContent:'',disabled:false});return parts.get(selector)},target={querySelector:element};
- H.bindLearn(target,C.scenes[5]);const step=element('[data-cluster-action="step"]'),live=element('[data-cluster-live]');
+ H.bindLearn(target,C.scenes[6]);const step=element('[data-cluster-action="step"]'),live=element('[data-cluster-live]');
  assert.match(live.innerHTML,/No assignments yet/);let n=0;while(!step.disabled&&n++<100)step.onclick();assert.ok(step.disabled);assert.match(live.innerHTML,/Stable:/);
  element('[data-cluster-action="restart"]').onclick();assert.equal(step.disabled,false);assert.match(live.innerHTML,/No assignments yet/);
  const first=live.innerHTML;element('[data-cluster-action="alternate"]').onclick();assert.notEqual(live.innerHTML,first);
@@ -122,14 +122,27 @@ test('HTML loads offline data and helper before config and shared renderer',()=>
  names.forEach((n,i)=>{assert.ok(html.includes(n));if(i)assert.ok(html.indexOf(names[i-1])<html.indexOf(n))});
  assert.match(html,/hidden-patterns.css/);
 });
-test('scene six uses a compact chart and hover legend while preserving the learning controls',()=>{
+test('scene six uses a compact chart without a legend while preserving the learning controls',()=>{
  const {H,C}=fixture(),target=chartTarget();target.innerHTML=H.scene(C.scenes[5]);H.bindLearn(target,C.scenes[5]);
  const live=target.querySelector('[data-cluster-live]');assert.match(target.innerHTML,/ml-cluster-centers-scene/);
  assert.doesNotMatch(live.innerHTML,/ml-cluster-chart-side|data-clear-selection|ml-cluster-heading/);
- assert.match(live.innerHTML,/ml-cluster-center-halo/);assert.match(live.innerHTML,/data-highlight/);
- live.charts[0].legends[0].onpointerenter();assert.ok(live.charts[0].marks.at(-2).classList.values.has('group-highlighted'));
- live.charts[0].legends[0].onpointerleave();assert.ok(live.charts[0].marks.every(m=>!m.classList.values.has('dimmed')));
- target.querySelector('[data-cluster-action="step"]').onclick();assert.match(target.querySelector('[data-cluster-status]').textContent,/each point joins its nearest center/);
+ assert.doesNotMatch(live.innerHTML,/ml-cluster-center-halo|data-highlight/);
+ target.querySelector('[data-guided-step="0"]').onclick();target.querySelector('[data-guided-step="1"]').onclick();assert.match(target.querySelector('[data-cluster-status]').innerHTML,/Each fish joins its <strong>nearest center<\/strong>/);
+});
+test('scene six unlocks ordered steps, repeats to stability, and resets the sequence',()=>{
+ const {H,C,c}=fixture(),target=chartTarget(),timers=new Map();let id=0;
+ Object.assign(c.window,{setInterval(fn,ms){assert.equal(ms,1200);timers.set(++id,fn);return id},clearInterval(i){timers.delete(i)}});
+ target.innerHTML=H.scene(C.scenes[5]);H.bindLearn(target,C.scenes[5]);
+ const step=i=>target.querySelector('[data-guided-step="'+i+'"]'),action=name=>target.querySelector('[data-cluster-action="'+name+'"]'),live=target.querySelector('[data-cluster-live]');
+ assert.doesNotMatch(live.innerHTML,/data-point="center-/);assert.equal(step(0).disabled,false);assert.equal(step(1).disabled,true);step(3).onclick();assert.equal(timers.size,0);
+ step(0).onclick();assert.equal((live.innerHTML.match(/data-point="center-/g)||[]).length,2);assert.equal(step(1).disabled,false);assert.equal(step(2).disabled,true);
+ step(1).onclick();assert.match(live.innerHTML,/Assign:/);assert.equal(step(2).disabled,false);assert.equal(step(3).disabled,true);
+ step(2).onclick();assert.match(live.innerHTML,/Move:/);assert.equal(step(3).disabled,false);
+ step(3).onclick();assert.equal(timers.size,1);action('play').onclick();assert.equal(timers.size,0);action('play').onclick();
+ let n=0;while(timers.size&&n++<100)[...timers.values()][0]();assert.match(live.innerHTML,/Stable:/);assert.ok(action('play').hidden);
+ step(1).onclick();assert.match(live.innerHTML,/Assign:/);step(3).onclick();action('alternate').onclick();assert.equal(timers.size,0);assert.equal(step(1).disabled,true);
+ step(0).onclick();action('restart').onclick();assert.equal(step(1).disabled,true);assert.doesNotMatch(live.innerHTML,/data-point="center-/);
+ step(0).onclick();step(1).onclick();step(2).onclick();step(3).onclick();H.bindLearn(target,C.scenes[0]);assert.equal(timers.size,0);
 });
 
 // Small DOM adapter exercises real render output and bound event handlers without a browser dependency.
@@ -200,7 +213,7 @@ test('playback advances every 1.2 seconds, respects boundaries, and cleans up on
  target.innerHTML=H.scene(C.scenes[6]);H.bindLearn(target,C.scenes[6]);
  const action=name=>target.querySelector('[data-cluster-action="'+name+'"]'),live=target.querySelector('[data-cluster-live]');
  assert.ok(action('back').disabled);live.charts[0].marks[4].onclick();action('play').onclick();assert.equal(timers.size,1);
- [...timers.values()][0]();assert.match(live.innerHTML,/Assign:/);assert.match(live.charts[0].inspector.innerHTML,/Example point 5/);
+ [...timers.values()][0]();assert.match(live.innerHTML,/Assign:/);assert.match(live.charts[0].inspector.innerHTML,/Example fish 5/);
  action('step').onclick();assert.equal(timers.size,0);assert.match(live.innerHTML,/Move:/);
  action('back').onclick();assert.match(live.innerHTML,/Assign:/);action('play').onclick();action('play').onclick();assert.equal(timers.size,0);
  action('play').onclick();c.window.document.hidden=true;events.get('visibilitychange')();assert.equal(timers.size,0);c.window.document.hidden=false;
