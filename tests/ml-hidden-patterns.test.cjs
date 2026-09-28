@@ -122,6 +122,15 @@ test('HTML loads offline data and helper before config and shared renderer',()=>
  names.forEach((n,i)=>{assert.ok(html.includes(n));if(i)assert.ok(html.indexOf(names[i-1])<html.indexOf(n))});
  assert.match(html,/hidden-patterns.css/);
 });
+test('scene six uses a compact chart and hover legend while preserving the learning controls',()=>{
+ const {H,C}=fixture(),target=chartTarget();target.innerHTML=H.scene(C.scenes[5]);H.bindLearn(target,C.scenes[5]);
+ const live=target.querySelector('[data-cluster-live]');assert.match(target.innerHTML,/ml-cluster-centers-scene/);
+ assert.doesNotMatch(live.innerHTML,/ml-cluster-chart-side|data-clear-selection|ml-cluster-heading/);
+ assert.match(live.innerHTML,/ml-cluster-center-halo/);assert.match(live.innerHTML,/data-highlight/);
+ live.charts[0].legends[0].onpointerenter();assert.ok(live.charts[0].marks.at(-2).classList.values.has('group-highlighted'));
+ live.charts[0].legends[0].onpointerleave();assert.ok(live.charts[0].marks.every(m=>!m.classList.values.has('dimmed')));
+ target.querySelector('[data-cluster-action="step"]').onclick();assert.match(target.querySelector('[data-cluster-status]').textContent,/each point joins its nearest center/);
+});
 
 // Small DOM adapter exercises real render output and bound event handlers without a browser dependency.
 function chartTarget(){

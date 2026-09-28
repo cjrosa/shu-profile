@@ -198,6 +198,8 @@
 @container(max-width:480px){.ml-cluster-distance>.ml-cluster-distance-chart{gap:8px}.ml-cluster-distance-legend{font-size:10px}.ml-cluster-distance-legend .ml-cluster-distance-key i{width:15px}}
 .ml-cluster-card .ml-cluster-distance .ml-cluster-plot>svg{background:none;border:0;border-radius:0;box-shadow:none}
 .ml-cluster-card .ml-cluster-hover-chart .ml-cluster-plot>svg{background:none;border:0;border-radius:0;box-shadow:none}
+.ml-cluster-centers-scene .ml-cluster-activity>.ml-actions{padding:0;border:0;background:none;gap:7px}
+.ml-cluster-centers-scene .ml-cluster-activity [data-cluster-status]{padding:8px 0 0;margin:0;background:none;border-radius:0;color:var(--ml-muted);font-weight:500}
 .ml-cluster-hover-chart .ml-cluster-legend{justify-content:center;gap:8px 16px}
 .ml-cluster-hover-chart .ml-cluster-distance-chart{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 18px;max-width:760px;align-items:center}
 .ml-cluster-hover-chart .ml-cluster-plot{min-width:0;margin:0}
