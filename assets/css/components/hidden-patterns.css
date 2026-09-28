@@ -180,6 +180,22 @@
 .ml-cluster-distance-key>span+span i{border-color:var(--ml-blue);border-top-style:dashed}
 .ml-cluster-mark>.ml-cluster-hit{pointer-events:all}
 .ml-cluster-distance-chart{position:relative;max-width:600px;margin:auto}
+.ml-cluster-distance>.ml-cluster-distance-chart{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:16px;max-width:760px}
+.ml-cluster-distance .ml-cluster-plot{min-width:0;margin:0}
+.ml-cluster-distance-legend{display:flex;flex-direction:column;gap:12px;font-size:11px;color:var(--ml-muted)}
+.ml-cluster-distance-legend .ml-cluster-distance-key{flex-direction:column;gap:12px;margin:0}
+.ml-cluster-line-key{cursor:pointer}
+.ml-cluster-distance-chart:has(.ml-cluster-line-key.similar:is(:hover,:focus)) .ml-cluster-distance-line.different,
+.ml-cluster-distance-chart:has(.ml-cluster-line-key.similar:is(:hover,:focus)) .ml-cluster-mark:last-of-type,
+.ml-cluster-distance-chart:has(.ml-cluster-line-key.similar:is(:hover,:focus)) .ml-cluster-line-key.different,
+.ml-cluster-distance-chart:has(.ml-cluster-line-key.different:is(:hover,:focus)) .ml-cluster-distance-line.similar,
+.ml-cluster-distance-chart:has(.ml-cluster-line-key.different:is(:hover,:focus)) .ml-cluster-mark:first-of-type,
+.ml-cluster-distance-chart:has(.ml-cluster-line-key.different:is(:hover,:focus)) .ml-cluster-line-key.similar{opacity:.2}
+.ml-cluster-distance-chart:has(.ml-cluster-line-key.similar:is(:hover,:focus)) .ml-cluster-distance-line.similar,
+.ml-cluster-distance-chart:has(.ml-cluster-line-key.different:is(:hover,:focus)) .ml-cluster-distance-line.different{animation:ml-distance-breathe 1.6s ease-in-out infinite}
+@keyframes ml-distance-breathe{0%,100%{stroke-width:3;opacity:.65}50%{stroke-width:6;opacity:1}}
+@media(prefers-reduced-motion:reduce){.ml-cluster-distance-chart:has(.ml-cluster-line-key.similar:is(:hover,:focus)) .ml-cluster-distance-line.similar,.ml-cluster-distance-chart:has(.ml-cluster-line-key.different:is(:hover,:focus)) .ml-cluster-distance-line.different{animation:none;stroke-width:6;opacity:1}}
+@container(max-width:480px){.ml-cluster-distance>.ml-cluster-distance-chart{gap:8px}.ml-cluster-distance-legend{font-size:10px}.ml-cluster-distance-legend .ml-cluster-distance-key i{width:15px}}
 .ml-cluster-card .ml-cluster-distance .ml-cluster-plot>svg{background:none;border:0;border-radius:0;box-shadow:none}
 .ml-cluster-card .ml-cluster-hover-chart .ml-cluster-plot>svg{background:none;border:0;border-radius:0;box-shadow:none}
 .ml-cluster-hover-chart .ml-cluster-legend{justify-content:center;gap:8px 16px}
