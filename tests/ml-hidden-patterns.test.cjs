@@ -138,11 +138,11 @@ test('scene six unlocks ordered steps, repeats to stability, and resets the sequ
  step(0).onclick();assert.equal((live.innerHTML.match(/data-point="center-/g)||[]).length,2);assert.equal(step(1).disabled,false);assert.equal(step(2).disabled,true);
  step(1).onclick();assert.match(live.innerHTML,/Assign:/);assert.equal(step(2).disabled,false);assert.equal(step(3).disabled,true);
  step(2).onclick();assert.match(live.innerHTML,/Move:/);assert.equal(step(3).disabled,false);
- step(3).onclick();assert.equal(timers.size,1);action('play').onclick();assert.equal(timers.size,0);action('play').onclick();
- let n=0;while(timers.size&&n++<100)[...timers.values()][0]();assert.match(live.innerHTML,/Stable:/);assert.ok(action('play').hidden);
+ step(3).onclick();assert.equal(timers.size,0);action('next').onclick();assert.match(live.innerHTML,/Assign:/);action('play').onclick();assert.equal(timers.size,1);action('play').onclick();assert.equal(timers.size,0);action('play').onclick();
+ let n=0;while(timers.size&&n++<100)[...timers.values()][0]();assert.match(live.innerHTML,/Stable:/);assert.ok(action('play').disabled);assert.ok(action('next').disabled);
  step(1).onclick();assert.match(live.innerHTML,/Assign:/);step(3).onclick();action('alternate').onclick();assert.equal(timers.size,0);assert.equal(step(1).disabled,true);
  step(0).onclick();action('restart').onclick();assert.equal(step(1).disabled,true);assert.doesNotMatch(live.innerHTML,/data-point="center-/);
- step(0).onclick();step(1).onclick();step(2).onclick();step(3).onclick();H.bindLearn(target,C.scenes[0]);assert.equal(timers.size,0);
+ step(0).onclick();step(1).onclick();step(2).onclick();step(3).onclick();action('play').onclick();H.bindLearn(target,C.scenes[0]);assert.equal(timers.size,0);
 });
 
 // Small DOM adapter exercises real render output and bound event handlers without a browser dependency.

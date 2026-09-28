@@ -215,6 +215,11 @@
 .ml-cluster-guided-step[aria-current="step"]{border-color:var(--ml-green);background:var(--ml-green-soft)}
 .ml-cluster-guided-step.complete>span{background:var(--ml-green);color:#fff}
 .ml-cluster-guided-step:disabled{opacity:.4;cursor:not-allowed}
+.ml-cluster-repeat-row{border:1px solid var(--ml-line);border-radius:7px;overflow:hidden}
+.ml-cluster-repeat-row>.ml-cluster-guided-step{width:100%;border:0;border-radius:0}
+.ml-cluster-repeat-row:has([aria-current="step"]){border-color:var(--ml-green);background:var(--ml-green-soft)}
+.ml-cluster-repeat-controls{display:flex;gap:6px;padding:0 9px 8px 36px}
+.ml-cluster-repeat-controls .ml-btn{padding:5px 8px;font-size:10px}
 .ml-cluster-guided-tools{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .ml-cluster-guided-tools .ml-btn{padding:6px 8px;font-size:10px}
 .ml-cluster-guided-chart{min-width:0}.ml-cluster-guided-chart .ml-cluster-chart-container{margin-top:0}
