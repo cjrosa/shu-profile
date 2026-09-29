@@ -63,7 +63,7 @@ test('species comparison cannot affect clustering and its row/column totals matc
  assert.deepEqual(plain(H.kmeans(H.standardize(raw).points).labels),before.labels);
 });
 test('teaching trace alternates assignments and means, leaves observations fixed, and reaches stability',()=>{
- const {H}=fixture(),trace=H.demo(),again=H.demo();assert.deepEqual(plain(trace),plain(again));
+ const {H}=fixture();const starts=new Set();for(let i=0;i<8;i++){const frames=H.demo(i);starts.add(JSON.stringify(frames[0].centers));assert.equal(frames.at(-1).phase,'stable')}assert.equal(starts.size,8);assert.deepEqual(plain(H.demo(8)),plain(H.demo(0)));const trace=H.demo(),again=H.demo();assert.deepEqual(plain(trace),plain(again));
  assert.equal(trace[0].phase,'start');assert.equal(trace.at(-1).phase,'stable');
  assert.ok(trace.filter(t=>t.phase==='move').length>1);
  for(let i=1;i<trace.length;i++){
@@ -142,7 +142,7 @@ test('scene six unlocks ordered steps, repeats to stability, and resets the sequ
  step(2).onclick();assert.match(live.innerHTML,/Move:/);assert.equal(step(3).disabled,false);
  step(3).onclick();assert.equal(timers.size,0);action('next').onclick();assert.match(live.innerHTML,/Assign:/);action('play').onclick();assert.equal(timers.size,1);action('play').onclick();assert.equal(timers.size,0);action('play').onclick();
  let n=0;while(timers.size&&n++<100)[...timers.values()][0]();assert.match(live.innerHTML,/Stable:/);assert.ok(action('play').disabled);assert.ok(action('next').disabled);
- step(1).onclick();assert.match(live.innerHTML,/Assign:/);step(3).onclick();action('alternate').onclick();assert.equal(timers.size,0);assert.equal(step(1).disabled,true);
+ step(1).onclick();assert.match(live.innerHTML,/Assign:/);step(3).onclick();action('alternate').onclick();assert.equal(timers.size,0);assert.equal(step(1).disabled,false);assert.match(live.innerHTML,/Start:/);
  step(0).onclick();action('restart').onclick();assert.equal(step(1).disabled,true);assert.doesNotMatch(live.innerHTML,/data-point="center-/);
  step(0).onclick();step(1).onclick();step(2).onclick();step(3).onclick();action('play').onclick();H.bindLearn(target,C.scenes[0]);assert.equal(timers.size,0);
 });
