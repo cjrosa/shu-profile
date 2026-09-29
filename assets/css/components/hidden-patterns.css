@@ -301,3 +301,74 @@
 @media(max-width:1100px){.ml-cluster-activity-head:has(.ml-cluster-scale-buttons)>.ml-cluster-header-controls{grid-column:1;grid-row:auto;margin-top:8px}.ml-cluster-activity-head:has(.ml-cluster-header-controls){grid-template-columns:1fr}}
 @media(max-width:900px){.ml-cluster-activity-head:has(.ml-cluster-scale-buttons){grid-template-columns:1fr;row-gap:6px}.ml-cluster-scale-buttons{grid-column:1;grid-row:auto;margin-top:8px}}
 @container(max-width:420px){.ml-cluster-chart-side{padding:12px}.ml-cluster-card .ml-cluster-plot svg text,.ml-cluster-card .ml-cluster-demo text{font-size:18px}}
+
+.ml-cluster-investigation{margin-top:1.5rem;padding:1.25rem;border:1px solid #dce5df;border-radius:16px;background:#f5f8f6;}
+.ml-cluster-investigation h4{margin:.65rem 0 1rem;font-size:1.15rem;line-height:1.5;}
+.ml-cluster-investigation summary{cursor:pointer;font-weight:700;}
+.ml-cluster-investigation .ml-actions{margin-top:1rem;}
+
+/* Compact questions with a distinct color for each evidence view. */
+.ml-cluster-card [data-investigation]{--qa:#397447;--qt:#edf5ef;display:flow-root;margin-top:14px;padding:12px 16px;border-radius:12px;border-left:4px solid var(--qa);background:var(--qt)}
+.ml-cluster-card [data-question-mode="species"]{--qa:#355f99;--qt:#eff4fb}
+.ml-cluster-card [data-question-mode="weight"]{--qa:#925014;--qt:#fff6e9}
+.ml-question-label{display:inline-flex;align-items:center;gap:6px;color:var(--qa);font-size:14px;font-weight:750;margin-right:12px}
+.ml-question-count{float:right;font-size:12px;line-height:20px;color:#59666b;text-align:right}
+.ml-cluster-card [data-investigation] svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ml-cluster-card [data-investigation] h4{font-size:18px;line-height:1.4;margin:7px 0 10px;font-weight:650}
+.ml-cluster-card [data-investigation] details{float:left;max-width:65%}
+.ml-cluster-card [data-investigation] summary{display:flex;align-items:center;gap:6px;width:fit-content;font-size:14px;color:var(--qa);list-style:none;padding:6px 0}
+.ml-cluster-card [data-investigation] summary::-webkit-details-marker{display:none}
+.ml-cluster-card [data-investigation] details p{font-size:14px;line-height:1.5;margin:6px 0 0}
+.ml-cluster-card [data-investigation] .ml-actions{display:flex;float:right;gap:6px;margin:0}
+.ml-cluster-card [data-investigation] .ml-btn{min-height:34px;padding:5px 10px;border-radius:8px;font-size:13px;line-height:1.3}
+.ml-cluster-card [data-investigation] [data-question-next]:not(:disabled){background:var(--qa);border-color:var(--qa);color:white}
+.ml-cluster-card [data-investigation]>p{clear:both;font-size:13px;line-height:1.4;margin:0;padding-top:10px;color:var(--qa)}
+@media(max-width:540px){.ml-cluster-card [data-investigation] details{float:none;max-width:100%}.ml-cluster-card [data-investigation] .ml-actions{margin-top:8px}.ml-cluster-card [data-investigation] h4{font-size:16px}}
+
+/* Keep hint controls beside navigation; expand hint text across the card. */
+.ml-cluster-card [data-investigation]{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px}
+.ml-cluster-card [data-investigation]>div[aria-live]{grid-column:1/-1}
+.ml-cluster-card [data-investigation] details{display:contents;float:none;max-width:none}
+.ml-cluster-card [data-investigation] details summary{grid-column:1;grid-row:2;align-self:start}
+.ml-cluster-card [data-investigation] .ml-actions{grid-column:2;grid-row:2;float:none;align-self:start}
+.ml-cluster-card [data-investigation] details p{grid-column:1/-1;grid-row:3;margin:10px 0 0;padding-top:10px;border-top:1px solid var(--qa)}
+.ml-cluster-card [data-investigation] details:not([open])>p{display:none}
+.ml-cluster-card [data-investigation]>p{grid-column:1/-1}
+@media(max-width:540px){.ml-cluster-card [data-investigation] .ml-actions{margin-top:0}}
+
+.ml-cluster-card [data-investigation] details p{width:100%;max-width:none;box-sizing:border-box;justify-self:stretch}
+
+.ml-cluster-card [data-investigation] .ml-question-hint-toggle{grid-column:1;grid-row:2;justify-self:start;align-self:start;display:inline-flex;align-items:center;gap:6px;padding:6px 0;background:none;border:0;color:var(--qa);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.ml-cluster-card [data-investigation] .ml-question-hint{grid-column:1/-1;grid-row:3;width:100%;max-width:none;box-sizing:border-box;margin:10px 0 0;padding:10px 0 0;border-top:1px solid #d9dede;font-size:14px;line-height:1.5;color:inherit}
+.ml-cluster-card [data-investigation] .ml-question-hint[hidden]{display:none}
+
+/* Final claim uses the same compact, colored visual language as the questions. */
+.ml-cluster-card .ml-claim-response{margin-top:16px}
+.ml-cluster-card .ml-claim-response>h3{font-size:20px;line-height:1.4;margin:0 0 14px}
+.ml-claim-prompts{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:14px}
+.ml-cluster-card .ml-claim-prompt{padding:14px 16px;border:1px solid #dce5df;border-top:4px solid var(--claim-accent);border-radius:12px;background:#fff}
+.ml-cluster-card .ml-claim-prompt h4{display:flex;align-items:center;gap:8px;margin:0 0 7px;color:var(--claim-accent);font-size:14px;line-height:1.4}
+.ml-cluster-card .ml-claim-prompt p{font-size:13px;line-height:1.45;margin:6px 0 0}
+.ml-cluster-card .ml-claim-prompt svg,.ml-cluster-card .ml-cluster-claim-evidence svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ml-cluster-card .ml-cluster-claim-evidence{margin-top:16px;border:1px solid #dce5df;border-radius:12px;background:#fff;overflow:hidden}
+.ml-cluster-card .ml-cluster-claim-evidence summary{display:flex;align-items:center;gap:8px;padding:12px 16px;cursor:pointer;color:#355f99;font-size:14px;font-weight:700;list-style:none}
+.ml-cluster-claim-evidence summary::-webkit-details-marker{display:none}
+.ml-claim-chevron{margin-left:auto;font-size:20px;font-weight:400}
+.ml-cluster-claim-evidence[open] .ml-claim-chevron{transform:rotate(45deg)}
+.ml-cluster-claim-evidence>div{padding:0 16px 16px;border-top:1px solid #d9dede}
+@media(max-width:760px){.ml-claim-prompts{grid-template-columns:1fr;gap:10px}}
+
+.ml-cluster-card .ml-cluster-claim-evidence{display:block;width:100%;min-width:0;padding:0}
+.ml-cluster-card .ml-cluster-claim-evidence>div{width:100%;min-width:0;box-sizing:border-box}
+
+.ml-cluster-card details.ml-claim-prompt{padding:0;overflow:hidden}
+.ml-cluster-card .ml-claim-prompt>summary{padding:12px 14px;list-style:none;cursor:pointer;height:100%;box-sizing:border-box}
+.ml-claim-prompt>summary::-webkit-details-marker{display:none}
+.ml-claim-reveal-label{display:block;margin-top:10px;font-size:11px;font-weight:700;color:var(--claim-accent)}
+.ml-claim-prompt[open]>summary{height:auto}
+.ml-claim-prompt[open] .ml-claim-reveal-label{display:none}
+.ml-cluster-card .ml-claim-answer{margin:0 16px 14px;padding-top:12px;border-top:1px solid #d9dede;font-size:14px;line-height:1.5}
+.ml-claim-answer>strong{color:var(--claim-accent);font-size:12px}
+.ml-cluster-card .ml-claim-answer p{font-size:13px}
+
+.ml-cluster-claim-evidence>div>.ml-cluster-scale-buttons{margin-top:14px}

@@ -90,7 +90,7 @@ test('notebook output and visual summaries use the computed results',()=>{
  assert.match(target.innerHTML,/Width also affects assignments/);
 });
 test('each scene renders the shared card, beginner definition, and valid chart markup',()=>{
- const {H,C}=fixture();C.scenes.forEach(s=>{const html=H.scene(s);assert.match(html,/ml-cluster-card/);if(s.kind!=='cluster-intro')assert.match(html,/ml-definition/);assert.doesNotMatch(html,/undefined|NaN/)});
+ const {H,C}=fixture();C.scenes.forEach(s=>{const html=H.scene(s);assert.match(html,/ml-cluster-card/);if(s.definition)assert.match(html,/ml-definition/);else assert.doesNotMatch(html,/ml-definition/);assert.doesNotMatch(html,/undefined|NaN/)});
  assert.doesNotMatch(H.scene(C.scenes[0]),/; Roach|; Perch|; Smelt|ml-definition|ml-cluster-cards|ml-cluster-intro-caption/);
  assert.match(H.scene(C.scenes[1]),/ml-cluster-cards/);assert.match(H.scene(C.scenes[1]),/ml-definition/);
 });
@@ -160,7 +160,7 @@ function chartTarget(){
    const control=html.match(/data-cluster-control="(\w+)"/);if(control){const el=target.querySelector('[data-cluster-control]');el.dataset.clusterControl=control[1];el.value=control[1]==='k'?'3':'standardized';el.setAttribute('aria-pressed','false')}
   },get innerHTML(){return markup},
   querySelectorAll(sel){return sel==='[data-chart]'?charts:sel==='[data-point]'?charts.flatMap(c=>c.marks):[]},
-  querySelector(sel){if(!controls.has(sel))controls.set(sel,sel==='[data-cluster-live]'?chartTarget():element());return controls.get(sel)}
+  querySelector(sel){if(!controls.has(sel))controls.set(sel,(sel==='[data-cluster-live]'||sel==='[data-investigation]')?chartTarget():element());return controls.get(sel)}
  };return target;
 }
 test('scene seven uses a plain hover legend and changing k updates all group counts',()=>{
@@ -246,4 +246,27 @@ test('Python and notebook exports preserve all eight complete scripts without fa
  vm.runInContext(source.slice(source.indexOf('function download(ext)'),source.indexOf('function reset()')),c);
  c.download('py');let text=await blob.text();assert.equal(link.clicked,true);assert.equal(link.download,'hidden_patterns.py');assert.match(text,/Requires Python, pandas, scikit-learn/);C.cells.forEach(cell=>assert.ok(text.includes(cell.hint)));assert.match(text,/print\(pd.crosstab/);
  c.download('ipynb');const book=JSON.parse(await blob.text());assert.equal(book.nbformat,4);assert.equal(book.cells.length,8);book.cells.forEach((cell,i)=>{assert.equal(cell.source.join(''),C.cells[i].hint);assert.deepEqual(cell.outputs,[]);assert.equal(cell.execution_count,null)});
+});
+
+test('scene eight guides hidden predictions and revealed evidence, preserving question positions',()=>{
+ const {H,C}=fixture(),target=chartTarget();target.innerHTML=H.scene(C.scenes[7]);H.bindLearn(target,C.scenes[7]);
+ const panel=target.querySelector('[data-investigation]'),reveal=target.querySelector('[data-cluster-control]');
+ assert.match(panel.innerHTML,/What does the number of fish in each group tell you/);
+ panel.querySelector('[data-question-next]').onclick();assert.match(panel.innerHTML,/one species or several/);
+ reveal.onclick();assert.match(panel.innerHTML,/Which species appear in all three/);
+ panel.querySelector('[data-question-next]').onclick();assert.match(panel.innerHTML,/32 Bream/);
+ reveal.onclick();assert.match(panel.innerHTML,/one species or several/);
+ assert.match(H.scene(C.scenes[8]),/What does finding Perch in all three groups tell you/);
+});
+
+test('Next after the last hidden question reveals the selected cluster information',()=>{
+ const {H,C}=fixture(),target=chartTarget();target.innerHTML=H.scene(C.scenes[7]);H.bindLearn(target,C.scenes[7]);
+ const panel=target.querySelector('[data-investigation]'),control=target.querySelector('[data-cluster-control]');
+ panel.querySelector('[data-question-next]').onclick();panel.querySelector('[data-question-next]').onclick();
+ assert.match(panel.innerHTML,/What would revealing species or weight/);
+ assert.doesNotMatch(panel.innerHTML,/data-question-next disabled/);
+ panel.querySelector('[data-question-next]').onclick();
+ assert.equal(control.getAttribute('aria-pressed'),'true');
+ assert.match(panel.innerHTML,/Which species appear in all three/);
+ assert.match(target.querySelector('[data-cluster-live]').innerHTML,/Bream/);
 });
