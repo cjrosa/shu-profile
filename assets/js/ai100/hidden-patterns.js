@@ -88,7 +88,7 @@ function bindCharts(target,savedSelection){
   const selection=savedSelection||{};
   const marks=Array.from(chart.querySelectorAll('[data-point]')),legends=Array.from(chart.querySelectorAll('[data-highlight]'));
   const inspector=chart.querySelector('[data-inspector]'),tooltip=chart.querySelector('[data-chart-tooltip]');
-  const centersOnly=tooltip?.getAttribute?.('data-centers-only')==='true',interactive=centersOnly?marks.filter(mark=>mark.dataset.point.startsWith('center-')):marks;
+  const clickOnly=tooltip?.getAttribute?.('data-click-only')==='true',centersOnly=tooltip?.getAttribute?.('data-centers-only')==='true',interactive=centersOnly?marks.filter(mark=>mark.dataset.point.startsWith('center-')):marks;
   const paint=()=>{
    const selected=marks.find(mark=>mark.dataset.point===selection.key);
    if(!selected)selection.key=null;
@@ -106,7 +106,7 @@ function bindCharts(target,savedSelection){
     mark.onpointerleave=mark.onblur=()=>{selection.cluster=null;paint()};
    }
    mark.onclick=()=>{selection.key=mark.dataset.point;selection.cluster=null;paint()};
-   if(tooltip&&!centersOnly){mark.onpointerenter=mark.onfocus=mark.onclick;mark.onblur=()=>{selection.key=null;paint()}};
+   if(tooltip&&!centersOnly&&!clickOnly){mark.onpointerenter=mark.onfocus=mark.onclick;mark.onblur=()=>{selection.key=null;paint()}};
    mark.onkeydown=event=>{
     if(event.key==='Enter'||event.key===' '){event.preventDefault();mark.onclick();return}
     const direction=['ArrowRight','ArrowDown'].includes(event.key)?1:['ArrowLeft','ArrowUp'].includes(event.key)?-1:0;
@@ -114,7 +114,7 @@ function bindCharts(target,savedSelection){
     if(event.key==='Escape'){selection.key=null;selection.cluster=null;paint()}
    };
   });
-  if(tooltip&&!centersOnly){chart.onpointerleave=()=>{if(!chart.contains?.(root.document?.activeElement)){selection.key=null;paint()}}}
+  if(tooltip&&!centersOnly&&!clickOnly){chart.onpointerleave=()=>{if(!chart.contains?.(root.document?.activeElement)){selection.key=null;paint()}}}
   legends.forEach(button=>{
    if(tooltip||!inspector){const highlight=()=>{selection.key=null;selection.cluster=button.dataset.highlight;paint()},restore=()=>{selection.cluster=null;paint()};button.onpointerenter=button.onfocus=highlight;button.onpointerleave=button.onblur=restore;button.onclick=highlight;button.onkeydown=event=>{if(event.key==='Escape')restore()}}
    else button.onclick=()=>{selection.key=null;selection.cluster=selection.cluster===button.dataset.highlight?null:button.dataset.highlight;paint()};
@@ -174,16 +174,16 @@ function marker(x,y,j,size=4){
  if(shape===3||shape===6)return `<path d="M${x} ${y-size-1}L${x+size+1} ${y}L${x} ${y+size+1}L${x-size-1} ${y}Z" fill="${shape===6?'white':c}" stroke="${c}"/>`;
  return `<circle cx="${x}" cy="${y}" r="${size}" fill="${shape===4?'white':c}" stroke="${c}"/>`;
 }
-function scatter(model,{neutral=false,reveal=false,hoverLegend=false}={}){
+function scatter(model,{neutral=false,reveal=false,hoverLegend=false,showCenters=true}={}){
  const sx=v=>58+v/65*560,sy=v=>264-v/20*224;
  const graph=`<figure class="ml-cluster-plot"><svg viewBox="0 0 660 320" role="group" aria-label="${rows().length} fish: Length versus Height in centimeters. ${neutral?'Species hidden; no groups shown.':model.k+' clusters, distinguished by shapes and colors. Width also affects assignments.'}">
  ${[0,5,10,15,20].map(v=>`<path d="M58 ${sy(v)}H618" stroke="#dce6e1"/><text x="49" y="${sy(v)+4}" text-anchor="end">${v}</text>`).join('')}
  ${[0,10,20,30,40,50,60].map(v=>`<text x="${sx(v)}" y="285" text-anchor="middle">${v}</text>`).join('')}
  <path d="M58 40V264H618" stroke="#61716b" fill="none"/>
  ${rows().map((r,i)=>chartMark(sx(r.Length),sy(r.Height),'fish-'+r.ID,'Fish '+r.ID,[...features.map(f=>[f,r[f]+' cm']),['Assignment',neutral?'Not assigned':'C'+model.labels[i]],...(reveal?[['Species',r.Species]]:[])],neutral?null:model.labels[i],neutral?`<circle cx="${sx(r.Length)}" cy="${sy(r.Height)}" r="3.5" fill="#61716b"/>`:marker(sx(r.Length),sy(r.Height),model.labels[i]),i===0)).join('')}
- ${neutral?'':model.means.map((p,j)=>chartMark(sx(p[0]),sy(p[1]),'center-'+j,'C'+j+' center',[...features.map((f,d)=>['Mean '+f,p[d].toFixed(2)+' cm']),['Fish',model.counts[j]]],j,centerVisual(sx(p[0]),sy(p[1]),j))).join('')}
+ ${neutral||!showCenters?'':model.means.map((p,j)=>chartMark(sx(p[0]),sy(p[1]),'center-'+j,'C'+j+' center',[...features.map((f,d)=>['Mean '+f,p[d].toFixed(2)+' cm']),['Fish',model.counts[j]]],j,centerVisual(sx(p[0]),sy(p[1]),j))).join('')}
  <text class="ml-cluster-axis-title" x="338" y="311" text-anchor="middle">Length (cm)</text><text class="ml-cluster-axis-title" transform="translate(17 155) rotate(-90)" text-anchor="middle">Height (cm)</text></svg>
- <figcaption>Each mark is one fish. ${neutral?'Only two of the three input measurements are shown.':'Groups use Length, Height, and Width; this view shows two features in original units. + marks a group average.'}</figcaption></figure>`;
+ <figcaption>Each mark is one fish. ${neutral?'Only two of the three input measurements are shown.':'Groups use Length, Height, and Width; this view shows two features in original units.'+(showCenters?' + marks a group average.':'')}</figcaption></figure>`;
  const legend=neutral?'':chartLegend(model.counts.map((_,j)=>'C'+j),model.counts);
  if(hoverLegend)return `<div class="ml-cluster-chart-container ml-cluster-hover-chart"><div class="ml-cluster-distance-chart" data-chart>${graph.replace(/ role="button" tabindex="-?\d+" aria-pressed="false"/g,'')}${legend}<div class="ml-cluster-chart-tooltip" data-chart-tooltip data-centers-only="true" hidden><section class="ml-cluster-inspector" data-inspector role="status" aria-live="polite"></section><button class="ml-btn" type="button" data-clear-selection>Close</button></div></div></div>`;
  return chartFrame(graph,legend);
@@ -226,7 +226,7 @@ function toyView(frame,compact=false,showCenters=true){
  if(compact){
   graph=graph.replace(/<div class="ml-cluster-heading">[\s\S]*?<\/div>/,'');
   graph=graph.replace('<path d="M52 25V266H622"', [0,2,4,6,8].map(v=>`<path d="M52 ${sy(v)}H622" stroke="#dce6e1" fill="none"/><text x="43" y="${sy(v)+4}" text-anchor="end">${v}</text>`).join('')+'<path d="M52 25V266H622"');
-  return `<div class="ml-cluster-chart-container ml-cluster-hover-chart"><div class="ml-cluster-distance-chart" data-chart><figure class="ml-cluster-plot">${graph}</figure><div class="ml-cluster-chart-tooltip" data-chart-tooltip hidden><section class="ml-cluster-inspector" data-inspector role="status" aria-live="polite"></section></div></div></div>`;
+  return `<div class="ml-cluster-chart-container ml-cluster-hover-chart"><div class="ml-cluster-distance-chart" data-chart><figure class="ml-cluster-plot">${graph}</figure><div class="ml-cluster-chart-tooltip" data-chart-tooltip data-click-only="true" hidden><section class="ml-cluster-inspector" data-inspector role="status" aria-live="polite"></section><button class="ml-btn" type="button" data-clear-selection>Close</button></div></div></div>`;
  }
  return chartFrame(graph,chartLegend(['A','B']),`<div class="ml-cluster-heading"><span>ILLUSTRATIVE EXAMPLE &middot; ${toy.length} FISH &middot; 2 FEATURES</span><strong>${esc(text)}</strong></div><p>Centers A and B are the outlined boxes. Circles join A; squares join B. ${frame.iteration?'Iteration '+frame.iteration+'. ':''}This small teaching example uses two features, not the 159-fish analysis.</p>`);
 }
@@ -484,16 +484,21 @@ function notebookOutput(index){
  if(index===2)return 'Standardized Length, Height, Width.\nEach mean ≈ 0; each standard deviation ≈ 1.\nValues are now unitless.';
  if(index===3)return prefix+`${rows().length} assignments learned; no species labels used.\n${countText(model)}\nTen starts; the most compact result is shown.\nCluster numbers are arbitrary identifiers.`;
  if(index===4)return prefix+model.counts.map((n,j)=>'C'+j+'  '+n).join('\n')+`\nTotal: ${rows().length} fish`;
- if(index===5)return prefix+'Cluster  Length  Height  Width (means in cm)\n'+model.means.map((p,j)=>'C'+j+'  '+p.map(v=>v.toFixed(2)).join('  ')).join('\n');
- if(index===6)return prefix+[2,3,5].map(k=>'k='+k+' → '+countText(result(k))).join('\n')+'\nThe original three-cluster assignments are retained.';
+ if(index===5)return prefix+'Length versus Height, colored and shaped by Cluster.\nWidth also affects assignments but is not shown.';
+ if(index===6)return prefix+'Cluster  Length  Height  Width (means in cm)\n'+model.means.map((p,j)=>'C'+j+'  '+p.map(v=>v.toFixed(2)).join('  ')).join('\n');
+ if(index===7)return prefix+[2,3,5].map(k=>'k='+k+' → '+countText(result(k))).join('\n')+'\nThe original three-cluster assignments are retained.';
  const o=overlap(model);return prefix+'Cluster  '+o.species.join('  ')+'\n'+o.counts.map((p,j)=>'C'+j+'  '+p.join('  ')).join('\n')+'\nSpecies was not used to form these groups.';
 }
-function notebook(target,index){const model=result();target.innerHTML=`<div class="ml-cluster-card">${index===6?[2,3,5].map(k=>`<h3>k=${k}</h3>${scatter(result(k))}`).join(''):fullPanel(model,{profiles:index===5,reveal:index===7})}</div>`;bindCharts(target)}
+function notebook(target,index){target.innerHTML=index===5?`<div class="ml-cluster-card">${scatter(result(),{hoverLegend:true,showCenters:false})}</div>`:'';if(index===5)bindCharts(target)}
 // Validate only the documented course scripts; ignore comments and formatting, not Python identifiers or strings.
 function tokens(code){return (code.match(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|#[^\n]*|[A-Za-z_]\w*|\d+(?:\.\d+)?|[^\s]/g)||[]).filter(t=>!t.startsWith('#')).map(t=>t.startsWith("'")?'"'+t.slice(1,-1)+'"':t)}
 function validate(code,hint){
  const a=tokens(code),b=tokens(hint);
  if(a.length!==b.length||a.some((v,i)=>v!==b[i]))return 'Use the shown workflow, including the same variables, inputs, and settings. Comments, spacing, and either straight quote style are allowed.';
+ if(hint.includes('plt.scatter(')){
+  const lines=code.split('\n').filter(l=>l.trim()&&!l.trim().startsWith('#')),expected=hint.split('\n');
+  if(lines.length!==expected.length||lines.some((line,i)=>/^\s/.test(line)!==/^\s/.test(expected[i]))||lines[5].match(/^\s*/)[0]!==lines[6].match(/^\s*/)[0])return 'Keep group and plt.scatter indented equally inside the loop; keep the other statements outside it.';
+ }
  if(hint.startsWith('for ')){
   const lines=code.split('\n').filter(l=>l.trim()&&!l.trim().startsWith('#'));
   if(lines.length!==3||/^\s/.test(lines[0])||!/^([ \t]+)\S/.test(lines[1])||lines[1].match(/^\s*/)[0]!==lines[2].match(/^\s*/)[0])return 'Keep both trial and print indented equally inside the for loop, as shown.';

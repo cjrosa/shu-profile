@@ -170,6 +170,7 @@
 .ml-cluster-mark{cursor:pointer;outline:none}
 .ml-cluster-hit{fill:transparent;pointer-events:all}
 .ml-cluster-selection-ring{fill:none;stroke:transparent;stroke-width:2;pointer-events:none}
+.ml-cluster-centers-scene .ml-cluster-mark:hover .ml-cluster-selection-ring{stroke:#a6641d;stroke-width:3}
 .ml-cluster-mark.selected .ml-cluster-selection-ring{stroke:#a6641d;stroke-width:3}
 .ml-cluster-mark:focus-visible .ml-cluster-selection-ring{stroke:#172f26;stroke-width:3;stroke-dasharray:3 2}
 .ml-cluster-mark.dimmed{opacity:.2}
@@ -238,13 +239,16 @@
 .ml-cluster-guided-tools{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .ml-cluster-guided-tools .ml-btn{padding:6px 8px;font-size:10px}
 .ml-cluster-guided-chart{min-width:0}.ml-cluster-guided-chart .ml-cluster-chart-container{margin-top:0}
-.ml-cluster-guided-chart .ml-cluster-hover-chart .ml-cluster-distance-chart{grid-template-columns:minmax(0,1fr);max-width:none;height:100%}
-.ml-cluster-guided-layout{align-items:stretch}
+.ml-cluster-guided-chart .ml-cluster-hover-chart .ml-cluster-distance-chart{grid-template-columns:minmax(0,1fr);max-width:none;height:auto}
+.ml-cluster-guided-layout{align-items:start}
 .ml-cluster-guided-chart{display:flex;flex-direction:column}
-.ml-cluster-guided-chart>[data-cluster-live]{flex:1;display:flex}
+.ml-cluster-guided-chart>[data-cluster-live]{display:flex}
 .ml-cluster-guided-chart .ml-cluster-chart-container{width:100%;margin:0}
-.ml-cluster-guided-chart .ml-cluster-plot{height:100%;display:flex;align-items:center}
-.ml-cluster-card .ml-cluster-guided-chart .ml-cluster-demo{width:100%;max-width:none;height:100%;min-height:310px}
+.ml-cluster-guided-chart .ml-cluster-plot{height:auto;display:block}
+.ml-cluster-card .ml-cluster-guided-chart .ml-cluster-demo{width:100%;max-width:none;height:auto;min-height:0}
+.ml-cluster-centers-scene .ml-cluster-activity{padding:14px}
+.ml-cluster-centers-scene .ml-cluster-activity-head{margin-bottom:12px;padding-bottom:10px}
+.ml-cluster-centers-scene .ml-cluster-step-message{margin-bottom:12px;padding:10px 12px}
 .ml-cluster-centers-scene [data-cluster-status]:empty{display:none}
 @media(max-width:760px){.ml-cluster-guided-layout{grid-template-columns:1fr;gap:14px}.ml-cluster-guided-rail{grid-template-columns:1fr 1fr}.ml-cluster-guided-tools{grid-column:1/-1}}
 .ml-cluster-hover-chart .ml-cluster-legend{justify-content:center;gap:8px 16px}

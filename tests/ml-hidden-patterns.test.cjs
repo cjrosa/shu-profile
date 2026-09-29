@@ -74,19 +74,19 @@ test('teaching trace alternates assignments and means, leaves observations fixed
  assert.notDeepEqual(plain(trace[0].centers),plain(H.demo(true)[0].centers));
 });
 test('course scripts are accepted with comments and quote variations, but wrong inputs/assignments are rejected',()=>{
- const {H,C}=fixture();assert.equal(C.cells.length,8);assert.equal(C.scenes.length,9);
+ const {H,C}=fixture();assert.equal(C.cells.length,9);assert.equal(C.scenes.length,9);
  C.cells.forEach(cell=>{assert.equal(H.validate(cell.hint,cell.hint),'');assert.equal(H.validate('# A comment\n'+cell.hint.replaceAll('"',"'"),cell.hint),'')});
- for(const [i,from,to] of [[0,'Fish.csv','Other.csv'],[1,'Width','Species'],[1,'X =','Y ='],[2,'fit_transform(X)','fit_transform(fish)'],[3,'fit_predict(scaled)','fit_predict(X)'],[3,'n_clusters=3','n_clusters=7'],[4,'= clusters','= trial'],[5,'Height','Weight'],[6,'[2, 3, 5]','[2, 3, 7]'],[7,'"Species"','"Weight"']])assert.ok(H.validate(C.cells[i].hint.replace(from,to),C.cells[i].hint));
+ for(const [i,from,to] of [[0,'Fish.csv','Other.csv'],[1,'Width','Species'],[1,'X =','Y ='],[2,'fit_transform(X)','fit_transform(fish)'],[3,'fit_predict(scaled)','fit_predict(X)'],[3,'n_clusters=3','n_clusters=7'],[4,'= clusters','= trial'],[5,'Height','Weight'],[7,'[2, 3, 5]','[2, 3, 7]'],[8,'"Species"','"Weight"']])assert.ok(H.validate(C.cells[i].hint.replace(from,to),C.cells[i].hint));
  assert.ok(H.validate('# '+C.cells[3].hint.replaceAll('\n','\n# '),C.cells[3].hint));
- assert.ok(H.validate(C.cells[6].hint.replace('    print','print'),C.cells[6].hint));
+ assert.ok(H.validate(C.cells[7].hint.replace('    print','print'),C.cells[7].hint));
  assert.ok(H.validate(C.cells[1].hint+'\nX = fish',C.cells[1].hint));
 });
 test('notebook output and visual summaries use the computed results',()=>{
  const {H}=fixture(),r=H.result(),target={innerHTML:''};
  r.counts.forEach((n,j)=>assert.ok(H.notebookOutput(4).includes('C'+j+'  '+n)));
- r.means.flat().forEach(v=>assert.ok(H.notebookOutput(5).includes(v.toFixed(2))));
- for(const i of [3,4,5,6,7]){H.notebook(target,i);assert.ok(target.innerHTML.includes('<svg'));assert.ok(!target.innerHTML.includes('NaN'));}
- H.notebook(target,7);assert.match(target.innerHTML,/Species revealed after clustering/);
+ r.means.flat().forEach(v=>assert.ok(H.notebookOutput(6).includes(v.toFixed(2))));
+ for(const i of [0,1,2,3,4,6,7,8]){H.notebook(target,i);assert.equal(target.innerHTML,'');}
+ H.notebook(target,5);assert.match(target.innerHTML,/ml-cluster-hover-chart/);assert.doesNotMatch(target.innerHTML,/NaN|data-point="center-|ml-cluster-table|ml-cluster-chart-side/);
  assert.match(target.innerHTML,/Width also affects assignments/);
 });
 test('each scene renders the shared card, beginner definition, and valid chart markup',()=>{
@@ -125,8 +125,10 @@ test('HTML loads offline data and helper before config and shared renderer',()=>
 test('scene six uses a compact chart without a legend while preserving the learning controls',()=>{
  const {H,C}=fixture(),target=chartTarget();target.innerHTML=H.scene(C.scenes[5]);H.bindLearn(target,C.scenes[5]);
  const live=target.querySelector('[data-cluster-live]');assert.match(target.innerHTML,/ml-cluster-centers-scene/);
- assert.doesNotMatch(live.innerHTML,/ml-cluster-chart-side|data-clear-selection|ml-cluster-heading/);
+ assert.doesNotMatch(live.innerHTML,/ml-cluster-chart-side|ml-cluster-heading/);
  assert.doesNotMatch(live.innerHTML,/ml-cluster-center-halo|data-highlight/);
+ assert.match(live.innerHTML,/data-clear-selection>Close<\/button>/);
+ const chart=live.charts[0];assert.equal(chart.marks[0].onpointerenter,undefined);assert.equal(chart.marks[0].onfocus,undefined);assert.equal(chart.onpointerleave,undefined);chart.marks[0].onclick();assert.equal(chart.tooltip.hidden,false);chart.clear.onclick();assert.equal(chart.tooltip.hidden,true);
  target.querySelector('[data-guided-step="0"]').onclick();target.querySelector('[data-guided-step="1"]').onclick();assert.match(target.querySelector('[data-cluster-status]').innerHTML,/Each fish joins its <strong>nearest center<\/strong>/);
 });
 test('scene six unlocks ordered steps, repeats to stability, and resets the sequence',()=>{
@@ -155,7 +157,7 @@ function chartTarget(){
    for(const chunk of html.split(' data-chart>').slice(1)){
     const marks=Array.from(chunk.matchAll(/<g class="ml-cluster-mark"[^>]*data-point="([^"]+)" data-group="([^"]*)" data-details="([^"]*)"/g),m=>element({point:decode(m[1]),group:m[2],details:decode(m[3])}));
     const legends=Array.from(chunk.matchAll(/data-highlight="([^"]+)"/g),m=>element({highlight:m[1]}));
-    const inspector=chunk.includes('data-inspector')?element():null,clear=element(),tooltip=chunk.includes('data-chart-tooltip')?element():null;if(tooltip&&chunk.includes('data-centers-only'))tooltip.setAttribute('data-centers-only','true');charts.push({marks,legends,inspector,clear,tooltip,querySelectorAll(sel){return sel==='[data-point]'?marks:legends},querySelector(sel){return sel==='[data-inspector]'?inspector:sel==='[data-chart-tooltip]'?tooltip:clear}});
+    const inspector=chunk.includes('data-inspector')?element():null,clear=element(),tooltip=chunk.includes('data-chart-tooltip')?element():null;if(tooltip&&chunk.includes('data-centers-only'))tooltip.setAttribute('data-centers-only','true');if(tooltip&&chunk.includes('data-click-only'))tooltip.setAttribute('data-click-only','true');charts.push({marks,legends,inspector,clear,tooltip,querySelectorAll(sel){return sel==='[data-point]'?marks:legends},querySelector(sel){return sel==='[data-inspector]'?inspector:sel==='[data-chart-tooltip]'?tooltip:clear}});
    }
    const control=html.match(/data-cluster-control="(\w+)"/);if(control){const el=target.querySelector('[data-cluster-control]');el.dataset.clusterControl=control[1];el.value=control[1]==='k'?'3':'standardized';el.setAttribute('aria-pressed','false')}
   },get innerHTML(){return markup},
@@ -235,17 +237,17 @@ test('distance and notebook charts bind inspection; Review selection never recor
  comparison.marks[0].onpointerenter();assert.equal(comparison.tooltip.hidden,false);assert.match(comparison.inspector.innerHTML,/compared with Fish 4/);assert.match(comparison.inspector.innerHTML,/difference 0.8 cm/);
  comparison.marks[0].onkeydown({key:'Escape'});assert.equal(comparison.tooltip.hidden,true);
  comparison.marks[1].onfocus();assert.match(comparison.inspector.innerHTML,/reference/);comparison.marks[1].onblur();assert.equal(comparison.tooltip.hidden,true);
- H.notebook(target,6);assert.equal(target.charts.length,3);target.charts[1].marks[1].onclick();assert.ok(target.charts[1].marks[1].classList.values.has('selected'));assert.ok(target.charts[0].marks.every(m=>!m.classList.values.has('selected')));
+ H.notebook(target,5);assert.equal(target.charts.length,1);target.charts[0].legends[1].onfocus();assert.ok(target.charts[0].marks.some(m=>m.classList.values.has('group-highlighted')));target.charts[0].legends[1].onblur();assert.ok(target.charts[0].marks.every(m=>!m.classList.values.has('dimmed')));
  const state={values:{},changed:{}};let changes=0;H.review(target,C.explore.tasks[0],state,()=>changes++);target.charts[0].marks[0].onclick();target.charts[0].legends[0].onclick();assert.equal(changes,0);assert.deepEqual(state,{values:{},changed:{}});
  target.charts[0].marks[0].onclick();state.values.scale='raw';H.review(target,C.explore.tasks[0],state,()=>changes++);assert.ok(target.charts[0].marks[0].classList.values.has('selected'));assert.match(target.charts[0].inspector.innerHTML,new RegExp('C'+H.result(3,'raw').labels[0]));
 });
 
-test('Python and notebook exports preserve all eight complete scripts without fabricated outputs',async()=>{
+test('Python and notebook exports preserve all nine complete scripts without fabricated outputs',async()=>{
  const {c,C}=fixture(),source=fs.readFileSync('assets/js/components/ai-ml-lab.js','utf8');let blob,link;
  Object.assign(c,{C,qa:()=>C.cells.map(cell=>({value:cell.hint})),Blob,setTimeout:()=>{},URL:{createObjectURL(b){blob=b;return 'blob:export'},revokeObjectURL(){}},document:{createElement(){link={click(){this.clicked=true}};return link}}});
  vm.runInContext(source.slice(source.indexOf('function download(ext)'),source.indexOf('function reset()')),c);
- c.download('py');let text=await blob.text();assert.equal(link.clicked,true);assert.equal(link.download,'hidden_patterns.py');assert.match(text,/Requires Python, pandas, scikit-learn/);C.cells.forEach(cell=>assert.ok(text.includes(cell.hint)));assert.match(text,/print\(pd.crosstab/);
- c.download('ipynb');const book=JSON.parse(await blob.text());assert.equal(book.nbformat,4);assert.equal(book.cells.length,8);book.cells.forEach((cell,i)=>{assert.equal(cell.source.join(''),C.cells[i].hint);assert.deepEqual(cell.outputs,[]);assert.equal(cell.execution_count,null)});
+ c.download('py');let text=await blob.text();assert.equal(link.clicked,true);assert.equal(link.download,'hidden_patterns.py');assert.match(text,/Requires Python, pandas, scikit-learn, matplotlib/);C.cells.forEach(cell=>assert.ok(text.includes(cell.hint)));assert.match(text,/print\(pd.crosstab/);
+ c.download('ipynb');const book=JSON.parse(await blob.text());assert.equal(book.nbformat,4);assert.equal(book.cells.length,9);book.cells.forEach((cell,i)=>{assert.equal(cell.source.join(''),C.cells[i].hint);assert.deepEqual(cell.outputs,[]);assert.equal(cell.execution_count,null)});
 });
 
 test('scene eight guides hidden predictions and revealed evidence, preserving question positions',()=>{
@@ -269,4 +271,11 @@ test('Next after the last hidden question reveals the selected cluster informati
  assert.equal(control.getAttribute('aria-pressed'),'true');
  assert.match(panel.innerHTML,/Which species appear in all three/);
  assert.match(target.querySelector('[data-cluster-live]').innerHTML,/Bream/);
+});
+
+test('plotting script and browser chart share Learn colors, shapes, labels, and assignments',()=>{
+ const {H,C,rows}=fixture(),target={innerHTML:''};assert.deepEqual(plain(C.cells.map((c,i)=>c.visual?i:null).filter(i=>i!==null)),[5]);
+ const script=C.cells[5].hint;for(const color of ['#1f7a46','#3977a8','#bd5814'])assert.ok(script.includes(color));assert.ok(script.includes('["o", "s", "^"]'));assert.ok(script.includes('plt.show()'));
+ H.notebook(target,5);assert.equal((target.innerHTML.match(/data-point="fish-/g)||[]).length,rows.length);assert.match(target.innerHTML,/Length \(cm\)/);assert.match(target.innerHTML,/Height \(cm\)/);
+ H.result().labels.forEach((group,i)=>assert.ok(target.innerHTML.includes('data-point="fish-'+rows[i].ID+'" data-group="'+group+'"')));
 });

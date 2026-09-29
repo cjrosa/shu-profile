@@ -1,6 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync('assets/js/components/ai-ml-lab.js','utf8');
-function fixture(config,storage=new Map()){
+function fixture(config,storage=new Map(),realCharts=false){
  function element(){return {value:'',textContent:'',innerHTML:'',hidden:false,attrs:{},listeners:{},classList:{add(){},remove(){},toggle(){}},setAttribute(k,v){this.attrs[k]=v},addEventListener(k,f){this.listeners[k]=f},focus(){this.focused=true},setSelectionRange(a,b){this.selectionStart=a;this.selectionEnd=b},selectionStart:0,selectionEnd:0,setRangeText(t,a,b){this.value=this.value.slice(0,a)+t+this.value.slice(b);this.selectionStart=this.selectionEnd=a+t.length}}}
  const globals=new Map(),cells=config.cells.map(()=>{const parts=new Map();return {...element(),querySelector(s){if(!parts.has(s))parts.set(s,element());return parts.get(s)},querySelectorAll(){return []}}});
  cells.forEach(cell=>{const code=cell.querySelector('.ml-code');code.closest=()=>cell;cell.querySelector('.ml-output').querySelector=()=>element()});
@@ -13,7 +13,7 @@ function fixture(config,storage=new Map()){
  if(config.id==='hidden_patterns'){for(const asset of ['hidden-patterns-data','hidden-patterns'])vm.runInContext(fs.readFileSync('assets/js/ai100/'+asset+'.js','utf8'),context);config.cells.forEach((cell,i)=>cell.output=()=>context.window.HiddenPatterns.notebookOutput(i));}
 
  // Expose closure functions only in this fixture. Chart rendering is outside progression tests.
- vm.runInContext(source.replace(/\}\)\(\);\s*$/,`C=config;updateMetrics=()=>{};renderExplore=()=>{};globalThis.lab={state,restore,store,grantPastes,pasteAllowance,taskAvailable,notebookComplete,refreshNotebookProgress,invalidateNotebookFrom,evaluate,fillAllCode,pasteCode,bindCodeInsertion,setMode,completeLearn,reset,typingGuide};})();`),context);
+ vm.runInContext(source.replace(/\}\)\(\);\s*$/,`C=config;${realCharts?'':'updateMetrics=()=>{};'}renderExplore=()=>{};globalThis.lab={state,restore,store,grantPastes,pasteAllowance,taskAvailable,notebookComplete,refreshNotebookProgress,invalidateNotebookFrom,evaluate,fillAllCode,pasteCode,bindCodeInsertion,setMode,completeLearn,reset,typingGuide};})();`),context);
  return {lab:context.lab,cells,document,storage,modes,part,get dialog(){return dialog},accept(){part('form').onsubmit({preventDefault(){}})},cancel(){part('[data-confirm-paste-cancel]').onclick()}};
 }
 function simple(){return {id:'test',cells:Array.from({length:3},()=>({requires:['print\\s*\\('],output:'ok'}))}}
@@ -23,15 +23,15 @@ test('Hidden Patterns opener insertion preserves existing notebook work and move
  const config=ctx.window.ML_LAB_CONFIG,key='ai100.ml.hidden_patterns';
  const storage=new Map([[key,JSON.stringify({revision:2,scene:6,unlocked:8,learnComplete:true,codes:['saved code'],completed:[0],explore:{answers:{scaling:0}}})]]);
  const f=fixture(config,storage);f.lab.restore();
- assert.equal(f.lab.state.scene,7);assert.equal(f.lab.state.unlocked,9);assert.equal(f.lab.state.learnComplete,true);assert.equal(f.lab.state.completed.has(0),true);assert.equal(f.lab.state.savedCodes[0],'saved code');assert.equal(f.lab.state.explore.answers.scaling,0);
- f.cells[0].querySelector('.ml-code').value=f.lab.state.savedCodes[0];f.lab.store();const restored=fixture(config,storage);restored.lab.restore();assert.equal(restored.lab.state.scene,7);assert.equal(restored.lab.state.unlocked,9);assert.equal(restored.lab.state.savedCodes[0],'saved code');
+ assert.equal(f.lab.state.scene,6);assert.equal(f.lab.state.unlocked,8);assert.equal(f.lab.state.learnComplete,true);assert.equal(f.lab.state.completed.has(0),true);assert.equal(f.lab.state.savedCodes[0],'saved code');assert.equal(f.lab.state.explore.answers.scaling,0);
+ f.cells[0].querySelector('.ml-code').value=f.lab.state.savedCodes[0];f.lab.store();const restored=fixture(config,storage);restored.lab.restore();assert.equal(restored.lab.state.scene,6);assert.equal(restored.lab.state.unlocked,8);assert.equal(restored.lab.state.savedCodes[0],'saved code');
 });
 test('Hidden Patterns revision preserves matching code, clears obsolete evidence, and leaves other labs alone',()=>{
  const ctx={window:{}};vm.createContext(ctx);vm.runInContext(fs.readFileSync('assets/js/ai100/hidden-patterns-config.js','utf8'),ctx);
  const config=ctx.window.ML_LAB_CONFIG,key='ai100.ml.hidden_patterns',codes=['load','features','scale','fit','attach and means'];
  const storage=new Map([[key,JSON.stringify({revision:1,codes,completed:[0,1,2,3,4],learnComplete:true,scene:4,unlocked:4,explore:{finished:true,answers:{limits:0}},pastesUsed:2})],['ai100.ml.fish_predictor','untouched']]);
  const f=fixture(config,storage);f.lab.restore();const s=f.lab.state;
- assert.deepEqual([...s.savedCodes],['load','features','scale','fit','','attach and means','','']);
+ assert.deepEqual([...s.savedCodes],['load','features','scale','fit','','','attach and means','','']);
  assert.equal(s.completed.size,0);assert.equal(s.learnComplete,false);assert.equal(s.scene,0);assert.equal(s.unlocked,0);assert.deepEqual(Object.keys(s.explore),[]);assert.equal(s.migrationNotice,true);assert.equal(s.pastesUsed,2);
  const fresh=fixture(config,storage);fresh.lab.restore();assert.deepEqual([...fresh.lab.state.savedCodes],[...s.savedCodes]);assert.equal(fresh.lab.state.migrated,false);assert.equal(fresh.lab.state.migrationNotice,true);
  assert.equal(storage.get('ai100.ml.fish_predictor'),'untouched');
@@ -120,4 +120,19 @@ for(const reason of ['changed','locked','exhausted'])test('stale paste is discar
 });
 test('empty, locked and exhausted pastes never open a dialog',()=>{
  const f=notebookFixture(simple()),e=f.cells[0].querySelector('.ml-code');f.lab.pasteCode(e,0,'');f.lab.pasteCode(f.cells[1].querySelector('.ml-code'),1,'X');f.lab.state.pastesUsed=3;f.lab.pasteCode(e,0,'X');assert.equal(f.dialog,null);
+});
+
+test('plot insertion preserves saved work and evidence, and only the explicit plotting task renders a chart',()=>{
+ const ctx={window:{}};vm.createContext(ctx);vm.runInContext(fs.readFileSync('assets/js/ai100/hidden-patterns-config.js','utf8'),ctx);
+ const config=ctx.window.ML_LAB_CONFIG,key='ai100.ml.hidden_patterns',codes=config.cells.filter((_,i)=>i!==5).map(c=>c.hint);
+ const storage=new Map([[key,JSON.stringify({revision:2,learnLayout:3,learnComplete:true,scene:8,unlocked:8,codes,completed:[0,1,2,3,4,5,6,7],answers:{kept:true},reflection:'My claim',explore:{answers:{limits:0}}})]]);
+ const f=fixture(config,storage,true);f.lab.restore();
+ assert.deepEqual([...f.lab.state.completed],[0,1,2,3,4]);assert.equal(f.lab.state.learnComplete,true);assert.equal(f.lab.state.scene,8);assert.equal(f.lab.state.reflection,'My claim');assert.equal(f.lab.state.answers.kept,true);assert.equal(f.lab.state.explore.answers.limits,0);
+ assert.deepEqual([...f.lab.state.savedCodes],[...codes.slice(0,5),'',...codes.slice(5)]);assert.equal(f.lab.notebookComplete(),false);
+ const again=fixture(config,storage);again.lab.restore();assert.deepEqual([...again.lab.state.savedCodes],[...f.lab.state.savedCodes]);
+ config.cells.forEach((spec,i)=>{const cell=f.cells[i];cell.querySelector('.ml-code').value=spec.hint;assert.equal(f.lab.evaluate(cell,i),true);assert.equal(cell.querySelector('.ml-inline-result').hidden,i!==5)});
+ assert.equal(f.lab.notebookComplete(),true);const plot=f.cells[5];assert.match(plot.querySelector('[data-cell-chart]').innerHTML,/ml-cluster-hover-chart/);
+ plot.querySelector('.ml-code').value=config.cells[5].hint.replace('plt.show()','');assert.equal(f.lab.evaluate(plot,5),false);assert.equal(plot.querySelector('.ml-inline-result').hidden,true);
+ plot.querySelector('.ml-code').value=config.cells[5].hint.replace('    plt.scatter','plt.scatter');assert.equal(f.lab.evaluate(plot,5),false);
+ plot.querySelector('.ml-code').value=config.cells[5].hint;assert.equal(f.lab.evaluate(plot,5),true);f.lab.invalidateNotebookFrom(5);assert.equal(plot.querySelector('.ml-inline-result').hidden,true);
 });
