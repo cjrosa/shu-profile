@@ -147,7 +147,7 @@ function speciesCards(model,revealed,attribute='species'){
 
 function investigationQuestions(attribute,revealed){
  const questions=!revealed?[
- ['Observe','What does the number of fish in each group tell you\u2014and what doesn\u2019t it tell you?','A larger group contains more fish with similar measurements in this dataset. It doesn\u2019t mean the group is more important or represents a more common species in nature.'],
+ ['Observe','What does the number of fish in each group tell you\u2014and what doesn\u2019t it tell you?','A larger group contains more fish with similar values for the measurements used to form the groups. It doesn\u2019t mean the group is more important or that its species are more common in nature.'],
  ['Predict','Do you think each group contains one species or several? Why?','Could different species have similar Length, Height, and Width?'],
  ['Plan','What would revealing species or weight help you check?','Species shows who shares a group. Weight helps you compare how heavy the fish are.']
  ]:attribute==='species'?[
