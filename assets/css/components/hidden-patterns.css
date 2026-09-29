@@ -351,8 +351,8 @@
 .ml-cluster-card .ml-claim-response>h3{font-size:20px;line-height:1.4;margin:0 0 14px}
 .ml-claim-prompts{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:14px}
 .ml-cluster-card .ml-claim-prompt{padding:14px 16px;border:1px solid #dce5df;border-top:4px solid var(--claim-accent);border-radius:12px;background:#fff}
-.ml-cluster-card .ml-claim-prompt h4{display:flex;align-items:center;gap:8px;margin:0 0 7px;color:var(--claim-accent);font-size:14px;line-height:1.4}
-.ml-cluster-card .ml-claim-prompt p{font-size:13px;line-height:1.45;margin:6px 0 0}
+.ml-cluster-card .ml-claim-prompt h4{display:flex;align-items:center;gap:8px;margin:0 0 7px;color:var(--claim-accent);font-family:inherit;font-size:17px;line-height:1.35}
+.ml-cluster-card .ml-claim-prompt p{font-size:12px;line-height:1.6;margin:6px 0 0}
 .ml-cluster-card .ml-claim-prompt svg,.ml-cluster-card .ml-cluster-claim-evidence svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .ml-cluster-card .ml-cluster-claim-evidence{margin-top:16px;border:1px solid #dce5df;border-radius:12px;background:#fff;overflow:hidden}
 .ml-cluster-card .ml-cluster-claim-evidence summary{display:flex;align-items:center;gap:8px;padding:12px 16px;cursor:pointer;color:#355f99;font-size:14px;font-weight:700;list-style:none}
@@ -371,8 +371,8 @@
 .ml-claim-reveal-label{display:block;margin-top:10px;font-size:11px;font-weight:700;color:var(--claim-accent)}
 .ml-claim-prompt[open]>summary{height:auto}
 .ml-claim-prompt[open] .ml-claim-reveal-label{display:none}
-.ml-cluster-card .ml-claim-answer{margin:0 16px 14px;padding-top:12px;border-top:1px solid #d9dede;font-size:14px;line-height:1.5}
+.ml-cluster-card .ml-claim-answer{margin:0 16px 14px;padding-top:12px;border-top:1px solid #d9dede;font-size:12px;line-height:1.6}
 .ml-claim-answer>strong{color:var(--claim-accent);font-size:12px}
-.ml-cluster-card .ml-claim-answer p{font-size:13px}
+.ml-cluster-card .ml-claim-answer p{font-size:12px}
 
 .ml-cluster-claim-evidence>div>.ml-cluster-scale-buttons{margin-top:14px}

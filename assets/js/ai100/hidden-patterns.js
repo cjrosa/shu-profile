@@ -174,7 +174,7 @@ function marker(x,y,j,size=4){
  if(shape===3||shape===6)return `<path d="M${x} ${y-size-1}L${x+size+1} ${y}L${x} ${y+size+1}L${x-size-1} ${y}Z" fill="${shape===6?'white':c}" stroke="${c}"/>`;
  return `<circle cx="${x}" cy="${y}" r="${size}" fill="${shape===4?'white':c}" stroke="${c}"/>`;
 }
-function scatter(model,{neutral=false,reveal=false,hoverLegend=false,showCenters=true}={}){
+function scatter(model,{neutral=false,reveal=false,hoverLegend=false,showCenters=true,inspectFish=false}={}){
  const sx=v=>58+v/65*560,sy=v=>264-v/20*224;
  const graph=`<figure class="ml-cluster-plot"><svg viewBox="0 0 660 320" role="group" aria-label="${rows().length} fish: Length versus Height in centimeters. ${neutral?'Species hidden; no groups shown.':model.k+' clusters, distinguished by shapes and colors. Width also affects assignments.'}">
  ${[0,5,10,15,20].map(v=>`<path d="M58 ${sy(v)}H618" stroke="#dce6e1"/><text x="49" y="${sy(v)+4}" text-anchor="end">${v}</text>`).join('')}
@@ -185,10 +185,10 @@ function scatter(model,{neutral=false,reveal=false,hoverLegend=false,showCenters
  <text class="ml-cluster-axis-title" x="338" y="311" text-anchor="middle">Length (cm)</text><text class="ml-cluster-axis-title" transform="translate(17 155) rotate(-90)" text-anchor="middle">Height (cm)</text></svg>
  <figcaption>Each mark is one fish. ${neutral?'Only two of the three input measurements are shown.':'Groups use Length, Height, and Width; this view shows two features in original units.'+(showCenters?' + marks a group average.':'')}</figcaption></figure>`;
  const legend=neutral?'':chartLegend(model.counts.map((_,j)=>'C'+j),model.counts);
- if(hoverLegend)return `<div class="ml-cluster-chart-container ml-cluster-hover-chart"><div class="ml-cluster-distance-chart" data-chart>${graph.replace(/ role="button" tabindex="-?\d+" aria-pressed="false"/g,'')}${legend}<div class="ml-cluster-chart-tooltip" data-chart-tooltip data-centers-only="true" hidden><section class="ml-cluster-inspector" data-inspector role="status" aria-live="polite"></section><button class="ml-btn" type="button" data-clear-selection>Close</button></div></div></div>`;
+ if(hoverLegend)return `<div class="ml-cluster-chart-container ml-cluster-hover-chart"><div class="ml-cluster-distance-chart" data-chart>${inspectFish?graph:graph.replace(/ role="button" tabindex="-?\d+" aria-pressed="false"/g,'')}${legend}<div class="ml-cluster-chart-tooltip" data-chart-tooltip ${inspectFish?'data-click-only="true"':'data-centers-only="true"'} hidden><section class="ml-cluster-inspector" data-inspector role="status" aria-live="polite"></section><button class="ml-btn" type="button" data-clear-selection>Close</button></div>${inspectFish?'<p class="ml-cluster-chart-help">Select a fish or center to inspect it. Use arrow keys to browse fish; Enter selects.</p>':''}</div></div>`;
  return chartFrame(graph,legend);
 }
-function fullPanel(model,{neutral=false,reveal=false,profiles=false,hoverLegend=false}={}){return `${scatter(model,{neutral,reveal,hoverLegend})}${profiles?summary(model):''}${reveal?speciesTable(model):''}`}
+function fullPanel(model,{neutral=false,reveal=false,profiles=false,hoverLegend=false,inspectFish=false}={}){return `${scatter(model,{neutral,reveal,hoverLegend,inspectFish})}${profiles?summary(model):''}${reveal?speciesTable(model):''}`}
 function scatter3D(model,angle){
  const points=model.scale==='raw'?model.raw:model.scaled.points;
  const lo=features.map((_,d)=>Math.min(...points.map(p=>p[d]))),hi=features.map((_,d)=>Math.max(...points.map(p=>p[d])));
@@ -465,7 +465,7 @@ function review(target,task,state,onChange){
  let view=reviewSelections.get(state);if(!view||view.task!==task.id){view={task:task.id,selection:{}};reviewSelections.set(state,view)}
  const signature=model.k+':'+model.scale;if(view.signature!==signature)resetModelSelection(view.selection);view.signature=signature;
  const control=task.id==='scaling'?scaleControl(scale):task.id==='choice'?kControl(k):`<button class="ml-btn primary" type="button" data-cluster-control="reveal" aria-pressed="${reveal}">${reveal?'Hide species':'Reveal species'}</button>`;
- target.innerHTML=`<div class="ml-cluster-card">${control}${task.id==='limits'?'':comparison(model)}${fullPanel(model,{reveal:task.id==='limits'&&reveal})}</div>`;
+ target.innerHTML=`<div class="ml-cluster-card">${control}${task.id==='limits'?'':comparison(model)}${fullPanel(model,{hoverLegend:true,inspectFish:true,reveal:task.id==='limits'&&reveal})}</div>`;
  bindCharts(target,view.selection);
  const input=target.querySelector('[data-cluster-control]'),id=input.dataset.clusterControl;
  const change=()=>{const value=id==='reveal'?!reveal:id==='k'?Number(input.value):input.value;state.values[id]=value;state.changed=state.changed||{};if(value!==task.controls[0].value)state.changed[task.id+'.'+id]=true;state.observations=state.observations||{};if(value!==task.controls[0].value)state.observations[task.id]=evidence(task,state);onChange(id)};
