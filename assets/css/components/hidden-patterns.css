@@ -343,7 +343,7 @@
 .ml-cluster-card [data-investigation] details p{width:100%;max-width:none;box-sizing:border-box;justify-self:stretch}
 
 .ml-cluster-card [data-investigation] .ml-question-hint-toggle{grid-column:1;grid-row:2;justify-self:start;align-self:start;display:inline-flex;align-items:center;gap:6px;padding:6px 0;background:none;border:0;color:var(--qa);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
-.ml-cluster-card [data-investigation] .ml-question-hint{grid-column:1/-1;grid-row:3;width:100%;max-width:none;box-sizing:border-box;margin:10px 0 0;padding:10px 0 0;border-top:1px solid #d9dede;font-size:14px;line-height:1.5;color:inherit}
+.ml-cluster-card [data-investigation] .ml-question-hint{grid-column:1/-1;grid-row:3;width:100%;max-width:none;box-sizing:border-box;margin:10px 0 0;padding:10px 0 0;border-top:1px solid #d9dede;font-size:12px;line-height:1.6;color:inherit}
 .ml-cluster-card [data-investigation] .ml-question-hint[hidden]{display:none}
 
 /* Final claim uses the same compact, colored visual language as the questions. */
