@@ -12,11 +12,11 @@
   ];
   const lessons = [
     ['Email infrastructure', 'Meet the user agents and mail servers. An outgoing queue and an incoming mailbox have different jobs.'],
-    ['Alice sends to Bob', 'Follow one message from composition to reading. Delivery to a mailbox can happen while Bob is offline.'],
-    ['SMTP conversation', 'Alice’s mail server acts as the SMTP client. Bob’s mail server listens for this server-to-server connection on TCP port 25.'],
-    ['Message anatomy', 'The SMTP envelope controls delivery. Message headers and body are content transmitted after DATA.'],
-    ['SMTP characteristics', 'Reuse a connection for two messages, then compare SMTP push, HTTP pull, and multipart content.'],
-    ['Reading email', 'Explore an IMAP mail client or a browser using webmail. The recipient server stores the mail.']
+    ['Alice sends to Bob', 'Press Play or Step to follow one message from composition to reading. Inspect either server to watch its queue or mailbox change. Bob can be offline when delivery occurs.'],
+    ['SMTP conversation', 'Alice’s server acts as the SMTP client; Bob’s server listens on TCP port 25. Play or step through the exchange, then expand Simulated email trace below to inspect the commands and replies.'],
+    ['Message anatomy', 'Step through the envelope, headers, and body. The message anatomy reference below highlights each part. SMTP envelope addresses control delivery; headers and body travel after DATA.'],
+    ['SMTP characteristics', 'Play two transfers over one connection. Expand the trace to see one greeting and two messages, then compare SMTP push, HTTP pull, and multipart content.'],
+    ['Reading email', 'Choose IMAP mail client or Webmail browser, then play or step through the example. Answer its understanding check to finish the lesson. You can also switch access methods to compare how each accesses stored mail.']
   ].map(([title, copy], i) => ({ title, copy, question: questions[i] }));
   function transaction(second = false) {
     const count = second ? 1 : 0;
