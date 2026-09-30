@@ -253,12 +253,12 @@ test('Python and notebook exports preserve all nine complete scripts without fab
 test('scene eight guides hidden predictions and revealed evidence, preserving question positions',()=>{
  const {H,C}=fixture(),target=chartTarget();target.innerHTML=H.scene(C.scenes[7]);H.bindLearn(target,C.scenes[7]);
  const panel=target.querySelector('[data-investigation]'),reveal=target.querySelector('[data-cluster-control]');
- assert.match(panel.innerHTML,/What does the number of fish in each group tell you/);
+ assert.match(panel.innerHTML,/What does the number of fish in each cluster tell you/);
  panel.querySelector('[data-question-next]').onclick();assert.match(panel.innerHTML,/one species or several/);
  reveal.onclick();assert.match(panel.innerHTML,/Which species appear in all three/);
  panel.querySelector('[data-question-next]').onclick();assert.match(panel.innerHTML,/32 Bream/);
  reveal.onclick();assert.match(panel.innerHTML,/one species or several/);
- assert.match(H.scene(C.scenes[8]),/What does finding Perch in all three groups tell you/);
+ assert.match(H.scene(C.scenes[8]),/What does finding Perch in all three clusters tell you/);
 });
 
 test('Next after the last hidden question reveals the selected cluster information',()=>{
