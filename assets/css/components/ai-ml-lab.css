@@ -652,3 +652,10 @@
  .ml-governance-group,.ml-governance-group:last-child{grid-column:1/-1}
  .ml-governance-group .ml-governance-loop{grid-template-columns:1fr!important}
 }
+
+/* Scene 7: explicit neuron-to-neuron connections. */
+.ml-nn-diagram-scroll{overflow-x:auto;background:#fff;border:1px solid var(--ml-line);border-radius:10px;padding:12px 0}.ml-nn-diagram{display:block;width:100%;min-width:640px;height:auto}.ml-nn-diagram text{text-anchor:middle;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.ml-nn-column-title{fill:#47764e;font-size:11px;font-weight:800;letter-spacing:.06em}.ml-nn-diagram-node{fill:#edf5ef;stroke:#477c50;stroke-width:2.5}.ml-nn-diagram-node.endpoint{fill:#fff}.ml-nn-node-label{fill:var(--ml-ink);font-size:12px;font-weight:700}.ml-nn-estimate{fill:#47764e;font-size:12px;font-weight:700}.ml-nn-diagram-key{margin:8px 0 0;color:var(--ml-muted);font-size:9px;line-height:1.5}
+
+.ml-nn-scaling-note{margin:12px 0;color:var(--ml-muted);font-size:12px;line-height:1.6}
+
+.ml-neural-lesson .ml-nn-intro{margin:12px 0 16px;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:12px;font-weight:400;line-height:1.6;color:var(--ml-muted)}
