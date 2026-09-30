@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Email Explorer · CS339</title><link rel="stylesheet" href="../assets/css/pages/email-explorer.css"></head>
+<body>
+<header><div class="header-inner"><a class="eyebrow" href="index.html" target="_top">CS339 / Application Layer</a><h1>Email Explorer</h1><p>Follow a message. Read the conversation. Discover how mail reaches a mailbox.</p></div></header>
+<main>
+<section class="lesson" aria-labelledby="lesson-title">
+<nav id="stages" aria-label="Lesson stages"></nav>
+<div class="heading"><span id="progress-label" class="eyebrow"></span><progress id="progress" max="6" value="1" aria-label="Lesson stage"></progress></div>
+<h2 id="lesson-title"></h2><p id="lesson-copy"></p>
+<div class="actions"><button id="back">Back</button><button id="next">Next</button><button id="restart">Restart lesson</button></div>
+</section>
+<div class="workspace">
+<section class="panel" aria-labelledby="map-title">
+<div class="heading"><h2 id="map-title">The email journey</h2><span id="phase" class="badge"></span></div>
+<div id="retrieval-settings" hidden><label for="retrieval">Access method</label> <select id="retrieval"><option value="imap">IMAP mail client</option><option value="webmail">Webmail browser</option></select></div>
+<div class="journey" aria-label="Email delivery diagram">
+<article id="node-alice" class="node"><span class="node-icon" aria-hidden="true">A</span><h3>Alice</h3><p>User agent</p><small>Compose and submit</small></article>
+<div id="edge-submit" class="edge"><span>SMTP</span><b aria-hidden="true">→</b><small>Submission</small></div>
+<article id="node-sender" class="node"><span class="node-icon server" aria-hidden="true">S</span><h3>Alice’s mail server</h3><p>Sending SMTP client</p><small id="queue"></small></article>
+<div id="edge-transfer" class="edge"><span>SMTP</span><b aria-hidden="true">→</b><small>TCP port 25</small></div>
+<article id="node-receiver" class="node"><span class="node-icon server" aria-hidden="true">S</span><h3>Bob’s mail server</h3><p>Receiving SMTP server</p><small id="mailbox"></small></article>
+<div id="edge-access" class="edge"><span id="access-label">IMAP</span><b aria-hidden="true">↔</b><small>Mail access</small></div>
+<article id="node-bob" class="node"><span class="node-icon" aria-hidden="true">B</span><h3>Bob</h3><p id="bob-agent">User agent</p><small>Retrieve and read</small></article>
+</div>
+<p id="webmail-note" class="muted" hidden>HTTP(S) connects Bob’s browser to the webmail service. The service accesses Bob’s mailbox; its backend implementation varies.</p>
+<div class="event" aria-live="polite" aria-atomic="true"><strong id="event-count"></strong><p id="explanation"></p></div>
+<div class="actions toolbar"><button id="step" class="primary">Step</button><button id="play">Play</button><button id="replay">Replay stage</button></div>
+<section class="prediction" aria-labelledby="question"><span class="eyebrow">Check your understanding</span><h3 id="question"></h3><div id="answers" class="actions"></div><p id="feedback" aria-live="polite"></p></section>
+</section>
+<aside class="panel transcript-panel" aria-labelledby="transcript-title"><div class="heading"><h2 id="transcript-title">Conversation log</h2><span class="badge">C: client · S: server</span></div><p class="muted">Brackets describe simulated events. SMTP command lines appear in the SMTP stages.</p><pre id="transcript" tabindex="0" aria-label="Protocol transcript"></pre></aside>
+</div>
+<section class="reference"><h2>The message inside DATA</h2><div class="message-grid"><div><h3>SMTP envelope</h3><code>MAIL FROM:&lt;alice@sender.example&gt;<br>RCPT TO:&lt;bob@receiver.example&gt;</code><p class="muted">Delivery addresses are separate from message headers.</p></div><div><h3>Message content</h3><pre id="message-sample"></pre><p class="muted">An empty line separates headers and body. The SMTP dot terminator is not stored as message content.</p></div></div></section>
+<footer>Coverage: <cite>2.3-EMAIL.pptx</cite>, J. F. Kurose and K. W. Ross, <cite>Computer Networking: A Top-Down Approach</cite>, 8th edition (2020). Adapted explanations and fictional examples for CS339. This is a teaching simulation; no email is sent.</footer>
+</main><script src="../assets/js/email-simulation.js"></script><script src="../assets/js/email-explorer.js"></script>
+</body></html>

@@ -50,7 +50,7 @@
       const get = (node, n, type) => planned[node].find(r => r.name === n && r.type === type);
       const record = (n, type, value, ttl) => ({ name: n, type, value, ttl, expires: this.time + ttl });
       const emit = (from, to, kind, text, records = [], result = null) => {
-        this.events.push({ from, to, kind, text, records, result });
+        this.events.push({ from, to, kind, text, records, result, time: this.time });
         records.forEach(r => { const i = planned[to].findIndex(p => p.name === r.name && p.type === r.type); if (i >= 0) planned[to].splice(i, 1); planned[to].push(r); });
       };
       const describe = r => r.type === 'CNAME' ? r.name + ' is an alias for ' + r.value + '. Follow the canonical name to get an IP address.' : r.name + ' → ' + r.value + ' (A record).';
