@@ -18,7 +18,7 @@
 <link rel="stylesheet" href="../assets/css/components/category-themes.css">
 <link rel="stylesheet" href="../assets/css/components/drawers.css">
 <link rel="stylesheet" href="../assets/css/components/footer.css">
-<link rel="stylesheet" href="../assets/css/pages/ai100.css?v=20260831-1">
+<link rel="stylesheet" href="../assets/css/pages/ai100.css?v=20260929-6">
 <link rel="stylesheet" href="../assets/css/components/glass-theme.css">
 </head>
 <body class="theme-ai100">
@@ -118,55 +118,53 @@
     </div>
   </div>
 
-  <div style="font-family:-apple-system,sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:20px;">Course Topics</div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
-
-    <div style="background:white;border:1px solid var(--border2);border-radius:12px;padding:20px 22px;box-shadow:var(--shadow);">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-        <div style="width:36px;height:36px;border-radius:9px;background:#EAF6EF;display:flex;align-items:center;justify-content:center;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F7A46" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+  <section class="ai-topics" aria-labelledby="ai-topics-heading">
+    <h2 class="ai-topics-label" id="ai-topics-heading">Course Topics</h2>
+    <ul class="ai-topics-list" role="list">
+      <li class="ai-topic">
+        <svg class="ai-topic-icon" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+        <div class="ai-topic-copy">
+          <h3 class="ai-topic-title">AI Foundations &amp; Responsible AI</h3>
+          <p class="ai-topic-desc">History, human oversight, ethics, privacy, and governance.</p>
         </div>
-        <div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">AI Foundations and Responsible AI</div>
-      </div>
-      <p style="font-family:-apple-system,sans-serif;font-size:12px;color:var(--text2);line-height:1.65;">Trace AI history and terminology while exploring human-in-the-loop systems, ethics, privacy, governance, and AI's broader societal impact.</p>
-    </div>
-
-    <div style="background:white;border:1px solid var(--border2);border-radius:12px;padding:20px 22px;box-shadow:var(--shadow);">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-        <div style="width:36px;height:36px;border-radius:9px;background:#EAF6EF;display:flex;align-items:center;justify-content:center;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F7A46" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
+      </li>
+      <li class="ai-topic">
+        <svg class="ai-topic-icon" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
+        <div class="ai-topic-copy">
+          <h3 class="ai-topic-title">Neural Networks &amp; Computer Vision</h3>
+          <p class="ai-topic-desc">Perceptrons, neural networks, CNNs, and image classification.</p>
         </div>
-        <div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">Neural Networks and Computer Vision</div>
-      </div>
-      <p style="font-family:-apple-system,sans-serif;font-size:12px;color:var(--text2);line-height:1.65;">Build from perceptrons to neural networks and CNNs, then see how visual features support classification and computer-vision applications through the interactive tools.</p>
-    </div>
-
-    <div style="background:white;border:1px solid var(--border2);border-radius:12px;padding:20px 22px;box-shadow:var(--shadow);">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-        <div style="width:36px;height:36px;border-radius:9px;background:#EAF6EF;display:flex;align-items:center;justify-content:center;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F7A46" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 6v10H4V9l8-6z"/></svg>
+      </li>
+      <li class="ai-topic">
+        <svg class="ai-topic-icon" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 6v10H4V9l8-6z"/></svg>
+        <div class="ai-topic-copy">
+          <h3 class="ai-topic-title">Reinforcement Learning</h3>
+          <p class="ai-topic-desc">Actions, rewards, policies, exploration, and Q-learning.</p>
         </div>
-        <div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">Reinforcement Learning</div>
-      </div>
-      <p style="font-family:-apple-system,sans-serif;font-size:12px;color:var(--text2);line-height:1.65;">Explore how agents learn through actions, rewards, policies, and exploration, including Q-tables and decision-making over time in both reinforcement-learning tools.</p>
-    </div>
-
-    <div style="background:white;border:1px solid var(--border2);border-radius:12px;padding:20px 22px;box-shadow:var(--shadow);">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;"><div style="width:36px;height:36px;border-radius:9px;background:#EAF6EF;display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F7A46" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 16h10M7 12h10M7 8h4"/></svg></div><div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">AI Infrastructure, Energy, and Society</div></div>
-      <p style="font-family:-apple-system,sans-serif;font-size:12px;color:var(--text2);line-height:1.65;">Understand the GPUs, data centers, computational scale, and energy demands behind modern AI, alongside governance, ethical tensions, and social consequences.</p>
-    </div>
-
-    <div style="background:white;border:1px solid var(--border2);border-radius:12px;padding:20px 22px;box-shadow:var(--shadow);">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;"><div style="width:36px;height:36px;border-radius:9px;background:#EAF6EF;display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F7A46" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/><circle cx="18" cy="18" r="2"/></svg></div><div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">Machine Learning, NLP, and Large Language Models</div></div>
-      <p style="font-family:-apple-system,sans-serif;font-size:12px;color:var(--text2);line-height:1.65;">Connect core machine-learning ideas to natural language processing and large language models, including practical applications, capabilities, and common limitations.</p>
-    </div>
-
-    <div style="background:white;border:1px solid var(--border2);border-radius:12px;padding:20px 22px;box-shadow:var(--shadow);">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;"><div style="width:36px;height:36px;border-radius:9px;background:#EAF6EF;display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F7A46" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M8 12h8M12 8v8"/><path d="M17 5l2-2"/></svg></div><div style="font-family:-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--text);">Reasoning, Assistants, Agents, and AI Workflows</div></div>
-      <p style="font-family:-apple-system,sans-serif;font-size:12px;color:var(--text2);line-height:1.65;">Explore reasoning models, AI assistants, evaluation, responsible use, agents, tool use, MCP, and emerging workflows for working with capable AI systems.</p>
-    </div>
-
-  </div>
+      </li>
+      <li class="ai-topic">
+        <svg class="ai-topic-icon" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 16h10M7 12h10M7 8h4"/></svg>
+        <div class="ai-topic-copy">
+          <h3 class="ai-topic-title">AI Infrastructure, Energy &amp; Society</h3>
+          <p class="ai-topic-desc">GPUs, data centers, energy demands, and societal impact.</p>
+        </div>
+      </li>
+      <li class="ai-topic">
+        <svg class="ai-topic-icon" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/><circle cx="18" cy="18" r="2"/></svg>
+        <div class="ai-topic-copy">
+          <h3 class="ai-topic-title">Machine Learning, NLP &amp; LLMs</h3>
+          <p class="ai-topic-desc">Core concepts, language applications, capabilities, and limitations.</p>
+        </div>
+      </li>
+      <li class="ai-topic">
+        <svg class="ai-topic-icon" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M8 12h8M12 8v8"/><path d="M17 5l2-2"/></svg>
+        <div class="ai-topic-copy">
+          <h3 class="ai-topic-title">Reasoning, Assistants &amp; Agents</h3>
+          <p class="ai-topic-desc">Reasoning models, evaluation, tool use, MCP, and workflows.</p>
+        </div>
+      </li>
+    </ul>
+  </section>
 
   <div class="ai-tools-label">Interactive Tools</div>
   <div class="ds-stack ai-tools-stack">
@@ -180,9 +178,11 @@
           <span class="cat-title-area">
             <span class="cat-name">Neural Network Foundations</span>
             <span class="cat-tagline">Perceptrons, connected layers, and learning from examples</span>
-            <span class="cat-tool-count">2 Tools</span>
           </span>
-          <span class="cat-chevron" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></span>
+          <span class="ai-tool-header-meta">
+            <span class="cat-tool-count">2 Tools</span>
+            <span class="cat-chevron" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></span>
+          </span>
         </span>
       </button>
       <div class="cat-body" id="body-ai-neural">
@@ -250,9 +250,11 @@
           <span class="cat-title-area">
             <span class="cat-name">Convolutional Neural Networks &amp; Computer Vision</span>
             <span class="cat-tagline">Visual features, filters, classification, and responsible evaluation</span>
-            <span class="cat-tool-count">2 Tools</span>
           </span>
-          <span class="cat-chevron" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></span>
+          <span class="ai-tool-header-meta">
+            <span class="cat-tool-count">2 Tools</span>
+            <span class="cat-chevron" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></span>
+          </span>
         </span>
       </button>
       <div class="cat-body" id="body-ai-cnn">
@@ -318,9 +320,11 @@
           <span class="cat-title-area">
             <span class="cat-name">Reinforcement Learning</span>
             <span class="cat-tagline">Rewards, policies, trial and error, and Q-tables</span>
-            <span class="cat-tool-count">3 Tools</span>
           </span>
-          <span class="cat-chevron" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></span>
+          <span class="ai-tool-header-meta">
+            <span class="cat-tool-count">3 Tools</span>
+            <span class="cat-chevron" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></span>
+          </span>
         </span>
       </button>
       <div class="cat-body" id="body-ai-rl">
@@ -406,9 +410,11 @@
           <span class="cat-title-area">
             <span class="cat-name">Machine Learning Labs</span>
             <span class="cat-tagline">Data, regression, classification, clustering, and typed Python practice</span>
-            <span class="cat-tool-count">4 Tools</span>
           </span>
-          <span class="cat-chevron" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></span>
+          <span class="ai-tool-header-meta">
+            <span class="cat-tool-count">4 Tools</span>
+            <span class="cat-chevron" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></span>
+          </span>
         </span>
       </button>
       <div class="cat-body" id="body-ai-ml"><div class="tools-grid">
@@ -450,9 +456,11 @@
           <span class="cat-title-area">
             <span class="cat-name">Natural Language Processing (NLP)</span>
             <span class="cat-tagline">Tokens, embeddings, semantic space, recurrent memory, and sentiment</span>
-            <span class="cat-tool-count">1 Tool</span>
           </span>
-          <span class="cat-chevron" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></span>
+          <span class="ai-tool-header-meta">
+            <span class="cat-tool-count">1 Tool</span>
+            <span class="cat-chevron" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></span>
+          </span>
         </span>
       </button>
       <div class="cat-body" id="body-ai-nlp">
