@@ -51,7 +51,7 @@
 <div id="inspector-empty"><p>Click a laptop, resolver, or DNS server to inspect its records and events.</p><button id="inspect-resolver">Inspect resolver</button></div>
 <div id="inspector-body">
 <p id="node-role" class="muted"></p>
-<div class="inspector-section-heading section-band"><h3>DNS cache <span id="cache-total" class="badge"></span></h3><div class="actions"><button id="age-node-cache" title="Advance simulated time by 61 seconds for all caches">Age +61 s</button><button id="flush-node-cache" title="Flush only this node's cached responses; keep owned records">Flush</button></div></div>
+<div class="inspector-section-heading section-band"><h3>DNS cache <span id="cache-total" class="badge"></span></h3><div class="actions"><button id="age-node-cache" data-tooltip="Advance simulated time by 61 seconds for all caches">Age +61 s</button><button id="flush-node-cache" data-tooltip="Flush only this node's cached responses; keep owned records">Flush</button></div></div>
 <div id="cache-content"></div>
 <section id="owned-section"><div class="section-band"><h3 id="owned-title"></h3></div><div id="owned-content"></div></section>
 <p id="cache-note" class="muted"></p>
@@ -66,4 +66,4 @@
 <section id="trace-detail" class="trace-detail" aria-label="Selected trace event" hidden><h3 id="trace-detail-title"></h3><p id="trace-detail-text"></p><div id="trace-detail-records"></div></section>
 </details>
 <p class="model-note">Simulated data for teaching · click any server to inspect its records and cache</p>
-</main><script src="../assets/js/dns-simulation.js"></script><script src="../assets/js/dns-explorer.js"></script></body></html>
+</main><script src="../assets/js/dns-simulation.js"></script><script src="../assets/js/dns-explorer.js"></script><script src="../assets/js/dns-tooltips.js"></script></body></html>

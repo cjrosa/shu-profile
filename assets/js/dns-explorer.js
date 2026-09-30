@@ -48,7 +48,8 @@
       name.append(textElement('strong', r.name), textElement('span', '→ ' + r.value, 'record-value'));
       type.append(textElement('span', r.type, 'record-type'));
       const ttl = textElement('td', cached ? r.remaining + ' s' : r.ttl ? r.ttl + ' s' : '—', 'ttl-cell');
-      ttl.setAttribute('title', cached ? 'Original TTL: ' + r.ttl + ' seconds' : r.ttl ? 'TTL issued to a cached copy' : 'Owned delegation; no cache expiration');
+      ttl.setAttribute('data-tooltip', cached ? 'Original TTL: ' + r.ttl + ' seconds' : r.ttl ? 'TTL issued to a cached copy' : 'Owned delegation; no cache expiration');
+      ttl.setAttribute('tabindex', '0');
       row.append(name, type, ttl); body.append(row);
     });
     table.append(caption, head, body); box.append(table);

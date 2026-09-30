@@ -1,4 +1,5 @@
 *{box-sizing:border-box}
+.dns-tooltip{position:fixed;z-index:1000;max-width:min(280px,calc(100vw - 16px));padding:7px 10px;border:1px solid #333;border-radius:5px;background:#000;color:#fff;font:12px/1.4 system-ui,sans-serif;box-shadow:0 3px 10px #0003;pointer-events:none}
 :root{--ink:#253954;--muted:#586b7e;--line:#d9e3eb;--query:#2666ab;--referral:#97600e;--answer:#23754c;--cache:#7d46a2}
 body{margin:0;background:#f3f6f9;color:var(--ink);font:13px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
 header{background:#f5f8fa;border-bottom:1px solid var(--line);padding:24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#29394b}
