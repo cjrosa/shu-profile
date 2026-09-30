@@ -6,7 +6,7 @@ function fixture() {
   function element(id = '') {
     const classes = new Set();
     return { id, dataset: {}, attrs: {}, listeners: {}, children: [], textContent: '', value: '', disabled: false, hidden: false,
-      focus() { this.focused=true; }, classList: { contains(key) { return classes.has(key); }, toggle(key, enabled) { if(enabled)classes.add(key);else classes.delete(key); } },
+      focus() { this.focused=true; }, getBoundingClientRect() { return {}; }, classList: { contains(key) { return classes.has(key); }, toggle(key, enabled) { if(enabled)classes.add(key);else classes.delete(key); } },
       setAttribute(key, value) { this.attrs[key] = value; }, addEventListener(key, fn) { this.listeners[key] = fn; },
       append(...children) { this.children.push(...children); }, replaceChildren(...children) { this.children = children; }
     };
@@ -28,6 +28,35 @@ function fixture() {
   return { el, click, timers, completeQuestion, advance, goStage, preset: name => click(presets.find(p => p.dataset.preset === name)), change(id,value) { el(id).value=value; el(id).listeners.change(); }, tick() { for(const fn of [...timers.values()])fn(); }, finish() { let remaining = 40; while(!el('step').disabled && remaining-- > 0) click('step'); assert.ok(remaining > 0); }, hide() { doc.hidden=true; doc.listeners.visibilitychange(); } };
 }
 const rows = (f,id) => f.el(id).children[0].children[2].children;
+test('Change IP pulses the selected domain authority, including aliases', () => {
+  const f=fixture();f.click('sandbox');
+  for(const [host,id] of [[Sim.HOST,'auth-shu'],['google.com','auth-google'],[Sim.ALIAS,'auth-shu']]){
+    f.change('hostname',host);f.click('change-address');
+    assert.equal(f.el('node-'+id).classList.contains('inspect-pulse'),true);
+    const other=id==='auth-shu'?'auth-google':'auth-shu';
+    assert.equal(f.el('node-'+other).classList.contains('inspect-pulse'),false);
+    f.el('node-'+id).listeners.animationend({animationName:'inspect-server-pulse'});
+    assert.equal(f.el('node-'+id).classList.contains('inspect-pulse'),false);
+  }
+});
+test('hierarchy stage exposes an inspection action before its question', () => {
+  const f=fixture();f.advance();
+  assert.equal(f.el('hierarchy-task').hidden,false);
+  assert.equal(f.el('playback-controls').hidden,true);
+  assert.equal(f.el('node-auth-shu').classList.contains('action-target'),true);
+  f.click('node-auth-google');assert.equal(f.el('prediction').hidden,true);
+  f.click('inspect-authority');
+  assert.equal(f.el('node-auth-shu').classList.contains('inspect-pulse'),true);
+  f.el('node-auth-shu').listeners.animationend({animationName:'inspect-server-pulse'});
+  assert.equal(f.el('node-auth-shu').classList.contains('inspect-pulse'),false);
+  f.click('inspect-authority');
+  assert.equal(f.el('node-auth-shu').classList.contains('inspect-pulse'),true);
+  assert.equal(f.el('cache-title').textContent,'sacredheart.edu authoritative');
+  assert.equal(f.el('prediction').hidden,false);
+  assert.equal(f.el('next').disabled,true);
+  assert.equal(f.el('node-auth-shu').classList.contains('action-target'),false);
+  f.completeQuestion();assert.equal(f.el('next').disabled,false);
+});
 test('questions follow demonstrations and correct answers unlock progression', () => {
  const f=fixture();
  assert.equal(f.el('next').disabled,true);
@@ -180,9 +209,9 @@ test('play, pause, stage/scenario switches, reset and hiding stop background pla
 });
 test('sandbox stale address refreshes, repeat hits cache, clear requires hierarchy again', () => {
   const f=fixture(); f.click('sandbox'); f.preset('changed'); f.finish(); assert.match(f.el('result').textContent,/192.0.2.20/);
-  f.click('advance'); assert.equal(f.el('clock').textContent,'Simulated time: 61 s'); f.finish(); assert.match(f.el('result').textContent,/192.0.2.80/);
+  f.click('age-node-cache'); assert.equal(f.el('clock').textContent,'Simulated time: 61 s'); f.finish(); assert.match(f.el('result').textContent,/192.0.2.80/);
   assert.equal(f.el('history').children.length,4); f.click('repeat'); f.finish(); assert.equal(f.el('history').children.length,3);
-  f.click('clear'); f.finish(); assert.equal(f.el('history').children.length,8);
+  f.click('node-resolver'); f.click('flush-node-cache'); f.finish(); assert.equal(f.el('history').children.length,8);
 });
 test('changing domain routes to the other branch and retains independent cached answers', () => {
   const f=fixture(); f.click('sandbox'); f.finish(); f.change('hostname','google.com'); f.finish();

@@ -6,7 +6,7 @@
     { title: 'One root, two TLD branches', copy: 'DNS distributes responsibility across organizations instead of relying on one central database. Each organization manages its own records. Follow root → .com → google.com, or root → .edu → sacredheart.edu. Click any server to inspect its delegations, records, and cache. The local resolver sits outside this hierarchy.', preset: 'first', host: Sim.HOST, inspect: 'root', focus: ['root','tld-com','tld-edu','auth-google','auth-shu'], question: 'Who owns the simulated sacredheart.edu A record?', answers: ['The root server', 'The sacredheart.edu authoritative server'], correct: 1, feedback: 'The authoritative server owns the A record. Root and TLD servers provide directions.' },
     { title: 'Trace an iterative lookup', copy: 'Press Play or Step. Blue queries ask, amber referrals direct, and green answers return records. Trace the .edu branch, then change the hostname to google.com to try .com.', preset: 'first', host: Sim.HOST, inspect: 'resolver', focus: ['resolver','root','tld-edu','auth-shu'], question: 'What does the root return in this lookup?', answers: ['The host IP address', 'A referral to the correct TLD'], correct: 1, feedback: 'The root returns a referral. The local resolver follows it and continues asking.' },
     { title: 'Trace recursive forwarding', copy: 'In this conceptual recursive walkthrough, each contacted server continues the lookup and passes the answer back. Follow the .com branch and click a server to inspect its cache. Compare this path with the resolver-led iterative lookup in Stage 3.', preset: 'first', host: 'google.com', style: 'recursive', inspect: 'root', focus: ['root','tld-com','auth-google'], question: 'In this recursive example, what does a contacted server do?', answers: ['Continues the lookup and returns the answer', 'Only tells the resolver which server to ask next'], correct: 0, feedback: 'Each contacted server continues the work. Returning directions is the iterative pattern from Stage 3. Full recursion through root and TLD servers is a conceptual comparison.' },
-    { title: 'Cached answers take a shortcut', copy: 'Play the cached lookup: only laptop and resolver exchange messages. Change IP and repeat to see a stale answer. Advance +61 s and play again: the expired A record refreshes using cached referrals.', preset: 'cached', host: Sim.HOST, inspect: 'resolver', focus: ['device','resolver'], question: 'The authoritative IP changes before the cached A expires. What may return?', answers: ['The old cached IP', 'Always the new IP immediately'], correct: 0, feedback: 'The cached answer can remain stale until its TTL expires. Referrals have separate, longer TTLs.' },
+    { title: 'Cached answers take a shortcut', copy: 'Play the cached lookup: only laptop and resolver exchange messages. Change IP and repeat to see a stale answer. Use Age +61 s in the selected-node panel and play again: the expired A record refreshes using cached referrals.', preset: 'cached', host: Sim.HOST, inspect: 'resolver', focus: ['device','resolver'], question: 'The authoritative IP changes before the cached A expires. What may return?', answers: ['The old cached IP', 'Always the new IP immediately'], correct: 0, feedback: 'The cached answer can remain stale until its TTL expires. Referrals have separate, longer TTLs.' },
     { title: 'Follow an alias to an A record', copy: 'Resolve www.sacredheart.edu: its CNAME points to sacredheart.edu, then A supplies the address. Click the authority to compare owned records with the resolver cache. After +61 s, CNAME remains while A expires.', preset: 'alias', host: Sim.HOST, inspect: 'auth-shu', focus: ['resolver','auth-shu'], question: 'What does CNAME contain?', answers: ['An IPv4 address', 'Another hostname'], correct: 1, feedback: 'CNAME names the canonical host; A supplies an IPv4 address. MX identifies a mail server and comes later in the email tool.' }
   ];
   const descriptions = { first: 'Start empty and trace the selected domain.', cached: 'A previous lookup has populated caches.', expired: '61 s later: the A expired, but referrals can remain.', changed: 'The authority changed its IP; the cached answer is still valid.', alias: 'Follow a CNAME to its canonical hostname, then its A record.' };
@@ -91,6 +91,7 @@
     const focus = mode === 'guided' ? lessons[stage].focus : ['resolver'];
     Object.keys(points).forEach(id => {
       const el = $('node-'+id);
+      el.classList.toggle('action-target', mode === 'guided' && stage === 1 && id === 'auth-shu' && !questionPrompted);
       el.classList.toggle('active', !!event && (id===event.from || id===event.to));
       el.classList.toggle('selected', id===selectedNode); el.classList.toggle('focus-node', !event && focus.includes(id));
       el.classList.toggle('muted-node', !intro && !overview && !participants.has(id));
@@ -108,7 +109,7 @@
   }
   function questionIsRelevant() {
     if (stage === 0) return true;
-    if (stage === 1) return !!selectedNode && selectedNode.startsWith('auth-');
+    if (stage === 1) return selectedNode === 'auth-shu';
     if (stage === 2 || stage === 3) return !!sim.result;
     if (stage === 4) return !!sim.result && sim.result !== sim.currentAddress();
     return !!sim.result && sim.history.some(e => e.records.some(r => r.type === 'CNAME'));
@@ -116,6 +117,9 @@
   function canAdvance() { return questionPrompted && selectedAnswer === lessons[stage].correct; }
   function canVisit(index) { return index <= stage || Array.from({length:index},(_,i)=>i).every(i=>i===stage?canAdvance():saved.get(i)?.selectedAnswer===lessons[i].correct); }
   function showNavigation() {
+    $('hierarchy-task').hidden = mode !== 'guided' || stage !== 1;
+    $('hierarchy-task-hint').textContent = questionPrompted ? (canAdvance() ? 'Correct. Select Next stage to follow a lookup.' : 'Review the A record in the inspector, then answer Check your understanding below to unlock Next.') : 'Select sacredheart.edu below to view its A record, then answer the question to unlock Next.';
+    $('node-auth-shu').classList.toggle('action-target', mode === 'guided' && stage === 1 && !questionPrompted);
     $('next').disabled = !canAdvance();
     lessons.forEach((_,i)=>$('stage-'+i).disabled=!canVisit(i));
   }
@@ -198,8 +202,9 @@
     $('play').textContent=timer===null?'Play':'Pause';
     const done=sim.cursor===sim.events.length,partial=sim.cursor>0&&!done;
     $('play').disabled=overview||done; $('step').disabled=overview||done||timer!==null; $('reset').disabled=overview;
+    $('playback-controls').hidden=overview;
     $('cache-actions').hidden=guided&&stage<4;
-    ['repeat','advance','clear','change-address'].forEach(id=>$(id).disabled=partial||timer!==null);
+    ['repeat','change-address'].forEach(id=>$(id).disabled=partial||timer!==null);
     const event=sim.history[sim.history.length-1];
     $('message-type').textContent=event?kinds[event.kind]:overview?'Stage focus':'Ready';
     $('message-type').setAttribute('data-kind',event?event.kind:'');
@@ -221,6 +226,15 @@
     $('node-'+id).addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' ') { e.preventDefault(); selectNode(id); } });
   });
   $('inspect-resolver').addEventListener('click',()=>selectNode('resolver'));
+  function pulseAuthority(id) {
+    ['auth-shu','auth-google'].forEach(key=>$('node-'+key).classList.toggle('inspect-pulse',false));
+    const node=$('node-'+id);
+    node.classList.toggle('inspect-pulse',false);
+    void node.getBoundingClientRect();
+    node.classList.toggle('inspect-pulse',true);
+  }
+  $('inspect-authority').addEventListener('click',()=>{selectNode('auth-shu');pulseAuthority('auth-shu');});
+  ['auth-shu','auth-google'].forEach(id=>$('node-'+id).addEventListener('animationend',e=>{if(e.animationName==='inspect-server-pulse')$('node-'+id).classList.toggle('inspect-pulse',false);}));
   $('prediction').addEventListener('animationend',e=>{if(e.animationName==='question-pulse')$('prediction').classList.toggle('question-pulse',false);});
   $('trace-filter').addEventListener('change',()=>{traceSelection=null;showTrace();});
   $('trace-follow').addEventListener('click',()=>{traceSelection=null;showTrace();$('trace-scroll').scrollTop=$('trace-scroll').scrollHeight;});
@@ -237,9 +251,7 @@
   $('play').addEventListener('click',()=>{if(timer!==null){stop();render();return;}if(sim.cursor===sim.events.length)return;timer=setInterval(step,1800);step();});
   $('step').addEventListener('click',step);
   $('repeat').addEventListener('click',()=>newLookup('Repeat lookup ready. Existing caches are preserved.'));
-  $('advance').addEventListener('click',()=>{sim.advance();newLookup('Advanced 61 s across all caches. Expired entries are gone; play the next lookup.');});
-  $('clear').addEventListener('click',()=>{sim.clearCache();newLookup('Local resolver cache cleared. Other servers keep their cached responses.');});
-  $('change-address').addEventListener('click',()=>{sim.changeAddress();newLookup('The authority now owns '+sim.currentAddress()+'. Cached copies keep their original TTL.');});
+  $('change-address').addEventListener('click',()=>{sim.changeAddress();newLookup('The authority now owns '+sim.currentAddress()+'. Cached copies keep their original TTL.');pulseAuthority(sim.zone().auth);});
   $('style').addEventListener('change',()=>{if(mode==='guided')return;setup(guidedPreset(),$('style').value,sim.zone().domain);render();});
   function guidedPreset(){return mode==='guided'?lessons[stage].preset:selectedPreset;}
   $('hostname').addEventListener('change',()=>{stop();logOffsets={};traceSelection=null;sim.start($('hostname').value);notice='Selected '+sim.name+'. Existing caches are preserved.';render();});
