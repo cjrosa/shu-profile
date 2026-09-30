@@ -167,7 +167,7 @@
   <div class="ip-stack">
 
     <!-- ------------------------------------------------------- -->
-    <!-- LAYER 5/7 &mdash; APPLICATION (PLACEHOLDER)                   -->
+    <!-- LAYER 5/7 &mdash; APPLICATION                                 -->
     <!-- ------------------------------------------------------- -->
     <div class="layer-accordion app" id="acc-app">
       <button class="layer-header" onclick="toggleLayer('acc-app')" aria-expanded="false">
@@ -179,7 +179,7 @@
           <div class="layer-title-area">
             <div class="layer-name">Application Layer</div>
             <div class="layer-tagline">HTTP &middot; DNS &middot; SMTP &middot; FTP &middot; TLS &middot; Client-Server &amp; P2P Models</div>
-            <span class="layer-tool-count">Coming Soon</span>
+            <span class="layer-tool-count">1 Tool</span>
           </div>
           <div class="layer-chevron">
             <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg>
@@ -187,26 +187,12 @@
         </div>
       </button>
       <div class="layer-body">
-        <div style="padding: 4px 0 8px;">
-          <div class="placeholder-card">
-            <div class="placeholder-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A95A3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            </div>
-            <div class="placeholder-body">
-              <div class="placeholder-title">No interactive tools planned for this layer</div>
-              <div class="placeholder-desc">Application layer protocols are well-suited to lecture and discussion &mdash; the concepts of request/response, DNS resolution, and session management tend to land without requiring animated visualizations. These topics are covered in CS339 through lecture, Wireshark labs, and hands-on exercises.</div>
-              <div class="placeholder-topics">
-                <span class="placeholder-tag">HTTP / HTTPS</span>
-                <span class="placeholder-tag">DNS</span>
-                <span class="placeholder-tag">SMTP / IMAP</span>
-                <span class="placeholder-tag">FTP</span>
-                <span class="placeholder-tag">TLS Handshake</span>
-                <span class="placeholder-tag">Client-Server Model</span>
-                <span class="placeholder-tag">P2P Architecture</span>
-                <span class="placeholder-tag">CDNs</span>
-              </div>
-            </div>
-          </div>
+        <div class="tools-grid">
+          <a class="tool-card" href="../viewer.html?tool=cs339/dns_explorer.html&amp;course=CS339&amp;label=Computer%20Networks&amp;name=DNS%20Explorer&amp;back=cs339/index.html">
+            <div class="tool-card-header"><div class="tool-icon blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><path d="M12 8v4M5 16v-4h14v4"/></svg></div><div><div class="tool-subtitle blue">Domain Name System</div><div class="tool-title">DNS Explorer</div></div></div>
+            <div class="tool-body"><p class="tool-desc">Follow a name through the DNS hierarchy. Explore referrals, caching and TTL, then resolve an alias with CNAME and A records.</p><div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot blue"></div>Six-stage guided lesson with prediction questions</div><div class="tool-feature"><div class="tool-feature-dot blue"></div>Sandbox for cached, expired, and alias lookups</div></div></div>
+            <div class="tool-footer"><span class="tool-cta blue">Open tool &rarr;</span><span class="tool-tag blue">Guided Simulator</span></div>
+          </a>
         </div>
       </div>
     </div>
@@ -652,6 +638,9 @@ const PROXY_URL = 'https://red-union-6b9e.crosa.workers.dev';
 
 // -- Tool registry for recommendations ------------------------
 const TOOLS = [
+  { name:'DNS Explorer', file:'dns_explorer.html', layer:'Application &mdash; Layer 5',
+    desc:'Guided DNS lookups, root/TLD/authoritative servers, iterative and recursive resolution, caching, TTL, A and CNAME records.',
+    keywords:['dns','domain name','hostname','name resolution','resolver','authoritative','tld','cname','dns cache','dns ttl','a record'] },
   { name:'Network Performance Explorer', file:'network_performance_explorer.html', layer:'General &mdash; Network Performance',
     desc:'Explore transmission delay with packet length, link rate, unit conversion, and animated serialization.',
     keywords:['delay','transmission delay','latency','packet length','link rate','bandwidth','performance','serialization','l/r'] },
@@ -772,7 +761,7 @@ function appendMessage(html, className) {
 // -- Call Claude API -------------------------------------------
 async function callClaude(messages) {
   const SYSTEM = `You are a concise, expert teaching assistant for CS339 Computer Networks at Sacred Heart University. 
-Answer questions about networking topics covered in the course: TCP/IP stack, transport layer (TCP, flow control, congestion control, seq/ack numbers, SYN/FIN handshakes, sliding window, AIMD, slow start), network layer (IP addressing, CIDR, subnetting, routing tables, LS/DV algorithms, Dijkstra, Bellman-Ford, DHCP, NAT/PAT), and link layer (Ethernet, switches, MAC addresses, MAC learning, ARP, broadcast flooding, VLANs, frames).
+Answer questions about networking topics covered in the course: TCP/IP stack, application layer (DNS, name resolution, resolver caching and TTL, A and CNAME records), transport layer (TCP, flow control, congestion control, seq/ack numbers, SYN/FIN handshakes, sliding window, AIMD, slow start), network layer (IP addressing, CIDR, subnetting, routing tables, LS/DV algorithms, Dijkstra, Bellman-Ford, DHCP, NAT/PAT), and link layer (Ethernet, switches, MAC addresses, MAC learning, ARP, broadcast flooding, VLANs, frames).
 
 Rules:
 - Be concise but complete. 2-4 short paragraphs maximum.
@@ -780,7 +769,7 @@ Rules:
 - If the question is outside networking/CS339 scope, politely redirect.
 - You may use markdown when helpful: headings, bold, italics, links, inline code, fenced code blocks, and simple lists.
 - End your answer with a single line starting with "TOOL:" naming the single most relevant tool from this list if applicable, or "TOOL:none" if no tool applies:
-  Network Performance Explorer, TCP Full Visualizer, CIDR Teaching Tool, Subnet Topology Builder, Router Visualizer, Routing Algorithm Visualizer, Graph Algorithm Visualizer, Link Layer Visualizer`;
+  DNS Explorer, Network Performance Explorer, TCP Full Visualizer, CIDR Teaching Tool, Subnet Topology Builder, Router Visualizer, Routing Algorithm Visualizer, Graph Algorithm Visualizer, Link Layer Visualizer`;
 
   const response = await fetch(PROXY_URL, {
     method: 'POST',
