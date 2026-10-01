@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AI-100 Machine Learning Lab</title>
-<link rel="stylesheet" href="../assets/css/components/ai-ml-lab.css?v=20260927-clustering-2">
+<link rel="stylesheet" href="../assets/css/components/ai-ml-lab.css?v=20261001-review-selection">
 </head>
-<body>
+<body class="ml-data-detective">
 <main class="ml-app">
   <header class="ml-intro">
     <div>
@@ -59,13 +59,13 @@
     <div class="ml-notebook-layout">
       <div class="ml-panel ml-notebook">
         <div class="ml-panel-head">
-          <div><h2>AI-100 Python Simulator</h2><span>Course-scoped Python practice · not a full Python runtime</span></div>
+          <div><h2>AI-100 Python Simulator</h2><span>Guided Python practice · simulated outputs</span></div>
           <div class="ml-toolbar">
             <button class="ml-btn" id="instructorTools" type="button" aria-haspopup="dialog">Instructor tools</button>
             <span class="ml-paste-budget" tabindex="0" aria-describedby="pasteTooltip"><span class="ml-paste-tokens" aria-hidden="true"><i data-paste-token></i><i data-paste-token></i><i data-paste-token></i></span><span id="pasteBudget" role="status" aria-live="polite">3 pastes left</span><span class="ml-paste-tooltip" id="pasteTooltip" role="tooltip">Save pastes for longer snippets. Reset lab restores your allowance.</span></span>
           </div>
         </div>
-        <div class="ml-simulator-note"><strong>Type the code yourself.</strong> This is a simulator. Please carefully follow the provided tasks and code scripts.</div>
+        <div class="ml-simulator-note"><strong>Type and run each script in order.</strong> A code cell holds Python instructions. This guided simulator checks the supported scripts and shows prepared outputs and charts from the course data; it does not run arbitrary Python. Read each task’s explanations as you go.</div>
         <div class="ml-cells" id="cells"></div>
       </div>
       <button class="ml-notebook-divider" id="notebookDivider" type="button" role="separator" aria-label="Resize notebook and task list panels" aria-orientation="vertical" aria-valuemin="45" aria-valuemax="75" aria-valuenow="60" title="Drag to resize · Double-click to reset">
@@ -78,7 +78,7 @@
         </section>
         <section class="ml-panel">
           <div class="ml-panel-head"><h2>Keep your work</h2><span>Optional: Run in Python (setup required)</span></div>
-          <p class="ml-python-setup-note">Requires Python, the necessary libraries, and the lab's data file.</p>
+          <p class="ml-python-setup-note">Requires Python, pandas, Seaborn 0.12 or later, and Fish.csv in the same folder. The .py download includes matplotlib commands to display each chart. The .ipynb download opens in a Python notebook. Chart styling may differ.</p>
           <div class="ml-panel-head" style="border:0">
             <div class="ml-actions">
               <button class="ml-btn" id="downloadPy" type="button">Download .py</button>
@@ -109,8 +109,8 @@
   <article class="ml-print-record" id="printRecord"></article>
 </main>
 <div class="ml-toast" id="mlToast" role="status" aria-live="polite"></div>
-<script src="../assets/js/ai100/data-detective-config.js?v=20260926-12"></script>
+<script src="../assets/js/ai100/data-detective-config.js?v=20260930-detective-1"></script>
 <script>window.ML_LAB_CONFIG.plotPoints=fishPlotPoints;</script>
-<script src="../assets/js/components/ai-ml-lab.js?v=20260927-clustering-2"></script>
+<script src="../assets/js/components/ai-ml-lab.js?v=20261001-review-selection"></script>
 </body>
 </html>

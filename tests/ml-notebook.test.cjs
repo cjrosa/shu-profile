@@ -13,11 +13,26 @@ function fixture(config,storage=new Map(),realCharts=false){
  if(config.id==='hidden_patterns'){for(const asset of ['hidden-patterns-data','hidden-patterns'])vm.runInContext(fs.readFileSync('assets/js/ai100/'+asset+'.js','utf8'),context);config.cells.forEach((cell,i)=>cell.output=()=>context.window.HiddenPatterns.notebookOutput(i));}
 
  // Expose closure functions only in this fixture. Chart rendering is outside progression tests.
- vm.runInContext(source.replace(/\}\)\(\);\s*$/,`C=config;${realCharts?'':'updateMetrics=()=>{};'}renderExplore=()=>{};globalThis.lab={state,restore,store,grantPastes,pasteAllowance,taskAvailable,notebookComplete,refreshNotebookProgress,invalidateNotebookFrom,evaluate,fillAllCode,pasteCode,bindCodeInsertion,setMode,completeLearn,reset,typingGuide};})();`),context);
+ vm.runInContext(source.replace(/\}\)\(\);\s*$/,`C=config;${realCharts?'':'updateMetrics=()=>{};'}renderExplore=()=>{};globalThis.lab={state,restore,store,grantPastes,pasteAllowance,taskAvailable,notebookComplete,refreshNotebookProgress,invalidateNotebookFrom,evaluate,fillAllCode,fillAndRunAllCode,pasteCode,bindCodeInsertion,setMode,completeLearn,reset,typingGuide};})();`),context);
  return {lab:context.lab,cells,document,storage,modes,part,get dialog(){return dialog},accept(){part('form').onsubmit({preventDefault(){}})},cancel(){part('[data-confirm-paste-cancel]').onclick()}};
 }
 function simple(){return {id:'test',cells:Array.from({length:3},()=>({requires:['print\\s*\\('],output:'ok'}))}}
 function notebookFixture(config,storage){const f=fixture(config,storage);f.lab.state.learnComplete=true;return f}
+test('Data Detective rejects a wrong plot, recovers, and preserves saved work',()=>{
+ const ctx={window:{}};vm.createContext(ctx);vm.runInContext(fs.readFileSync('assets/js/ai100/data-detective-config.js','utf8'),ctx);
+ const config=ctx.window.ML_LAB_CONFIG,f=notebookFixture(config);f.lab.fillAllCode();
+ for(let i=0;i<3;i++)assert.equal(f.lab.evaluate(f.cells[i],i),true);
+ const editor=f.cells[3].querySelector('.ml-code');editor.value=editor.value.replace('Weight','weight');
+ assert.equal(f.lab.evaluate(f.cells[3],3),false);assert.equal(f.lab.state.completed.size,3);
+ assert.match(f.cells[3].querySelector('.ml-output').innerHTML,/Check this task/);
+ assert.doesNotMatch(f.cells[3].querySelector('.ml-output').innerHTML,/Success:|NameError|ValueError/);
+ editor.value=f.lab.typingGuide(3).replaceAll('sb','sns');
+ assert.equal(f.lab.evaluate(f.cells[3],3),true);
+ for(let i=4;i<6;i++){f.cells[i].querySelector('.ml-code').value=f.lab.typingGuide(i).replaceAll('sb.','sns.');assert.equal(f.lab.evaluate(f.cells[i],i),true);}
+ f.lab.state.explore={questionOrder:2,answers:{claim:0},justifications:{claim:'The dots show an upward association.'},attempts:{claim:2}};f.lab.store();
+ const restored=fixture(config,f.storage);restored.lab.restore();assert.equal(restored.lab.state.completed.size,6);
+ assert.equal(restored.lab.state.savedCodes[3],editor.value);assert.equal(restored.lab.state.explore.answers.claim,0);assert.equal(restored.lab.state.explore.attempts.claim,2);
+});
 test('Hidden Patterns opener insertion preserves existing notebook work and moves saved Learn positions once',()=>{
  const ctx={window:{}};vm.createContext(ctx);vm.runInContext(fs.readFileSync('assets/js/ai100/hidden-patterns-config.js','utf8'),ctx);
  const config=ctx.window.ML_LAB_CONFIG,key='ai100.ml.hidden_patterns';
@@ -135,4 +150,17 @@ test('plot insertion preserves saved work and evidence, and only the explicit pl
  plot.querySelector('.ml-code').value=config.cells[5].hint.replace('plt.show()','');assert.equal(f.lab.evaluate(plot,5),false);assert.equal(plot.querySelector('.ml-inline-result').hidden,true);
  plot.querySelector('.ml-code').value=config.cells[5].hint.replace('    plt.scatter','plt.scatter');assert.equal(f.lab.evaluate(plot,5),false);
  plot.querySelector('.ml-code').value=config.cells[5].hint;assert.equal(f.lab.evaluate(plot,5),true);f.lab.invalidateNotebookFrom(5);assert.equal(plot.querySelector('.ml-inline-result').hidden,true);
+});
+
+for(const name of ['data-detective','fish-predictor','hidden-patterns','loan-auditor'])test(name+' instructor fills and runs all code with saved results',()=>{
+ const ctx={window:{}};vm.createContext(ctx);vm.runInContext(fs.readFileSync('assets/js/ai100/'+name+'-config.js','utf8'),ctx);
+ const config=ctx.window.ML_LAB_CONFIG,f=notebookFixture(config);f.lab.state.governanceComplete=true;f.lab.state.pastesUsed=2;
+ assert.equal(f.lab.fillAndRunAllCode(),'All code cells filled and run successfully.');
+ assert.equal(f.lab.notebookComplete(),true);assert.equal(f.lab.state.executions,config.cells.length);assert.equal(f.lab.state.pastesUsed,2);
+ const restored=fixture(config,f.storage);restored.lab.restore();assert.equal(restored.lab.notebookComplete(),true);
+ assert.equal(f.lab.fillAndRunAllCode(),'All code cells filled and run successfully.');assert.equal(f.lab.notebookComplete(),true);
+});
+test('instructor run all respects Learn and stops at a failed task',()=>{
+ const config=simple();config.cells.forEach(c=>c.code='x = 1');const f=fixture(config);assert.match(f.lab.fillAndRunAllCode(),/Complete Learn/);assert.equal(f.lab.state.executions,0);
+ f.lab.state.learnComplete=true;assert.match(f.lab.fillAndRunAllCode(),/Stopped at task 1/);assert.equal(f.lab.state.executions,1);assert.equal(f.lab.notebookComplete(),false);
 });
