@@ -132,13 +132,40 @@
     box.append(textElement('p', server ? `${count} ${count === 1 ? 'message' : 'messages'} ${selectedNode === 'sender' ? 'waiting to transfer' : 'stored on server'}.` : selectedNode === 'alice' ? 'Alice composes mail here. Her mail server handles onward delivery.' : 'Bob can read delivered mail later. His laptop does not need to be online when his server accepts it.'));
     for (let i = 0; server && i < count; i++) {
       const item = textElement('div', ''); item.className = 'stored-mail';
-      item.append(textElement('strong', 'Lunch plans'), textElement('span', 'alice@sender.example → bob@receiver.example'));
+      item.append(textElement('strong', Sim.message[2]), textElement('span', Sim.message[0]), textElement('span', Sim.message[1]));
       if (selectedNode === 'receiver') item.append(textElement('span', stage === 5 && mode === 'imap' && step >= 3 ? 'Folder: Course' : 'Folder: Inbox'));
       box.append(item);
     }
     const nodeEvents = Sim.events(stage, mode).slice(0, step).map((event, i) => ({ event, i })).filter(({ event }) => event.node === selectedNode || edges[event.edge]?.nodes.includes(selectedNode));
     el('node-event-count').textContent = String(nodeEvents.length); el('node-log-empty').hidden = !!nodeEvents.length;
     el('node-event-log').replaceChildren(...nodeEvents.map(({ event, i }) => { const li = textElement('li', ''); li.append(textElement('strong', `Step ${i + 1} · ${event.phase}`), textElement('span', event.text)); return li; }));
+  }
+  function showMessagePreview(state) {
+    const data = state.lines.includes('C: ' + Sim.message[2]);
+    const anatomy = stage === 3 && ['Headers', 'Blank line', 'Body'].includes(state.phase);
+    let caption = '';
+    if (step && !(learning === 'guided' && stage === 0)) {
+      if (stage === 5) {
+        if (state.mailbox) caption = mode === 'webmail'
+          ? (step >= 2 ? 'Bob’s browser — received message via HTTPS' : 'Bob’s server — stored message, not yet displayed')
+          : (step === 2 ? 'Bob’s mail client — received message via IMAP' : 'Bob’s server — stored message');
+      } else if (data || anatomy) caption = 'SMTP DATA — message headers and body';
+      else if (state.phase === 'Compose' || (stage === 0 && step === 1)) caption = 'Alice’s user agent — composed message';
+      else if (state.phase === 'Read' || (stage === 0 && step === 4)) caption = 'Bob’s mail client — received message via IMAP';
+      else if (state.queue) caption = state.phase === 'Transfer' ? 'SMTP transfer — message in transit' : 'Alice’s server — queued message';
+      else if (state.mailbox) caption = 'Bob’s server — stored message';
+    }
+    el('message-preview').hidden = !caption;
+    el('preview-caption').textContent = caption;
+    const separator = Sim.message.indexOf('');
+    el('preview-headers').replaceChildren(...Sim.message.slice(0, separator).map(line =>
+      textElement(line.startsWith('Subject:') ? 'strong' : 'span', line)));
+    el('preview-body').textContent = Sim.message.slice(separator + 1).join('\n');
+    el('preview-separator').hidden = !(data || anatomy);
+    el('preview-body-label').hidden = data || anatomy;
+    el('preview-note').textContent = data || anatomy
+      ? 'Subject travels after DATA as a message header. RCPT TO determines the delivery recipient; Subject is not an SMTP command.'
+      : 'The subject stays with the message from composition through delivery and reading.';
   }
   function showQuestion(state) {
     const [question, answers, correct, explanation] = currentQuestion();
@@ -214,7 +241,7 @@
     el('result').hidden = !completed || !guided; el('result').textContent = 'Lesson complete. Revisit a stage or explore freely.';
     const anatomy = ['Envelope', 'Headers', 'Blank line', 'Body', 'DATA terminator'];
     ['envelope', 'headers', 'blank', 'body', 'terminator'].forEach((id, i) => el('anatomy-' + id).classList.toggle('anatomy-active', stage === 3 && state.phase === anatomy[i]));
-    showNetwork(state); showInspector(state); showQuestion(state); showTrace();
+    showMessagePreview(state); showNetwork(state); showInspector(state); showQuestion(state); showTrace();
   }
   function openStage(index, fresh = false) {
     stop(); stage = index;

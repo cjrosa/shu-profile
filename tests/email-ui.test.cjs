@@ -113,3 +113,43 @@ test('shared DNS styles, accessible topology and hub viewer link resolve',()=>{
   assert.equal((html.match(/role="button" tabindex="0"/g)||[]).length,4);
   assert.match(html,/aria-live="polite"/);assert.match(fs.readFileSync('cs339/index.html','utf8'),/viewer.html\?tool=cs339\/email_explorer.html/);
 });
+
+test('subject follows composition, queue, delivery and reading, and replay clears preview',()=>{
+  const f=fixture();f.click('inspect-sender');f.answer(0);f.click('next');
+  assert.equal(f.el('message-preview').hidden,true);
+  f.click('step');assert.match(f.el('preview-caption').textContent,/composed/);
+  assert.deepEqual(f.el('preview-headers').children.map(e=>e.textContent),Sim.message.slice(0,3));
+  assert.equal(f.el('preview-body').textContent,Sim.message[4]);
+  f.click('step');assert.match(f.el('preview-caption').textContent,/queued/);
+  f.click('node-sender');assert.equal(f.el('storage-content').children[1].children[0].textContent,Sim.message[2]);
+  f.click('step');f.click('step');assert.match(f.el('preview-caption').textContent,/in transit/);
+  f.click('step');assert.match(f.el('preview-caption').textContent,/server.*stored/);
+  f.click('node-receiver');assert.equal(f.el('storage-content').children[1].children[0].textContent,Sim.message[2]);
+  f.click('step');assert.match(f.el('preview-caption').textContent,/received.*IMAP/);
+  f.click('replay');assert.equal(f.el('message-preview').hidden,true);
+});
+
+test('SMTP DATA preview exposes subject and separator without opening trace',()=>{
+  const f=fixture();f.click('sandbox');f.change('scenario','2');
+  for(let i=0;i<5;i++)f.click('step');
+  assert.equal(f.el('preview-separator').hidden,true);
+  f.click('step');assert.match(f.el('preview-caption').textContent,/SMTP DATA/);
+  assert.equal(f.el('preview-separator').hidden,false);
+  assert.equal(f.el('preview-headers').children[2].textContent,'Subject: Lunch plans');
+  assert.match(f.el('preview-note').textContent,/not an SMTP command/);
+  f.click('reset');assert.equal(f.el('message-preview').hidden,true);
+  f.change('scenario','3');f.click('step');f.click('step');
+  assert.equal(f.el('preview-separator').hidden,false);
+});
+
+test('reading preview waits for retrieval and disappears after deletion or access mode reset',()=>{
+  const f=fixture();f.click('sandbox');f.change('scenario','5');
+  assert.equal(f.el('message-preview').hidden,true);
+  f.click('step');assert.match(f.el('preview-caption').textContent,/server.*stored/);
+  f.click('step');assert.match(f.el('preview-caption').textContent,/received.*IMAP/);
+  f.click('step');f.click('step');assert.equal(f.el('message-preview').hidden,true);
+  f.change('retrieval','webmail');assert.equal(f.el('message-preview').hidden,true);
+  f.click('step');assert.match(f.el('preview-caption').textContent,/not yet displayed/);
+  f.click('step');assert.match(f.el('preview-caption').textContent,/browser.*HTTPS/);
+  assert.equal(f.el('preview-headers').children[2].textContent,Sim.message[2]);
+});

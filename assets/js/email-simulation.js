@@ -24,7 +24,7 @@
       event('Envelope', 'MAIL FROM identifies the envelope sender.', 'sender', 'transfer', 1, count, ['C: MAIL FROM:<alice@sender.example>', 'S: 250 Sender OK']),
       event('Envelope', 'RCPT TO identifies the delivery recipient.', 'receiver', 'transfer', 1, count, ['C: RCPT TO:<bob@receiver.example>', 'S: 250 Recipient OK']),
       event('Message transfer', '354 means the server is ready for message data.', 'receiver', 'transfer', 1, count, ['C: DATA', 'S: 354 End data with <CRLF>.<CRLF>']),
-      event('Message transfer', 'Headers, a blank line, and the body travel inside DATA.', 'receiver', 'transfer', 1, count, message.map(line => 'C: ' + line)),
+      event('Message transfer', 'Subject travels as a message header after DATA, alongside the other headers, a blank line, and the body.', 'receiver', 'transfer', 1, count, message.map(line => 'C: ' + line)),
       event('Accepted', 'The dot-only line ends DATA. The server accepts the message and stores it in Bob’s mailbox in this example.', 'receiver', 'transfer', 0, count + 1, ['C: .', 'S: 250 Message accepted for delivery'])
     ];
   }
@@ -50,7 +50,7 @@
       case 2: return [connection, greeting, ...transaction(), close(1)];
       case 3: return [
         event('Envelope', 'These are SMTP commands outside the message: MAIL FROM and RCPT TO determine the envelope addresses.', 'sender', 'transfer', 1, 0, ['C: MAIL FROM:<alice@sender.example>', 'C: RCPT TO:<bob@receiver.example>']),
-        event('Headers', 'From, To, and Subject are message headers, not SMTP commands. Envelope and header addresses can differ.', 'receiver', 'transfer', 1, 0, ['C: DATA', 'S: 354 Send message data', ...message.slice(0, 3)]),
+        event('Headers', 'From, To, and Subject are message headers, not SMTP commands. RCPT TO determines the delivery recipient. Subject is part of the delivered message. Envelope and header addresses can differ.', 'receiver', 'transfer', 1, 0, ['C: DATA', 'S: 354 Send message data', ...message.slice(0, 3)]),
         event('Blank line', 'An empty line separates the message headers from the body.', 'receiver', 'transfer', 1, 0, ['[blank line — header/body separator]']),
         event('Body', 'The body contains Alice’s message.', 'receiver', 'transfer', 1, 0, [message[4]]),
         event('DATA terminator', 'The wire delimiter is <CRLF>.<CRLF>: a dot alone on a line. It is a protocol delimiter, not part of the stored message.', 'receiver', 'transfer', 0, 1, ['C: .', 'S: 250 Message accepted for delivery'])
