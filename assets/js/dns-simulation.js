@@ -34,10 +34,10 @@
     currentAddress(zone = this.zone()) { return zone.domain === HOST ? this.address : this.googleAddress; }
     changeAddress() { const z = this.zone(); if(z.domain === HOST) this.address = this.address === OLD ? NEW : OLD; else this.googleAddress = this.googleAddress === z.ip ? '198.51.100.80' : z.ip; }
     ownedRecords(node) {
-      if (node === 'root') return ZONES.map(z => ({ name: '.' + z.tld, type: 'Delegation', value: NODES[z.tldNode].name }));
+      if (node === 'root') return ZONES.map(z => ({ name: '.' + z.tld, type: 'NS', value: NODES[z.tldNode].name }));
       const z = ZONES.find(z => z.tldNode === node || z.auth === node);
       if (!z) return [];
-      if (node === z.tldNode) return [{ name: z.domain, type: 'Delegation', value: NODES[z.auth].name }];
+      if (node === z.tldNode) return [{ name: z.domain, type: 'NS', value: NODES[z.auth].name }];
       return [{ name: z.domain, type: 'A', value: this.currentAddress(z), ttl: 60 }, { name: 'www.' + z.domain, type: 'CNAME', value: z.domain, ttl: 120 }];
     }
     save() { return copy({ ...this }); }
