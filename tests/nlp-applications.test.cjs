@@ -5,18 +5,16 @@ test('Word2Vec reverses input and prediction for the same context',()=>{
  assert.match(cbow,/does not preserve their order/);assert.doesNotMatch(skip,/How this relates to the embeddings above/);
  assert.match(A.word2vec('skipgram',0),/Predict nearby words/);
 });
-test('translation reads before generation and finishes after four output words',()=>{
- assert.doesNotMatch(A.applications('translation',2),/>Me</);
- assert.match(A.applications('translation',4),/>Me</);
- assert.match(A.applications('translation',7),/>libros</);
- assert.match(A.applications('translation',7),/>END</);
+test('generation reads all inputs before predicting, feeds output back, and ends explicitly',()=>{
+ for(const mode of ['translation','caption']){
+ const frames=A.applicationFrames(mode),transfer=frames.findIndex(f=>f.phase==='transfer'),predict=frames.findIndex(f=>f.phase==='predict');
+ assert.ok(transfer>0&&predict>transfer);
+ for(let i=0;i<transfer;i++)assert.equal(frames[i].written,0);
+ frames.forEach((f,i)=>{if(f.phase==='emit'){assert.equal(frames[i-1].phase,'predict');assert.equal(f.written,frames[i-1].written+1);assert.match(A.applications(mode,i),/generated-now/)}});
+ assert.equal(frames.at(-1).phase,'end');assert.match(A.applications(mode,frames.length-1),/>END</);
+ assert.match(A.applicationToolbar(mode,frames.length-1),/disabled/);
+ }
 });
-test('caption starts from visual context and generates three words',()=>{
- assert.match(A.applications('caption',0),/Context is ready/);
- assert.match(A.applications('caption',3),/>runs</);
- assert.match(A.applications('caption',3),/>END</);
-});
-
 test('Word2Vec learning updates only input embeddings and reduces target loss',()=>{
  for(const mode of ['skipgram','cbow'])for(let center=0;center<5;center++){
  const d=A.word2vecStep(mode,center),loss=p=>-d.targets.reduce((sum,i)=>sum+Math.log(p[i]),0)/d.targets.length;
@@ -25,4 +23,14 @@ test('Word2Vec learning updates only input embeddings and reduces target loss',(
  assert.notDeepEqual(d.outputBefore,d.outputAfter);
  assert.match(A.word2vec(mode,center,4),/w2v-phase-4/);
  }
+});
+
+test('chapter checks provide retry and correct explanations without affecting other scenes',()=>{
+ for(const [kind,answer] of [['word2vec',1],['context',0],['evolve',2],['final',1]]){
+ assert.doesNotMatch(A.knowledgeCheck(kind),/role="status"/);
+ assert.match(A.knowledgeCheck(kind,answer),/Correct./);
+ assert.match(A.knowledgeCheck(kind,(answer+1)%3),/Try again./);
+ assert.match(A.knowledgeCheck(kind,answer),/aria-pressed="true"/);
+ }
+ assert.equal(A.knowledgeCheck('rnntrain'),'');
 });

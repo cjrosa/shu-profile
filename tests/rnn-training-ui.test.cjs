@@ -82,3 +82,24 @@ test('Word2Vec and applications occupy their own scenes',()=>{
  f.run('state.scene=11;render()');assert.match(f.view(),/Translation/);assert.match(f.view(),/Image captioning/);
  assert.equal(f.run('scenes.length'),13);
 });
+
+test('chapter-end checks render and preserve selected feedback across navigation',()=>{
+ const f=fixture(5);assert.match(f.view(),/Check your understanding/);
+ f.run("state.knowledgeAnswers={word2vec:1};render()");assert.match(f.view(),/Correct./);
+ f.query('#nextBtn').onclick();assert.doesNotMatch(f.view(),/Check your understanding/);
+ f.query('#prevBtn').onclick();assert.match(f.view(),/Correct./);
+ for(const scene of [7,10,12]){f.run('state.scene='+scene+';render()');assert.match(f.view(),/Check your understanding/)}
+});
+
+test('generation autoplay reaches END and cancels on navigation',()=>{
+ const f=fixture(11);f.run('applicationPlaying=true;applicationTick()');let guard=0;while(f.timers.size&&guard++<40)f.tick();
+ assert.equal(f.run('applicationPlaying'),false);assert.match(f.view(),/Selected: END/);
+ f.run('state.applicationStep=0;applicationPlaying=true;applicationTick()');f.query('#nextBtn').onclick();assert.equal(f.timers.size,0);assert.equal(f.run('applicationPlaying'),false);
+});
+
+test('word steps do not restart the whole-scene entrance animation',()=>{
+ const f=fixture(11);assert.equal(f.query('#sceneContent').style.animation,'');
+ f.run('state.applicationStep=1;render()');assert.equal(f.query('#sceneContent').style.animation,'none');
+ f.run('state.applicationStep=2;render()');assert.equal(f.query('#sceneContent').style.animation,'none');
+ f.query('#nextBtn').onclick();assert.equal(f.query('#sceneContent').style.animation,'');
+});

@@ -160,3 +160,75 @@
 
 .w2v-lesson .w2v-status{justify-content:flex-start;text-align:left;padding:7px 10px;gap:8px;margin-top:10px}
 .w2v-lesson .w2v-status svg{width:20px;height:20px;flex-basis:20px}
+
+.nlp-knowledge{margin-top:18px;padding-top:12px;border-top:1px solid var(--line);font-size:11px}.nlp-knowledge summary{cursor:pointer;color:var(--green-dark);font-weight:600}.nlp-knowledge fieldset{border:0;padding:12px 0 0;margin:0}.nlp-knowledge legend{padding-top:12px;font-weight:600}.nlp-knowledge button{display:block;width:100%;text-align:left;font:inherit;color:var(--ink);background:white;border:1px solid var(--line);border-radius:7px;padding:8px 10px;margin:6px 0;cursor:pointer}.nlp-knowledge button[aria-pressed=true]{border-color:var(--green);background:var(--green-soft)}.nlp-knowledge button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}.knowledge-feedback{padding:9px 12px;border-radius:8px;line-height:1.5}.knowledge-feedback.correct{background:var(--green-soft);color:var(--green-dark)}.knowledge-feedback.retry{background:var(--amber-soft);color:#75450c}
+
+/* Scene 12 follows Scene 6's compact type scale. */
+.applications-lesson{font-family:inherit;font-size:13px}
+.applications-lesson button,.applications-lesson svg text{font-family:inherit}
+.applications-lesson h3,.applications-lesson h4{font-size:14px;line-height:1.4;font-weight:700;margin:0 0 10px}
+.applications-lesson p{font-size:13px;line-height:1.5;font-weight:400;margin:8px 0}
+.applications-lesson .extension-controls{margin:0 0 8px;gap:6px}
+.applications-lesson .extension-controls .choice{padding:7px 14px;font-size:14px;min-height:0;border-radius:8px}
+.applications-lesson .tokens{gap:6px;margin:10px 0}
+.applications-lesson .token{padding:7px 13px;font-size:14px;min-height:0}
+.applications-lesson .rnn-math,.applications-lesson .rnn-math p,.applications-lesson>p[aria-live]{font-size:11px;line-height:1.5}
+
+/* Remove excess vertical space from the sequence-generation scene. */
+.story:has(.applications-lesson){min-height:0}
+.canvas:has(.applications-lesson){min-height:0;align-items:start;padding-top:12px;padding-bottom:12px}
+.nlp-extension.applications-lesson{margin-top:0;padding:12px}
+.applications-lesson .rnn-time-heading{margin-top:0;margin-bottom:8px;gap:10px}
+.applications-lesson .rnn-time-heading h3{margin:0}
+.applications-lesson .generation-grid{margin-top:10px;gap:8px}
+.applications-lesson .generation-grid .panel{padding:10px}
+.applications-lesson .rnn-math{margin-top:10px}
+
+.nlp-extension.applications-lesson{border:0;border-radius:0;padding:0}
+.applications-lesson .rnn-time-heading{justify-content:flex-end}
+
+/* Compact content typography for Scene 12. */
+.applications-lesson{font-family:inherit;font-size:11px}
+.applications-lesson p,.applications-lesson .rnn-math,.applications-lesson .rnn-math p,.applications-lesson>p[aria-live]{font-size:11px;line-height:1.45;font-weight:400}
+.applications-lesson h4{font-size:12px;line-height:1.4;font-weight:600;margin-bottom:8px}
+.applications-lesson .extension-controls .choice{font-family:inherit;font-size:12px;font-weight:600;padding:6px 10px}
+.applications-lesson .token{font-family:inherit;font-size:12px;font-weight:600;padding:6px 9px}
+.applications-lesson .rnn-sentence-end{font-size:11px;font-weight:600}
+
+.generation-network{display:block;width:100%;max-width:240px;margin:8px auto}.generation-network circle{stroke:white;stroke-width:2}.generation-links{opacity:.4}.generation-feedback{opacity:.25}.generation-read .generation-encoder .generation-links,.generation-encode .generation-encoder .generation-links,.generation-predict .generation-decoder .generation-links{opacity:1;stroke-dasharray:7 5;animation:w2v-flow 1s linear infinite}.generation-emit .generation-decoder .generation-feedback{opacity:1;stroke-dasharray:7 5;animation:w2v-flow 1s linear infinite}.generation-transfer .generation-transfer{animation:w2v-forward 1s infinite}.generation-encode .context-slots i{animation:rnnReveal .65s}.generated-now{animation:rnnReveal .5s}.applications-lesson .generation-message{padding:7px 10px;background:var(--purple-soft);color:#62468c;border:1px solid #d4c6e5;border-radius:8px;text-align:left}.generation-end .generation-message{background:var(--green-soft);border-color:#bdd6c2;color:var(--green-dark)}
+@media(prefers-reduced-motion:reduce){.applications-lesson *{animation:none!important}}
+
+.applications-lesson .generation-network{width:100%;max-width:360px;margin:8px auto;font-family:inherit;color:var(--ink)}
+.applications-lesson .generation-network text{fill:var(--ink);font-family:inherit}
+
+.applications-lesson .generation-encoder,.applications-lesson .generation-decoder{overflow:hidden}
+.applications-lesson .generation-diagram-area{background:#fff;border-top:1px solid var(--line);margin:10px -10px -10px;padding:10px}
+.applications-lesson .generation-diagram-area .generation-network{margin:0 auto}
+.applications-lesson .generation-diagram-area p{margin:6px 0 0}
+.applications-lesson .generation-decoder>p:empty{display:none}
+
+.generation-handoff{stroke-dasharray:6 4;animation:w2v-flow 1s linear infinite}.generation-transfer .generation-context{box-shadow:0 0 0 2px #7354a7}
+@media(prefers-reduced-motion:reduce){.generation-handoff{animation:none}}
+
+.applications-lesson .generation-direct{position:relative;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:stretch;padding-bottom:36px}.generation-direct .generation-encoder,.generation-direct .generation-decoder{display:flex;flex-direction:column}.generation-direct .generation-diagram-area{margin-top:auto}.generation-bridge{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:2}.generation-bridge path{fill:none;stroke:#7354a7;stroke-width:2;opacity:.4}.generation-transfer .generation-bridge path{opacity:1;stroke-dasharray:8 5;animation:w2v-flow 1s linear infinite}
+@media(max-width:650px){.applications-lesson .generation-direct{grid-template-columns:1fr;gap:40px}}
+
+.applications-lesson .generation-feedback{display:block;opacity:.5}
+.generation-encode .generation-encoder .generation-feedback,.generation-emit .generation-decoder .generation-feedback{opacity:1;stroke-dasharray:7 5;animation:w2v-flow 1s linear infinite}
+@media(prefers-reduced-motion:reduce){.applications-lesson .generation-feedback{animation:none}}
+
+.applications-lesson .generation-encoder .token.active{background:var(--green);border-color:var(--green);color:#fff;box-shadow:none}
+.applications-lesson .generation-encoder .rnn-sentence-end{display:inline-flex;align-items:center;justify-content:center;background:#fff;border:1px dashed var(--green);color:var(--green);border-radius:7px;padding:6px 9px}
+.applications-lesson .generation-encoder .generation-end-active{box-shadow:0 0 0 2px var(--green-soft);font-weight:700;border-width:2px}
+
+.applications-lesson .generation-decoder>h4{margin-bottom:4px}
+.generation-decoder-meta{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:4px 14px}
+.applications-lesson .generation-decoder-meta p{margin:2px 0;font-size:11px;line-height:1.3}
+.generation-decoder-meta p:empty{display:none}
+.applications-lesson .generation-decoder>.tokens{margin:6px 0;gap:5px}
+.applications-lesson .generation-decoder>.tokens .token,.applications-lesson .generation-decoder>.tokens .rnn-sentence-end{padding:4px 7px;min-height:0;font-size:11px}
+
+.applications-lesson .generation-direct{padding-bottom:0}
+.applications-lesson .generation-message{display:flex;align-items:center;gap:8px;margin:10px 0 0;padding:7px 10px}
+.applications-lesson .generation-message svg{flex:0 0 20px;width:20px;height:20px}
+.applications-lesson .generation-message p{margin:0;color:inherit;font-size:11px;line-height:1.4}
