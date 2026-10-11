@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const html = fs.readFileSync('ai100/nlp_rnn_visualizer.html', 'utf8');
 const script = html.split('<script>')[1].split('</script>')[0];
 function fixture() {
-  const context = vm.createContext({ location: { search: '' }, URLSearchParams, RNNComparison:require('../assets/js/ai100/rnn-comparison.js'),RNNTraining:require('../assets/js/ai100/rnn-training.js') });
+  const context = vm.createContext({ location: { search: '' }, URLSearchParams, NLPApplications:require('../assets/js/ai100/nlp-applications.js'),RNNComparison:require('../assets/js/ai100/rnn-comparison.js'),RNNTraining:require('../assets/js/ai100/rnn-training.js') });
   vm.runInContext(script.slice(0, script.indexOf('let tokenizationTimer')), context);
   return code => vm.runInContext(code, context);
 }
@@ -71,6 +71,6 @@ test('training and inference diagrams distinguish recurrent state from sentence 
 
 test('representation lessons explain identity, lookup, projection, and state separately',()=>{
  const run=fixture();assert.match(run('renderOnehot()'),/Identity, not meaning/);
- assert.match(run('renderLookup()'),/Six values per row/);assert.match(run('renderLookup()'),/Embedding value 1/);
+ assert.match(run('renderLookup()'),/Each row shows 50 values/);assert.match(run('renderLookup()'),/Embedding value 1/);
  assert.match(run('renderSemantic()'),/distorted/);assert.match(run('renderContext()'),/Running impression/);
 });

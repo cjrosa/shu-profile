@@ -90,3 +90,73 @@
 .classifier-product-labels,.classifier-product{display:grid;grid-template-columns:1fr 1.2fr 1.2fr;gap:5px;align-items:center}.classifier-product-labels{font-size:9px;color:var(--muted);margin-bottom:6px}.classifier-product{font-size:12px;font-variant-numeric:tabular-nums;margin:5px 0}.classifier-product span,.classifier-product strong{padding:7px 2px;border-radius:5px}.classifier-product span:first-child{background:var(--purple-soft)}.classifier-product span:nth-child(2){background:#f0f2f1}.classifier-product strong{background:var(--green-soft);color:var(--green-dark)}.playing .classifier-product{animation:classifierAppear .5s var(--product-delay) ease both}.playing .classifier-merge{animation-delay:1s}.playing .classifier-score{animation-delay:1.7s}@media(prefers-reduced-motion:reduce){.classifier-transform *{animation:none!important}}
 
 .representation-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px auto 0;max-width:1050px}.representation-cards p{font-size:12px;line-height:1.5;color:var(--muted);margin:0}.representation-cards h3{font-size:13px}@media(max-width:650px){.representation-cards{grid-template-columns:1fr}}
+
+.nlp-extension{border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:24px}.nlp-extension h3{font-size:17px;margin:0 0 12px}.nlp-extension h4{font-size:13px;margin:0 0 12px}.nlp-extension p{font-size:12px;line-height:1.5;color:var(--muted)}.extension-controls{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.extension-controls [aria-pressed="true"]{background:var(--green-soft);border-color:var(--green);color:var(--green-dark)}.extension-flow{display:grid;grid-template-columns:1fr 30px 1fr;align-items:center;gap:12px;margin-top:14px}.generation-grid{display:grid;grid-template-columns:1fr 24px 1fr 24px 1fr;gap:10px;align-items:center}.generation-grid .panel{text-align:center;min-width:0}.context-slots{display:flex;gap:6px;justify-content:center}.context-slots i{width:35px;height:26px;border:1px dashed #c8badf;border-radius:5px;background:var(--purple-soft)}.context-slots .ready{background:var(--purple);border-style:solid;animation:rnnReveal .4s}.generation-pending{color:var(--muted);border-style:dashed;opacity:.45}@media(max-width:760px){.generation-grid,.extension-flow{grid-template-columns:1fr}.generation-grid>.flow,.extension-flow>.flow{transform:rotate(90deg)}}
+
+/* Word2Vec learning sequence */
+.w2v-process{display:grid;grid-template-columns:1fr 36px 1fr 36px 1.2fr;align-items:center;gap:12px;margin-top:24px}
+.w2v-process .panel{min-width:0;background:white;padding:22px;border:1px solid #dde5df;border-radius:18px}
+.w2v-process h4{margin:0 0 18px}.w2v-embedding-row{margin:14px 0}.w2v-blocks{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-top:8px}.w2v-blocks i{display:block;height:32px;border-radius:5px}
+.w2v-transfer{font-size:32px;color:#7354a7;text-align:center}.w2v-combine{text-align:center}.w2v-combine svg{display:block;width:120px;max-width:100%;margin:20px auto;fill:#477b50;stroke:#7354a7;stroke-width:3}.w2v-combine path{fill:none}
+.w2v-prob{display:grid;grid-template-columns:65px 1fr 42px;align-items:center;gap:8px;padding:8px 5px;border:2px solid transparent;border-radius:8px}.w2v-prob i{height:12px;background:linear-gradient(to right,#7354a7 var(--p),#edf0ed var(--p));border-radius:6px}.w2v-prob.target{border-color:#477b50;background:#edf5ef}.w2v-status{min-height:3em;margin-top:24px}
+.w2v-phase-0 .w2v-input{box-shadow:0 0 0 2px #5076bd}.w2v-phase-1 .w2v-transfer,.w2v-phase-2 .w2v-transfer{animation:w2v-forward 1.1s infinite}.w2v-phase-1 .w2v-combine path{stroke-dasharray:8 5;animation:w2v-flow 1s linear infinite}.w2v-phase-2 .w2v-predict{box-shadow:0 0 0 2px #7354a7}.w2v-phase-3 .w2v-transfer{color:#ae5042;animation:w2v-back 1.1s infinite}.w2v-phase-4 .w2v-blocks i,.w2v-phase-4 .w2v-combine path{animation:w2v-update 1s ease-in-out 3}
+@keyframes w2v-forward{50%{transform:translateX(8px);opacity:.4}}@keyframes w2v-back{50%{transform:translateX(-8px);opacity:.4}}@keyframes w2v-flow{to{stroke-dashoffset:-26}}@keyframes w2v-update{50%{filter:brightness(1.2);outline:3px solid #c58b39;stroke:#c58b39}}
+@media(max-width:760px){.w2v-process{grid-template-columns:1fr}.w2v-transfer{transform:rotate(90deg);animation:none!important}}
+@media(prefers-reduced-motion:reduce){.w2v-process *{animation:none!important}}
+
+.w2v-values i{display:flex;align-items:center;justify-content:center;font-style:normal;font-size:clamp(9px,.85vw,13px);color:#20252a;min-width:0;height:36px}
+.w2v-average-source{margin:12px 0;text-align:left}.w2v-average-source>span{font-size:14px}.w2v-average-arrow{font-size:28px;color:#7354a7;margin-top:16px}.w2v-combine p{font-size:15px}.w2v-phase-1 .w2v-combine .w2v-blocks{animation:w2v-vector-in .8s ease-out}.w2v-phase-1 .w2v-average-arrow{animation:w2v-average 1s infinite}
+@keyframes w2v-vector-in{from{opacity:.2;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}@keyframes w2v-average{50%{transform:translateY(6px);opacity:.4}}
+@media(prefers-reduced-motion:reduce){.w2v-phase-1 .w2v-combine .w2v-blocks,.w2v-phase-1 .w2v-average-arrow{animation:none}}
+
+/* Compact, borderless Word2Vec lesson. */
+.nlp-extension.w2v-lesson{border:0;border-radius:0;padding:0;margin-top:0}
+.w2v-lesson .extension-controls{margin:0 0 8px;gap:6px}.w2v-lesson .extension-controls .choice{padding:7px 14px;font-size:14px;min-height:0;border-radius:8px}.w2v-lesson>p{margin:8px 0}.w2v-lesson .tokens{gap:6px;margin:10px 0}.w2v-lesson .token{padding:7px 13px;font-size:17px;min-height:0}
+.w2v-lesson .w2v-process{margin-top:14px;gap:10px;grid-template-columns:1fr 26px 1fr 26px 1.1fr;align-items:center}.w2v-lesson .w2v-process .panel{padding:14px;border:0;border-radius:8px;background:#f7f9f8}.w2v-lesson .w2v-process h4{margin:0 0 10px;font-size:15px}.w2v-lesson .w2v-transfer{align-self:center;font-size:26px}.w2v-lesson .w2v-embedding-row{margin:8px 0}.w2v-lesson .w2v-blocks{margin-top:5px;gap:3px}.w2v-lesson .w2v-values i{height:27px}.w2v-lesson .w2v-prob{padding:4px;grid-template-columns:58px 1fr 36px;font-size:13px}.w2v-lesson .w2v-combine p{font-size:13px}.w2v-lesson .w2v-status{min-height:0;margin:14px 0 6px}.w2v-lesson .w2v-loss{font-size:13px;color:#365f3c}
+.w2v-learning{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;border-top:1px solid #dde5df;padding-top:16px;margin-top:14px}.w2v-learning h4{font-size:14px;margin:0 0 6px}.w2v-learning p{margin:0;font-size:13px}.w2v-lesson .embedding-same{font-size:11px;margin-top:12px}
+@media(max-width:760px){.w2v-lesson .w2v-process,.w2v-learning{grid-template-columns:1fr}.w2v-lesson .w2v-transfer{justify-self:center}}
+
+.w2v-lookup-table{display:grid;gap:3px}.w2v-lookup-row{display:grid;grid-template-columns:52px minmax(0,1fr);align-items:center;gap:5px;padding:3px;border-radius:5px;font-size:12px;opacity:.45}.w2v-lookup-row.selected{opacity:1;background:#e8f1e9;box-shadow:inset 3px 0 #477b50}.w2v-lesson .w2v-lookup-row .w2v-blocks{margin:0}.w2v-lesson .w2v-lookup-row .w2v-values i{height:22px;font-size:10px}.w2v-lookup-arrow{text-align:center;color:#477b50;font-size:24px;margin:5px 0}.w2v-retrieved strong{font-size:12px}.w2v-phase-0 .w2v-lookup-row.selected{animation:w2v-lookup-select .65s ease-out}.w2v-phase-0 .w2v-retrieved .w2v-blocks{animation:w2v-lookup-populate .65s var(--lookup-delay) both}.w2v-phase-0 .w2v-lookup-arrow{animation:w2v-average .8s 2}.w2v-status:empty,.w2v-loss:empty{display:none}
+@keyframes w2v-lookup-select{from{background:#b8d4bb;box-shadow:inset 3px 0 #477b50,0 0 0 2px #477b50}to{background:#e8f1e9;box-shadow:inset 3px 0 #477b50}}
+@keyframes w2v-lookup-populate{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.w2v-phase-0 .w2v-lookup-row.selected,.w2v-phase-0 .w2v-retrieved .w2v-blocks,.w2v-phase-0 .w2v-lookup-arrow{animation:none}}
+
+/* Table -> retrieved inputs -> use/average -> prediction. */
+.w2v-lesson .w2v-process{grid-template-columns:minmax(0,1.2fr) 18px minmax(0,1fr) 18px minmax(0,1fr) 18px minmax(0,1fr);gap:7px}
+.w2v-lesson .w2v-process .panel{padding:10px}.w2v-lesson .w2v-process h4{font-size:13px}.w2v-lesson .w2v-transfer,.w2v-lesson .w2v-lookup-arrow{align-self:center;font-size:22px;margin:0}.w2v-lesson .w2v-values i{font-size:10px;height:25px}.w2v-lesson .w2v-blocks{gap:2px}.w2v-lesson .w2v-lookup-row{grid-template-columns:43px minmax(0,1fr);gap:3px;font-size:11px}.w2v-lesson .w2v-lookup-row .w2v-values i{font-size:9px}.w2v-lesson .w2v-prob{grid-template-columns:43px minmax(0,1fr) 29px;gap:4px;font-size:11px}.w2v-phase-0 .w2v-lookup-arrow{animation:w2v-forward .8s 2}
+@media(max-width:900px){.w2v-lesson .w2v-process{grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr)}.w2v-lesson .w2v-input+.w2v-transfer{display:none}}
+@media(max-width:520px){.w2v-lesson .w2v-process{grid-template-columns:1fr}.w2v-lesson .w2v-lookup-arrow{transform:rotate(90deg);animation:none}.w2v-lesson .w2v-input+.w2v-transfer{display:block}}
+@media(prefers-reduced-motion:reduce){.w2v-phase-0 .w2v-lookup-arrow{animation:none}}
+
+.w2v-lesson .w2v-combine{border:1.5px solid #477b50!important;background:white!important}.w2v-lesson .w2v-combine .w2v-network{width:100%;max-width:300px;margin:5px auto;display:block;fill:#202620;stroke:none}.w2v-network .w2v-synapse{opacity:.35}.w2v-network circle{stroke:white;stroke-width:2}.w2v-lesson .w2v-combine p{margin:5px 0;font-size:12px}.w2v-phase-1 .w2v-network .w2v-synapse,.w2v-phase-2 .w2v-network .w2v-synapse{stroke-dasharray:8 5;animation:w2v-flow 1s linear infinite;opacity:.7}.w2v-phase-3 .w2v-network .w2v-synapse{stroke:#ae5042;stroke-dasharray:8 5;animation:w2v-flow 1s linear infinite reverse;opacity:.7}.w2v-phase-4 .w2v-network .w2v-synapse{animation:w2v-weight-update 1s 3}
+@keyframes w2v-weight-update{50%{stroke:#c58b39;stroke-width:3;opacity:1}}
+@media(prefers-reduced-motion:reduce){.w2v-lesson .w2v-network .w2v-synapse{animation:none}}
+
+.w2v-vocabulary-note{display:flex;align-items:flex-start;gap:12px;background:#edf5ef;border-left:3px solid #477b50;border-radius:8px;padding:12px 15px;margin-top:16px}.w2v-vocabulary-note svg{flex:0 0 36px}.w2v-vocabulary-note strong{font-size:14px;color:#365f3c}.w2v-lesson .w2v-vocabulary-note p{font-size:13px;margin:4px 0 0}
+
+/* Shared typography and message styling throughout Scene 6. */
+.w2v-lesson{font-family:inherit;font-size:13px}.w2v-lesson button,.w2v-lesson svg text{font-family:inherit}.w2v-lesson p,.w2v-lesson .w2v-combine p,.w2v-lesson .embedding-same,.w2v-lesson .w2v-loss,.w2v-lesson .w2v-vocabulary-note p{font-size:13px;line-height:1.5;font-weight:400}.w2v-lesson h4,.w2v-lesson .w2v-process h4,.w2v-lesson .w2v-vocabulary-note strong{font-size:14px;line-height:1.4;font-weight:700}.w2v-lesson .w2v-embedding-row strong,.w2v-lesson .w2v-lookup-row,.w2v-lesson .w2v-prob{font-size:12px}.w2v-lesson .w2v-values i,.w2v-lesson .w2v-lookup-row .w2v-values i{font-size:10px;font-weight:400;font-variant-numeric:tabular-nums}.w2v-lesson .extension-controls .choice,.w2v-lesson .token{font-size:14px;font-family:inherit}.w2v-lesson .w2v-status{display:flex;align-items:center;gap:12px;border-left:3px solid #7354a7;background:#f1edf7;border-radius:8px;padding:12px 15px;margin:14px 0 6px;color:#7354a7}.w2v-lesson .w2v-status svg{flex:0 0 32px}.w2v-lesson .w2v-status p{margin:0}.w2v-phase-0 .w2v-status{display:none}.w2v-phase-3 .w2v-status svg{transform:rotate(180deg)}
+
+/* Keep supporting messages smaller than the main demonstration. */
+.w2v-lesson .w2v-status,.w2v-lesson .w2v-vocabulary-note{padding:9px 12px;gap:9px}
+.w2v-lesson .w2v-status p,.w2v-lesson .w2v-vocabulary-note p{font-size:11px;line-height:1.4}
+.w2v-lesson .w2v-vocabulary-note strong{font-size:12px;line-height:1.4}
+.w2v-lesson .w2v-status svg,.w2v-lesson .w2v-vocabulary-note svg{width:24px;height:24px;flex:0 0 24px}
+
+/* Reference message layout, with colors tied to the learning step. */
+.w2v-lesson .w2v-status,.w2v-lesson .w2v-vocabulary-note{justify-content:center;align-items:center;text-align:center;border:1px solid #d4c6e5;border-radius:10px;background:#f1edf7;color:#62468c;padding:11px 16px;gap:10px}
+.w2v-lesson .w2v-status p,.w2v-lesson .w2v-vocabulary-note p{color:inherit;margin:0;font-size:11px;line-height:1.5}
+.w2v-lesson .w2v-vocabulary-note{background:#edf5ef;border-color:#bdd6c2;color:#365f3c}
+.w2v-lesson .w2v-vocabulary-note strong{display:block;color:inherit;font-size:11px;margin-bottom:3px}
+.w2v-phase-3 .w2v-status{background:#fbefec;border-color:#e5c0b9;color:#a14a3e}
+.w2v-phase-4 .w2v-status{background:var(--amber-soft);border-color:#ead0a7;color:#75450c}
+.w2v-phase-0 .w2v-status{display:none}
+
+.w2v-lesson .w2v-learning h4{font-family:inherit;font-size:12px;line-height:1.4;font-weight:700;margin:0 0 6px}
+.w2v-lesson .w2v-learning p{font-family:inherit;font-size:11px;line-height:1.5;font-weight:400;margin:0}
+
+.w2v-lesson .w2v-vocabulary-note{justify-content:flex-start;text-align:left;padding:7px 10px;gap:8px;margin-top:10px}
+.w2v-lesson .w2v-vocabulary-note svg{width:20px;height:20px;flex-basis:20px}
+
+.w2v-lesson .w2v-status{justify-content:flex-start;text-align:left;padding:7px 10px;gap:8px;margin-top:10px}
+.w2v-lesson .w2v-status svg{width:20px;height:20px;flex-basis:20px}
