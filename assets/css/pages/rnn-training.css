@@ -232,3 +232,19 @@
 .applications-lesson .generation-message{display:flex;align-items:center;gap:8px;margin:10px 0 0;padding:7px 10px}
 .applications-lesson .generation-message svg{flex:0 0 20px;width:20px;height:20px}
 .applications-lesson .generation-message p{margin:0;color:inherit;font-size:11px;line-height:1.4}
+
+.generation-selection{border-top:1px solid var(--line);padding:0 10px 8px;text-align:center}.generation-output-link{font-size:22px;color:#7354a7;line-height:1.2}.applications-lesson .generation-selection h4{margin:2px 0 4px}.applications-lesson .generation-selection p{font-size:10px;margin:4px 0}.generation-candidates{max-width:310px;margin:8px auto}.generation-candidate{display:grid;grid-template-columns:65px 1fr 32px;align-items:center;gap:8px;padding:4px 7px;font-size:11px;border:1px solid transparent;border-radius:5px;text-align:left}.generation-candidate i{display:block;height:8px;border-radius:4px;background:linear-gradient(to right,#7354a7 var(--probability),#edf0ed var(--probability))}.generation-candidate.selected{background:var(--green-soft);border-color:var(--green);color:var(--green-dark);font-weight:600}.generation-candidate.selected i{background:linear-gradient(to right,var(--green) var(--probability),#edf0ed var(--probability))}.generation-predict .generation-candidate i{animation:generation-score .6s ease-out}.generation-predict .generation-output-link{animation:w2v-average 1s infinite}.generation-word-feedback{font-size:11px;color:var(--blue);margin-top:6px;animation:rnnReveal .6s}.applications-lesson .generation-illustrative{color:var(--muted);font-style:italic}.applications-lesson .generated-now{background:var(--green);color:white;border-color:var(--green)}
+@keyframes generation-score{from{transform:scaleX(0);transform-origin:left}to{transform:scaleX(1);transform-origin:left}}
+
+/* Keep the encoder compact beside the taller decoder. */
+.applications-lesson .generation-direct .generation-encoder{align-self:center;height:auto}
+.applications-lesson .generation-direct .generation-encoder .generation-diagram-area{margin-top:10px}
+
+.applications-lesson .generation-cnn{display:block;width:100%;max-width:360px;margin:auto;font-family:inherit;fill:var(--ink)}
+.generation-encode .generation-cnn .generation-links{opacity:1;stroke-dasharray:7 5;animation:w2v-flow 1s linear infinite}
+
+.applications-lesson .generation-encoder>.caption-image{display:block;align-self:center;width:220px;max-width:100%;height:auto;margin:8px auto 12px;flex-shrink:0}
+
+.generation-encode .cnn-receptive-field{animation:cnn-scan 2.4s steps(1,end) infinite}.generation-encode .cnn-feature-cell{animation:cnn-map-scan 2.4s steps(1,end) infinite}.cnn-convolution-signal{opacity:0}.generation-encode .cnn-convolution-signal{opacity:1;stroke-dasharray:4 4;animation:w2v-flow .65s linear infinite}
+@keyframes cnn-scan{0%{transform:translate(0,0)}11%{transform:translate(8px,0)}22%{transform:translate(16px,0)}33%{transform:translate(0,11px)}44%{transform:translate(8px,11px)}55%{transform:translate(16px,11px)}66%{transform:translate(0,22px)}77%{transform:translate(8px,22px)}88%,100%{transform:translate(16px,22px)}}
+@keyframes cnn-map-scan{0%{transform:translate(0,0)}11%{transform:translate(9px,0)}22%{transform:translate(18px,0)}33%{transform:translate(0,13px)}44%{transform:translate(9px,13px)}55%{transform:translate(18px,13px)}66%{transform:translate(0,26px)}77%{transform:translate(9px,26px)}88%,100%{transform:translate(18px,26px)}}
