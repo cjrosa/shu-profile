@@ -297,3 +297,12 @@
 .map-axis-label,.map-cube text{font-weight:700}
 
 .pooling-info{cursor:help}.pooling-info:focus-visible{outline:1px solid var(--green);outline-offset:2px}
+
+/* Align standalone messages with their scene's bounded content. */
+#sceneContent .lesson-message{min-width:0;max-width:100%;overflow-wrap:anywhere}
+#sceneContent .lesson-message>p,#sceneContent .lesson-message>div{min-width:0;max-width:100%}
+#sceneContent:has(>.embedding-compare)>.lesson-message{max-width:1040px;margin-left:auto;margin-right:auto}
+#sceneContent:has(>.lookup-layout)>.lesson-message{max-width:1030px;margin-left:auto;margin-right:auto}
+#sceneContent:has(>.challenge-layout)>.lesson-message{max-width:900px;margin-left:auto;margin-right:auto}
+#sceneContent:has(>.token-layout)>.lesson-message{max-width:1080px;margin-left:auto;margin-right:auto}
+#sceneContent .context-demo>.lesson-message{max-width:940px;margin-left:auto;margin-right:auto}
