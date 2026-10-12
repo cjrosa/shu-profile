@@ -282,3 +282,18 @@
 .map-builder>.semantic-layout{margin-top:10px}
 
 .projector-message{display:flex;align-items:center;gap:8px;padding:8px 12px;margin-top:10px;border:1px solid #bdd6c2;border-radius:8px;background:var(--green-soft);color:var(--green-dark)}.projector-message svg{flex:0 0 20px}.projector-message p{margin:0;font-size:11px;line-height:1.5}.projector-message a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+
+/* Consistent compact message boxes across the lesson. */
+#sceneContent .lesson-message{position:relative;text-align:left;justify-content:flex-start;font-family:inherit;font-size:11px;line-height:1.45;font-weight:400;padding:8px 12px 8px 40px;min-height:36px;gap:0}
+#sceneContent .lesson-message::before{content:"";position:absolute;left:12px;top:9px;width:20px;height:20px;background:currentColor;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='none' stroke='black' stroke-width='1.6'/%3E%3Cpath d='M12 10v7M12 6v1' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat}
+#sceneContent .lesson-message>svg{display:none}
+#sceneContent .lesson-message p,#sceneContent .lesson-message>div{font-family:inherit;font-size:11px;line-height:1.45;text-align:left;margin:0}
+
+#sceneContent .representation-cards .panel h3{font-family:inherit;font-size:12px;line-height:1.4;font-weight:600;margin:0 0 6px}
+#sceneContent .representation-cards .panel p{font-family:inherit;font-size:11px;line-height:1.45;font-weight:400;margin:0}
+
+#sceneContent .lesson-message{width:100%;max-width:none;margin-left:0;margin-right:0;box-sizing:border-box}
+
+.map-axis-label,.map-cube text{font-weight:700}
+
+.pooling-info{cursor:help}.pooling-info:focus-visible{outline:1px solid var(--green);outline-offset:2px}
