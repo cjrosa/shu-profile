@@ -34,3 +34,11 @@ test('chapter checks provide retry and correct explanations without affecting ot
  }
  assert.equal(A.knowledgeCheck('rnntrain'),'');
 });
+
+test('sentence carousel is rendered and each example updates words and learning targets',()=>{
+ A.word2vecSentences.forEach((words,i)=>{
+ const html=A.word2vec('skipgram',2,0,i);assert.match(html,/w2v-carousel-nav/);assert.equal((html.match(/class="w2v-carousel-dot"/g)||[]).length,4);
+ words.forEach(word=>assert.ok(html.includes('>'+word+'<')));
+ const d=A.word2vecStep('skipgram',2,i);assert.deepEqual(d.inputs,[2]);assert.deepEqual(d.targets,[0,1,3,4]);
+ });
+});

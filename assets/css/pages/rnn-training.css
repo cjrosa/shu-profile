@@ -316,3 +316,7 @@
 #semanticPlot[data-grid="false"] .map-gridline{display:none}
 
 #semanticPlot[data-grid=false]:not(:has(.map-cube)){background-image:none}
+
+.w2v-carousel-nav{display:flex;align-items:center;justify-content:center;gap:9px;margin:6px 0 12px}.w2v-carousel-nav button{border:1px solid var(--line);border-radius:6px;background:white;color:var(--green-dark);font-size:18px;line-height:1;padding:3px 8px;cursor:pointer}.w2v-carousel-nav button.w2v-carousel-dot{width:10px;height:10px;border-radius:50%;padding:0;background:#dce5df}.w2v-carousel-nav button[aria-pressed=true]{background:var(--green);border-color:var(--green)}.w2v-carousel-nav span{font-size:10px;color:var(--muted)}.w2v-carousel-nav button:focus-visible{outline:2px solid var(--green);outline-offset:3px}
+
+.w2v-carousel-nav button:not(.w2v-carousel-dot){border:0;background:transparent;box-shadow:none;border-radius:0;padding:3px 6px}
