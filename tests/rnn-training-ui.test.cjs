@@ -109,3 +109,11 @@ test('context comparison reveals matching vectors before different interpretatio
  f.tick();assert.equal(f.run('state.contextStep'),2);f.tick();assert.equal(f.run('state.contextStep'),3);assert.equal(f.run('contextPlaying'),false);assert.match(f.view(),/Likely meaning: excellent idea/);assert.match(f.view(),/Likely meaning: deadly attack/);
  f.run('state.contextStep=0;contextPlaying=true;contextTick()');f.query('#nextBtn').onclick();assert.equal(f.timers.size,0);
 });
+
+test('3D map uses three embedding projections and preserves similarity and build progress',()=>{
+ const f=fixture(6),before=f.run('JSON.stringify(neighbors(state.semanticWord))');
+ f.run('state.mapDimension=3;state.mapStep=15;render()');assert.match(f.view(),/Three-dimensional/);assert.match(f.view(),/map-cube/);
+ assert.equal(f.run('Object.values(projected3D).every(p=>p.length===3&&p.every(Number.isFinite))'),true);
+ const initial=f.run('JSON.stringify(map3DPoint(projected3D.dog))');f.run('state.mapYaw=95');assert.notEqual(f.run('JSON.stringify(map3DPoint(projected3D.dog))'),initial);
+ assert.equal(f.run('JSON.stringify(neighbors(state.semanticWord))'),before);assert.equal(f.run('state.mapStep'),15);
+});
