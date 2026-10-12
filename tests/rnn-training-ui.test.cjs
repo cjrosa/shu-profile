@@ -103,3 +103,9 @@ test('word steps do not restart the whole-scene entrance animation',()=>{
  f.run('state.applicationStep=2;render()');assert.equal(f.query('#sceneContent').style.animation,'none');
  f.query('#nextBtn').onclick();assert.equal(f.query('#sceneContent').style.animation,'');
 });
+
+test('context comparison reveals matching vectors before different interpretations',()=>{
+ const f=fixture(7);f.run('contextPlaying=true;contextTick()');assert.equal(f.run('state.contextStep'),1);assert.match(f.view(),/exactly the same embedding/);
+ f.tick();assert.equal(f.run('state.contextStep'),2);f.tick();assert.equal(f.run('state.contextStep'),3);assert.equal(f.run('contextPlaying'),false);assert.match(f.view(),/Likely meaning: excellent idea/);assert.match(f.view(),/Likely meaning: deadly attack/);
+ f.run('state.contextStep=0;contextPlaying=true;contextTick()');f.query('#nextBtn').onclick();assert.equal(f.timers.size,0);
+});

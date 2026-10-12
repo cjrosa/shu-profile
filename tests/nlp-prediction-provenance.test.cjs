@@ -72,5 +72,5 @@ test('training and inference diagrams distinguish recurrent state from sentence 
 test('representation lessons explain identity, lookup, projection, and state separately',()=>{
  const run=fixture();assert.match(run('renderOnehot()'),/Identity, not meaning/);
  assert.match(run('renderLookup()'),/Each row shows 50 values/);assert.match(run('renderLookup()'),/Embedding value 1/);
- assert.match(run('renderSemantic()'),/distorted/);assert.match(run('renderContext()'),/Running impression/);
+ assert.match(run('renderSemantic()'),/distorted/);assert.match(run('renderContext()'),/Same static embedding for killer/);
 });
