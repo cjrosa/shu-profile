@@ -306,3 +306,13 @@
 #sceneContent:has(>.challenge-layout)>.lesson-message{max-width:900px;margin-left:auto;margin-right:auto}
 #sceneContent:has(>.token-layout)>.lesson-message{max-width:1080px;margin-left:auto;margin-right:auto}
 #sceneContent .context-demo>.lesson-message{max-width:940px;margin-left:auto;margin-right:auto}
+
+#semanticPlot:has(.map-cube){background-image:none}
+.map-cube line.map-gridline{stroke:#dde5df;stroke-width:.7;opacity:.65}
+
+#semanticPlot:not(:has(.map-cube)){background-image:linear-gradient(to right,rgba(100,125,110,.045) 1px,transparent 1px),linear-gradient(to bottom,rgba(100,125,110,.045) 1px,transparent 1px)}
+#semanticPlot .map-cube line.map-gridline{stroke:#b8c7be;opacity:.22;stroke-width:.6}
+#semanticPlot[data-grid="false"]{background-image:none}
+#semanticPlot[data-grid="false"] .map-gridline{display:none}
+
+#semanticPlot[data-grid=false]:not(:has(.map-cube)){background-image:none}

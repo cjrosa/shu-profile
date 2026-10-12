@@ -117,3 +117,9 @@ test('3D map uses three embedding projections and preserves similarity and build
  const initial=f.run('JSON.stringify(map3DPoint(projected3D.dog))');f.run('state.mapYaw=95');assert.notEqual(f.run('JSON.stringify(map3DPoint(projected3D.dog))'),initial);
  assert.equal(f.run('JSON.stringify(neighbors(state.semanticWord))'),before);assert.equal(f.run('state.mapStep'),15);
 });
+
+test('both semantic projections include every comparison vocabulary word',()=>{
+ const f=fixture(6);assert.equal(f.run('Object.keys(projected).length'),24);assert.equal(f.run('Object.keys(projected3D).length'),24);
+ assert.equal(f.run('WORDS.every(w=>projected[w]&&projected3D[w]&&neighbors(w).every(([n])=>projected[n]))'),true);
+ f.run('state.mapStep=24;render()');assert.equal((f.view().match(/data-semantic=/g)||[]).length,24);
+});
