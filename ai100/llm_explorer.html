@@ -52,6 +52,49 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 @media(max-width:850px){.canvas{min-height:610px}}
 @media(max-width:560px){.shell{width:calc(100vw - 18px);max-width:calc(100vw - 18px);padding-top:16px}.chapter{padding:9px 4px;text-align:center;font-size:8px}.chapter:before{display:none}.story-head{display:block;padding:15px}.scene-count{margin-top:8px}.canvas{min-height:690px;padding:15px 10px}.controls{width:100%;align-items:stretch;flex-direction:column}.control-group{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.progress{max-width:none;min-height:5px}.scene-tools{align-items:flex-end}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+.story:has(.ngram-demo:not([hidden])){min-height:0}
+.canvas:has(.ngram-demo:not([hidden])){min-height:0;padding-top:10px}
+.ngram-demo{max-width:960px;margin:auto}
+.ngram-picker{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:16px}
+.ngram-demo button{padding:10px 16px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font-weight:750;cursor:pointer}
+.ngram-demo button[aria-pressed="true"]{background:var(--green-soft);border-color:var(--green);color:var(--green-dark)}
+.ngram-demo button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.ngram-picker button{padding:7px 13px}
+.ngram-picker small{display:block;margin-top:2px;font-size:13px;font-weight:500;color:var(--muted)}
+.ngram-scroll{overflow-x:auto;padding:4px 0 12px}
+.ngram-words{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));min-width:550px;padding:8px 0}
+.ngram-window{position:absolute;top:0;bottom:0;left:0;width:40%;border:2px solid var(--green);border-radius:14px;background:var(--green-soft);transition:left .32s ease,width .32s ease;pointer-events:none}
+.ngram-word{position:relative;display:grid;place-items:center;min-height:70px;margin:0 7px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--muted);font-size:clamp(19px,2.5vw,29px);font-weight:750;transition:color .32s,border-color .32s}
+.ngram-word.selected{color:var(--green-dark);border-color:var(--green)}
+.ngram-actions{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin:4px 0 12px}
+.ngram-actions button{min-height:40px;padding:0 14px}
+.ngram-demo .ngram-primary{background:var(--green);border-color:var(--green);color:#fff;min-height:40px}
+.ngram-demo button:disabled{opacity:.5;cursor:default}
+.ngram-collected{border:1px solid var(--line);border-radius:10px;padding:8px 8px 0}
+.ngram-collected h3{display:flex;align-items:center;gap:8px;margin:0 -8px;padding:0 8px 6px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}
+.ngram-collected h3 svg{flex:0 0 18px;width:18px;height:18px;color:var(--green)}
+.ngram-group-scroll{overflow-x:auto}
+.ngram-group-track{position:relative;width:max-content;min-width:100%}
+.ngram-links{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;color:var(--green)}
+.ngram-connector{cursor:pointer;pointer-events:stroke;outline:none}
+.ngram-link-hit{stroke:transparent;stroke-width:14px}
+.ngram-link-line{pointer-events:none}
+.ngram-connector.active .ngram-link-line,.ngram-connector:focus-visible .ngram-link-line{stroke:var(--blue);stroke-width:2.5px}
+.ngram-groups li span{position:relative;z-index:1}
+.ngram-groups .overlap-highlight{color:var(--ink)}
+.ngram-overlap-phrase{position:absolute;z-index:0;pointer-events:none;border:2px solid var(--blue);border-radius:4px;background:var(--blue-soft)}
+.ngram-groups{display:flex;gap:12px;list-style:none;padding:12px 0;margin:0}
+.ngram-groups li{position:relative;flex-shrink:0;white-space:nowrap;padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:#f8faf9}
+.ngram-groups li[aria-current]{background:var(--green-soft);border-color:var(--green);color:var(--green-dark);font-weight:750}
+.ngram-predict{display:flex;align-items:center;gap:8px;margin:0 0 12px;padding:8px 12px;border:1px solid var(--line);border-radius:9px;background:var(--green-soft);font-size:13px;line-height:1.4;color:var(--green-dark)}
+.ngram-predict svg{flex:0 0 18px;width:18px;height:18px}
+.ngram-predict p{margin:0}
+.ngram-completion{margin-top:22px;padding:16px;border:1px solid var(--line);border-radius:13px;background:var(--green-soft);font-size:13px;line-height:1.6}
+.ngram-completion p{margin:0}
+.ngram-completion-title{display:flex;align-items:center;gap:8px}
+.ngram-completion-title svg{flex:0 0 18px;width:18px;height:18px;color:var(--green)}
+.ngram-completion .ngram-bridge{margin-top:12px}
+.controls button.primary.scene-one-next{background:#fff;color:var(--ink);border-color:var(--line)}
 </style>
 </head>
 <body>
@@ -62,9 +105,31 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
  <nav class="chapter-bar" aria-label="Lesson chapters"></nav>
  <section class="story" id="scenePanel" aria-labelledby="sceneTitle">
   <header class="story-head"><div><div class="scene-kicker" id="sceneKicker"></div><h2 class="scene-title" id="sceneTitle"></h2><p class="scene-copy" id="sceneCopy"></p></div><div class="scene-tools"><div class="scene-count" id="sceneCount"></div></div></header>
-  <div class="canvas"><div class="scene-content" id="sceneContent"><p class="chapter-question" id="chapterQuestion"></p><div class="panel placeholder"><h3>Visualization preview</h3><p id="placeholderCopy"></p></div></div></div>
+  <div class="canvas"><div class="scene-content" id="sceneContent"><p class="chapter-question" id="chapterQuestion"></p><div class="panel placeholder"><h3>Visualization preview</h3><p id="placeholderCopy"></p></div>
+   <div class="ngram-demo" hidden>
+    <div class="ngram-predict">
+     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9.5"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.8-2.5 2-2.5 4"/><path d="M12 16.5h.01"/></svg>
+     <p><strong>Predict:</strong> <span id="ngramPrediction"></span></p>
+    </div>
+    <div class="ngram-picker" role="group" aria-label="N-gram size">
+     <button id="ngramSize1" type="button" aria-pressed="false">Unigram<small>1 word</small></button>
+     <button id="ngramSize2" type="button" aria-pressed="true">Bigram<small>2 words</small></button>
+     <button id="ngramSize3" type="button" aria-pressed="false">Trigram<small>3 words</small></button>
+    </div>
+    <div class="ngram-scroll" tabindex="0" role="group" aria-label="Sentence: New Haven pizza is legendary. Scroll to see all words on small screens.">
+     <div class="ngram-words"><div class="ngram-window" aria-hidden="true"></div><span class="ngram-word" id="ngramWord0">New</span><span class="ngram-word" id="ngramWord1">Haven</span><span class="ngram-word" id="ngramWord2">pizza</span><span class="ngram-word" id="ngramWord3">is</span><span class="ngram-word" id="ngramWord4">legendary.</span></div>
+    </div>
+    <div class="ngram-actions"><button class="ngram-primary" id="ngramAdvance" type="button">Slide one word →</button><button id="ngramReset" type="button">Reset</button><span class="sr-only" id="ngramStatus" aria-live="polite"></span></div>
+    <div class="ngram-collected"><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="12" height="12" rx="2"/><rect x="9" y="9" width="12" height="12" rx="2"/></svg>Collected groups</h3><div class="ngram-group-scroll" tabindex="0" role="group" aria-label="Collected groups. Hover, click, or focus a connector to highlight shared words. Scroll horizontally to see all groups."><div class="ngram-group-track"><ol class="ngram-groups" id="ngramGroups" aria-label="Collected n-grams"></ol><svg class="ngram-links" id="ngramLinks" role="group" aria-label="Shared-word connectors"></svg></div></div></div>
+    <div class="ngram-completion" id="ngramCompletion" role="status" aria-atomic="true" hidden>
+     <p class="ngram-completion-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12 3 3 6-6"/></svg><strong id="ngramDiscovery"></strong></p>
+     <p id="ngramObservation"></p>
+     <p class="ngram-bridge"><strong>Next:</strong> What happens when we collect n-grams from a larger passage and count how often each pattern appears?</p>
+    </div>
+   </div>
+  </div></div>
  </section>
- <div class="controls"><div class="control-group"><button id="prevBtn" type="button">? Previous</button><button id="nextBtn" class="primary" type="button">Next ?</button></div><div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="1" aria-valuemax="23" aria-valuenow="1"><div class="progress-fill" id="progressFill"></div></div><div class="control-group"><button id="restartBtn" type="button">Restart</button></div></div>
+ <div class="controls"><div class="control-group"><button id="prevBtn" type="button">&larr; Previous</button><button id="nextBtn" class="primary" type="button">Next &rarr;</button></div><div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="1" aria-valuemax="23" aria-valuenow="1"><div class="progress-fill" id="progressFill"></div></div><div class="control-group"><button id="restartBtn" type="button">Restart</button></div></div>
  <div class="sr-only" id="liveStatus" aria-live="polite"></div>
  <noscript>Enable JavaScript to navigate the LLM Explorer chapters and scenes.</noscript>
 </main>

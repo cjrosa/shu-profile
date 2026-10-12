@@ -35,7 +35,7 @@ test('all scenes render with correct metadata, chapter selection and progress', 
     assert.equal(f.query('#sceneCopy').textContent, item.description);
     assert.equal(f.query('#placeholderCopy').textContent, item.placeholder);
     assert.equal(f.query('#chapterQuestion').textContent, chapters[item.chapterIndex].question);
-    assert.equal(f.query('#sceneCount').textContent, `Scene ${index + 1} of 23`);
+    assert.equal(f.query('#sceneCount').textContent, `${chapters[item.chapterIndex].title} · Scene ${item.sceneIndex + 1} of ${chapters[item.chapterIndex].scenes.length}`);
     assert.equal(f.query('.progress').attributes['aria-valuenow'], String(index + 1));
     assert.equal(f.query('#progressFill').style.width, `${(index + 1) / 23 * 100}%`);
     assert.equal(f.query('#prevBtn').disabled, index === 0);
@@ -59,21 +59,21 @@ test('chapter jumps, reselection, reverse boundaries and restart follow the refe
   }
   f.click('#restartBtn');
   assert.equal(f.query('#prevBtn').disabled, true);
-  assert.equal(f.query('#sceneCount').textContent, 'Scene 1 of 23');
+  assert.equal(f.query('#sceneCount').textContent, 'Predict · Scene 1 of 5');
   assert.equal(f.query('#nextBtn').textContent, 'Next →');
 });
 test('arrow keys navigate, clamp at the start, and ignore editable or modified input', () => {
   const f = fixture();
   assert.equal(f.key('ArrowLeft'), true);
-  assert.equal(f.query('#sceneCount').textContent, 'Scene 1 of 23');
+  assert.equal(f.query('#sceneCount').textContent, 'Predict · Scene 1 of 5');
   assert.equal(f.key('ArrowRight'), true);
-  assert.equal(f.query('#sceneCount').textContent, 'Scene 2 of 23');
+  assert.equal(f.query('#sceneCount').textContent, 'Predict · Scene 2 of 5');
   for (const target of [{ closest: () => ({}) }, { isContentEditable: true }]) assert.equal(f.key('ArrowRight', target), false);
   for (const modifier of ['ctrlKey', 'altKey', 'metaKey', 'shiftKey', 'defaultPrevented']) assert.equal(f.key('ArrowRight', undefined, { [modifier]: true }), false);
   assert.equal(f.key('Enter'), false);
-  assert.equal(f.query('#sceneCount').textContent, 'Scene 2 of 23');
+  assert.equal(f.query('#sceneCount').textContent, 'Predict · Scene 2 of 5');
   f.key('ArrowLeft');
-  assert.equal(f.query('#sceneCount').textContent, 'Scene 1 of 23');
+  assert.equal(f.query('#sceneCount').textContent, 'Predict · Scene 1 of 5');
 });
 test('hub keeps the shell disabled and excludes it from search', () => {
   const hub = fs.readFileSync('ai100/index.html', 'utf8');
@@ -85,4 +85,78 @@ test('hub keeps the shell disabled and excludes it from search', () => {
   assert.match(html, /aria-valuemax="23"/);
   assert.equal((html.match(/<script /g) || []).length, 1);
   assert.match(html, /prefers-reduced-motion/);
+});
+
+test('n-gram window collects every overlapping group and stops at the boundary', () => {
+  const f = fixture();
+  assert.equal(f.query('.ngram-demo').hidden, false);
+  assert.equal(f.query('.placeholder').hidden, true);
+  assert.equal(f.query('.ngram-window').style.width, '40%');
+  for (const [index, group] of ['New Haven', 'Haven pizza', 'pizza is', 'is legendary'].entries()) {
+    assert.ok(f.query('#ngramStatus').textContent.endsWith(group));
+    assert.equal((f.query('#ngramGroups').innerHTML.match(/<li/g) || []).length, index + 1);
+    assert.equal(f.query('.ngram-window').style.left, (index * 20) + '%');
+    if (index < 3) f.click('#ngramAdvance');
+  }
+  assert.equal(f.query('#ngramAdvance').disabled, true);
+  f.click('#ngramAdvance');
+  assert.equal((f.query('#ngramGroups').innerHTML.match(/<li/g) || []).length, 4);
+});
+test('size changes, reset and scene return restore appropriate initial groups', () => {
+  const f = fixture();
+  for (const size of [3, 1, 2]) {
+    f.click('#ngramSize' + size);
+    assert.equal(f.query('.ngram-window').style.left, '0%');
+    assert.equal(f.query('.ngram-window').style.width, (size * 20) + '%');
+    assert.equal((f.query('#ngramGroups').innerHTML.match(/<li/g) || []).length, 1);
+    for (let index = 0; index < 5 - size; index++) f.click('#ngramAdvance');
+    assert.equal(f.query('#ngramAdvance').disabled, true);
+    assert.equal((f.query('#ngramGroups').innerHTML.match(/<li/g) || []).length, 6 - size);
+    f.click('#ngramReset');
+    assert.equal(f.query('#ngramAdvance').disabled, false);
+    assert.equal(f.query('.ngram-window').style.left, '0%');
+    assert.equal((f.query('#ngramGroups').innerHTML.match(/<li/g) || []).length, 1);
+  }
+  f.click('#nextBtn');
+  assert.equal(f.query('.ngram-demo').hidden, true);
+  assert.equal(f.query('.placeholder').hidden, false);
+  f.click('#prevBtn');
+  assert.equal(f.query('#ngramStatus').textContent, '1 group collected: New Haven');
+});
+
+test('prediction stays unanswered until completion for each size and resets for another experiment', () => {
+  const f = fixture();
+  for (const [size, name, observation] of [
+    [2, 'bigrams', 'Notice how neighboring groups overlap by one word.'],
+    [3, 'trigrams', 'Notice how neighboring groups share two words.'],
+    [1, 'unigrams', 'Each unigram contains one word.']
+  ]) {
+    f.click('#ngramSize' + size);
+    assert.equal(f.query('#ngramPrediction').textContent, `How many ${name} can you make from five words?`);
+    for (let step = 0; step < 5 - size; step++) {
+      assert.equal(f.query('#ngramCompletion').hidden, true);
+      assert.equal(f.query('#ngramDiscovery').textContent, '');
+      assert.equal(f.query('#ngramObservation').textContent, '');
+      assert.doesNotMatch(f.query('#ngramStatus').textContent, /of \d|Complete/);
+      f.click('#ngramAdvance');
+    }
+    assert.equal(f.query('#ngramCompletion').hidden, false);
+    assert.equal(f.query('#ngramDiscovery').textContent, `You've discovered all ${6 - size} ${name}!`);
+    assert.equal(f.query('#ngramObservation').textContent, observation);
+    assert.equal(f.query('#ngramAdvance').disabled, true);
+    f.click('#ngramReset');
+    assert.equal(f.query('#ngramCompletion').hidden, true);
+    assert.equal(f.query('#ngramDiscovery').textContent, '');
+    assert.equal(f.query('#ngramObservation').textContent, '');
+    assert.equal(f.query('#ngramSize' + size).attributes['aria-pressed'], 'true');
+    // Finish again so the next size change must clear a completed experiment.
+    for (let step = 0; step < 5 - size; step++) f.click('#ngramAdvance');
+  }
+  f.click('#nextBtn');
+  assert.equal(f.query('#sceneTitle').textContent, 'Counting Word Patterns');
+  assert.equal(f.query('.placeholder').hidden, false);
+  f.click('#prevBtn');
+  assert.equal(f.query('#ngramCompletion').hidden, true);
+  assert.equal(f.query('#ngramDiscovery').textContent, '');
+  assert.equal(f.query('#ngramPrediction').textContent, 'How many bigrams can you make from five words?');
 });
