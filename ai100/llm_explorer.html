@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Explorer</title>
+<style>
+:root{--green:#1f7a46;--green-dark:#155b34;--green-soft:#e8f5ed;--ink:#17201b;--muted:#66706a;--line:#dbe6df;--page:#f3f7f4;--blue:#2774c8;--blue-soft:#eaf3fc;--amber:#d98213;--amber-soft:#fff2dd;--purple:#7652a7;--purple-soft:#f1ebf8;--red:#b9493f;--red-soft:#fff0ee;--teal:#16847b;--white:#fff}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;overflow-x:hidden;background:var(--page);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,select{font:inherit}
+.shell{width:min(1180px,calc(100% - 28px));min-width:0;margin:auto;padding:24px 0 38px}
+.eyebrow{color:var(--green);font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter-spacing:-.035em}
+.intro{max-width:1030px;margin:0 0 16px;color:var(--muted);font-size:14px;line-height:1.55}
+.chapter-bar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));margin:0 0 12px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.chapter{position:relative;min-width:0;padding:11px 10px 11px 38px;color:var(--muted);font-size:11px;font-weight:750;border-right:1px solid var(--line)}
+.chapter:last-child{border:0}
+.chapter:before{content:attr(data-number);position:absolute;left:12px;top:9px;display:grid;place-items:center;width:19px;height:19px;border-radius:50%;background:#edf1ee;font-size:9px}
+.chapter.active{background:var(--green-soft);color:var(--green-dark)}
+.chapter.active:before{background:var(--green);color:#fff}
+.story{width:100%;min-width:0;min-height:570px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 10px 34px rgba(21,68,41,.07);overflow:hidden}
+.story-head{display:flex;justify-content:space-between;gap:16px;padding:18px 20px 14px;border-bottom:1px solid var(--line)}
+.scene-kicker{color:var(--green);font-size:10px;font-weight:850;letter-spacing:.1em;text-transform:uppercase}
+.scene-title{margin:3px 0;font-size:clamp(18px,2.5vw,25px);letter-spacing:-.02em}
+.scene-copy{margin:0;max-width:930px;color:var(--muted);font-size:12px;line-height:1.5}
+.scene-count{color:var(--muted);font-size:11px;font-weight:800;white-space:nowrap}
+.canvas{min-width:0;min-height:452px;padding:22px;display:grid;place-items:center;overflow:hidden}
+.scene-content{width:100%;min-width:0;animation:sceneIn .28s ease}
+.panel{padding:16px;border:1px solid var(--line);border-radius:13px;background:#f8faf9}
+.panel h3{margin:0 0 10px;font-size:12px}
+.controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}
+.control-group{display:flex;gap:8px}
+.progress{flex:1;max-width:390px;height:5px;border-radius:99px;background:#dfe6e1;overflow:hidden}
+.progress-fill{height:100%;background:var(--green);transition:width .3s}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.scene-tools{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.chapter-bar button.chapter{min-height:0;border-top:0;border-bottom:0;border-left:0;border-radius:0;background:#fff;text-align:left;cursor:pointer;font-family:inherit}
+.chapter-bar button.chapter:hover{background:#f5f8f6;color:var(--green-dark)}
+.chapter-bar button.chapter.active{background:var(--green-soft)}
+.chapter-bar button.chapter:focus-visible{position:relative;z-index:2;outline:3px solid rgba(39,116,200,.35);outline-offset:-3px}
+/* Shell values copied from NLP & RNN Visualizer; scene-specific styles are excluded. */
+.controls button{min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);cursor:pointer;font-weight:750}
+.controls button:hover{border-color:var(--green);color:var(--green)}
+.controls button.primary{border-color:var(--green);background:var(--green);color:#fff}
+.controls button:disabled{opacity:.45;cursor:default}
+.controls button:focus-visible{outline:3px solid rgba(39,116,200,.35);outline-offset:2px}
+.chapter-question{margin:0 0 18px;color:var(--green-dark);font-size:14px;font-weight:750;text-align:center;line-height:1.5}
+.placeholder{max-width:760px;margin:auto;text-align:center}
+.placeholder p{margin:0;color:var(--muted);font-size:12px;line-height:1.5}
+@keyframes sceneIn{from{opacity:0;transform:translateY(5px)}}
+@media(max-width:850px){.canvas{min-height:610px}}
+@media(max-width:560px){.shell{width:calc(100vw - 18px);max-width:calc(100vw - 18px);padding-top:16px}.chapter{padding:9px 4px;text-align:center;font-size:8px}.chapter:before{display:none}.story-head{display:block;padding:15px}.scene-count{margin-top:8px}.canvas{min-height:690px;padding:15px 10px}.controls{width:100%;align-items:stretch;flex-direction:column}.control-group{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.progress{max-width:none;min-height:5px}.scene-tools{align-items:flex-end}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<main class="shell">
+ <div class="eyebrow">Natural Language Processing ? Large Language Models</div>
+ <h1>LLM Explorer</h1>
+ <p class="intro">Explore how language models move from word patterns to tokens, context, attention, and repeated next-token prediction.</p>
+ <nav class="chapter-bar" aria-label="Lesson chapters"></nav>
+ <section class="story" id="scenePanel" aria-labelledby="sceneTitle">
+  <header class="story-head"><div><div class="scene-kicker" id="sceneKicker"></div><h2 class="scene-title" id="sceneTitle"></h2><p class="scene-copy" id="sceneCopy"></p></div><div class="scene-tools"><div class="scene-count" id="sceneCount"></div></div></header>
+  <div class="canvas"><div class="scene-content" id="sceneContent"><p class="chapter-question" id="chapterQuestion"></p><div class="panel placeholder"><h3>Visualization preview</h3><p id="placeholderCopy"></p></div></div></div>
+ </section>
+ <div class="controls"><div class="control-group"><button id="prevBtn" type="button">? Previous</button><button id="nextBtn" class="primary" type="button">Next ?</button></div><div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="1" aria-valuemax="23" aria-valuenow="1"><div class="progress-fill" id="progressFill"></div></div><div class="control-group"><button id="restartBtn" type="button">Restart</button></div></div>
+ <div class="sr-only" id="liveStatus" aria-live="polite"></div>
+ <noscript>Enable JavaScript to navigate the LLM Explorer chapters and scenes.</noscript>
+</main>
+<script src="../assets/js/ai100/llm-explorer.js"></script>
+</body>
+</html>
