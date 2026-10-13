@@ -1,4 +1,4 @@
-/* Shared semantic icon colors for Scenes 1–4. */
+/* Shared semantic icon colors for Scenes 1–5. */
 .llm-tooltip{position:fixed;z-index:10000;max-width:min(280px,calc(100vw - 16px));padding:7px 10px;border:1px solid #000;border-radius:6px;background:#111;color:#fff;font:12px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;box-shadow:0 3px 12px #0003;overflow-wrap:anywhere}
 .llm-tooltip[hidden]{display:none}
 .count-challenge .count-hint{background:#111;color:#fff}
@@ -59,3 +59,25 @@
 .prob-demo #probDiscovery p:last-child svg,
 .gen-demo #genDiscovery p:last-child svg{color:var(--blue)}
 .gen-demo .gen-run-header button svg{color:var(--red)}
+
+/* Scene 5: reuse the established palette; example icons never reveal a match. */
+.limits-demo #limitsChallenges button:nth-child(1) svg{color:var(--blue)}
+.limits-demo #limitsChallenges button:nth-child(1) svg rect{fill:var(--blue-soft)}
+.limits-demo #limitsChallenges button:nth-child(2) svg{color:var(--purple)}
+.limits-demo #limitsChallenges button:nth-child(3) svg{color:var(--teal)}
+.limits-demo #limitsChallenges button:nth-child(4) svg{color:var(--amber)}
+.limits-demo #limitsChallenges button:nth-child(4) svg path{fill:var(--amber-soft)}
+.limits-demo #limitsTitle svg,
+.limits-demo #limitsTrainingTitle svg{color:var(--teal)}
+.limits-demo #limitsTitle svg path:first-child,
+.limits-demo #limitsTrainingTitle svg rect{fill:#e0f3ef}
+.limits-demo #limitsTrainingTitle svg rect:last-child{fill:var(--blue-soft);stroke:var(--blue)}
+.limits-demo .limits-examples svg{color:var(--purple)}
+.limits-demo .limits-examples svg path{fill:var(--purple-soft)}
+.limits-demo .limits-context-message[data-severity="info"] svg{color:var(--blue)}
+.limits-demo .limits-context-message[data-severity="info"] svg circle{fill:var(--blue-soft)}
+.limits-demo .limits-context-message[data-severity="success"] svg,
+.limits-demo #limitsDiscovery svg{color:var(--green)}
+.limits-demo .limits-context-message[data-severity="success"] svg circle,
+.limits-demo #limitsDiscovery svg circle{fill:#d5efdf}
+.limits-demo .limits-context-message[data-severity="warning"] svg path:first-child{fill:var(--amber-soft)}

@@ -41,7 +41,7 @@
 .gen-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line)}
 .gen-header h3{display:flex;align-items:center;gap:8px;margin:0;font-size:14px;color:var(--muted)}
 #genCount{font-size:12px;color:var(--muted)}
-.gen-sentence{display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding:10px 16px;margin:0;color:#293b30;font-family:Georgia,"Palatino Linotype",Palatino,serif;font-size:clamp(19px,1.8vw,21px);font-weight:400;line-height:1.65;letter-spacing:.01em}
+.gen-sentence{display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding:10px 16px;margin:0;color:#293b30;font-family:Georgia,"Palatino Linotype",Palatino,serif;font-size:var(--passage-font-size,15px);font-weight:400;line-height:1.65;letter-spacing:.01em}
 .gen-word{padding:0 5px;border:1px solid var(--line);border-radius:5px;overflow-wrap:anywhere;max-width:100%;background:#f8faf9}
 .gen-context-word{border-color:var(--green);background:var(--green-soft);color:var(--green-dark)}
 .gen-pending{padding:0 7px;border:1px dashed var(--green);border-radius:5px;color:var(--green)}

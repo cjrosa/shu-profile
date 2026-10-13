@@ -132,7 +132,7 @@ test('hub enables LLM Explorer and includes it in search', () => {
   assert.doesNotMatch(hub, />Coming soon<\/span>/);
   const html = fs.readFileSync('ai100/llm_explorer.html', 'utf8');
   assert.match(html, /aria-valuemax="23"/);
-  assert.deepEqual([...html.matchAll(/<script src="([^"]+)"/g)].map(match => match[1]), ['../assets/js/ai100/llm-explorer.js', '../assets/js/ai100/llm-probability.js', '../assets/js/ai100/llm-generation.js']);
+  assert.deepEqual([...html.matchAll(/<script src="([^"]+)"/g)].map(match => match[1]), ['../assets/js/ai100/llm-explorer.js', '../assets/js/ai100/llm-probability.js', '../assets/js/ai100/llm-generation.js', '../assets/js/ai100/llm-limits.js']);
   assert.match(html, /prefers-reduced-motion/);
 });
 

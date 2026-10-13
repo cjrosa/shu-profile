@@ -111,7 +111,7 @@
     };
   }
   function corpusFrequencies(text, size) {
-    if (![1, 2, 3].includes(size)) return [];
+    if (![1, 2, 3, 4, 5].includes(size)) return [];
     const words = wordSpans(text), counts = new Map();
     for (let i = 0; i <= words.length - size; i++) {
       const pattern = words.slice(i, i + size).map(word => word.normalized).join(' ');
@@ -413,13 +413,15 @@
     const isCounting = item.id === 'counting';
     const isProbability = item.id === 'conditional-probability';
     const isGeneration = item.id === 'generating-language';
+    const isLimits = item.id === 'n-gram-limits';
+    $('#limitsDemo').hidden = !isLimits;
     $('.gen-demo').hidden = !isGeneration;
     if (!isGeneration && window.cancelGeneration) window.cancelGeneration();
     if (!isProbability && window.cancelProbabilityReveal) window.cancelProbabilityReveal();
     $('.prob-demo').hidden = !isProbability;
     if (isProbability && window.drawProbability) window.drawProbability();
-    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration;
-    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration;
+    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits;
+    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits;
     $('.count-demo').hidden = !isCounting;
     if (isCounting) drawCounting();
     $('.ngram-demo').hidden = !isNgram;

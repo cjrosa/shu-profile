@@ -64,7 +64,7 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 .ngram-scroll{overflow-x:auto;padding:4px 0 12px}
 .ngram-words{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));min-width:550px;padding:8px 0}
 .ngram-window{position:absolute;top:0;bottom:0;left:0;width:40%;border:2px solid var(--green);border-radius:14px;background:var(--green-soft);transition:left .32s ease,width .32s ease;pointer-events:none}
-.ngram-word{position:relative;display:grid;place-items:center;min-height:70px;margin:0 7px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--muted);font-size:clamp(19px,2.5vw,29px);font-weight:750;transition:color .32s,border-color .32s}
+.ngram-word{position:relative;display:grid;place-items:center;min-height:70px;margin:0 7px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--muted);font-size:var(--passage-font-size,15px);font-weight:750;transition:color .32s,border-color .32s}
 .ngram-word.selected{color:var(--green-dark);border-color:var(--green)}
 .ngram-actions{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin:4px 0 12px}
 .ngram-actions button{min-height:40px;padding:0 14px}
@@ -117,7 +117,8 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 .count-training h3{display:flex;align-items:center;gap:8px;margin:0;padding:10px 16px;border-bottom:1px solid var(--line);background:#fff;font-size:14px;color:var(--muted)}
 .count-training h3 svg{flex:0 0 18px;width:18px;height:18px;color:var(--green)}
 .count-training:has(.count-passage){background:#fff}
-.count-passage{position:relative;margin:0;padding:10px 16px;background:#fff;color:#293b30;font-family:Georgia,"Palatino Linotype",Palatino,serif;font-size:clamp(19px,1.8vw,21px);line-height:1.65;letter-spacing:.01em}
+:root{--passage-font-size:15px}
+.count-passage{position:relative;margin:0;padding:10px 16px;background:#fff;color:#293b30;font-family:Georgia,"Palatino Linotype",Palatino,serif;font-size:var(--passage-font-size,15px);line-height:1.65;letter-spacing:.01em}
 .count-word{display:inline;padding:0;border:0;border-radius:3px;background:transparent;color:inherit;cursor:pointer;line-height:inherit}
 .count-group-border{position:absolute;pointer-events:none;border:2px solid var(--green);border-radius:5px;background:rgba(31,122,70,.08)}
 .count-word:disabled{cursor:text}
@@ -163,6 +164,7 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 <link rel="stylesheet" href="../assets/css/pages/llm-probability.css">
 <link rel="stylesheet" href="../assets/css/pages/llm-generation.css">
 <link rel="stylesheet" href="../assets/css/pages/llm-icons.css">
+<link rel="stylesheet" href="../assets/css/pages/llm-limits.css">
 </head>
 <body>
 <main class="shell">
@@ -242,6 +244,12 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 
 <details class="gen-about"><summary><svg class="prob-message-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 3h9l4 4v14H6Z"/><path d="M14 3v5h5M9 12h7M9 16h7"/></svg>About the training text</summary><p>Uses the same New Haven pizza training text as Scenes 2&ndash;3. Matching ignores case and punctuation; sequences can cross sentence boundaries. Repetitions and awkward results are part of the experiment.</p></details>
 </div>
+<div class="gen-demo limits-demo" id="limitsDemo" hidden>
+<div class="ngram-picker" id="limitsChallenges" role="group" aria-label="Choose a limitation"></div>
+<section class="gen-workspace" aria-labelledby="limitsTitle"><div class="gen-header"><h3 id="limitsTitle"></h3><div class="gen-actions"><button id="limitsIntervening" type="button">Add intervening words</button><button id="limitsReset" type="button">Reset</button></div></div><div class="limits-body"><p id="limitsQuestion"></p><div class="ngram-picker" id="limitsSizes" role="group" aria-label="N-gram size"></div><section class="count-training" id="limitsTraining" aria-labelledby="limitsTrainingTitle" hidden><h3 id="limitsTrainingTitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="12" height="12" rx="2"/><rect x="9" y="9" width="12" height="12" rx="2"/></svg>Training text</h3><p class="count-passage" id="limitsPassage"></p></section><div id="limitsControls" class="gen-actions"></div><div id="limitsVisual" aria-live="polite" aria-atomic="true"></div><p class="gen-status" id="limitsStatus" role="status"></p></div><footer class="gen-model-footer" id="limitsPredictionFooter" hidden><p class="gen-status" id="limitsPredictionStatus" role="status"></p></footer></section>
+<div class="gen-message gen-discovery" id="limitsDiscovery" hidden><div><p id="limitsTakeaway"></p></div></div>
+<details><summary>What we've discovered ? Next: Tokens</summary><div class="limits-body"><ul><li>N-grams predict subsequent words using observed frequencies.</li><li>Repeated predictions can generate text.</li><li>More context makes exact sequence matching harder in limited data.</li><li>Unseen contexts and distant relationships remain challenging.</li><li>Statistical word prediction alone does not guarantee meaningful language.</li></ul><p><strong>Next: Tokens.</strong> Modern language models process tokens, which are not necessarily complete words. How can reusable pieces help represent an enormous vocabulary?</p><p>Tokenization alone does not resolve limited context. Modern models still face challenges with context, unfamiliar inputs, and meaning.</p></div></details>
+</div>
   </div></div>
  </section>
  <div class="controls"><div class="control-group"><button id="prevBtn" type="button">&larr; Previous</button><button id="nextBtn" class="primary" type="button">Next &rarr;</button></div><div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="1" aria-valuemax="23" aria-valuenow="1"><div class="progress-fill" id="progressFill"></div></div><div class="control-group"><button id="restartBtn" type="button">Restart</button></div></div>
@@ -251,5 +259,6 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 <script src="../assets/js/ai100/llm-explorer.js"></script>
 <script src="../assets/js/ai100/llm-probability.js"></script>
 <script src="../assets/js/ai100/llm-generation.js"></script>
+<script src="../assets/js/ai100/llm-limits.js"></script>
 </body>
 </html>

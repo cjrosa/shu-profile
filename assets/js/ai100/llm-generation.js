@@ -26,6 +26,7 @@
   }
   if (typeof module !== 'undefined' && module.exports) module.exports = { createGenerator };
   if (typeof document === 'undefined') return;
+  window.llmCreateGenerator = createGenerator;
   const $ = id => document.getElementById(id), model = createGenerator(window.llmProbability);
   let revealed = false, running = false, timer = null, revision = 0;
   let lookingUp = false, lookupTimer = null;
