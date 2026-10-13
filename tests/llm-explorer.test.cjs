@@ -124,12 +124,12 @@ test('arrow keys navigate, clamp at the start, and ignore editable or modified i
   f.key('ArrowLeft');
   assert.equal(f.query('#sceneCount').textContent, 'Predict · Scene 1 of 5');
 });
-test('hub keeps the shell disabled and excludes it from search', () => {
+test('hub enables LLM Explorer and includes it in search', () => {
   const hub = fs.readFileSync('ai100/index.html', 'utf8');
-  assert.doesNotMatch(hub, /tool=ai100%2Fllm_explorer/);
-  assert.doesNotMatch(hub, /name:'LLM Explorer', file:'llm_explorer\.html/);
-  assert.match(hub, /aria-disabled="true"/);
-  assert.match(hub, />Coming soon<\/span>/);
+  assert.match(hub, /tool=ai100%2Fllm_explorer/);
+  assert.match(hub, /name:'LLM Explorer', file:'llm_explorer\.html/);
+  assert.doesNotMatch(hub, /aria-disabled="true"/);
+  assert.doesNotMatch(hub, />Coming soon<\/span>/);
   const html = fs.readFileSync('ai100/llm_explorer.html', 'utf8');
   assert.match(html, /aria-valuemax="23"/);
   assert.deepEqual([...html.matchAll(/<script src="([^"]+)"/g)].map(match => match[1]), ['../assets/js/ai100/llm-explorer.js', '../assets/js/ai100/llm-probability.js', '../assets/js/ai100/llm-generation.js']);

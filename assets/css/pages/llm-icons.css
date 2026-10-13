@@ -1,0 +1,57 @@
+/* Shared semantic icon colors for Scenes 1–4. */
+.ngram-demo .ngram-predict svg,
+.prob-demo .prob-message-icon,
+.gen-demo #genCompareHelp svg{color:var(--blue)}
+.ngram-predict svg circle,
+.prob-message-icon circle{fill:var(--blue-soft)}
+
+.ngram-demo .ngram-collected h3 svg,
+.count-demo #countTrainingTitle svg,
+.prob-demo #probTrainingTitle svg,
+.gen-demo #genTitle svg,
+.gen-demo .gen-run-header h4 svg,
+.gen-demo .gen-about summary svg{color:var(--teal)}
+.ngram-collected h3 svg rect,
+#countTrainingTitle svg rect,
+#probTrainingTitle svg rect{fill:#e0f3ef}
+.ngram-collected h3 svg rect:last-child,
+#countTrainingTitle svg rect:last-child,
+#probTrainingTitle svg rect:last-child{fill:var(--blue-soft);stroke:var(--blue)}
+.gen-demo #genTitle svg path:first-child,
+.gen-demo .gen-run-header h4 svg path:first-child,
+.gen-demo .gen-about summary svg path:first-child{fill:#e0f3ef}
+
+.count-demo #countComparisonTitle svg,
+.count-demo #countCorpusIcon,
+.count-demo .count-gram-badge svg,
+.prob-demo #probPredictionTitle svg,
+.prob-demo #probCompareTitle svg,
+.prob-demo .prob-task-title svg,
+.gen-demo #genCompareTitle svg,
+.gen-demo #genModelTitle svg{color:var(--purple)}
+#countCorpusIcon rect,.count-gram-badge svg rect,
+#genModelTitle svg rect{fill:var(--purple-soft)}
+
+.count-demo #countChallengeIcon,
+.prob-demo .prob-challenge>svg,
+.prob-demo .prob-challenges>summary svg,
+.gen-demo details:not(.gen-about)>summary svg{color:var(--amber)}
+.count-demo #countChallengeIcon path:first-child,
+.prob-demo .prob-challenge>svg path,
+.prob-demo .prob-challenges>summary svg path,
+.gen-demo details:not(.gen-about)>summary svg path{fill:var(--amber-soft)}
+
+.ngram-demo .ngram-completion-title svg,
+.count-demo #countDiscovery svg,
+.count-demo .challenge-complete #countChallengeIcon,
+.prob-demo #probDiscovery p:first-child svg,
+.gen-demo #genDiscovery p:first-child svg{color:var(--green)}
+.ngram-completion-title svg circle,
+#countDiscovery svg circle,
+.challenge-complete #countChallengeIcon circle,
+#probDiscovery p:first-child svg circle,
+#genDiscovery p:first-child svg circle{fill:#d5efdf}
+.count-demo .challenge-complete #countChallengeIcon path{fill:none}
+.prob-demo #probDiscovery p:last-child svg,
+.gen-demo #genDiscovery p:last-child svg{color:var(--blue)}
+.gen-demo .gen-run-header button svg{color:var(--red)}

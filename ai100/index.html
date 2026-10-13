@@ -482,7 +482,7 @@
             </div>
             <div class="tool-footer"><span class="tool-cta" style="color:var(--teal);">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span><span class="tool-tag" style="background:var(--teal-l);color:var(--teal);">Interactive</span></div>
           </a>
-          <div class="tool-card" data-course-order="2" aria-disabled="true" style="border:0.5px solid var(--teal-m);opacity:0.55;">
+          <a class="tool-card" data-course-order="2" href="../viewer.html?tool=ai100%2Fllm_explorer.html&amp;course=AI100&amp;label=Foundations%20of%20Artificial%20Intelligence&amp;name=LLM%20Explorer&amp;back=ai100/index.html" style="border:0.5px solid var(--teal-m);">
             <div class="tool-card-header">
               <div class="tool-icon" style="background:var(--teal-l);">
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4V5Z"/><path d="M8 9h8M8 12h5"/></svg>
@@ -490,15 +490,15 @@
               <div><div class="tool-subtitle" style="color:var(--teal);">Natural Language Processing</div><div class="tool-title">LLM Explorer</div></div>
             </div>
             <div class="tool-body">
-              <p class="tool-desc">Preview five chapters on language prediction, tokens, context, attention, and generation. Scene visualizations are planned for a later phase.</p>
+              <p class="tool-desc">Explore n-grams, count word patterns, predict the next word, and generate text. Later chapters preview tokens, context, and attention.</p>
               <div class="tool-features">
-                <div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Five chapters and 23 scene previews</div>
-                <div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Follow the planned learning sequence</div>
+                <div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Interactive n-gram and probability explorations</div>
+                <div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Generate and compare different text sequences</div>
                 <div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Navigate chapters and scenes</div>
               </div>
             </div>
-            <div class="tool-footer"><span class="tool-cta" style="color:var(--teal);">Unavailable <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span><span class="tool-tag" style="background:var(--teal-l);color:var(--teal);">Coming soon</span></div>
-          </div>
+            <div class="tool-footer"><span class="tool-cta" style="color:var(--teal);">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span><span class="tool-tag" style="background:var(--teal-l);color:var(--teal);">Interactive</span></div>
+          </a>
         </div>
       </div>
     </section>
@@ -544,6 +544,7 @@
 const PROXY_URL = 'https://red-union-6b9e.crosa.workers.dev';
 
 const TOOLS = [
+  { name:'LLM Explorer', file:'llm_explorer.html', cat:'Natural Language Processing', desc:'Explore n-grams, word patterns, next-word probabilities, and text generation.', keywords:['llm','language model','n-gram','ngram','bigram','trigram','probability','prediction','generation'] },
   { name:'Data Detective', file:'data_detective.html?v=20260828-1', cat:'Machine Learning Labs', desc:'Type Python to inspect data, build visualizations, and make careful evidence-based claims.', keywords:['data','pandas','seaborn','visualization','histogram','scatterplot','correlation','feature','label'] },
   { name:'Fish Predictor', file:'fish_predictor.html?v=20260828-1', cat:'Machine Learning Labs', desc:'Train and evaluate regression models on unseen fish using reproducible Python workflows.', keywords:['machine learning','regression','train test','linear regression','random forest','mae','rmse','overfitting'] },
   { name:'Loan Evaluator', file:'loan_model_auditor.html?v=20260905-1', cat:'Machine Learning Labs', desc:'Follow Project 4 to make charts and build a random forest. Then check its mistakes, learn why results change, and ask what needs checking before real use.', keywords:['project 4','seaborn','classification','regressor','classifier','loan','confusion matrix','precision','recall','specificity','threshold','fairness','responsible ai','missing data','governance'] },
@@ -648,7 +649,7 @@ Rules:
 - You may use markdown when helpful: headings, bold, italics, links, inline code, fenced code blocks, and simple lists.
 - If the question is outside AI100 scope, politely redirect to foundations-level context.
 - End with a single line starting "TOOL:" naming the single most relevant tool from this list when applicable, or "TOOL:none" when no tool applies:
-  Perceptron Playground, Neural Network Explorer, Q-Table Explorer, DQN Explorer, Reinforcement Learning Playground, NLP & RNN Visualizer, CNN Visualizer, CNN Long-Tail Lab`;
+  Perceptron Playground, Neural Network Explorer, Q-Table Explorer, DQN Explorer, Reinforcement Learning Playground, NLP & RNN Visualizer, LLM Explorer, CNN Visualizer, CNN Long-Tail Lab`;
 
   const response = await fetch(PROXY_URL, {
     method: 'POST',
