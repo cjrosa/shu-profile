@@ -269,7 +269,7 @@
       const gramName = ['Unigram', 'Bigram', 'Trigram'][size - 1];
       badge.setAttribute('role', 'img');
       badge.setAttribute('aria-label', `${gramName}: ${size} ${size === 1 ? 'word' : 'words'}`);
-      badge.title = gramName;
+      badge.setAttribute('data-tooltip', gramName);
       // Only fixed SVG markup and the calculated size enter this badge.
       badge.innerHTML = `<svg viewBox="0 0 36 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">${Array.from({ length: size }, (_, index) => `<rect x="${(36 - size * 10 - (size - 1) * 2) / 2 + index * 12}" y="3" width="10" height="10" rx="2"/>`).join('')}</svg>`;
       label.className = 'count-pattern-label';
@@ -462,9 +462,39 @@
   $('#nextBtn').addEventListener('click', () => move(1));
   $('#restartBtn').addEventListener('click', () => { activeScene = 0; render(); });
   document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') hideTooltip();
     if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || isEditable(event.target) || event.target.closest('.ngram-demo, .count-demo, .prob-demo, .gen-demo')) return;
     if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { event.preventDefault(); move(event.key === 'ArrowRight' ? 1 : -1); }
   });
   window.llmProbability = { corpus, wordSpans, findPattern, corpusFrequencies, continuationCounts };
+  // One viewport-positioned tooltip avoids clipping inside scene cards.
+  const tooltip = document.createElement('div');
+  tooltip.className = 'llm-tooltip'; tooltip.id = 'llmTooltip';
+  tooltip.setAttribute('role', 'tooltip'); tooltip.hidden = true;
+
+  let tooltipTarget = null;
+  function hideTooltip() {
+    if (tooltipTarget) tooltipTarget.removeAttribute('aria-describedby');
+    tooltipTarget = null; tooltip.hidden = true; tooltip.remove();
+  }
+  function showTooltip(event) {
+    const target = event.target.closest?.('[data-tooltip]');
+    if (!target) return;
+    hideTooltip(); tooltipTarget = target; document.body.append(tooltip);
+    tooltip.textContent = target.getAttribute('data-tooltip'); tooltip.hidden = false;
+    target.setAttribute('aria-describedby', 'llmTooltip');
+    const rect = target.getBoundingClientRect(), tip = tooltip.getBoundingClientRect();
+    tooltip.style.left = `${Math.max(8, Math.min(rect.left + (rect.width - tip.width) / 2, window.innerWidth - tip.width - 8))}px`;
+    tooltip.style.top = `${rect.top >= tip.height + 16 ? rect.top - tip.height - 8 : rect.bottom + 8}px`;
+  }
+  document.addEventListener('pointerover', showTooltip);
+  document.addEventListener('focusin', showTooltip);
+  document.addEventListener('pointerout', event => {
+    if (tooltipTarget && !tooltipTarget.contains(event.relatedTarget) && !tooltip.contains(event.relatedTarget)) hideTooltip();
+  });
+  document.addEventListener('focusout', hideTooltip);
+  document.addEventListener('click', hideTooltip);
+  window.addEventListener?.('scroll', hideTooltip, true);
+  window.addEventListener?.('resize', hideTooltip);
   render();
 })();

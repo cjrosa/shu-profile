@@ -49,7 +49,7 @@
     const pending = document.createElement('span'); pending.className = 'gen-pending'; pending.textContent = capped || ended ? '■' : '?'; pending.setAttribute('aria-hidden', 'true'); $('genSentence').append(pending);
     $('genContext').textContent = model.context();
     $('genCount').textContent = `${state.generated} / ${model.limit} added words`;
-    message('genStatus', capped ? `Generation paused at ${model.limit} added words. Reset to try another path.` : ended ? 'No continuation found. This word sequence was not followed by another word in the training text. Reset to try another path.' : running ? 'Generating one word at a time.' : revealed ? 'Choose the next word.' : 'What word comes next?');
+    message('genStatus', capped ? `Generation paused at ${model.limit} added words. Reset to try another path.` : ended ? 'No continuation found. This word sequence was not followed by another word in the training text. Reset to try another path.' : running ? 'Generating one word at a time.' : revealed ? 'Select a word to add it to your text, then click Predict again.' : 'What word comes next?');
     if (lookingUp) message('genStatus', 'Looking up learned word patterns…');
     $('genLookup').hidden = false;
     $('genLookup').setAttribute('data-active', lookingUp || running);
@@ -72,8 +72,12 @@
     if (revealed && !capped) result.candidates.forEach(candidate => {
       const button = document.createElement('button'), word = document.createElement('strong'), values = document.createElement('span'), track = document.createElement('span'), bar = document.createElement('span');
       button.type = 'button'; button.className = 'gen-candidate'; button.disabled = running;
+      button.setAttribute('aria-label', 'Select ' + candidate.word + ', ' + Number((candidate.probability * 100).toFixed(1)) + '% probability, and add it to the generated text');
+      const choice = document.createElement('span');
+      choice.className = 'gen-choice'; choice.setAttribute('aria-hidden', 'true');
+      choice.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false"><rect x="2" y="2" width="16" height="16" rx="3"/><path d="m5 10 3 3 7-7"/></svg>';
       word.textContent = candidate.word; values.textContent = `${candidate.count} of ${result.total} · ${Number((candidate.probability * 100).toFixed(1))}%`;
-      track.className = 'count-track'; track.setAttribute('aria-hidden', 'true'); bar.className = 'count-bar'; bar.style.width = `${candidate.probability * 100}%`; track.append(bar); button.append(word, values, track);
+      track.className = 'count-track'; track.setAttribute('aria-hidden', 'true'); bar.className = 'count-bar'; bar.style.width = `${candidate.probability * 100}%`; track.append(bar); button.append(word, values, track, choice);
       const version = revision;
       button.addEventListener('click', () => {
         if (version !== revision || running || !revealed) return;
@@ -97,7 +101,7 @@
       const title = document.createElement('span'), titleIcon = document.createElement('span');
       titleIcon.setAttribute('aria-hidden', 'true');
       titleIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M6 3h9l4 4v14H6Z"/><path d="M14 3v5h5M9 12h7M9 16h7"/></svg>';
-      title.textContent = (run.size === 2 ? 'Bigram' : 'Trigram') + ' / Run ' + id + (run.ended ? ' / finished' : ' / partial');
+      title.textContent = 'Run ' + id + ' · ' + (run.size === 2 ? 'Bigram' : 'Trigram') + ' · ' + (run.ended ? 'Finished' : 'Partial');
       label.append(titleIcon, title);
       if (id === runId && !run.ended) {
         const activity = document.createElement('span');
@@ -105,13 +109,13 @@
         activity.setAttribute('data-active', running || lookingUp);
         activity.setAttribute('role', 'img');
         activity.setAttribute('aria-label', running || lookingUp ? 'Generating' : 'Current run, waiting for your next choice');
-        activity.title = running || lookingUp ? 'Generating' : 'Waiting for your next choice';
+        activity.setAttribute('data-tooltip', running || lookingUp ? 'Generating' : 'Waiting for your next choice');
         activity.innerHTML = '<svg viewBox="0 0 30 12" aria-hidden="true" focusable="false"><circle cx="5" cy="6" r="2.5"/><circle cx="15" cy="6" r="2.5"/><circle cx="25" cy="6" r="2.5"/></svg>';
         label.append(activity);
       }
       text.textContent = run.words.join(' ');
       remove.type = 'button';
-      remove.title = 'Delete run ' + id;
+      remove.setAttribute('data-tooltip', 'Delete run ' + id);
       remove.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg>';
       remove.setAttribute('aria-label', 'Delete run ' + id + ' from comparison');
       remove.addEventListener('click', () => {
