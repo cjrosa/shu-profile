@@ -5,6 +5,25 @@ const vm = require('node:vm');
 const engine = require('../assets/js/ai100/llm-explorer.js');
 const { createGenerator } = require('../assets/js/ai100/llm-generation.js');
 
+test('greedy selects highest frequency, resolves ties consistently, and stops at limits', () => {
+  const model=createGenerator(engine,()=>{throw Error('Greedy must not sample');},2);
+  model.reset(3);assert.equal(model.greedy(),true);
+  assert.equal(model.snapshot().words.at(-1),'pizza');
+  model.greedy();assert.equal(model.greedy(),false);
+  const tied=createGenerator({...engine,corpus:'New a New b'});
+  tied.greedy();assert.equal(tied.snapshot().words.at(-1),'a');
+});
+
+test('changing automatic mode cancels a pending step and starts a fresh greedy run', () => {
+  const f=fixture();f.click('genSize3');f.click('genAuto');
+  const stale=[...f.jobs.values()][0];
+  f.click('genAutoMode');f.click('genModeGreedy');
+  stale();assert.equal(f.jobs.size,0);assert.equal(f.get('genCount').textContent,'0 / 40 added words');
+  f.click('genAuto');f.tick();
+  assert.equal(f.get('genContext').textContent,'Haven pizza');
+  assert.match(f.get('genStatus').textContent,/Greedy/);
+});
+
 test('manual generation uses corpus counts, shifts contexts and rejects invented words', () => {
   const model = createGenerator(engine);
   assert.deepEqual(model.distribution().candidates, [{word:'Haven',count:4,probability:1}]);

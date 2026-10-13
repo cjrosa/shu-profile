@@ -17,7 +17,24 @@
     if (!outside) return { severity: 'success', title: 'Full context available', text: `${model} uses ${capacity} preceding words. All ${available} words fit in the green window; none are outside it. Add intervening words to see what falls out of view.` };
     return { severity: 'warning', title: 'Limited context', text: `${model} sees only “${words.slice(-capacity).map(item => item.word).join(' ')}”. It cannot use the earlier information about Marie to choose the next word. Adding more text does not increase how far back it can look.` };
   }
-  if (typeof module !== 'undefined' && module.exports) module.exports = { memoryWords, statistics, memoryMessage };
+  function generatePair(engine, createGenerator, size, random = Math.random, limit = 24, mode = 'sampling') {
+    const models = [0, 1].map(() => { const model = createGenerator(engine, random, limit); model.reset(size); return model; });
+    const traces = models.map(() => Array(size - 1).fill(null));
+    // Advance both samples at each step, retaining the actual evidence before sampling.
+    for (let step = 0; step < limit; step++) {
+      models.forEach((model, index) => {
+        const context = model.context(), distribution = model.distribution();
+        if (mode === 'greedy' ? model.greedy() : model.sample()) traces[index].push({ context, ...distribution });
+      });
+    }
+    const samples = models.map((model, index) => ({ ...model.snapshot(), traces: traces[index], ended: !model.distribution().total }));
+    samples.forEach((sample, index) => {
+      sample.differences = sample.words.map((word, position) => Boolean(sample.traces[position]) && word !== samples[1 - index].words[position]);
+      sample.branches = sample.words.map((word, position) => sample.differences[position] && sample.traces[position]?.context === samples[1 - index].traces[position]?.context);
+    });
+    return samples;
+  }
+  if (typeof module !== 'undefined' && module.exports) module.exports = { memoryWords, statistics, memoryMessage, generatePair };
   if (typeof document === 'undefined') return;
   const $ = id => document.getElementById(id), engine = window.llmProbability;
   const exampleContexts = ['New Haven', 'purple elephants', 'pizza is', 'New York', 'the country', 'flying pizzas'];
@@ -32,6 +49,15 @@
   const questions = ['How far back can an n-gram model look?', 'What happens when the model encounters a phrase it has never seen?', 'Does remembering more words always improve prediction?', 'Does generating plausible text mean the model understands it?'];
   const discoveries = ['An n-gram model considers only the previous n−1 words. Earlier information is unavailable to its prediction.', 'This model gets stuck on phrases it has never seen—even sensible ones—because it needs a matching pattern in its training text.', 'Larger n-grams provide more context, but exact sequences are harder to observe repeatedly in limited training data: more context, less repeated evidence.', 'This model follows observed word patterns. Plausible sequences do not establish semantic understanding. Familiar passages can sound natural and meaningful.'];
   let challenge = 0, size = 2, extended = false, runs = [];
+  let generationMode = 'sampling';
+  function closeGenerationMenu() { $('limitsModeMenu').hidden = true; $('limitsModeToggle').setAttribute('aria-expanded', 'false'); }
+  let generationTimer = null, generationRevision = 0, cancelDisplay = null;
+  function stopGeneration() {
+    closeGenerationMenu();
+    clearTimeout(generationTimer); generationTimer = null; generationRevision++;
+    if (cancelDisplay) { cancelDisplay(); cancelDisplay = null; }
+    $('limitsGenerate').disabled = false;
+  }
   function element(tag, text, cls) { const node = document.createElement(tag); if (text) node.textContent = text; if (cls) node.className = cls; return node; }
   function icon() { return $('genTitle').querySelector('svg').cloneNode(true); }
   function button(parent, text, action, pressed) {
@@ -143,15 +169,115 @@
     discover(consequence);
   }
   function generate() {
-    const model = window.llmCreateGenerator(engine, Math.random, 24); model.reset(size);
-    while (model.sample()) { /* Bounded synchronous generation: no queued animation or stale callbacks. */ }
-    runs.push(model.snapshot()); if (runs.length > 2) runs.shift();
+    stopGeneration();
+    $('limitsStatus').className = 'gen-status';
+    const revision = generationRevision;
+    runs = generatePair(engine, window.llmCreateGenerator, size, Math.random, 24, generationMode);
+    $('limitsDiscovery').hidden = true;
     const visual = $('limitsVisual'); visual.replaceChildren();
-    runs.forEach((run, i) => { const block = element('div', '', 'limits-sample'); block.append(element('strong', `Sample ${i + 1} · ${run.size === 2 ? 'Bigram' : 'Trigram'}`)); const sentence = element('p', '', 'gen-sentence'); run.words.forEach(word => sentence.append(element('span', word, 'gen-word'))); block.append(sentence); visual.append(block); });
-    $('limitsStatus').textContent = 'Compare the latest two samples. Do they sound natural? Make sense? Repeat? Have unusual transitions? Could this counting model explain the words? Samples stop at 24 added words or no continuation.';
-    discover();
+    const inspector = element('section', '', 'limits-choice-inspector');
+    inspector.hidden = true;
+    inspector.setAttribute('aria-label', 'Possible words at the selected step');
+    inspector.setAttribute('aria-live', 'polite');
+    const selections = [];
+    function inspect(sampleIndex, position) {
+      inspector.hidden = false;
+      const run = runs[sampleIndex], trace = run.traces[position], selected = run.words[position];
+      selections.forEach(item => item.node.setAttribute('aria-pressed', item.sampleIndex === sampleIndex && item.position === position));
+      inspector.replaceChildren();
+      const heading = element('h4', '', 'limits-evidence-title');
+      heading.append($('genModelTitle').querySelector('svg').cloneNode(true), document.createTextNode(`Sample ${sampleIndex + 1} · word ${position + 1}: ${selected}`));
+      inspector.append(heading, element('p', `Context: “${trace.context}” — amber marks where the samples chose different next words.`));
+      const candidates = element('div', '', 'limits-choice-candidates');
+      trace.candidates.forEach(candidate => {
+        const card = element('div', '', 'limits-choice-candidate');
+        card.setAttribute('data-chosen', candidate.word === selected);
+        const track = element('span', '', 'count-track'), bar = element('span', '', 'count-bar');
+        bar.style.width = `${candidate.probability * 100}%`; track.setAttribute('aria-hidden', 'true'); track.append(bar);
+        card.append(element('strong', candidate.word + (candidate.word === selected ? ' · Selected' : '')), element('span', `${candidate.count} of ${trace.total} · ${Number((candidate.probability * 100).toFixed(1))}%`), track);
+        candidates.append(card);
+      });
+      inspector.append(candidates, element('p', 'Generation samples using these probabilities; it does not always choose the most likely word. A 50% chance means roughly half of many draws, not a guaranteed choice in either sample.'));
+    }
+    const displays = [];
+    runs.forEach((run, sampleIndex) => {
+      const block = element('div', '', 'limits-sample');
+      const title = element('strong', `Sample ${sampleIndex + 1} · ${run.size === 2 ? 'Bigram' : 'Trigram'} · ${generationMode === 'greedy' ? 'Greedy' : 'Sampling'}`, 'limits-sample-title');
+      const activity = element('span', '', 'gen-typing');
+      activity.setAttribute('data-active', 'true');
+      activity.setAttribute('role', 'img');
+      activity.setAttribute('aria-label', 'Generating');
+      activity.setAttribute('data-tooltip', 'Generating');
+      activity.innerHTML = '<svg viewBox="0 0 30 12" aria-hidden="true" focusable="false"><circle cx="5" cy="6" r="2.5"/><circle cx="15" cy="6" r="2.5"/><circle cx="25" cy="6" r="2.5"/></svg>';
+      title.append(activity); block.append(title);
+      const sentence = element('p', '', 'gen-sentence');
+      const contextPositions = new Map();
+      run.branches.forEach((branch, nextPosition) => {
+        if (branch) for (let contextPosition = nextPosition - run.size + 1; contextPosition < nextPosition; contextPosition++) contextPositions.set(contextPosition, nextPosition);
+      });
+      const tiles = run.words.map((word, position) => {
+        let tile;
+        const nextPosition = contextPositions.get(position);
+        if (nextPosition === undefined) { tile = element('span', word, 'gen-word'); sentence.append(tile); }
+        else {
+          tile = button(sentence, word, () => inspect(sampleIndex, nextPosition), false);
+          tile.className = 'gen-word limits-branch-context';
+          tile.disabled = true;
+          tile.setAttribute('aria-label', `Sample ${sampleIndex + 1}, context: ${run.traces[nextPosition].context}. Show possible next words where the samples diverged.`);
+          selections.push({ node: tile, sampleIndex, position: nextPosition });
+        }
+        tile.hidden = true;
+        return tile;
+      });
+      const status = element('small'); status.hidden = true;
+      displays.push({ tiles, status, run, activity });
+      block.append(sentence, status); visual.append(block);
+    });
+    visual.append(inspector);
+    const explanation = 'Amber marks the shared context where the samples chose different next words. Later words can differ because that choice changed the context. Does either passage make sense?';
+    $('limitsStatus').textContent = '';
+    $('limitsStatus').hidden = true;
+    $('limitsGenerate').disabled = true;
+    let position = 0;
+    const length = Math.max(...runs.map(run => run.words.length));
+    cancelDisplay = () => {
+      displays.forEach(display => {
+        display.activity.hidden = true; display.activity.setAttribute('data-active', 'false');
+        if (position < display.tiles.length) { display.status.hidden = false; display.status.textContent = 'Generation stopped. Select Generate to start a new pair.'; }
+      });
+      $('limitsStatus').textContent = 'Generation stopped. Select Generate to start a new pair.';
+      $('limitsStatus').hidden = false;
+    };
+    function advance() {
+      if (revision !== generationRevision) return;
+      displays.forEach(display => {
+        if (display.tiles[position]) display.tiles[position].hidden = false;
+        if (position >= display.tiles.length - 1) {
+          display.activity.hidden = true; display.activity.setAttribute('data-active', 'false'); display.status.hidden = false;
+          display.status.textContent = display.run.ended ? 'Stopped: no observed continuation.' : 'Stopped at 24 added words.';
+        }
+      });
+      selections.forEach(item => {
+        if (item.position <= position) { item.node.disabled = false; item.node.setAttribute('data-branch-revealed', 'true'); }
+      });
+      position++;
+      if (position >= length) {
+        generationTimer = null; cancelDisplay = null; $('limitsGenerate').disabled = false;
+        $('limitsStatus').textContent = explanation;
+        $('limitsStatus').hidden = false;
+        if (!selections.length) {
+          inspector.hidden = false;
+          inspector.replaceChildren(element('p', generationMode === 'greedy' ? 'Both passages match: greedy always chooses the highest-probability word, with ties resolved by first appearance in the training text. Try Sampling to allow different paths.' : 'Both samples followed the same path this time. Generate again to compare another pair.'));
+        }
+        discover();
+      } else if (!reducedMotion) generationTimer = setTimeout(advance, 500);
+    }
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reducedMotion) { while (position < length) advance(); }
+    else advance();
   }
   function render() {
+    stopGeneration();
     $('limitsTraining').hidden = challenge !== 1;
     $('limitsPassage').textContent = engine.corpus;
     $('limitsPredictionFooter').hidden = challenge !== 1 && challenge !== 2;
@@ -173,6 +299,11 @@
     const controls = $('limitsControls'); controls.replaceChildren();
     controls.className = challenge === 1 ? 'gen-actions limits-examples' : 'gen-actions';
     $('limitsIntervening').hidden = challenge !== 0;
+    $('limitsGenerate').hidden = challenge !== 3;
+    $('limitsGenerateControl').hidden = challenge !== 3;
+    $('limitsGenerate').textContent = 'Generate · ' + (generationMode === 'greedy' ? 'Greedy' : 'Sampling');
+    $('limitsModeSampling').setAttribute('aria-pressed', generationMode === 'sampling');
+    $('limitsModeGreedy').setAttribute('aria-pressed', generationMode === 'greedy');
     $('limitsIntervening').textContent = extended ? 'Remove intervening words' : 'Add intervening words';
     controls.hidden = challenge === 0;
     if (challenge === 0) drawMemory();
@@ -186,10 +317,33 @@
       $('limitsPredictionStatus').textContent = 'Select a phrase to see what the training text can predict.';
     }
     if (challenge === 2) { controls.hidden = true; drawStatistics(); }
-    if (challenge === 3) { button(controls, 'Generate sample', generate).className = 'gen-primary'; $('limitsStatus').textContent = 'Generate twice to compare samples from the same pizza corpus and sampler as Scene 4.'; }
+    if (challenge === 3) {
+      controls.hidden = true;
+      const status = $('limitsStatus'), info = element('span', '', 'limits-placeholder-icon');
+      info.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01"/></svg>';
+      status.className = 'gen-status limits-placeholder';
+      status.replaceChildren(info, document.createTextNode('Select Generate to begin.'));
+    }
   }
   function reset() { size = challenge === 2 ? 1 : 2; extended = false; runs = []; render(); }
   $('limitsReset').addEventListener('click', reset);
+  $('limitsGenerate').addEventListener('click', generate);
+  $('limitsModeToggle').addEventListener('click', () => {
+    const open = $('limitsModeMenu').hidden;
+    $('limitsModeMenu').hidden = !open; $('limitsModeToggle').setAttribute('aria-expanded', open);
+    if (open) $(generationMode === 'greedy' ? 'limitsModeGreedy' : 'limitsModeSampling').focus();
+  });
+  for (const [id, mode] of [['limitsModeSampling', 'sampling'], ['limitsModeGreedy', 'greedy']]) $(id).addEventListener('click', () => {
+    if (generationMode !== mode) { generationMode = mode; runs = []; render(); }
+    closeGenerationMenu(); $('limitsModeToggle').focus();
+  });
+  $('limitsGenerateControl').addEventListener('keydown', event => {
+    if (event.key === 'Escape') { event.preventDefault(); closeGenerationMenu(); $('limitsModeToggle').focus(); }
+  });
+  $('limitsGenerateControl').addEventListener('focusout', event => { if (!$('limitsGenerateControl').contains(event.relatedTarget)) closeGenerationMenu(); });
+  document.addEventListener?.('pointerdown', event => { if (!$('limitsGenerateControl').contains(event.target)) closeGenerationMenu(); });
+  window.cancelLimitsGeneration = stopGeneration;
+  window.addEventListener?.('pagehide', stopGeneration);
   $('limitsIntervening').addEventListener('click', () => { extended = !extended; render(); discover(); $('limitsIntervening').focus(); });
   render();
 })();

@@ -21,7 +21,13 @@
       }
       return false;
     }
-    return { reset, append, sample, context, distribution, generated, limit,
+    function greedy() {
+      const candidates = distribution().candidates;
+      // Preserve first occurrence in the training text when probabilities tie.
+      const best = candidates.reduce((winner, candidate) => !winner || candidate.count > winner.count ? candidate : winner, null);
+      return best ? append(best.word) : false;
+    }
+    return { reset, append, sample, greedy, context, distribution, generated, limit,
       snapshot: () => ({ size, words: [...words], generated: generated() }) };
   }
   if (typeof module !== 'undefined' && module.exports) module.exports = { createGenerator };
@@ -29,11 +35,13 @@
   window.llmCreateGenerator = createGenerator;
   const $ = id => document.getElementById(id), model = createGenerator(window.llmProbability);
   let revealed = false, running = false, timer = null, revision = 0;
+  let autoMode = 'sampling';
   let lookingUp = false, lookupTimer = null;
   const runs = new Map();
   let runId = 1, deletedRun = false;
   function message(id, text) { $(id).textContent = text; }
   function stop() {
+    closeModeMenu();
     running = false; clearTimeout(timer); timer = null;
     lookingUp = false; clearTimeout(lookupTimer); lookupTimer = null; revision++;
   }
@@ -50,7 +58,7 @@
     const pending = document.createElement('span'); pending.className = 'gen-pending'; pending.textContent = capped || ended ? '■' : '?'; pending.setAttribute('aria-hidden', 'true'); $('genSentence').append(pending);
     $('genContext').textContent = model.context();
     $('genCount').textContent = `${state.generated} / ${model.limit} added words`;
-    message('genStatus', capped ? `Generation paused at ${model.limit} added words. Reset to try another path.` : ended ? 'No continuation found. This word sequence was not followed by another word in the training text. Reset to try another path.' : running ? 'Generating one word at a time.' : revealed ? 'Select a word to add it to your text, then click Predict again.' : 'What word comes next?');
+    message('genStatus', capped ? `Generation paused at ${model.limit} added words. Reset to try another path.` : ended ? 'No continuation found. This word sequence was not followed by another word in the training text. Reset to try another path.' : running ? (autoMode === 'greedy' ? 'Greedy: choosing the highest-probability next word.' : 'Sampling one word at a time using the displayed probabilities.') : revealed ? 'Select a word to add it to your text, then click Predict again.' : 'What word comes next?');
     if (lookingUp) message('genStatus', 'Looking up learned word patterns…');
     $('genLookup').hidden = false;
     $('genLookup').setAttribute('data-active', lookingUp || running);
@@ -68,6 +76,8 @@
     $('genStop').disabled = !running;
     $('genStop').hidden = !running;
     $('genAuto').hidden = running;
+    $('genAutoControl').hidden = running;
+    $('genAuto').textContent = 'Auto Generate · ' + (autoMode === 'greedy' ? 'Greedy' : 'Sampling');
     for (const size of [2, 3]) $('genSize' + size).setAttribute('aria-pressed', state.size === size);
     $('genCandidates').replaceChildren();
     if (revealed && !capped) result.candidates.forEach(candidate => {
@@ -131,7 +141,8 @@
     const version = revision;
     timer = setTimeout(() => {
       if (!running || version !== revision) return;
-      model.sample(); revision++; revealed = true; draw(true);
+      if (autoMode === 'greedy') model.greedy(); else model.sample();
+      revision++; revealed = true; draw(true);
       if (running) schedule();
     }, 1400);
   }
@@ -150,6 +161,30 @@
   $('genAuto').addEventListener('click', () => { if (lookingUp || running || !model.distribution().total || model.generated() >= model.limit) return; running = true; revision++; revealed = true; draw(); schedule(); });
   $('genStop').addEventListener('click', () => { stop(); draw(); });
   $('genReset').addEventListener('click', () => reset());
+  function closeModeMenu() { $('genModeMenu').hidden = true; $('genAutoMode').setAttribute('aria-expanded', 'false'); }
+  $('genAutoMode').addEventListener('click', () => {
+    const open = $('genModeMenu').hidden;
+    $('genModeMenu').hidden = !open; $('genAutoMode').setAttribute('aria-expanded', open);
+    if (open) $(autoMode === 'greedy' ? 'genModeGreedy' : 'genModeSampling').focus();
+  });
+  for (const [id, mode] of [['genModeSampling', 'sampling'], ['genModeGreedy', 'greedy']]) {
+    $(id).addEventListener('click', () => {
+      if (autoMode !== mode) { autoMode = mode; reset(); }
+      closeModeMenu();
+      $('genModeSampling').setAttribute('aria-pressed', autoMode === 'sampling');
+      $('genModeGreedy').setAttribute('aria-pressed', autoMode === 'greedy');
+      $('genAutoMode').focus();
+    });
+  }
+  $('genAutoControl').addEventListener('keydown', event => {
+    if (event.key === 'Escape') { event.preventDefault(); closeModeMenu(); $('genAutoMode').focus(); }
+  });
+  $('genAutoControl').addEventListener('focusout', event => {
+    if (!$('genAutoControl').contains(event.relatedTarget)) closeModeMenu();
+  });
+  document.addEventListener?.('pointerdown', event => {
+    if (!$('genAutoControl').contains(event.target)) closeModeMenu();
+  });
   for (const size of [2, 3]) $('genSize' + size).addEventListener('click', () => reset(size));
   window.cancelGeneration = () => { stop(); draw(); };
   window.addEventListener?.('pagehide', stop);

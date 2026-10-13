@@ -415,6 +415,7 @@
     const isGeneration = item.id === 'generating-language';
     const isLimits = item.id === 'n-gram-limits';
     $('#limitsDemo').hidden = !isLimits;
+    if (!isLimits && window.cancelLimitsGeneration) window.cancelLimitsGeneration();
     $('.gen-demo').hidden = !isGeneration;
     if (!isGeneration && window.cancelGeneration) window.cancelGeneration();
     if (!isProbability && window.cancelProbabilityReveal) window.cancelProbabilityReveal();

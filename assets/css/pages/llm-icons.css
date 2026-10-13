@@ -59,6 +59,8 @@
 .prob-demo #probDiscovery p:last-child svg,
 .gen-demo #genDiscovery p:last-child svg{color:var(--blue)}
 .gen-demo .gen-run-header button svg{color:var(--red)}
+.gen-demo #genSampling svg{color:var(--blue)}
+.gen-demo #genSampling svg circle{fill:var(--blue-soft)}
 
 /* Scene 5: reuse the established palette; example icons never reveal a match. */
 .limits-demo #limitsChallenges button:nth-child(1) svg{color:var(--blue)}
