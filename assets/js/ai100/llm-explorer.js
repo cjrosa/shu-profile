@@ -53,7 +53,7 @@
     return chapterStart(chapterIndex) + sceneIndex;
   }
   function isEditable(target) { return target.isContentEditable || Boolean(target.closest('input, select, textarea, [contenteditable]:not([contenteditable="false"])')); }
-  const corpus = 'New Haven pizza is legendary. People travel from all over the country to taste its perfect blend of char, chew, and flavor. The brick ovens at Pepe’s, Sally’s, and Modern have been crafting pies for generations. Locals debate which spot is best, but everyone agrees that New Haven sets the gold standard. The crust is thin yet strong enough to hold its toppings, the sauce is tangy, and the mozzarella melts into pure bliss. For anyone who truly loves pizza, a trip to New Haven is not just a meal—it’s a pilgrimage.';
+  const corpus = 'New Haven pizza is legendary. People travel from all over the country to taste its perfect blend of char, chew, and flavor. The brick ovens at Pepe’s, Sally’s, and Modern have been crafting pies for generations. Locals debate which spot is best, but everyone agrees that New Haven sets the gold standard. The crust is thin yet strong enough to hold its toppings, the sauce is tangy, and the mozzarella melts into pure bliss. For anyone who truly loves pizza, a trip to New Haven is not just a meal—it’s a pilgrimage. New Haven pizza brings people together.';
   function wordSpans(text) {
     return Array.from(text.matchAll(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu), match => ({
       text: match[0], normalized: match[0].toLowerCase().replace(/’/g, "'"), start: match.index, end: match.index + match[0].length
@@ -120,7 +120,21 @@
     }
     return [...counts.values()].sort((a, b) => b.count - a.count || a.first - b.first);
   }
-  if (typeof module !== 'undefined' && module.exports) module.exports = { chapters, scenes, nextIndex, chapterStart, isEditable, corpus, wordSpans, findPattern, countingChallenge, challengeProgress, corpusFrequencies };
+  function continuationCounts(text, context) {
+    const words = wordSpans(text), target = wordSpans(context), counts = new Map();
+    let terminal = 0;
+    if (![1, 2].includes(target.length)) return { candidates: [], total: 0, terminal };
+    for (let i = 0; i <= words.length - target.length; i++) {
+      if (!target.every((word, offset) => word.normalized === words[i + offset].normalized)) continue;
+      const next = words[i + target.length];
+      if (!next) { terminal++; continue; }
+      if (!counts.has(next.normalized)) counts.set(next.normalized, { word: next.text, count: 0 });
+      counts.get(next.normalized).count++;
+    }
+    const total = [...counts.values()].reduce((sum, entry) => sum + entry.count, 0);
+    return { total, terminal, candidates: [...counts.values()].map(entry => ({ ...entry, probability: entry.count / total })) };
+  }
+  if (typeof module !== 'undefined' && module.exports) module.exports = { chapters, scenes, nextIndex, chapterStart, isEditable, corpus, wordSpans, findPattern, countingChallenge, challengeProgress, corpusFrequencies, continuationCounts };
   if (typeof document === 'undefined') return;
   const $ = selector => document.querySelector(selector);
   let countSize = 2, countPattern = 'New Haven', revealed = false;
@@ -397,8 +411,12 @@
   function renderPlaceholder(item, chapter) {
     const isNgram = item.id === 'n-grams';
     const isCounting = item.id === 'counting';
-    $('.placeholder').hidden = isNgram || isCounting;
-    $('#chapterQuestion').hidden = isNgram || isCounting;
+    const isProbability = item.id === 'conditional-probability';
+    if (!isProbability && window.cancelProbabilityReveal) window.cancelProbabilityReveal();
+    $('.prob-demo').hidden = !isProbability;
+    if (isProbability && window.drawProbability) window.drawProbability();
+    $('.placeholder').hidden = isNgram || isCounting || isProbability;
+    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability;
     $('.count-demo').hidden = !isCounting;
     if (isCounting) drawCounting();
     $('.ngram-demo').hidden = !isNgram;
@@ -441,8 +459,9 @@
   $('#nextBtn').addEventListener('click', () => move(1));
   $('#restartBtn').addEventListener('click', () => { activeScene = 0; render(); });
   document.addEventListener('keydown', event => {
-    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || isEditable(event.target) || event.target.closest('.ngram-demo, .count-demo')) return;
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || isEditable(event.target) || event.target.closest('.ngram-demo, .count-demo, .prob-demo')) return;
     if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { event.preventDefault(); move(event.key === 'ArrowRight' ? 1 : -1); }
   });
+  window.llmProbability = { corpus, wordSpans, findPattern, corpusFrequencies, continuationCounts };
   render();
 })();
