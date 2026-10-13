@@ -33,3 +33,10 @@
 }
 #sceneContent p.tokens-feedback:has(>svg:first-child){position:relative;padding-left:36px}
 #sceneContent p.tokens-feedback>svg:first-child{position:absolute;left:12px;top:10px;margin:0}
+
+/* Exploration questions share typography across n-gram and token scenes. */
+#sceneContent .llm-exploration-question{font-family:inherit;font-size:13px;font-weight:700;line-height:1.6;letter-spacing:normal;color:var(--ink)}
+
+/* Match the question-to-control gap without default paragraph margins. */
+#sceneContent .llm-question-row{display:block;margin:0 0 8px;line-height:1.6}
+#sceneContent .llm-question-row + .tokens-input-wrap{margin-top:0}

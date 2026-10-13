@@ -1,0 +1,172 @@
+/* Scene-specific layout; typography, tiles and messages reuse Scene 1. */
+.tokens-input-header label[for="subwordsPreset"]{font-weight:750;color:var(--green-dark)}
+.tokens-input-header #subwordsPreset{appearance:none;-webkit-appearance:none;padding:8px 34px 8px 12px;border:1px solid var(--green);border-radius:8px;background-color:#f4faf6;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23477750' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;color:var(--green-dark);font-weight:600;cursor:pointer}
+.tokens-input-header #subwordsPreset:hover{background-color:var(--green-soft);border-color:var(--green-dark)}
+.tokens-input-header #subwordsPreset option{background:#fff;color:var(--ink);font-weight:400}
+.subwords-construction{display:flex;align-items:center;gap:12px;overflow-wrap:anywhere}
+#subwordsWord{font-family:Georgia,"Palatino Linotype",Palatino,serif;font-size:var(--passage-font-size,15px);line-height:1.65;letter-spacing:.01em;overflow-wrap:anywhere;min-width:0}
+#subwordsDemo button:disabled{cursor:default}
+
+/* Semantic SVG accents follow the approved Explorer icon conventions. */
+#subwordsTitle .subwords-build-icon{color:var(--teal)}
+.subwords-build-icon rect{fill:#e0f3ef}
+.subwords-build-icon rect:last-of-type{fill:var(--green-soft);stroke:var(--green)}
+#subwordsTitle .subwords-build-icon path{fill:none;stroke:var(--green)}
+#subwordsDemo .subwords-predict-icon{color:var(--amber)}
+.subwords-predict-icon path{fill:var(--amber-soft)}
+
+/* Keep construction actions in the panel header, wrapping on narrow screens. */
+#subwordsDemo .tokens-comparison-header:has(#subwordsTeachingTitle){flex-wrap:wrap}
+#subwordsDemo .tokens-comparison-header .tokens-toolbar{margin:0 0 0 auto;gap:8px;font-size:12px}
+#subwordsDemo .tokens-comparison-header .tokens-toolbar button{padding:6px 9px;border-radius:6px}
+
+/* Editable teaching pieces and authentic tokens share one construction card. */
+#subwordsPieces{gap:8px;padding-top:0}
+.subwords-editable-piece{position:relative;display:inline-flex;flex-direction:column;align-items:stretch}
+#subwordsDemo .subwords-piece-handle{padding:4px 22px 4px 8px;cursor:grab}
+#subwordsDemo .subwords-piece-handle:active{cursor:grabbing}
+#subwordsDemo .subwords-piece-remove{position:absolute;right:1px;top:1px;width:22px;height:22px;padding:0;border:0;background:transparent;color:var(--muted);font-size:14px;line-height:1}
+#subwordsDemo .subwords-piece-remove:hover{color:var(--red);background:var(--red-soft)}
+.subwords-editable-piece.dragging{opacity:.5}
+.subwords-construction-card{padding:12px 16px;border:1px solid var(--line);border-radius:9px;background:var(--white,#fff)}
+#subwordsReal{margin-top:12px}
+#subwordsDemo .subwords-construction-card .tokens-tile{background:var(--white,#fff)}
+.subwords-model-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.subwords-model-header h3{display:flex;align-items:center;gap:8px;margin:0;font-size:13px;font-weight:700;color:var(--muted)}
+.subwords-model-header svg{width:18px;height:18px;flex-shrink:0}
+.subwords-model-header strong{font-size:13px;color:var(--green)}
+#subwordsTokenStatus:empty{margin:0}
+
+.subwords-drop-zone{display:inline-flex;align-items:center;justify-content:center;align-self:stretch;min-width:72px;padding:4px 10px;border:2px dashed var(--green);border-radius:5px;background:var(--green-soft);color:var(--green-dark);font-size:12px;line-height:1.65}
+
+/* One horizontal construction card, with a stacked layout on small screens. */
+.subwords-construction-card{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.9fr) minmax(0,1fr);align-items:start;gap:16px 24px}
+.subwords-teaching-column{min-width:0}
+.subwords-word-column{min-width:0}
+.subwords-word-column .subwords-construction{margin:0;min-height:37px;gap:8px}
+#subwordsDemo .subwords-column-label{display:flex;align-items:center;min-height:21px;margin:0 0 8px;font-size:13px;font-weight:700;line-height:1.6;color:var(--muted)}
+.subwords-model-header{min-height:21px}
+#subwordsDemo #subwordsModel .tokens-tile{padding:4px 8px;border-color:var(--purple);background:var(--purple-soft)}
+#subwordsDemo .subwords-model-header strong{color:var(--purple)}
+.subwords-construction-card>#subwordsReal{margin:0;min-width:0;grid-column:3;grid-row:1}
+.subwords-construction-card>#subwordsStatus{grid-column:1 / -1;margin:0}
+.subwords-construction-card>#subwordsStatus:empty{display:none}
+@container(max-width:640px){.subwords-construction-card{grid-template-columns:minmax(0,1fr)}.subwords-construction-card>#subwordsReal{grid-column:1;grid-row:auto}}
+
+.subwords-saved-card{margin-top:12px}
+.subwords-saved-word{margin:0;overflow-wrap:anywhere;font-family:Georgia,"Palatino Linotype",Palatino,serif;font-size:var(--passage-font-size,15px);line-height:1.65;letter-spacing:.01em}
+.subwords-saved-model{min-width:0}
+#subwordsDemo .subwords-saved-model .tokens-tile{padding:4px 8px;border-color:var(--purple);background:var(--purple-soft)}
+.subwords-saved-card{grid-template-columns:minmax(0,1.2fr) minmax(0,.9fr) minmax(0,1fr) auto}
+#subwordsDemo .subwords-saved-actions{grid-column:4;grid-row:1;align-self:center;margin:0;justify-content:flex-end;gap:8px}
+#subwordsDemo .subwords-saved-actions button{display:grid;place-items:center;width:32px;height:32px;padding:6px;border-radius:6px;color:var(--green-dark)}
+.subwords-saved-actions svg{width:18px;height:18px}
+#subwordsDemo .subwords-saved-actions button:last-child{color:var(--red)}
+@container(max-width:640px){.subwords-saved-card{grid-template-columns:minmax(0,1fr) auto}.subwords-saved-card>.subwords-teaching-column,.subwords-saved-card>.subwords-word-column,.subwords-saved-card>.subwords-saved-model{grid-column:1}#subwordsDemo .subwords-saved-actions{grid-column:2;grid-row:1 / span 3}}
+
+/* Rounded text holder shared by the active and kept constructions. */
+.subwords-word-column .subwords-construction,.subwords-word-column .subwords-saved-word{display:flex;align-items:center;min-height:37px;padding:6px 12px;border:1px solid var(--line);border-radius:9px;background:var(--white,#fff);overflow-wrap:anywhere}
+
+#subwordsDemo .subwords-column-label{gap:8px}
+.subwords-column-label svg{width:18px;height:18px;flex-shrink:0}
+.subwords-teaching-icon{color:var(--teal)}
+.subwords-teaching-icon rect{fill:#e0f3ef}
+.subwords-word-icon{color:var(--green)}
+.subwords-word-icon rect{fill:var(--green-soft)}
+.subwords-model-icon{color:var(--purple)}
+.subwords-model-icon rect{fill:var(--purple-soft)}
+
+#subwordsActiveCard{grid-template-columns:minmax(0,1.2fr) minmax(0,.9fr) minmax(0,1fr) auto}
+.subwords-builder-actions{grid-column:4;grid-row:1;align-self:center;justify-self:end}
+#subwordsDemo .subwords-builder-actions button{display:grid;place-items:center;width:32px;height:32px;padding:6px;border-radius:6px;color:var(--green-dark)}
+.subwords-builder-actions svg{width:18px;height:18px}
+.subwords-builder-actions svg path:first-child{fill:var(--green-soft)}
+@container(max-width:640px){#subwordsActiveCard{grid-template-columns:minmax(0,1fr) auto}#subwordsActiveCard>.subwords-teaching-column,#subwordsActiveCard>.subwords-word-column,#subwordsActiveCard>#subwordsReal{grid-column:1}#subwordsActiveCard>.subwords-builder-actions{grid-column:2;grid-row:1 / span 3}}
+
+.subwords-builder-actions{display:flex;align-items:center;gap:8px}
+#subwordsDemo #subwordsCancel{color:var(--red)}
+#subwordsCancel svg path{fill:none}
+.subwords-saved-card[aria-current="true"]{border-color:var(--green)}
+
+/* Active builder is distinct from the white kept cards. */
+#subwordsActiveCard{border:2px solid var(--green);background:var(--green-soft)}
+
+#subwordsDemo .subwords-editing-label{grid-column:1 / -1;grid-row:1;margin:0;padding-bottom:10px;border-bottom:1px solid var(--line);font-size:13px;font-weight:700;line-height:1.6;color:var(--green-dark)}
+#subwordsActiveCard.subwords-is-editing>.subwords-teaching-column,#subwordsActiveCard.subwords-is-editing>.subwords-word-column,#subwordsActiveCard.subwords-is-editing>#subwordsReal,#subwordsActiveCard.subwords-is-editing>.subwords-builder-actions{grid-row:2}
+#subwordsDemo .subwords-editing-badge{margin:8px 0 0;padding:4px 8px;border-radius:6px;background:var(--green-soft);color:var(--green-dark);font-size:12px;font-weight:700;line-height:1.5}
+@container(max-width:640px){#subwordsActiveCard.subwords-is-editing>.subwords-teaching-column{grid-row:2}#subwordsActiveCard.subwords-is-editing>.subwords-word-column{grid-row:3}#subwordsActiveCard.subwords-is-editing>#subwordsReal{grid-row:4}#subwordsActiveCard.subwords-is-editing>.subwords-builder-actions{grid-row:2 / span 3}}
+
+#subwordsDemo .subwords-select-prompt{display:flex;align-items:center;gap:8px;margin:12px 0}
+.subwords-select-prompt svg{width:16px;height:16px;flex-shrink:0;color:var(--teal)}
+.subwords-select-prompt svg circle{fill:#e0f3ef}
+
+.subwords-teaching-column .tokens-note:empty{display:none}
+
+.subwords-saved-card .subwords-teaching-column>.tokens-tiles{gap:0;align-items:center}
+#subwordsDemo .subwords-insert-piece{position:relative;display:grid;place-items:center;align-self:stretch;width:0;min-height:37px;padding:0;border:0;border-radius:4px;background:transparent;color:var(--green);flex:0 0 0;transition:width .15s ease,flex-basis .15s ease;z-index:1}
+.subwords-insert-piece::before{content:"";position:absolute;top:0;bottom:0;left:-6px;right:-6px}
+.subwords-saved-card .subwords-editable-piece{margin:0 2px}
+#subwordsDemo .subwords-insert-piece:hover,#subwordsDemo .subwords-insert-piece:focus-visible,#subwordsDemo .subwords-insert-piece[aria-expanded=true]{width:24px;flex-basis:24px}
+.subwords-insert-piece svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:20px;height:36px;opacity:0;pointer-events:none}
+.subwords-insert-piece svg circle{fill:var(--white,#fff)}
+.subwords-insert-piece:hover svg,.subwords-insert-piece:focus-visible svg,.subwords-insert-piece[aria-expanded=true] svg{opacity:1}
+.subwords-piece-chooser{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding:8px;border:1px solid var(--green);border-radius:8px;background:var(--white,#fff)}
+@media(hover:none){#subwordsDemo .subwords-insert-piece{width:24px;flex-basis:24px}.subwords-insert-piece svg{opacity:1}}
+@media(prefers-reduced-motion:reduce){#subwordsDemo .subwords-insert-piece{transition:none}}
+
+/* Emphasize the active build and its left-to-right relationship. */
+#subwordsActiveCard{background:var(--white,#fff);border:1px solid var(--line);border-left:4px solid var(--green);padding:16px 18px;column-gap:32px}
+#subwordsActiveCard .subwords-teaching-column>.subwords-column-label{color:var(--teal)}
+#subwordsActiveCard .subwords-word-column>.subwords-column-label{color:var(--green-dark)}
+#subwordsActiveCard .subwords-model-header h3{color:var(--purple)}
+#subwordsActiveCard .subwords-word-column{position:relative}
+#subwordsActiveCard #subwordsReal{position:relative}
+#subwordsActiveCard .subwords-construction{background:var(--green-soft);border-color:var(--green);min-height:42px;justify-content:center}
+#subwordsActiveCard #subwordsWord{color:var(--green-dark);font-weight:700}
+#subwordsDemo #subwordsActiveCard .subwords-piece-handle{background:var(--green-soft)}
+#subwordsDemo #subwordsSave{background:var(--green);border-color:var(--green);color:var(--white,#fff)}
+#subwordsSave svg path:first-child{fill:none}
+#subwordsDemo #subwordsSave:hover:not(:disabled){background:var(--green-dark)}
+.subwords-flow-link{position:absolute;left:-27px;top:38px;width:20px;height:20px;color:var(--green);pointer-events:none}
+#subwordsReal>.subwords-flow-link{color:var(--purple)}
+@container(max-width:640px){#subwordsActiveCard{row-gap:18px}.subwords-flow-link{display:none}}
+
+/* Unboxed construction action icons. */
+#subwordsDemo .subwords-saved-actions button,#subwordsDemo .subwords-builder-actions button,#subwordsDemo #subwordsSave,#subwordsDemo #subwordsSave:hover:not(:disabled){border:0;background:transparent;box-shadow:none}
+#subwordsDemo #subwordsSave{color:var(--green-dark)}
+
+#subwordsDemo #subwordsSave{color:var(--green)}
+#subwordsDemo .subwords-saved-actions button{color:var(--red)}
+
+/* Display constructed text directly, without an input-like box. */
+#subwordsDemo .subwords-word-column .subwords-construction,#subwordsDemo .subwords-word-column .subwords-saved-word,#subwordsActiveCard .subwords-construction{border:0;border-radius:0;background:transparent;box-shadow:none;padding:4px 0;justify-content:flex-start}
+
+/* Corner-mounted remove controls on teaching pieces. */
+#subwordsDemo .subwords-piece-remove{top:-7px;right:-7px;width:18px;height:18px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:var(--red);color:var(--white,#fff);font-size:14px;font-weight:700;line-height:1;z-index:2}
+#subwordsDemo .subwords-piece-remove:hover{background:var(--red);color:var(--white,#fff)}
+
+#subwordsDemo .subwords-piece-remove{width:14px;height:14px;top:-6px;right:-4px;font-family:Arial,sans-serif;font-size:12px;font-weight:400;line-height:14px;display:flex;align-items:center;justify-content:center}
+.subwords-saved-card .subwords-editable-piece{margin:0 4px}
+
+#subwordsDemo .subwords-saved-card .subwords-shared-piece{background:var(--green-soft);border-color:var(--green-dark);text-decoration:underline;text-underline-offset:3px}
+
+/* Vocabulary usage counts refer to occurrences in kept constructions. */
+#subwordsVocabulary{gap:12px;padding:6px 0 2px}
+#subwordsDemo #subwordsVocabulary .tokens-tile{position:relative;padding:6px 14px;min-width:44px;text-align:center;font-size:18px}
+.subwords-usage-badge{position:absolute;top:-7px;right:-7px;display:flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;border-radius:50%;background:var(--green);color:var(--white,#fff);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:11px;font-weight:700;line-height:1;letter-spacing:normal}
+
+.subwords-reuse-flash .subwords-saved-word{animation:subwordsReuseFlash 1s ease-out}
+@keyframes subwordsReuseFlash{0%,40%{background:var(--green-soft);color:var(--green-dark);box-shadow:0 0 0 3px var(--green);border-radius:5px}100%{background:transparent;box-shadow:0 0 0 0 transparent}}
+@media(prefers-reduced-motion:reduce){.subwords-reuse-flash .subwords-saved-word{animation:none;background:var(--green-soft);outline:2px solid var(--green);border-radius:5px}}
+
+.subwords-vocabulary-piece{position:relative;display:inline-flex}
+#subwordsDemo .subwords-vocabulary-piece>.subwords-usage-badge{position:absolute;top:-7px;right:-7px;display:flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;border:0;border-radius:50%;background:var(--green);color:white;font-size:11px;font-weight:700;line-height:1}
+
+.subwords-kept-headings{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.9fr) minmax(0,1fr) 32px;gap:24px;padding:12px 16px 0;margin-top:12px}
+#subwordsDemo .subwords-kept-headings .subwords-column-label{margin:0}
+.subwords-saved-card{align-items:center}
+@container(max-width:640px){.subwords-kept-headings{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:12px 0 0}#subwordsDemo .subwords-kept-headings .subwords-column-label{font-size:12px;gap:4px}.subwords-kept-headings svg{width:16px;height:16px}}
+
+/* Quiet remove controls; emphasize only during interaction. */
+#subwordsDemo .subwords-piece-remove{width:12px;height:12px;top:-4px;right:-3px;background:var(--line);color:var(--muted);font-size:10px;line-height:12px;font-weight:400}
+#subwordsDemo .subwords-piece-remove:hover,#subwordsDemo .subwords-piece-remove:focus-visible{background:var(--red);color:var(--white,#fff)}
