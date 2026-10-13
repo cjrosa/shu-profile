@@ -224,7 +224,25 @@
 
     // Load tool
     if (tool) {
-      document.getElementById('tool-frame').src = tool;
+      const frame = document.getElementById('tool-frame');
+      const toolUrl = new URL(tool, location.href);
+      for (const key of ['chapter', 'scene']) {
+        if (params.has(key)) toolUrl.searchParams.set(key, params.get(key));
+      }
+      // Keep the visible viewer URL current when the embedded explorer navigates.
+      window.addEventListener('message', event => {
+        if (event.source !== frame.contentWindow || event.origin !== location.origin ||
+            toolUrl.origin !== location.origin || !toolUrl.pathname.endsWith('/ai100/llm_explorer.html')) return;
+        const data = event.data;
+        if (!data || data.type !== 'llm-explorer-navigation' ||
+            !Number.isInteger(data.chapter) || data.chapter < 1 || data.chapter > 5 ||
+            !Number.isInteger(data.scene) || data.scene < 1 || data.scene > [5, 4, 4, 5, 5][data.chapter - 1]) return;
+        const url = new URL(location.href);
+        url.searchParams.set('chapter', data.chapter);
+        url.searchParams.set('scene', data.scene);
+        history.replaceState(history.state, '', url.href);
+      });
+      frame.src = toolUrl.href;
     } else {
       document.getElementById('tool-frame').style.display = 'none';
       document.getElementById('error').style.display = 'flex';

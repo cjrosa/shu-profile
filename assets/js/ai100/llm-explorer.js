@@ -43,11 +43,247 @@
     return direction > 0 && index === scenes.length - 1 ? 0 : Math.max(0, Math.min(scenes.length - 1, index + direction));
   }
   function chapterStart(chapterIndex) { return scenes.findIndex(item => item.chapterIndex === chapterIndex); }
+  // URL numbers are one-based; scene numbers are local to their chapter.
+  function sceneFromSearch(search) {
+    const params = new URLSearchParams(search);
+    const chapterNumber = Number(params.get('chapter') || 1);
+    const chapterIndex = Number.isInteger(chapterNumber) && chapterNumber >= 1 && chapterNumber <= chapters.length ? chapterNumber - 1 : 0;
+    const sceneNumber = Number(params.get('scene') || 1);
+    const sceneIndex = Number.isInteger(sceneNumber) && sceneNumber >= 1 && sceneNumber <= chapters[chapterIndex].scenes.length ? sceneNumber - 1 : 0;
+    return chapterStart(chapterIndex) + sceneIndex;
+  }
   function isEditable(target) { return target.isContentEditable || Boolean(target.closest('input, select, textarea, [contenteditable]:not([contenteditable="false"])')); }
-  if (typeof module !== 'undefined' && module.exports) module.exports = { chapters, scenes, nextIndex, chapterStart, isEditable };
+  const corpus = 'New Haven pizza is legendary. People travel from all over the country to taste its perfect blend of char, chew, and flavor. The brick ovens at Pepe’s, Sally’s, and Modern have been crafting pies for generations. Locals debate which spot is best, but everyone agrees that New Haven sets the gold standard. The crust is thin yet strong enough to hold its toppings, the sauce is tangy, and the mozzarella melts into pure bliss. For anyone who truly loves pizza, a trip to New Haven is not just a meal—it’s a pilgrimage.';
+  function wordSpans(text) {
+    return Array.from(text.matchAll(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu), match => ({
+      text: match[0], normalized: match[0].toLowerCase().replace(/’/g, "'"), start: match.index, end: match.index + match[0].length
+    }));
+  }
+  function findPattern(text, pattern, size) {
+    const source = wordSpans(text), target = wordSpans(pattern);
+    if (![1, 2, 3].includes(size) || target.length !== size) return [];
+    return source.flatMap((word, index) => target.every((part, offset) => source[index + offset]?.normalized === part.normalized)
+      ? [{ index, start: word.start, end: source[index + size - 1].end }] : []);
+  }
+  function countingChallenge(text, size) {
+    const words = wordSpans(text), frequencies = new Map();
+    for (let index = 0; index <= words.length - size; index++) {
+      const pattern = words.slice(index, index + size).map(word => word.normalized).join(' ');
+      frequencies.set(pattern, (frequencies.get(pattern) || 0) + 1);
+    }
+    const counts = [...frequencies.values()], maximum = Math.max(0, ...counts);
+    const name = ['unigram', 'bigram', 'trigram'][size - 1];
+    if (!maximum) return { prompt: `There are no ${name}s in this text. Try a smaller group size.`, hint: 'A group needs enough consecutive words to fill it.' };
+    if (maximum === 1) return {
+      prompt: `Do any ${name}s repeat? None do in this passage—patterns that occur only once are a discovery too.`,
+      hint: `Select ${Math.min(2, frequencies.size)} different ${name}${frequencies.size > 1 ? 's' : ''} to compare their counts and complete the challenge. Every one occurs once.`
+    };
+    if (size === 1) return {
+      prompt: `Can you find a word that appears ${maximum} times?`,
+      hint: 'Select individual words and compare their counts. Look for short words used throughout the passage.'
+    };
+    if (size === 2) return {
+      prompt: counts.includes(1) ? 'Find a bigram that repeats and compare it with one that occurs only once.' : 'Which bigram appears most often? Compare the groups you find.',
+      hint: `At least one bigram appears ${maximum} times. Look for the same two words together in different parts of the passage.`
+    };
+    return { prompt: 'Does any trigram repeat? Find a three-word group that appears more than once.', hint: `At least one trigram appears ${maximum} times. Compare complete three-word groups.` };
+  }
+  function challengeProgress(text, size, selections) {
+    const words = wordSpans(text), frequencies = new Map();
+    for (let i = 0; i <= words.length - size; i++) {
+      const pattern = words.slice(i, i + size).map(word => word.normalized).join(' ');
+      frequencies.set(pattern, (frequencies.get(pattern) || 0) + 1);
+    }
+    const maximum = Math.max(0, ...frequencies.values());
+    const selected = new Set(Array.from(selections, pattern => wordSpans(pattern).map(word => word.normalized).join(' ')));
+    const counts = [...selected].filter(pattern => frequencies.has(pattern)).map(pattern => frequencies.get(pattern));
+    if (maximum === 1) return {
+      complete: counts.length >= Math.min(2, frequencies.size),
+      feedback: 'You’ve compared unique patterns. None repeat in this text—an important discovery about longer word groups.'
+    };
+    if (size === 2 && [...frequencies.values()].includes(1)) return {
+      complete: counts.some(count => count > 1) && counts.includes(1),
+      feedback: "You've found a repeating word pattern and one that occurs only once."
+    };
+    return {
+      complete: maximum > 0 && (size === 3 ? counts.some(count => count > 1) : counts.includes(maximum)),
+      feedback: size === 3 ? 'You’ve found a three-word pattern that repeats.' : `You’ve found a ${size === 1 ? 'word' : 'pattern'} with the highest count in this text: ${maximum}.`
+    };
+  }
+  function corpusFrequencies(text, size) {
+    if (![1, 2, 3].includes(size)) return [];
+    const words = wordSpans(text), counts = new Map();
+    for (let i = 0; i <= words.length - size; i++) {
+      const pattern = words.slice(i, i + size).map(word => word.normalized).join(' ');
+      if (!counts.has(pattern)) counts.set(pattern, { pattern, count: 0, first: i });
+      counts.get(pattern).count++;
+    }
+    return [...counts.values()].sort((a, b) => b.count - a.count || a.first - b.first);
+  }
+  if (typeof module !== 'undefined' && module.exports) module.exports = { chapters, scenes, nextIndex, chapterStart, isEditable, corpus, wordSpans, findPattern, countingChallenge, challengeProgress, corpusFrequencies };
   if (typeof document === 'undefined') return;
   const $ = selector => document.querySelector(selector);
-  let activeScene = 0;
+  let countSize = 2, countPattern = 'New Haven', revealed = false;
+  const explored = new Map(), passageWords = wordSpans(corpus);
+  const challengeSelections = new Set();
+  function drawCorpusComparison() {
+    if (!$('#countCorpusComparison').open) return;
+    const frequencies = corpusFrequencies(corpus, countSize);
+    const name = ['Unigrams', 'Bigrams', 'Trigrams'][countSize - 1];
+    const repeated = frequencies.filter(entry => entry.count > 1).length;
+    $('#countCorpusTitleText').textContent = `Complete corpus · ${name}`;
+    $('#countCorpusIcon').innerHTML = Array.from({ length: countSize }, (_, index) => `<rect x="${(36 - countSize * 10 - (countSize - 1) * 2) / 2 + index * 12}" y="3" width="10" height="10" rx="2"/>`).join('');
+    $('#countCorpusSummary').textContent = `${frequencies.length} unique patterns; ${repeated} ${repeated === 1 ? 'appears' : 'appear'} more than once. ${repeated === 0 ? 'Every pattern occurs once—a discovery about how longer groups become unique. ' : ''}Showing the top ${Math.min(10, frequencies.length)}. Ties follow first appearance in the passage.`;
+    $('#countFullSummary').textContent = `Inspect all ${frequencies.length} patterns`;
+    const chart = $('#countCorpusBars'), list = $('#countFullList');
+    chart.replaceChildren(); list.replaceChildren();
+    frequencies.forEach((entry, index) => {
+      if (index < 10) {
+        const row = document.createElement('li'), label = document.createElement('span'), track = document.createElement('span'), bar = document.createElement('span'), value = document.createElement('strong');
+        row.className = 'count-row'; label.textContent = entry.pattern; value.textContent = entry.count;
+        track.className = 'count-track'; track.setAttribute('aria-hidden', 'true');
+        bar.className = 'count-bar'; bar.style.width = `${entry.count / frequencies[0].count * 100}%`;
+        track.append(bar); row.append(label, track, value); chart.append(row);
+      }
+      const row = document.createElement('tr'), label = document.createElement('td'), value = document.createElement('td');
+      label.textContent = entry.pattern; value.textContent = entry.count;
+      row.append(label, value); list.append(row);
+    });
+  }
+  $('#countCorpusComparison').addEventListener('toggle', drawCorpusComparison);
+  let showAll = false, refreshCountHighlights = () => {};
+  const patternKey = pattern => wordSpans(pattern).map(word => word.normalized).join(' ');
+  function patternColor(index) {
+    const hue = (index * 137.508 + 145) % 360;
+    return { ink: `hsl(${hue} 55% 32%)`, fill: `hsl(${hue} 60% 89%)` };
+  }
+  $('#countShowAll').addEventListener('change', event => { showAll = event.target.checked; refreshCountHighlights(); });
+  function choosePattern(pattern) {
+    countPattern = pattern; revealed = true;
+    const key = wordSpans(pattern).map(word => word.normalized).join(' ');
+    explored.set(key, { pattern, count: findPattern(corpus, pattern, countSize).length, color: explored.get(key)?.color || patternColor(explored.size) });
+    challengeSelections.add(key);
+    drawCounting();
+  }
+  function drawCounting() {
+    const challenge = countingChallenge(corpus, countSize);
+    const progress = challengeProgress(corpus, countSize, challengeSelections);
+    $('#countChallengeLabel').textContent = progress.complete ? 'Challenge complete!' : 'Try it:';
+    $('#countChallengeText').textContent = progress.complete ? progress.feedback : challenge.prompt;
+    $('.count-challenge').classList.toggle('challenge-complete', progress.complete);
+    $('#countChallengeIcon').innerHTML = progress.complete ? '<circle cx="12" cy="12" r="9.5"/><path d="m7.5 12 3 3 6-6"/>' : '<path d="M9 18h6M10 21h4M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 2H9s0-1-1-2Z"/>';
+    $('#countHintText').textContent = challenge.hint;
+    const matches = revealed ? findPattern(corpus, countPattern, countSize) : [];
+    $('#countResult').textContent = revealed ? `Found ${matches.length} ${matches.length === 1 ? 'occurrence' : 'occurrences'} of “${countPattern}”` : '';
+    for (let size = 1; size <= 3; size++) $('#countSize' + size).setAttribute('aria-pressed', size === countSize);
+    const passage = $('#countPassage');
+    passage.replaceChildren();
+    const wordButtons = [];
+    let hoverStart = null, focusStart = null, hoveredPattern = null, focusedPattern = null;
+    function showGroup() {
+      passage.querySelectorAll('.count-group-border').forEach(border => border.remove());
+      const preview = hoveredPattern ?? focusedPattern;
+      const start = hoverStart ?? focusStart;
+      const pattern = preview ?? (start !== null && start + countSize <= wordButtons.length ? passageWords.slice(start, start + countSize).map(word => word.text).join(' ') : null);
+      const layers = showAll ? new Map(explored) : new Map();
+      if (pattern !== null) layers.set(patternKey(pattern), explored.get(patternKey(pattern)) || { pattern, color: patternColor(0) });
+      const colors = wordButtons.map(() => []);
+      layers.forEach(entry => {
+        const size = wordSpans(entry.pattern).length;
+        findPattern(corpus, entry.pattern, size).forEach(match => {
+          for (let i = match.index; i < match.index + size; i++) colors[i].push(entry.color.fill);
+        });
+      });
+      wordButtons.forEach((button, index) => {
+        const fills = colors[index];
+        button.style.background = fills.length ? `linear-gradient(to bottom, ${fills.map((fill, i) => `${fill} ${i / fills.length * 100}% ${(i + 1) / fills.length * 100}%`).join(', ')})` : '';
+      });
+      if (!layers.size) return;
+      const bounds = passage.getBoundingClientRect();
+      layers.forEach(entry => {
+      const previewSize = wordSpans(entry.pattern).length;
+      findPattern(corpus, entry.pattern, previewSize).forEach(match => {
+      const lines = [];
+      wordButtons.slice(match.index, match.index + previewSize).forEach(button => {
+        const rect = button.getBoundingClientRect();
+        const line = lines.find(item => Math.abs(item.top - rect.top) < 2);
+        if (line) { line.right = Math.max(line.right, rect.right); line.bottom = Math.max(line.bottom, rect.bottom); }
+        else lines.push({ left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom });
+      });
+      lines.forEach(line => {
+        const border = document.createElement('span');
+        border.className = 'count-group-border'; border.style.borderColor = entry.color.ink; border.style.background = 'transparent'; border.setAttribute('aria-hidden', 'true');
+        Object.assign(border.style, { left: `${line.left - bounds.left - passage.clientLeft - 3}px`, top: `${line.top - bounds.top - passage.clientTop}px`, width: `${line.right - line.left + 6}px`, height: `${line.bottom - line.top}px` });
+        passage.append(border);
+      });
+      });
+      });
+    }
+    refreshCountHighlights = showGroup;
+    passage.onpointerleave = () => { hoverStart = null; showGroup(); };
+    let cursor = 0;
+    passageWords.forEach((word, index) => {
+      passage.append(document.createTextNode(corpus.slice(cursor, word.start)));
+      const button = document.createElement('button');
+      button.type = 'button'; button.className = 'count-word'; button.textContent = word.text;
+      button.disabled = index + countSize > passageWords.length;
+      const phrase = passageWords.slice(index, index + countSize).map(part => part.text).join(' ');
+      button.setAttribute('aria-label', `Select ${phrase}`);
+      wordButtons.push(button);
+      button.addEventListener('pointerenter', () => { hoverStart = index; showGroup(); });
+      button.addEventListener('focus', () => { focusStart = index; showGroup(); });
+      button.addEventListener('blur', () => { focusStart = null; showGroup(); });
+      button.addEventListener('click', (event = {}) => {
+        choosePattern(phrase);
+        if (event.detail === 0) $('#countPassage').querySelectorAll('.count-word')[index].focus({ preventScroll: true });
+      });
+      passage.append(button); cursor = word.end;
+    });
+    passage.append(document.createTextNode(corpus.slice(cursor)));
+    $('#countComparison').hidden = false;
+    $('#countEmpty').hidden = explored.size > 0;
+    $('#countDiscovery').hidden = !progress.complete;
+    const bars = $('#countBars'); bars.replaceChildren();
+    const maximum = Math.max(1, ...Array.from(explored.values(), entry => entry.count));
+    [...explored.values()].sort((a, b) => b.count - a.count).forEach(entry => {
+      const row = document.createElement('li'), label = document.createElement('span'), track = document.createElement('span'), bar = document.createElement('span'), value = document.createElement('strong');
+      row.className = 'count-row'; label.textContent = entry.pattern; value.textContent = entry.count;
+      const size = wordSpans(entry.pattern).length;
+      const badge = document.createElement('span');
+      badge.className = 'count-gram-badge';
+      badge.style.color = entry.color.ink; badge.style.background = entry.color.fill; badge.style.borderColor = entry.color.ink;
+      const gramName = ['Unigram', 'Bigram', 'Trigram'][size - 1];
+      badge.setAttribute('role', 'img');
+      badge.setAttribute('aria-label', `${gramName}: ${size} ${size === 1 ? 'word' : 'words'}`);
+      badge.title = gramName;
+      // Only fixed SVG markup and the calculated size enter this badge.
+      badge.innerHTML = `<svg viewBox="0 0 36 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">${Array.from({ length: size }, (_, index) => `<rect x="${(36 - size * 10 - (size - 1) * 2) / 2 + index * 12}" y="3" width="10" height="10" rx="2"/>`).join('')}</svg>`;
+      label.className = 'count-pattern-label';
+      label.prepend(badge);
+      row.tabIndex = 0;
+      row.addEventListener('pointerenter', () => { hoveredPattern = entry.pattern; showGroup(); });
+      row.addEventListener('pointerleave', () => { hoveredPattern = null; showGroup(); });
+      row.addEventListener('focus', () => { focusedPattern = entry.pattern; showGroup(); });
+      row.addEventListener('blur', () => { focusedPattern = null; showGroup(); });
+      track.className = 'count-track'; bar.className = 'count-bar'; bar.style.width = `${entry.count / maximum * 100}%`;
+      track.setAttribute('aria-hidden', 'true'); track.append(bar); row.append(label, track, value); bars.append(row);
+    });
+    $('#countShowAll').checked = showAll;
+    showGroup();
+    drawCorpusComparison();
+  }
+  for (let size = 1; size <= 3; size++) $('#countSize' + size).addEventListener('click', () => {
+    if (countSize !== size) {
+      challengeSelections.clear(); explored.clear(); showAll = false;
+    }
+    countSize = size; revealed = false; drawCounting();
+  });
+  $('#countReset').addEventListener('click', () => {
+    $('#countCorpusComparison').open = false; $('#countFullDetails').open = false;
+    challengeSelections.clear(); showAll = false;
+    explored.clear(); countSize = 2; revealed = false; drawCounting();
+  });
+  let activeScene = typeof window === 'undefined' ? 0 : sceneFromSearch(window.location.search);
   const words = ['New', 'Haven', 'pizza', 'is', 'legendary'];
   let gramSize = 2, gramStart = 0;
   let selectedOverlap = null;
@@ -160,8 +396,11 @@
   });
   function renderPlaceholder(item, chapter) {
     const isNgram = item.id === 'n-grams';
-    $('.placeholder').hidden = isNgram;
-    $('#chapterQuestion').hidden = isNgram;
+    const isCounting = item.id === 'counting';
+    $('.placeholder').hidden = isNgram || isCounting;
+    $('#chapterQuestion').hidden = isNgram || isCounting;
+    $('.count-demo').hidden = !isCounting;
+    if (isCounting) drawCounting();
     $('.ngram-demo').hidden = !isNgram;
     $('#nextBtn').classList.toggle('scene-one-next', isNgram);
     if (isNgram) { gramSize = 2; gramStart = 0; updateNgram(); }
@@ -171,6 +410,15 @@
   }
   function render() {
     const item = scenes[activeScene], chapter = chapters[item.chapterIndex];
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('chapter', item.chapterIndex + 1);
+      url.searchParams.set('scene', item.sceneIndex + 1);
+      window.history.replaceState(window.history.state, '', url.href);
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'llm-explorer-navigation', chapter: item.chapterIndex + 1, scene: item.sceneIndex + 1 }, window.location.origin);
+      }
+    }
     $('#sceneKicker').textContent = `Chapter ${item.chapterIndex + 1} · ${chapter.title} / Scene ${item.sceneIndex + 1}`;
     $('#sceneTitle').textContent = item.title;
     $('#sceneCopy').textContent = item.description;
@@ -193,7 +441,7 @@
   $('#nextBtn').addEventListener('click', () => move(1));
   $('#restartBtn').addEventListener('click', () => { activeScene = 0; render(); });
   document.addEventListener('keydown', event => {
-    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || isEditable(event.target) || event.target.closest('.ngram-demo')) return;
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || isEditable(event.target) || event.target.closest('.ngram-demo, .count-demo')) return;
     if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { event.preventDefault(); move(event.key === 'ArrowRight' ? 1 : -1); }
   });
   render();

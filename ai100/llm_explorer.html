@@ -96,6 +96,70 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 .ngram-completion .ngram-bridge{margin-top:12px}
 .controls button.primary.scene-one-next{background:#fff;color:var(--ink);border-color:var(--line)}
 </style>
+<style>
+.count-demo{max-width:960px;margin:auto}
+.count-demo button,.count-demo input{font:inherit}
+.count-demo button:not(.count-word){padding:9px 14px;border:1px solid var(--line);border-radius:8px;background:white;color:var(--ink);font-weight:750;cursor:pointer}
+.count-demo button[aria-pressed="true"]{background:var(--green-soft);border-color:var(--green);color:var(--green-dark)}
+.count-demo :focus-visible{outline:2px solid var(--green);outline-offset:3px}
+.count-help{color:var(--muted);font-size:13px;line-height:1.5;margin:10px 0}
+.count-challenge{position:relative;cursor:help;display:flex;align-items:flex-start;gap:10px;margin:0 0 16px;padding:12px 16px;border:1px solid var(--line);border-radius:9px;background:var(--green-soft);color:var(--green-dark);font-size:14px;line-height:1.5}
+.count-challenge svg{flex:0 0 20px;width:20px;height:20px;margin-top:1px}
+.count-challenge p{margin:0}
+.count-challenge.challenge-complete{border-color:var(--green)}
+.count-discovery:not([hidden]){animation:sceneIn .28s ease}
+.count-challenge .count-hint{position:absolute;z-index:5;left:16px;right:16px;top:calc(100% + 8px);width:max-content;max-width:calc(100% - 32px);padding:10px 14px;border-radius:7px;background:#171717;color:#fff;font-size:13px;line-height:1.5;box-shadow:0 4px 14px #0003;visibility:hidden;opacity:0;transition:opacity .15s}
+.count-hint:before{content:"";position:absolute;left:20px;bottom:100%;border:6px solid transparent;border-bottom-color:#171717}
+.count-challenge:hover .count-hint,.count-challenge:focus .count-hint{visibility:visible;opacity:1}
+.count-challenge:has(.count-hint):after{content:"";position:absolute;left:0;right:0;top:100%;height:8px}
+.count-footnote{color:var(--muted);font-size:12px;line-height:1.5;margin:6px 2px 16px}
+.count-training{min-width:0;margin:0;padding:0 0 6px;border:1px solid var(--line);border-radius:13px;background:#f8faf9;overflow:hidden}
+.count-training h3{display:flex;align-items:center;gap:8px;margin:0;padding:10px 16px;border-bottom:1px solid var(--line);background:#fff;font-size:14px;color:var(--muted)}
+.count-training h3 svg{flex:0 0 18px;width:18px;height:18px;color:var(--green)}
+.count-training:has(.count-passage){background:#fff}
+.count-passage{position:relative;margin:0;padding:10px 16px;background:#fff;color:#293b30;font-family:Georgia,"Palatino Linotype",Palatino,serif;font-size:clamp(19px,1.8vw,21px);line-height:1.65;letter-spacing:.01em}
+.count-word{display:inline;padding:0;border:0;border-radius:3px;background:transparent;color:inherit;cursor:pointer;line-height:inherit}
+.count-group-border{position:absolute;pointer-events:none;border:2px solid var(--green);border-radius:5px;background:rgba(31,122,70,.08)}
+.count-word:disabled{cursor:text}
+.count-hit{background:#c9efd5;color:#12492b;animation:countReveal .35s ease backwards}
+@keyframes countReveal{from{background:transparent}}
+.count-demo button:disabled:not(.count-word){opacity:.5;cursor:default}
+.count-comparison{margin-top:18px;padding-bottom:0;background:#fff}
+.count-comparison-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 16px;border-bottom:1px solid var(--line);background:#fff}
+.count-header-actions{display:flex;align-items:center;gap:12px;flex-shrink:0;font-size:12px}
+.count-header-actions label{display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}
+.count-header-actions input{accent-color:var(--green)}
+.count-comparison-header{flex-wrap:wrap}
+.count-comparison-header h3{padding:0;border:0}
+.count-demo #countReset{padding:4px 9px;font-size:12px;line-height:1.3;border-radius:6px;flex-shrink:0}
+.count-empty{margin:0;padding:20px 16px;color:var(--muted);font-size:14px;line-height:1.5}
+.count-bars:empty{display:none}
+.count-bars{list-style:none;padding:16px;margin:0;display:grid;gap:10px;min-height:64px;max-height:230px;overflow:auto}
+.count-corpus-details{margin-top:16px;background:#fff}
+.count-corpus-details>summary{padding:12px 16px;cursor:pointer;color:var(--green-dark);font-size:14px;font-weight:750}
+.count-corpus-details>summary:focus-visible{outline:none;background:var(--green-soft)}
+.count-corpus-details[open]>summary{border-bottom:1px solid var(--line)}
+.count-corpus-summary{margin:12px 16px 0;color:var(--muted);font-size:13px;line-height:1.5}
+.count-training h3 #countCorpusIcon{flex-basis:32px;width:32px;height:18px}
+.count-corpus-bars{max-height:none}
+.count-full-details{padding:0 16px 16px;font-size:13px}
+.count-full-details summary{cursor:pointer;color:var(--green-dark);font-weight:750}
+.count-full-scroll{max-height:280px;overflow:auto;margin-top:10px}
+.count-full-scroll table{width:100%;border-collapse:collapse;text-align:left}
+.count-full-scroll th,.count-full-scroll td{padding:7px 10px;border-bottom:1px solid var(--line)}
+.count-full-scroll th{position:sticky;top:0;background:#fff}
+.count-full-scroll td:last-child,.count-full-scroll th:last-child{text-align:right}
+.count-row{display:grid;grid-template-columns:minmax(110px,1fr) 2fr 2ch;gap:12px;align-items:center;font-size:15px;overflow-wrap:anywhere}
+.count-pattern-label{display:flex;align-items:center;gap:8px}
+.count-gram-badge{display:inline-flex;align-items:center;justify-content:center;flex:0 0 38px;height:24px;border:1px solid var(--line);border-radius:6px;background:var(--green-soft);color:var(--green-dark)}
+.count-gram-badge svg{width:32px;height:16px}
+.count-track{height:16px;border-radius:4px;background:#e5ece7;overflow:hidden}
+.count-bar{height:100%;display:block;background:var(--green);border-radius:4px}
+.count-discovery{margin-top:16px;font-size:14px;line-height:1.6;background:var(--green-soft)}
+.count-discovery p{margin:0}.count-discovery p+p{margin-top:10px}
+.count-discovery-icon{display:inline-block;width:18px;height:18px;margin-right:8px;vertical-align:-3px;color:var(--green)}
+@media(max-width:560px){.count-passage{padding:12px}}
+</style>
 </head>
 <body>
 <main class="shell">
@@ -126,6 +190,25 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
      <p id="ngramObservation"></p>
      <p class="ngram-bridge"><strong>Next:</strong> What happens when we collect n-grams from a larger passage and count how often each pattern appears?</p>
     </div>
+   </div>
+   <div class="count-demo" hidden>
+    <aside class="count-challenge" aria-labelledby="countTry" aria-describedby="countHint" tabindex="0"><svg id="countChallengeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 18h6M10 21h4M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 2H9s0-1-1-2Z"/></svg><div><p id="countTry" aria-live="polite" aria-atomic="true"><strong id="countChallengeLabel">Try it:</strong> <span id="countChallengeText"></span></p><p class="count-hint" id="countHint" role="tooltip"><strong>Hint:</strong> <span id="countHintText"></span></p></div></aside>
+    <section class="count-training" aria-labelledby="countTrainingTitle"><h3 id="countTrainingTitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="12" height="12" rx="2"/><rect x="9" y="9" width="12" height="12" rx="2"/></svg>Training text</h3><p class="count-passage" id="countPassage" aria-describedby="countPassageHelp"></p></section>
+    <p class="count-footnote" id="countPassageHelp">Hover to preview matching groups. Click or tap a starting word to count and compare. Groups can cross sentence boundaries.</p>
+    <div class="ngram-picker" role="group" aria-label="Pattern size">
+     <button id="countSize1" type="button" aria-pressed="false">Unigram<small>1 word</small></button>
+     <button id="countSize2" type="button" aria-pressed="true">Bigram<small>2 consecutive words</small></button>
+     <button id="countSize3" type="button" aria-pressed="false">Trigram<small>3 consecutive words</small></button>
+    </div>
+    <p class="sr-only" id="countResult" role="status" aria-live="polite" aria-atomic="true"></p>
+    <section class="count-training count-comparison" id="countComparison" aria-labelledby="countComparisonTitle"><div class="count-comparison-header"><h3 id="countComparisonTitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 4v16h16M8 8h10M8 12h6M8 16h8"/></svg>Compare your explored patterns</h3><div class="count-header-actions"><label><input id="countShowAll" type="checkbox"> Show all</label><button id="countReset" type="button">Reset</button></div></div><p class="count-empty" id="countEmpty">Click or tap a word in the passage to add its n-gram and count here.</p><ul class="count-bars" id="countBars"></ul></section>
+    <div class="panel count-discovery" id="countDiscovery" hidden><p><svg class="count-discovery-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12 3 3 6-6"/></svg><strong>Discovery:</strong> Some word sequences occur more often than others. By counting these patterns, we can begin to identify which sequences are common in the training text.</p><p><strong>Next:</strong> If we know how often different word sequences occur, can we use those counts to predict which word comes next?</p></div>
+    <details class="count-training count-corpus-details" id="countCorpusComparison"><summary>Explore frequencies across the complete training text.</summary>
+     <h3 id="countCorpusTitle"><svg id="countCorpusIcon" viewBox="0 0 36 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false"></svg><span id="countCorpusTitleText">Complete corpus</span></h3>
+     <p class="count-corpus-summary" id="countCorpusSummary"></p>
+     <ol class="count-bars count-corpus-bars" id="countCorpusBars" aria-label="Top ten patterns by occurrence count"></ol>
+     <details class="count-full-details" id="countFullDetails"><summary id="countFullSummary">Inspect all patterns</summary><div class="count-full-scroll" tabindex="0" role="region" aria-label="Complete frequency list"><table><thead><tr><th scope="col">Pattern</th><th scope="col">Count</th></tr></thead><tbody id="countFullList"></tbody></table></div></details>
+    </details>
    </div>
   </div></div>
  </section>

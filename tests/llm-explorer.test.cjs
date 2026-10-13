@@ -3,21 +3,53 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const { chapters, scenes, chapterStart } = require('../assets/js/ai100/llm-explorer.js');
-function fixture() {
+const { corpus, wordSpans, findPattern } = require('../assets/js/ai100/llm-explorer.js');
+test('counts exact overlapping sequences with punctuation and apostrophe normalization', () => {
+  for (const [pattern, size, count] of [['New Haven', 2, 3], ['pizza', 1, 2], ['the', 1, 6], ['New Haven pizza', 3, 1], ['and the', 2, 1], ['pizza pizza', 2, 0], ['legendary People', 2, 1], ["Pepe's Sally's", 2, 1], ['meal it’s a', 3, 1], ['piz', 1, 0]]) {
+    const matches = findPattern(corpus, pattern, size);
+    assert.equal(matches.length, count, pattern);
+    for (const match of matches) assert.deepEqual(wordSpans(corpus.slice(match.start, match.end)).map(w => w.normalized), wordSpans(pattern).map(w => w.normalized));
+  }
+  assert.equal(findPattern('a a a', 'a a', 2).length, 2);
+  assert.equal(findPattern(corpus, 'New Haven', 1).length, 0);
+  assert.equal(findPattern(corpus, '', 2).length, 0);
+  for (const size of [1, 2, 3]) {
+    const words = wordSpans(corpus).map(w => w.normalized);
+    const reference = new Map();
+    for (let i = 0; i <= words.length - size; i++) {
+      const key = words.slice(i, i + size).join(' ');
+      reference.set(key, (reference.get(key) || 0) + 1);
+    }
+    for (const [pattern, count] of reference) assert.equal(findPattern(corpus, pattern.toUpperCase(), size).length, count);
+  }
+});
+function fixture(href = 'https://example.test/ai100/llm_explorer.html') {
   const elements = new Map(), events = {};
   function element() {
     return { textContent: '', dataset: {}, style: {}, attributes: {}, children: [], disabled: false,
-      classList: { toggle() {} }, handlers: {},
+      classList: { values: new Set(), toggle() {}, add(value) { this.values.add(value); } }, handlers: {},
       setAttribute(key, value) { this.attributes[key] = String(value); },
       removeAttribute(key) { delete this.attributes[key]; },
       addEventListener(key, fn) { this.handlers[key] = fn; },
-      appendChild(child) { this.children.push(child); }
+      appendChild(child) { this.children.push(child); },
+      append(...children) { children.forEach(child => { child.parent = this; }); this.children.push(...children); },
+      remove() { if (this.parent) this.parent.children = this.parent.children.filter(child => child !== this); },
+      clientLeft: 0, clientTop: 0, getBoundingClientRect() { return { left: 0, right: 30, top: 0, bottom: 20 }; },
+      prepend(...children) { this.children.unshift(...children); },
+      replaceChildren(...children) { this.children = children; }, focus() {},
+      querySelectorAll(selector) { return this.children.filter(child => '.' + child.className === selector); }
     };
   }
-  const query = selector => { if (!elements.has(selector)) elements.set(selector, element()); return elements.get(selector); };
-  const document = { querySelector: query, createElement: element, addEventListener: (key, fn) => { events[key] = fn; } };
-  vm.runInNewContext(fs.readFileSync('assets/js/ai100/llm-explorer.js', 'utf8'), { document });
-  return { query, click: selector => query(selector).handlers.click(), chapter: index => query('.chapter-bar').children[index].handlers.click(),
+  const html = fs.readFileSync('ai100/llm_explorer.html', 'utf8');
+  const query = selector => {
+    if (/^#[\w-]+$/.test(selector)) assert.ok(html.includes(`id="${selector.slice(1)}"`), `Missing HTML element: ${selector}`);
+    if (!elements.has(selector)) elements.set(selector, element());
+    return elements.get(selector);
+  };
+  const document = { querySelector: query, createElement: element, createTextNode: text => ({ textContent: text }), addEventListener: (key, fn) => { events[key] = fn; } };
+  const window = { location: new URL(href), history: { state: null, replaceState(state, title, url) { window.location = new URL(url); } } };
+  vm.runInNewContext(fs.readFileSync('assets/js/ai100/llm-explorer.js', 'utf8'), { document, window, URL, URLSearchParams });
+  return { query, url: () => window.location.href, click: selector => query(selector).handlers.click(), chapter: index => query('.chapter-bar').children[index].handlers.click(),
     key: (key, target = { closest: () => null }, extra = {}) => { let prevented = false; events.keydown({ key, target, preventDefault() { prevented = true; }, ...extra }); return prevented; } };
 }
 test('all requested chapters and 23 unique scene records are complete', () => {
@@ -119,7 +151,7 @@ test('size changes, reset and scene return restore appropriate initial groups', 
   }
   f.click('#nextBtn');
   assert.equal(f.query('.ngram-demo').hidden, true);
-  assert.equal(f.query('.placeholder').hidden, false);
+  assert.equal(f.query('.placeholder').hidden, true);
   f.click('#prevBtn');
   assert.equal(f.query('#ngramStatus').textContent, '1 group collected: New Haven');
 });
@@ -154,9 +186,231 @@ test('prediction stays unanswered until completion for each size and resets for 
   }
   f.click('#nextBtn');
   assert.equal(f.query('#sceneTitle').textContent, 'Counting Word Patterns');
-  assert.equal(f.query('.placeholder').hidden, false);
+  assert.equal(f.query('.placeholder').hidden, true);
   f.click('#prevBtn');
   assert.equal(f.query('#ngramCompletion').hidden, true);
   assert.equal(f.query('#ngramDiscovery').textContent, '');
   assert.equal(f.query('#ngramPrediction').textContent, 'How many bigrams can you make from five words?');
+});
+
+test('passage clicks count immediately, compare patterns and reset cleanly', () => {
+  const f = fixture(); f.click('#nextBtn');
+  const clickWord = index => f.query('#countPassage').querySelectorAll('.count-word')[index].handlers.click();
+  assert.equal(f.query('#countEmpty').hidden, false);
+  assert.equal(f.query('#countComparison').hidden, false);
+  assert.equal(f.query('#countBars').children.length, 0);
+  const hits = () => f.query('#countPassage').children.filter(node => node.classList?.values.has('count-hit')).length;
+  assert.equal(f.query('#countResult').textContent, '');
+  assert.equal(f.query('#countPassage').children.map(node => node.textContent).join(''), corpus);
+  clickWord(0);
+  assert.equal(f.query('#countEmpty').hidden, true);
+  assert.match(f.query('#countResult').textContent, /Found 3 occurrences/);
+  assert.equal(hits(), 0);
+  assert.equal(f.query('#countComparison').hidden, false);
+  assert.equal(f.query('#countBars').children.length, 1);
+  assert.equal(f.query('#countBars').children[0].children[0].textContent, 'New Haven');
+  assert.equal(f.query('#countBars').children[0].children[2].textContent, 3);
+  clickWord(1);
+  assert.match(f.query('#countResult').textContent, /Found 1 occurrence/);
+  assert.equal(hits(), 0);
+  assert.equal(f.query('#countComparison').hidden, false);
+  assert.deepEqual(f.query('#countBars').children.map(row => row.children[2].textContent), [3, 1]);
+  clickWord(0);
+  assert.equal(f.query('#countBars').children.length, 2);
+  for (const [size, index, count, highlighted] of [[1, 2, 2, 2], [3, 0, 1, 3], [2, 0, 3, 6]]) {
+    f.click('#countSize' + size);
+    assert.equal(f.query('#countResult').textContent, '');
+    assert.equal(hits(), 0);
+    clickWord(index);
+    assert.match(f.query('#countResult').textContent, new RegExp('Found ' + count + ' occurrence'));
+    assert.equal(hits(), 0);
+  }
+  f.click('#countReset');
+  assert.equal(f.query('#countEmpty').hidden, false);
+  assert.equal(f.query('#countResult').textContent, '');
+  assert.equal(hits(), 0);
+  assert.equal(f.query('#countComparison').hidden, false);
+  assert.equal(f.query('#countBars').children.length, 0);
+  assert.equal(f.query('#countDiscovery').hidden, true);
+  assert.equal(f.query('#countSize2').attributes['aria-pressed'], 'true');
+});
+
+test('URL chapter and scene survive refresh and follow every navigation control', () => {
+  const f = fixture('https://example.test/ai100/llm_explorer.html?chapter=1&scene=2&embed=yes#lesson');
+  assert.equal(f.query('#sceneTitle').textContent, 'Counting Word Patterns');
+  assert.equal(fixture(f.url()).query('#sceneTitle').textContent, 'Counting Word Patterns');
+  f.click('#nextBtn');
+  assert.equal(new URL(f.url()).searchParams.get('scene'), '3');
+  f.click('#prevBtn');
+  assert.equal(new URL(f.url()).searchParams.get('scene'), '2');
+  f.chapter(2);
+  assert.equal(new URL(f.url()).searchParams.get('chapter'), '3');
+  assert.equal(new URL(f.url()).searchParams.get('scene'), '1');
+  f.key('ArrowLeft');
+  assert.equal(new URL(f.url()).searchParams.get('chapter'), '2');
+  assert.equal(new URL(f.url()).searchParams.get('scene'), '4');
+  f.click('#restartBtn');
+  assert.equal(new URL(f.url()).searchParams.get('chapter'), '1');
+  assert.equal(new URL(f.url()).searchParams.get('scene'), '1');
+  assert.equal(new URL(f.url()).searchParams.get('embed'), 'yes');
+  assert.equal(new URL(f.url()).hash, '#lesson');
+  for (const [index, item] of scenes.entries()) {
+    const direct = fixture(`https://example.test/?chapter=${item.chapterIndex + 1}&scene=${item.sceneIndex + 1}`);
+    assert.equal(direct.query('#sceneTitle').textContent, scenes[index].title);
+  }
+});
+
+test('missing or invalid URL numbers fall back to valid chapter and scene', () => {
+  for (const query of ['', '?chapter=0&scene=-1', '?chapter=garbage&scene=NaN', '?chapter=999&scene=999', '?chapter=1.5&scene=2.5']) {
+    assert.equal(fixture('https://example.test/' + query).query('#sceneTitle').textContent, scenes[0].title);
+  }
+  for (const query of ['?chapter=2', '?chapter=2&scene=5']) {
+    assert.equal(fixture('https://example.test/' + query).query('#sceneTitle').textContent, chapters[1].scenes[0].title);
+  }
+  assert.equal(fixture('https://example.test/?scene=2').query('#sceneTitle').textContent, 'Counting Word Patterns');
+});
+
+test('discovery challenges adapt to size and measured frequencies, including absent repeats', () => {
+  const { countingChallenge } = require('../assets/js/ai100/llm-explorer.js');
+  const words = wordSpans(corpus).map(word => word.normalized);
+  const maxima = [1, 2, 3].map(size => {
+    const counts = {};
+    for (let i = 0; i <= words.length - size; i++) {
+      const group = words.slice(i, i + size).join(' ');
+      counts[group] = (counts[group] || 0) + 1;
+    }
+    return Math.max(...Object.values(counts));
+  });
+  assert.deepEqual(maxima, [6, 3, 1]);
+  assert.match(countingChallenge(corpus, 1).prompt, /6 times/);
+  assert.match(countingChallenge(corpus, 2).hint, /3 times/);
+  assert.match(countingChallenge(corpus, 3).prompt, /None do.*discovery/);
+  assert.match(countingChallenge('a b c a b c', 3).hint, /2 times/);
+  assert.doesNotMatch(countingChallenge('a b c a b c', 3).prompt, /None do/);
+  assert.match(countingChallenge('a a a a', 1).prompt, /4 times/);
+  assert.match(countingChallenge('a b c', 2).prompt, /None do/);
+  assert.match(countingChallenge('a a a', 2).prompt, /most often/);
+  assert.match(countingChallenge('a', 3).prompt, /no trigrams/);
+  const f = fixture(); f.click('#nextBtn');
+  for (const size of [1, 3, 2]) {
+    f.click('#countSize' + size);
+    const expected = countingChallenge(corpus, size);
+    assert.equal(f.query('#countChallengeText').textContent, expected.prompt);
+    assert.equal(f.query('#countHintText').textContent, expected.hint);
+  }
+  f.click('#countSize3'); f.click('#countReset');
+  assert.equal(f.query('#countChallengeText').textContent, countingChallenge(corpus, 2).prompt);
+});
+
+test('challenge completion requires active-size evidence and controls discovery', () => {
+  const { challengeProgress } = require('../assets/js/ai100/llm-explorer.js');
+  assert.equal(challengeProgress(corpus, 2, []).complete, false);
+  assert.equal(challengeProgress(corpus, 2, ['Haven pizza', 'pizza is']).complete, false);
+  assert.equal(challengeProgress(corpus, 2, ['New Haven', 'NEW HAVEN']).complete, false);
+  assert.equal(challengeProgress(corpus, 2, ['New Haven', 'pizza is']).complete, true);
+  assert.equal(challengeProgress(corpus, 2, ['the', 'pizza is']).complete, false);
+  assert.equal(challengeProgress(corpus, 1, ['pizza']).complete, false);
+  assert.equal(challengeProgress(corpus, 1, ['the']).complete, true);
+  assert.equal(challengeProgress(corpus, 3, ['New Haven pizza', 'NEW HAVEN PIZZA']).complete, false);
+  assert.equal(challengeProgress(corpus, 3, ['New Haven pizza', 'Haven pizza is']).complete, true);
+  assert.equal(challengeProgress('a b c a b c', 3, ['a b c']).complete, true);
+  const f = fixture(); f.click('#nextBtn');
+  const pick = i => f.query('#countPassage').querySelectorAll('.count-word')[i].handlers.click();
+  const hidden = () => f.query('#countDiscovery').hidden;
+  assert.equal(hidden(), true);
+  pick(1); pick(2); assert.equal(hidden(), true);
+  pick(0); assert.equal(hidden(), false);
+  assert.equal(f.query('#countChallengeLabel').textContent, 'Challenge complete!');
+  assert.equal(f.query('#countChallengeText').textContent, "You've found a repeating word pattern and one that occurs only once.");
+  f.click('#countSize3'); assert.equal(hidden(), true);
+  assert.equal(f.query('#countBars').children.length, 0);
+  pick(0); pick(0); assert.equal(hidden(), true);
+  pick(1); assert.equal(hidden(), false);
+  f.click('#countSize2'); assert.equal(hidden(), true);
+  pick(0); assert.equal(hidden(), true);
+  pick(1); assert.equal(hidden(), false);
+  f.click('#countReset'); assert.equal(hidden(), true);
+  assert.equal(f.query('#countChallengeLabel').textContent, 'Try it:');
+  assert.equal(f.query('#countBars').children.length, 0);
+  f.click('#nextBtn'); assert.equal(f.query('#sceneTitle').textContent, 'Conditional Probability');
+});
+
+test('colored comparison previews and Show all clear without changing exploration', () => {
+  const f = fixture(); f.click('#nextBtn');
+  const words = () => f.query('#countPassage').querySelectorAll('.count-word');
+  words()[0].handlers.click(); words()[1].handlers.click();
+  const rows = f.query('#countBars').children;
+  const badge = row => row.children[0].children[0];
+  assert.notEqual(badge(rows[0]).style.color, badge(rows[1]).style.color);
+  rows[0].handlers.pointerenter();
+  assert.ok(words()[0].style.background.includes(badge(rows[0]).style.background));
+  rows[0].handlers.pointerleave(); assert.equal(words()[0].style.background, '');
+  f.query('#countShowAll').handlers.change({ target: { checked: true } });
+  assert.ok(words()[1].style.background.includes(badge(rows[0]).style.background));
+  assert.ok(words()[1].style.background.includes(badge(rows[1]).style.background));
+  assert.equal(f.query('#countBars').children.length, 2);
+  f.click('#countSize1');
+  assert.equal(f.query('#countShowAll').checked, false);
+  assert.equal(f.query('#countBars').children.length, 0);
+  assert.equal(f.query('#countEmpty').hidden, false);
+  f.query('#countShowAll').handlers.change({ target: { checked: false } });
+  assert.ok(words().every(word => word.style.background === ''));
+  f.query('#countShowAll').handlers.change({ target: { checked: true } });
+  f.click('#countReset');
+  assert.equal(f.query('#countShowAll').checked, false);
+  assert.ok(words().every(word => word.style.background === ''));
+  assert.equal(f.query('#countBars').children.length, 0);
+});
+
+test('comparison sorts highest counts first and preserves selection order for ties', () => {
+  const f = fixture(); f.click('#nextBtn');
+  const pick = i => f.query('#countPassage').querySelectorAll('.count-word')[i].handlers.click();
+  pick(1); pick(2); pick(0);
+  const entries = () => f.query('#countBars').children.map(row => [row.children[0].textContent, row.children[2].textContent]);
+  assert.deepEqual(entries(), [['New Haven', 3], ['Haven pizza', 1], ['pizza is', 1]]);
+  f.click('#countSize1');
+  pick(wordSpans(corpus).findIndex(word => word.normalized === 'the'));
+  assert.deepEqual(entries(), [['the', 6]]);
+});
+
+test('Expandable corpus comparison ranks the complete corpus without completing manual challenges', () => {
+  const { corpusFrequencies } = require('../assets/js/ai100/llm-explorer.js');
+  assert.deepEqual(corpusFrequencies('b a b a c', 1).map(e => [e.pattern, e.count]), [['b', 2], ['a', 2], ['c', 1]]);
+  for (const size of [1, 2, 3]) {
+    const all = corpusFrequencies(corpus, size);
+    assert.equal(new Set(all.map(e => e.pattern)).size, all.length);
+    assert.equal(all.reduce((sum, e) => sum + e.count, 0), wordSpans(corpus).length - size + 1);
+    all.forEach((entry, index) => {
+      assert.equal(entry.count, findPattern(corpus, entry.pattern, size).length);
+      if (index) assert.ok(all[index - 1].count >= entry.count);
+    });
+  }
+  const f = fixture(); f.click('#nextBtn');
+  assert.equal(Boolean(f.query('#countCorpusComparison').open), false);
+  f.query('#countCorpusComparison').open = !f.query('#countCorpusComparison').open; f.query('#countCorpusComparison').handlers.toggle();
+  assert.equal(f.query('#countCorpusComparison').open, true);
+  for (const size of [2, 1, 3]) {
+    f.click('#countSize' + size);
+    const expected = corpusFrequencies(corpus, size);
+    const rows = f.query('#countCorpusBars').children;
+    assert.equal(rows.length, 10);
+    rows.forEach((row, index) => {
+      assert.equal(row.children[0].textContent, expected[index].pattern);
+      assert.equal(row.children[2].textContent, expected[index].count);
+      assert.equal(row.children[1].children[0].style.width, `${expected[index].count / expected[0].count * 100}%`);
+    });
+    assert.equal(f.query('#countFullList').children.length, expected.length);
+    assert.equal(f.query('#countBars').children.length, 0);
+    assert.equal(f.query('#countDiscovery').hidden, true);
+  }
+  assert.match(f.query('#countCorpusSummary').textContent, /Every pattern occurs once/);
+  f.query('#countPassage').querySelectorAll('.count-word')[0].handlers.click();
+  f.query('#countCorpusComparison').open = !f.query('#countCorpusComparison').open; f.query('#countCorpusComparison').handlers.toggle();
+  assert.equal(f.query('#countCorpusComparison').open, false);
+  assert.equal(f.query('#countBars').children.length, 1);
+  f.query('#countCorpusComparison').open = !f.query('#countCorpusComparison').open; f.query('#countCorpusComparison').handlers.toggle(); f.click('#countReset');
+  assert.equal(f.query('#countCorpusComparison').open, false);
+  const html = fs.readFileSync('ai100/llm_explorer.html', 'utf8');
+  assert.ok(html.indexOf('id="countDiscovery"') < html.indexOf('id="countCorpusComparison"'));
+  assert.doesNotMatch(html, /id="countCompareAll"/);
 });
