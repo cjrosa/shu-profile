@@ -63,6 +63,10 @@
 #tokensStatus:empty{min-height:0;margin:0}
 #tokensResults:not([hidden]){animation:sceneIn .22s ease}
 .tokens-demo{container-type:inline-size}
+.tokens-demo #tokensToggle{display:flex;align-items:center;justify-content:center;gap:5px;margin-left:auto;padding:4px 7px;font-size:11px;line-height:1.3;white-space:nowrap;font-weight:600;color:var(--green-dark);border-color:var(--line);border-radius:6px}
+#tokensToggle svg{width:18px;height:18px;flex-shrink:0;color:var(--green)}
+.tokens-token-row{position:relative}
+.tokens-obscured .tokens-tiles,.tokens-obscured #tokensTokenCount{filter:blur(5px);opacity:.2;user-select:none}
 @container(min-width:760px){
   #tokensResults{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px;row-gap:0}
   #tokensResults>.tokens-row{min-width:0;margin:0;display:grid;grid-template-rows:subgrid;grid-row:1 / span 3;row-gap:0}

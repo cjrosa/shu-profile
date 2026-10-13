@@ -3,6 +3,18 @@
   const $ = id => document.getElementById(id), engine = window.llmTokenEngine;
   let tokenizer, loading, result;
   const explored = new Set();
+  function setTokensVisible(visible) {
+    $('tokensModelCard').classList.toggle('tokens-obscured', !visible);
+    for (const id of ['tokensPieces','tokensTokenCount']) {
+      $(id).inert = !visible;
+      $(id).setAttribute('aria-hidden', String(!visible));
+    }
+    $('tokensToggle').setAttribute('aria-expanded', String(visible));
+    $('tokensToggleLabel').textContent = visible ? 'Hide tokens' : 'Show tokens';
+    if (visible && result) explored.add(result.text);
+    $('tokensDiscovery').hidden = !visible || !result || result.tokens.length <= result.words.length;
+    $('tokensCompletion').hidden = !visible || explored.size < 3;
+  }
   function element(tag, text, className) {
     const node = document.createElement(tag); node.textContent = text;
     if (className) node.className = className;
@@ -30,6 +42,7 @@
     $('tokensSpan').scrollTop = input.scrollTop;
   }
   function clear() {
+    setTokensVisible(false);
     result = null; $('tokensResults').hidden = true;
     $('tokensDiscovery').hidden = true; $('tokensCompletion').hidden = true;
     $('tokensWords').replaceChildren(); $('tokensPieces').replaceChildren();
@@ -80,8 +93,6 @@
 
       $('tokensResults').hidden = false;
       $('tokensStatus').textContent = '';
-      $('tokensDiscovery').hidden = !(result.tokens.length > result.words.length);
-      explored.add(result.text); $('tokensCompletion').hidden = explored.size < 3;
     } catch (error) { result = null; $('tokensStatus').textContent = error.message; }
   }
   engine.presets.forEach(text => { const option = element('option',text); option.value = text; $('tokensPreset').append(option); });
@@ -95,6 +106,7 @@
   }
   function reset() { explored.clear(); $('tokensInput').value = engine.initial; $('tokensPreset').value = engine.initial; updateComparison(); }
   $('tokensReset').addEventListener('click',reset);
+  $('tokensToggle').addEventListener('click',()=>setTokensVisible($('tokensToggle').getAttribute('aria-expanded') !== 'true'));
   $('tokensRetry').addEventListener('click',()=>{ $('tokensRetry').hidden = true; initialize(); });
   reset();
   if (!$('tokensDemo').hidden) initialize();

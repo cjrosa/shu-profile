@@ -21,6 +21,11 @@ test('automatic comparison, overlap, changes, discovery, reset and empty input',
   assert.equal(get('tokensReveal'),null);
   assert.equal(get('tokensPrediction'),null);
   assert.equal(get('tokensWordCount').textContent,'6');assert.equal(get('tokensPieces').children.length,8);
+  assert.equal(get('tokensPieces').getAttribute('aria-hidden'),'true');
+  assert.equal(get('tokensDiscovery').hidden,true);
+  get('tokensToggle').click();
+  assert.equal(get('tokensPieces').inert,false);
+  assert.equal(get('tokensToggle').getAttribute('aria-expanded'),'true');
   get('tokensWords').children[1].click();
   assert.equal(get('tokensPieces').querySelectorAll('.related').length,2);
   assert.equal(get('tokensPieces').querySelectorAll('[aria-pressed="true"]').length,2);
@@ -28,9 +33,9 @@ test('automatic comparison, overlap, changes, discovery, reset and empty input',
   assert.equal(get('tokensWords').querySelectorAll('[aria-pressed="true"]').length,1);
   assert.equal(get('tokensWords').children[1].getAttribute('aria-pressed'),'true');
   assert.equal(get('tokensSpan').textContent,get('tokensInput').value);
-  f.input('dog');assert.equal(get('tokensResults').hidden,false);assert.equal(get('tokensPieces').children.length,1);
+  f.input('dog');assert.equal(get('tokensPieces').inert,true);get('tokensToggle').click();assert.equal(get('tokensResults').hidden,false);assert.equal(get('tokensPieces').children.length,1);
   assert.equal(get('tokensDiscovery').hidden,true);
-  f.input('🙂');get('tokensPieces').children[0].click();
+  f.input('🙂');get('tokensToggle').click();get('tokensPieces').children[0].click();
   assert.match(get('tokensPieces').textContent,/bytes/);assert.ok(get('tokensSpan').querySelector('.tokens-partial'));
   assert.equal(get('tokensCompletion').hidden,false);
   get('tokensReset').click();assert.equal(get('tokensInput').value,'the mozzarella melts into pure bliss.');assert.equal(get('tokensCompletion').hidden,true);assert.equal(get('tokensResults').hidden,false);
@@ -43,6 +48,8 @@ test('preset repetition, native keyboard controls and navigation isolation',asyn
   for(const option of [...get('tokensPreset').options].filter(o=>o.value)) {
     get('tokensPreset').value=option.value;get('tokensPreset').dispatchEvent(new w.Event('change'));
     assert.equal(get('tokensResults').hidden,false);
+    assert.equal(get('tokensPieces').getAttribute('aria-hidden'),'true');
+    get('tokensToggle').click();
     assert.equal(Number(get('tokensTokenCount').textContent),get('tokensPieces').children.length);
     assert.equal(get('tokensSpan').textContent,option.value);
   }
