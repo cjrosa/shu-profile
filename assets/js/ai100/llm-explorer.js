@@ -4,37 +4,37 @@
   const scene = (id, title, description, placeholder) => ({ id, title, description, placeholder });
   const chapters = [
     { id: 'predict', title: 'Predict', question: 'How can computers predict and generate language?', scenes: [
-      scene('n-grams', 'What Is an N-Gram?', 'Explore how consecutive words form overlapping groups', 'A sentence will be grouped into overlapping sequences of consecutive words to show how n-grams are formed.'),
-      scene('counting', 'Counting Word Patterns', 'Discovering repeated sequences in training text.', 'Repeated word sequences will be highlighted in a short training text and paired with their observed counts.'),
-      scene('conditional-probability', 'Conditional Probability', 'Using observed patterns to predict the next word.', 'Observed word patterns will connect a preceding context to possible next words and their relative frequencies.'),
-      scene('generating-language', 'Generating Language', 'Building sentences through repeated predictions.', 'A sentence will grow one word at a time as each prediction supplies the context for the next step.'),
-      scene('n-gram-limits', 'The Limits of N-Grams', 'Unseen sequences and limited context.', 'Contrasting examples will reveal what happens when a word sequence is unseen or important context falls outside the n-gram.')
+      scene('n-grams', 'What Is an N-Gram?', 'Group neighboring words into n-grams and see how the groups overlap as you move through a sentence.', 'A sentence will be grouped into overlapping sequences of consecutive words to show how n-grams are formed.'),
+      scene('counting', 'Counting Word Patterns', 'Find repeated word groups in a passage and compare their counts to discover common patterns.', 'Repeated word sequences will be highlighted in a short training text and paired with their observed counts.'),
+      scene('conditional-probability', 'Conditional Probability', 'Use the words before a blank to compare possible next words and calculate their probabilities from the passage.', 'Observed word patterns will connect a preceding context to possible next words and their relative frequencies.'),
+      scene('generating-language', 'Generating Language', 'Build text one word at a time and compare how different choices change the words that follow.', 'A sentence will grow one word at a time as each prediction supplies the context for the next step.'),
+      scene('n-gram-limits', 'The Limits of N-Grams', 'Explore what happens when a word pattern is missing, context is too short, or generated text lacks meaning.', 'Contrasting examples will reveal what happens when a word sequence is unseen or important context falls outside the n-gram.')
     ] },
     { id: 'tokenize', title: 'Tokenize', question: 'How does an LLM represent language?', scenes: [
-      scene('words-tokens', 'Words vs. Tokens', 'Why tokens are not necessarily complete words.', 'The same text will be shown as words and as tokens, making differences in boundaries visible.'),
-      scene('subwords', 'Subword Tokenization', 'Reusable pieces of language.', 'Related words will be separated into reusable pieces to illustrate how subword tokens represent language.'),
-      scene('tokenizer', 'Inside a Tokenizer', 'Token boundaries, token IDs, and vocabulary.', 'A text example will connect token boundaries to vocabulary entries and their token IDs.'),
-      scene('context-windows', 'Context Windows', 'How many tokens a model can consider.', 'A bounded token window will show which parts of a longer passage fit within the available context.')
+      scene('words-tokens', 'Words vs. Tokens', 'Compare words with real tokenizer output and see how spaces, punctuation, and word pieces affect the split.', 'The same text will be shown as words and as tokens, making differences in boundaries visible.'),
+      scene('subwords', 'Subword Tokenization', 'Explore how smaller, reusable word pieces help a model represent many different words.', 'Related words will be separated into reusable pieces to illustrate how subword tokens represent language.'),
+      scene('tokenizer', 'Inside a Tokenizer', 'Connect text pieces to entries in a tokenizer vocabulary and the numerical IDs used to represent them.', 'A text example will connect token boundaries to vocabulary entries and their token IDs.'),
+      scene('context-windows', 'Context Windows', 'Explore how a token limit determines how much text a model can consider at one time.', 'A bounded token window will show which parts of a longer passage fit within the available context.')
     ] },
     { id: 'context', title: 'Context', question: 'Why does language prediction require context?', scenes: [
-      scene('context-matters', 'Why Context Matters', 'Relationships between distant words.', 'Connections between distant words will show how earlier information can change the meaning of a later word.'),
-      scene('rnn-approach', 'The RNN Approach', 'Sequential processing and hidden-state memory.', 'A sequence of RNN steps will show information passing forward through a hidden state.'),
-      scene('long-distance', 'The Long-Distance Challenge', 'Why retaining distant information can be difficult.', 'A longer sequence will trace how information from an earlier word must travel through successive processing steps.'),
-      scene('transformer', 'Enter the Transformer', 'A different approach to incorporating context.', 'A comparison of sequential processing and token-to-token connections will introduce the transformer approach to context.')
+      scene('context-matters', 'Why Context Matters', 'See how surrounding words and earlier information help resolve meaning and guide predictions.', 'Connections between distant words will show how earlier information can change the meaning of a later word.'),
+      scene('rnn-approach', 'The RNN Approach', 'Follow how a recurrent neural network reads text in order and passes information from one step to the next.', 'A sequence of RNN steps will show information passing forward through a hidden state.'),
+      scene('long-distance', 'The Long-Distance Challenge', 'Explore why information from earlier words can become harder to retain as a sequence grows.', 'A longer sequence will trace how information from an earlier word must travel through successive processing steps.'),
+      scene('transformer', 'Enter the Transformer', 'Discover how transformers connect information across a sequence to build context for each token.', 'A comparison of sequential processing and token-to-token connections will introduce the transformer approach to context.')
     ] },
     { id: 'attend', title: 'Attend', question: 'How do transformers incorporate information across tokens?', scenes: [
-      scene('self-attention', 'Introducing Self-Attention', 'Which other tokens are relevant?', 'Connections from one token to other tokens will illustrate which contextual information may be relevant.'),
-      scene('qkv', 'Queries, Keys, and Values', 'How attention relationships are calculated.', 'A token diagram will distinguish queries, keys, and values and show their roles in forming attention relationships.'),
-      scene('attention-weights', 'Attention Weights', 'Combining information from other tokens.', 'Attention weights will be paired with token information to illustrate a weighted combination.'),
-      scene('feed-forward', 'Feed-Forward Networks', 'Transforming contextual representations.', 'A contextual token representation will pass through a feed-forward block to show the next transformation.'),
-      scene('layers', 'Transformer Layers', 'Repeating attention and feed-forward processing.', 'Stacked layer blocks will trace repeated attention and feed-forward processing through a transformer.')
+      scene('self-attention', 'Introducing Self-Attention', 'Explore how each token draws on other tokens to build a representation of its meaning in context.', 'Connections from one token to other tokens will illustrate which contextual information may be relevant.'),
+      scene('qkv', 'Queries, Keys, and Values', 'See how queries, keys, and values work together to find and combine relevant information from other tokens.', 'A token diagram will distinguish queries, keys, and values and show their roles in forming attention relationships.'),
+      scene('attention-weights', 'Attention Weights', 'Compare attention weights and see how they control the information combined from different tokens.', 'Attention weights will be paired with token information to illustrate a weighted combination.'),
+      scene('feed-forward', 'Feed-Forward Networks', 'Explore how a network transforms each token representation after attention has added information from context.', 'A contextual token representation will pass through a feed-forward block to show the next transformation.'),
+      scene('layers', 'Transformer Layers', 'Follow how repeated attention and processing steps refine token representations through a transformer.', 'Stacked layer blocks will trace repeated attention and feed-forward processing through a transformer.')
     ] },
     { id: 'generate', title: 'Generate', question: 'How does an LLM produce text?', scenes: [
-      scene('inside-llm', 'Inside an LLM', 'Tokens, transformer processing, and prediction.', 'An overview will connect input tokens, transformer layers, and the next-token prediction stage.'),
-      scene('next-token', 'Predicting the Next Token', 'Candidate tokens and probabilities.', 'Candidate next tokens will appear alongside their predicted probabilities for a shared context.'),
-      scene('sampling', 'Temperature and Sampling', 'Why outputs can vary.', 'Contrasting probability distributions and sampling outcomes will show how temperature can affect variation.'),
-      scene('response', 'Generating a Response', 'Repeated token prediction.', 'A response will be traced through repeated prediction steps, with each selected token added to the context.'),
-      scene('correctness', "Fluent Doesn't Mean Correct", 'The limits of language generation.', 'A fluent response will be paired with evidence checks to distinguish plausible language from factual correctness.')
+      scene('inside-llm', 'Inside an LLM', 'Connect tokenization, transformer layers, and prediction to see how text moves through a language model.', 'An overview will connect input tokens, transformer layers, and the next-token prediction stage.'),
+      scene('next-token', 'Predicting the Next Token', 'Compare possible next tokens and the probabilities a model assigns based on the available context.', 'Candidate next tokens will appear alongside their predicted probabilities for a shared context.'),
+      scene('sampling', 'Temperature and Sampling', 'Explore how temperature and sampling affect which token is chosen and why responses can vary.', 'Contrasting probability distributions and sampling outcomes will show how temperature can affect variation.'),
+      scene('response', 'Generating a Response', 'Follow a response as it grows, with each new token becoming part of the context for the next prediction.', 'A response will be traced through repeated prediction steps, with each selected token added to the context.'),
+      scene('correctness', "Fluent Doesn't Mean Correct", 'Examine why convincing language can contain mistakes and why factual claims still need to be checked.', 'A fluent response will be paired with evidence checks to distinguish plausible language from factual correctness.')
     ] }
   ];
   const scenes = chapters.flatMap((chapter, chapterIndex) => chapter.scenes.map((item, sceneIndex) => ({ ...item, chapterIndex, sceneIndex })));
@@ -414,6 +414,9 @@
     const isProbability = item.id === 'conditional-probability';
     const isGeneration = item.id === 'generating-language';
     const isLimits = item.id === 'n-gram-limits';
+    const isTokens = item.id === 'words-tokens';
+    $('#tokensDemo').hidden = !isTokens;
+    if (isTokens && window.openTokenScene) window.openTokenScene();
     $('#limitsDemo').hidden = !isLimits;
     if (!isLimits && window.cancelLimitsGeneration) window.cancelLimitsGeneration();
     $('.gen-demo').hidden = !isGeneration;
@@ -421,8 +424,8 @@
     if (!isProbability && window.cancelProbabilityReveal) window.cancelProbabilityReveal();
     $('.prob-demo').hidden = !isProbability;
     if (isProbability && window.drawProbability) window.drawProbability();
-    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits;
-    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits;
+    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens;
+    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens;
     $('.count-demo').hidden = !isCounting;
     if (isCounting) drawCounting();
     $('.ngram-demo').hidden = !isNgram;
@@ -466,7 +469,7 @@
   $('#restartBtn').addEventListener('click', () => { activeScene = 0; render(); });
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape') hideTooltip();
-    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || isEditable(event.target) || event.target.closest('.ngram-demo, .count-demo, .prob-demo, .gen-demo')) return;
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || isEditable(event.target) || event.target.closest('.ngram-demo, .count-demo, .prob-demo, .gen-demo, .tokens-demo')) return;
     if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { event.preventDefault(); move(event.key === 'ArrowRight' ? 1 : -1); }
   });
   window.llmProbability = { corpus, wordSpans, findPattern, corpusFrequencies, continuationCounts };

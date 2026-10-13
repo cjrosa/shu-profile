@@ -165,6 +165,8 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 <link rel="stylesheet" href="../assets/css/pages/llm-generation.css">
 <link rel="stylesheet" href="../assets/css/pages/llm-icons.css">
 <link rel="stylesheet" href="../assets/css/pages/llm-limits.css">
+<link rel="stylesheet" href="../assets/css/pages/llm-tokens.css">
+<link rel="stylesheet" href="../assets/css/pages/llm-messages.css">
 </head>
 <body>
 <main class="shell">
@@ -252,6 +254,35 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 <div class="gen-message gen-discovery" id="limitsDiscovery" hidden><div><p id="limitsTakeaway"></p></div></div>
 <details><summary>What we've discovered ? Next: Tokens</summary><div class="limits-body"><ul><li>N-grams predict subsequent words using observed frequencies.</li><li>Repeated predictions can generate text.</li><li>More context makes exact sequence matching harder in limited data.</li><li>Unseen contexts and distant relationships remain challenging.</li><li>Statistical word prediction alone does not guarantee meaningful language.</li></ul><p><strong>Next: Tokens.</strong> Modern language models process tokens, which are not necessarily complete words. How can reusable pieces help represent an enormous vocabulary?</p><p>Tokenization alone does not resolve limited context. Modern models still face challenges with context, unfamiliar inputs, and meaning.</p></div></details>
 </div>
+<div class="tokens-demo" id="tokensDemo" hidden>
+<section class="tokens-input-card" aria-labelledby="tokensInputTitle">
+<header class="tokens-input-header"><h3 id="tokensInputTitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 3h9l4 4v14H6Z"/><path d="M14 3v5h5M9 12h7M9 16h7"/></svg>Original text</h3>
+<div class="tokens-toolbar"><label for="tokensPreset">Try an example</label><select id="tokensPreset"></select><button id="tokensReset" type="button">Reset</button></div>
+</header>
+<div class="tokens-input-body">
+<label for="tokensInput"><strong>Is a token the same thing as a word?</strong> Edit the text to explore.</label>
+<div class="tokens-input-wrap"><div class="tokens-input-highlight" id="tokensSpan" aria-hidden="true"></div><textarea id="tokensInput" maxlength="600" rows="2" spellcheck="false" aria-describedby="tokensLimit"></textarea></div>
+</div>
+<footer class="tokens-input-footer">
+<p class="tokens-note" id="tokensLimit">Up to 600 characters. Spaces, line breaks, and punctuation are preserved.</p>
+</footer>
+</section>
+<button id="tokensRetry" type="button" hidden>Retry</button>
+<p id="tokensStatus" role="status"></p>
+<div id="tokensResults" hidden>
+<section class="tokens-row" aria-labelledby="tokensWordsTitle"><header class="tokens-comparison-header"><h3 id="tokensWordsTitle"><svg class="tokens-words-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 10h10M7 14h6"/></svg>Words</h3><strong id="tokensWordCount"></strong></header><div class="tokens-tiles" id="tokensWords"></div><footer class="tokens-comparison-footer" aria-label="About word counting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01"/></svg><p>Here, we count whitespace-separated chunks as words, including punctuation and symbols.</p></footer></section>
+<section class="tokens-row tokens-token-row" aria-labelledby="tokensTokensTitle"><header class="tokens-comparison-header"><h3 id="tokensTokensTitle"><svg class="tokens-pieces-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="7" width="6" height="10" rx="2"/><rect x="10" y="7" width="5" height="10" rx="2"/><rect x="17" y="7" width="5" height="10" rx="2"/></svg>Tokens</h3><strong id="tokensTokenCount"></strong></header><div class="tokens-tiles" id="tokensPieces"></div><footer class="tokens-comparison-footer" aria-label="About token boundaries"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01"/></svg><p>Each tile is one token. Markers show spaces (·), line breaks (↵), tabs (⇥), and carriage returns (␍). “bytes” indicates part of a character.</p></footer></section>
+</div>
+<p class="tokens-feedback" id="tokensDiscovery" hidden><svg class="tokens-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12 3 3 6-6"/></svg><strong>Discovery:</strong> A token isn't necessarily a word. Language models divide text into pieces based on their tokenizer's vocabulary.</p>
+<div class="tokens-feedback" id="tokensCompletion" hidden><p><svg class="tokens-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12 3 3 6-6"/></svg><strong>Discovery:</strong> Words and tokens are not always the same. A tokenizer can represent text using pieces that are smaller than words, complete words, or combinations that include spaces and punctuation.</p><p><svg class="tokens-feedback-icon tokens-next-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 12h16m-6-6 6 6-6 6"/></svg><strong>Next:</strong> Why would a language model break words into smaller, reusable pieces instead of treating every word as a separate unit?</p></div>
+<details class="tokens-about gen-about"><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 3h9l4 4v14H6Z"/><path d="M14 3v5h5M9 12h7M9 16h7"/></svg>About the tokenizer</summary>
+<p><strong>One real tokenizer.</strong> Language models process sequences of tokens. This scene uses <code>cl100k_base</code> through js-tiktoken, a JavaScript version of OpenAI’s tiktoken library. Other tokenizers can split the same text differently.</p>
+<p><strong>Exact text matters.</strong> Spaces, punctuation, capitalization, and line breaks can affect the split. The tiles preserve your input, and the word count is a simple whitespace-based comparison.</p>
+<p><strong>Unicode and emoji.</strong> A token can contain only part of a character’s bytes. These tiles show “bytes”; striped highlights indicate a partially covered character.</p>
+<p><strong>Runs in your browser.</strong> The tokenizer and vocabulary are bundled with this site. Your text is processed locally without sending it to a language-model API.</p>
+<p><strong>Learn more:</strong> <a href="https://github.com/openai/tiktoken" target="_blank" rel="noopener noreferrer">OpenAI tiktoken</a> · <a href="https://github.com/dqbd/tiktoken/tree/main/js" target="_blank" rel="noopener noreferrer">js-tiktoken documentation</a> <span>(links open in a new tab)</span></p>
+</details>
+</div>
   </div></div>
  </section>
  <div class="controls"><div class="control-group"><button id="prevBtn" type="button">&larr; Previous</button><button id="nextBtn" class="primary" type="button">Next &rarr;</button></div><div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="1" aria-valuemax="23" aria-valuenow="1"><div class="progress-fill" id="progressFill"></div></div><div class="control-group"><button id="restartBtn" type="button">Restart</button></div></div>
@@ -262,5 +293,7 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 <script src="../assets/js/ai100/llm-probability.js"></script>
 <script src="../assets/js/ai100/llm-generation.js"></script>
 <script src="../assets/js/ai100/llm-limits.js"></script>
+<script src="../assets/js/ai100/llm-token-engine.js"></script>
+<script src="../assets/js/ai100/llm-tokens.js"></script>
 </body>
 </html>

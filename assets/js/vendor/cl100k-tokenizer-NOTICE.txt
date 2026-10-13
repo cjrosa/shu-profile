@@ -1,0 +1,21 @@
+Locally bundled tokenizer for AI-100 LLM Explorer
+
+js-tiktoken 1.0.21: https://github.com/dqbd/tiktoken/tree/main/js
+Vocabulary: cl100k_base, bundled from js-tiktoken/ranks/cl100k_base.
+Includes base64-js (MIT). License texts are in this directory.
+The ~1 MB bundle is loaded only when Chapter 2 Scene 1 is opened.
+There are no runtime API or CDN requests for tokenization.
+
+Rebuild from the repository root:
+  npm ci --prefix tools/llm-tokenizer
+  node tools/llm-tokenizer/build.cjs
+
+Validate:
+  node tools/llm-tokenizer/verify.cjs
+  node --test tests/llm-tokens.test.cjs tests/llm-tokens-ui.test.cjs
+
+The adapter deliberately uses the pinned js-tiktoken textMap byte entries:
+decoding each token as a string would lose partial Unicode byte sequences.
+The scene shows these entries as hexadecimal bytes, not replacement characters.
+Special-token spellings typed by students are treated as ordinary text.
+Word comparison uses whitespace-separated chunks, explicitly labeled in the UI.

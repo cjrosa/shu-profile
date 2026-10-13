@@ -1,0 +1,35 @@
+/* Compact explanatory messages shared by all implemented Explorer scenes. */
+#sceneContent :is(.ngram-predict,.ngram-completion,.count-challenge,.count-discovery,.prob-explanation,.gen-message:not(details),.tokens-feedback){
+  padding:8px 12px;
+  margin-top:10px;
+  margin-bottom:10px;
+  font-size:13px;
+  line-height:1.5;
+  border-radius:9px;
+  gap:8px;
+}
+#sceneContent :is(.ngram-completion,.count-discovery,.gen-message:not(details),.tokens-feedback)>p,
+#sceneContent .gen-discovery p{margin:0;font-size:inherit;line-height:inherit}
+#sceneContent :is(.ngram-completion,.count-discovery,.gen-discovery,.tokens-feedback) p+p{margin-top:6px}
+#sceneContent :is(.ngram-predict,.ngram-completion,.count-challenge,.count-discovery,.prob-explanation,.gen-message:not(details),.tokens-feedback) svg{
+  width:16px;
+  height:16px;
+  flex-shrink:0;
+}
+#sceneContent :is(.ngram-predict,.ngram-completion-title,.count-challenge)>svg{flex-basis:16px}
+
+/* Keep wrapped discovery/transition text aligned after its icon. */
+#sceneContent :is(.count-discovery,.gen-discovery,.tokens-feedback)>p:has(>svg:first-child),
+#sceneContent .gen-discovery>div>p:has(>svg:first-child){
+  position:relative;
+  padding-left:24px;
+}
+#sceneContent :is(.count-discovery,.gen-discovery,.tokens-feedback)>p>svg:first-child,
+#sceneContent .gen-discovery>div>p>svg:first-child{
+  position:absolute;
+  left:0;
+  top:2px;
+  margin:0;
+}
+#sceneContent p.tokens-feedback:has(>svg:first-child){position:relative;padding-left:36px}
+#sceneContent p.tokens-feedback>svg:first-child{position:absolute;left:12px;top:10px;margin:0}

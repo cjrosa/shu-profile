@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@dqbd/tiktoken": "^1.0.22",
+    "esbuild": "^0.25.12",
+    "js-tiktoken": "^1.0.21",
+    "jsdom": "^26.1.0"
+  }
+}
