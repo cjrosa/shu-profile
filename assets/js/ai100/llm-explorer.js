@@ -412,11 +412,14 @@
     const isNgram = item.id === 'n-grams';
     const isCounting = item.id === 'counting';
     const isProbability = item.id === 'conditional-probability';
+    const isGeneration = item.id === 'generating-language';
+    $('.gen-demo').hidden = !isGeneration;
+    if (!isGeneration && window.cancelGeneration) window.cancelGeneration();
     if (!isProbability && window.cancelProbabilityReveal) window.cancelProbabilityReveal();
     $('.prob-demo').hidden = !isProbability;
     if (isProbability && window.drawProbability) window.drawProbability();
-    $('.placeholder').hidden = isNgram || isCounting || isProbability;
-    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability;
+    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration;
+    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration;
     $('.count-demo').hidden = !isCounting;
     if (isCounting) drawCounting();
     $('.ngram-demo').hidden = !isNgram;
@@ -459,7 +462,7 @@
   $('#nextBtn').addEventListener('click', () => move(1));
   $('#restartBtn').addEventListener('click', () => { activeScene = 0; render(); });
   document.addEventListener('keydown', event => {
-    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || isEditable(event.target) || event.target.closest('.ngram-demo, .count-demo, .prob-demo')) return;
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || isEditable(event.target) || event.target.closest('.ngram-demo, .count-demo, .prob-demo, .gen-demo')) return;
     if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { event.preventDefault(); move(event.key === 'ArrowRight' ? 1 : -1); }
   });
   window.llmProbability = { corpus, wordSpans, findPattern, corpusFrequencies, continuationCounts };

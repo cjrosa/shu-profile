@@ -50,9 +50,25 @@ function fixture(href = 'https://example.test/ai100/llm_explorer.html', animatio
   const window = { location: new URL(href), history: { state: null, replaceState(state, title, url) { window.location = new URL(url); } } };
   vm.runInNewContext(fs.readFileSync('assets/js/ai100/llm-explorer.js', 'utf8'), { document, window, URL, URLSearchParams });
   vm.runInNewContext(fs.readFileSync('assets/js/ai100/llm-probability.js', 'utf8'), { document, window });
+  const generationJobs = new Map(); let jobId = 0;
+  vm.runInNewContext(fs.readFileSync('assets/js/ai100/llm-generation.js', 'utf8'), { document, window,
+    setTimeout(fn) { generationJobs.set(++jobId, fn); return jobId; }, clearTimeout(id) { generationJobs.delete(id); } });
   return { query, body: document.body, url: () => window.location.href, click: selector => query(selector).handlers.click(), chapter: index => query('.chapter-bar').children[index].handlers.click(),
+    generationJobs,
     key: (key, target = { closest: () => null }, extra = {}) => { let prevented = false; events.keydown({ key, target, preventDefault() { prevented = true; }, ...extra }); return prevented; } };
 }
+test('Scene 4 navigation cancels generation and preserves manual pacing on return', () => {
+  const f = fixture('https://example.test/ai100/llm_explorer.html?chapter=1&scene=4');
+  assert.equal(f.query('.gen-demo').hidden, false);
+  assert.equal(f.query('.placeholder').hidden, true);
+  f.click('#genAuto'); assert.equal(f.generationJobs.size, 1);
+  const stale = [...f.generationJobs.values()][0];
+  f.click('#nextBtn'); assert.equal(f.generationJobs.size, 0); stale();
+  assert.equal(f.query('.gen-demo').hidden, true);
+  assert.equal(f.query('#genCount').textContent, '0 / 40 added words');
+  f.click('#prevBtn'); assert.equal(f.generationJobs.size, 0);
+  assert.equal(f.query('.gen-demo').hidden, false);
+});
 test('all requested chapters and 23 unique scene records are complete', () => {
   assert.deepEqual(chapters.map(c => c.title), ['Predict', 'Tokenize', 'Context', 'Attend', 'Generate']);
   assert.deepEqual(chapters.map(c => c.scenes.length), [5, 4, 4, 5, 5]);
@@ -116,7 +132,7 @@ test('hub keeps the shell disabled and excludes it from search', () => {
   assert.match(hub, />Coming soon<\/span>/);
   const html = fs.readFileSync('ai100/llm_explorer.html', 'utf8');
   assert.match(html, /aria-valuemax="23"/);
-  assert.deepEqual([...html.matchAll(/<script src="([^"]+)"/g)].map(match => match[1]), ['../assets/js/ai100/llm-explorer.js', '../assets/js/ai100/llm-probability.js']);
+  assert.deepEqual([...html.matchAll(/<script src="([^"]+)"/g)].map(match => match[1]), ['../assets/js/ai100/llm-explorer.js', '../assets/js/ai100/llm-probability.js', '../assets/js/ai100/llm-generation.js']);
   assert.match(html, /prefers-reduced-motion/);
 });
 
