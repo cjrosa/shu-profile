@@ -81,3 +81,11 @@
 .prob-numerator{padding:0 8px 7px;border-bottom:1px solid var(--green)}
 .prob-denominator{padding:7px 8px 0}
 @media(max-width:560px){.prob-formula-card{padding:12px}.prob-explanation .prob-calculation-formula{font-size:13px}}
+
+/* Training-text explanation uses the established circle-i footer. */
+.prob-demo .count-training:has(>.prob-training-footer){padding-bottom:0}
+.prob-demo .count-training:has(>.prob-training-footer)+.ngram-picker{margin-top:16px}
+.prob-training-footer{display:flex;align-items:flex-start;gap:9px;padding:8px 16px;border-top:1px solid var(--line);background:#fff;color:var(--muted);font-size:12px;font-style:italic;line-height:1.5}
+.prob-training-footer svg{flex:0 0 18px;width:18px;height:18px;color:var(--green);margin-top:1px}
+.prob-training-footer p{margin:0}
+@media(max-width:560px){.prob-training-footer{padding-left:12px;padding-right:12px}}

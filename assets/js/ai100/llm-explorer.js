@@ -414,6 +414,8 @@
     const isProbability = item.id === 'conditional-probability';
     const isGeneration = item.id === 'generating-language';
     const isLimits = item.id === 'n-gram-limits';
+    const isTokenizer = item.id === 'tokenizer';
+    $('#tokenizerDemo').hidden = !isTokenizer;
     const isSubwords = item.id === 'subwords';
     $('#subwordsDemo').hidden = !isSubwords;
     const isTokens = item.id === 'words-tokens';
@@ -426,8 +428,8 @@
     if (!isProbability && window.cancelProbabilityReveal) window.cancelProbabilityReveal();
     $('.prob-demo').hidden = !isProbability;
     if (isProbability && window.drawProbability) window.drawProbability();
-    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords;
-    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords;
+    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer;
+    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer;
     $('.count-demo').hidden = !isCounting;
     if (isCounting) drawCounting();
     $('.ngram-demo').hidden = !isNgram;
