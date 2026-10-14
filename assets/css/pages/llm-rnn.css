@@ -27,3 +27,41 @@
 
 #rnnDemo .rnn-sentence-token[data-source="generated"]{border-style:dashed}
 
+
+/* Compact spacing around the refresher prompt and tile legend. */
+#rnnDemo .tokens-input-body{padding-top:8px;padding-bottom:8px}
+#rnnDemo .tokens-input-body > .llm-exploration-question{margin:0 0 6px}
+#rnnDemo .tokens-input-body > .tokens-note{margin:6px 0}
+#rnnDemo .rnn-sentence-strip{margin:8px 0}
+
+#rnnDemo .rnn-token-heading{margin:10px 0 4px;font-size:13px;font-weight:700;color:var(--ink)}
+#rnnDemo .rnn-token-heading + .rnn-sentence-strip{margin-top:4px}
+
+#rnnDemo .rnn-response-footnote{margin:4px 0 8px;font-size:11px;line-height:1.4;color:var(--muted)}
+
+#rnnDemo .rnn-context-signal p{margin:4px 0}
+
+/* Reduce the gap between the scene header and the opening reminder. */
+.canvas:has(#rnnDemo:not([hidden])){padding-top:10px}
+#rnnDemo > .tokens-feedback:first-child{margin-top:0;margin-bottom:10px}
+
+#rnnInfluencePlot{display:block;width:100%;max-width:480px;height:auto;margin:4px auto}
+#rnnInfluencePlot .rnn-plot-grid{fill:none;stroke:var(--purple);stroke-opacity:.18;stroke-width:1}
+#rnnInfluencePlot .rnn-plot-labels{fill:var(--muted);font:700 11px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+#rnnInfluencePlot .rnn-signal-line{fill:none;stroke:var(--purple);stroke-width:2.5;stroke-linejoin:round}
+#rnnInfluencePlot .rnn-signal-point{fill:var(--purple);stroke:#fff;stroke-width:1.5}
+
+#rnnDemo .rnn-context-signal{background:#fff}
+#rnnDemo .rnn-plot-icon{color:var(--purple)}
+#rnnDemo .rnn-plot-icon circle{fill:var(--purple-soft)}
+
+#rnnDemo .rnn-tracking-label{margin-left:auto;text-align:right;font-size:11px;font-weight:400;color:var(--muted)}
+#rnnDemo .rnn-context-signal .tokens-comparison-header{flex-wrap:wrap}
+
+#rnnDemo .rnn-tracking-label{display:inline-flex;align-items:center;gap:6px}
+#rnnDemo .rnn-tracking-icon{width:16px;height:16px;flex-shrink:0;color:var(--purple)}
+#rnnDemo .rnn-tracking-label strong{font-size:inherit;font-weight:700;color:inherit}
+
+#rnnInfluencePlot .rnn-current-guide{stroke:var(--purple);stroke-width:1.5;stroke-dasharray:4 4;stroke-opacity:.65}
+
+#rnnInfluencePlot .rnn-current-axis-label{fill:var(--purple);font-weight:700}
