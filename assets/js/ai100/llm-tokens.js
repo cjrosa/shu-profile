@@ -38,7 +38,7 @@
   function fitInput() {
     const input = $('tokensInput');
     input.style.height = 'auto';
-    input.style.height = `${Math.max(100,input.scrollHeight + 2)}px`;
+    input.style.height = `${Math.max(48,input.scrollHeight + 2)}px`;
     $('tokensSpan').scrollTop = input.scrollTop;
   }
   function clear() {

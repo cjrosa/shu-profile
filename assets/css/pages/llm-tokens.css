@@ -80,3 +80,11 @@
 @media(max-width:560px){.tokens-comparison-header{margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px}}
 @media(max-width:560px){.tokens-comparison-footer{margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px}}
 @media(max-width:560px){.tokens-input-header,.tokens-input-body,.tokens-input-footer{padding-left:12px;padding-right:12px}.tokens-input-header .tokens-toolbar{width:100%}.tokens-input-header select{flex:1;min-width:0;width:auto}.tokens-input-header label{width:100%}}
+
+/* Keep the original-text editor compact while allowing longer input to grow. */
+#tokensDemo .tokens-input-header{padding-top:8px;padding-bottom:8px}
+#tokensDemo .tokens-input-body{padding-top:8px;padding-bottom:8px}
+#tokensDemo #tokensInput{min-height:48px;padding:10px 16px}
+#tokensDemo #tokensSpan{padding:10px 16px}
+
+#tokensTry .tokens-feedback-icon{color:var(--amber);fill:var(--amber-soft)}
