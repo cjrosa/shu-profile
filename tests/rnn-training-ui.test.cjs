@@ -7,7 +7,7 @@ function fixture(initialScene=8){
   function query(s){if(s==='#sceneContent svg title, #sceneContent [title], #sceneToolbar [title]')return null;if(!elements.has(s))elements.set(s,element());return elements.get(s)}
   const chapters=Array.from({length:4},element);
   const document={querySelector:query,querySelectorAll:s=>s==='.chapter'?chapters:[],addEventListener:(type,fn)=>(events[type]??=[]).push(fn)};
-  const context=vm.createContext({document,location:{search:'?scene='+initialScene},URLSearchParams,NLPApplications:require('../assets/js/ai100/nlp-applications.js'),RNNComparison:require('../assets/js/ai100/rnn-comparison.js'),RNNTraining:require('../assets/js/ai100/rnn-training.js'),clearInterval(){},setTimeout:fn=>{timers.set(++timerId,fn);return timerId},clearTimeout:id=>timers.delete(id),queueMicrotask:fn=>fn()});
+  const context=vm.createContext({document,location:{search:typeof initialScene==='string'?initialScene:'?scene='+(initialScene+1)},URL,URLSearchParams,NLPApplications:require('../assets/js/ai100/nlp-applications.js'),RNNComparison:require('../assets/js/ai100/rnn-comparison.js'),RNNTraining:require('../assets/js/ai100/rnn-training.js'),clearInterval(){},setTimeout:fn=>{timers.set(++timerId,fn);return timerId},clearTimeout:id=>timers.delete(id),queueMicrotask:fn=>fn()});
   vm.runInContext(script,context);
   function click(action){const button={dataset:{trainAction:action},closest:s=>s==='[data-train-action]'?button:null};events.click.forEach(fn=>fn({target:button}))}
   function tick(){const tasks=[...timers.values()];timers.clear();tasks.forEach(fn=>fn())}
@@ -122,4 +122,36 @@ test('both semantic projections include every comparison vocabulary word',()=>{
  const f=fixture(6);assert.equal(f.run('Object.keys(projected).length'),24);assert.equal(f.run('Object.keys(projected3D).length'),24);
  assert.equal(f.run('WORDS.every(w=>projected[w]&&projected3D[w]&&neighbors(w).every(([n])=>projected[n]))'),true);
  f.run('state.mapStep=24;render()');assert.equal((f.view().match(/data-semantic=/g)||[]).length,24);
+});
+
+test('Scene 10 visibly refreshes prior blocks and animates carried state after each word',()=>{
+ const f=fixture();f.query('#nextBtn').onclick();
+ for(let i=1;i<=7;i++){
+  f.query('#rnnNext').onclick();assert.match(f.view(),/rnn-show-state-carry/);
+  const expected=f.run("rnn(['a','little','too','dark','for','my','taste'])["+(i-1)+"].prev");
+  const prior=f.view().match(/class="rnn-state-blocks prior-blocks"[\s\S]*?<\/g>/)[0];
+  for(const value of expected)assert.ok(prior.includes('data-state-value="'+value+'"'));
+  if(i<7)assert.match(f.view(),/animateMotion path="M697 341V420H140V401" dur="1.1s" begin="1.2s"/);
+ }
+});
+
+test('one-based continuous scene links and chapter-only links restore the correct scene',()=>{
+ for(let n=1;n<=13;n++){
+  const f=fixture('?scene='+n);assert.equal(f.run('state.scene'),n-1);
+  assert.equal(f.query('#sceneCount').textContent,'Scene '+n+' of 13');
+ }
+ for(const [chapter,scene] of [[1,1],[2,7],[3,9],[4,12]])assert.equal(fixture('?chapter='+chapter).run('state.scene'),scene-1);
+ assert.equal(fixture('?chapter=1&scene=10').run('state.scene'),9);
+ assert.equal(fixture('?chapter=3&scene=999').run('state.scene'),8);
+ assert.equal(fixture('?chapter=bad&scene=bad').run('state.scene'),0);
+});
+test('navigation writes canonical chapter and continuous scene for refresh and the viewer',()=>{
+ const f=fixture('?chapter=3&scene=10');
+ // Use the host URL implementation for the browser navigation contract.
+ f.run("globalThis.window={location:{href:'https://example.test/ai100/nlp_rnn_visualizer.html?keep=yes#lesson',origin:'https://example.test'},history:{state:null,replaceState(s,t,url){window.location.href=url}},parent:{postMessage(message,origin){window.message=message;window.targetOrigin=origin}}}");
+ f.run('render()');assert.match(f.run('window.location.href'),/chapter=3&scene=10/);
+ f.query('#nextBtn').onclick();assert.equal(f.run('window.message.scene'),11);
+ f.query('#nextBtn').onclick();assert.equal(f.run('window.message.chapter'),4);assert.equal(f.run('window.message.scene'),12);
+ assert.equal(fixture(new URL(f.run('window.location.href')).search).run('state.scene'),11);
+ f.query('#restartBtn').onclick();assert.equal(f.run('window.message.scene'),1);assert.equal(f.run('window.message.chapter'),1);
 });
