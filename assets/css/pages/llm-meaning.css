@@ -1,0 +1,53 @@
+/* Scene-specific layout; typography, tiles and messages reuse Scene 1. */
+.tokens-input-header label[for="meaningPreset"]{font-weight:750;color:var(--green-dark)}
+.tokens-input-header #meaningPreset{appearance:none;-webkit-appearance:none;padding:8px 34px 8px 12px;border:1px solid var(--green);border-radius:8px;background-color:#f4faf6;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23477750' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;color:var(--green-dark);font-weight:600;cursor:pointer}
+.tokens-input-header #meaningPreset:hover{background-color:var(--green-soft);border-color:var(--green-dark)}
+.tokens-input-header #meaningPreset option{background:#fff;color:var(--ink);font-weight:400}
+#meaningDemo .meaning-sentence{position:relative;padding:12px 16px;border:1px solid var(--line);border-radius:10px;background:#fff;display:flex;flex-direction:column}
+#meaningDemo .meaning-sentence h3{font-size:14px;margin:0 0 8px;color:var(--muted)}
+#meaningDemo .tokens-tiles{gap:8px;position:relative;z-index:1}
+#meaningDemo .tokens-tile{padding:4px 8px;background:#fff}
+#meaningDemo .tokens-tile.meaning-target{text-decoration:none;border-color:var(--green-dark)}
+#meaningDemo .tokens-tile.related{background:#fff}
+#meaningDemo .tokens-tile[aria-pressed=true]{background:#fff;border-color:var(--green-dark)}
+#meaningDemo .tokens-tile.meaning-between{border-style:dashed}
+#meaningDemo .tokens-tile:focus-visible{outline:3px solid var(--green);outline-offset:3px}
+.meaning-links{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.meaning-links path{fill:none;stroke:var(--green);stroke-width:1.7;stroke-dasharray:1 5;stroke-linecap:round;stroke-linejoin:round}
+#meaningDemo textarea{overflow:auto;margin:8px 0 12px}
+#meaningDemo .meaning-swap{font-family:inherit;font-size:12px}
+
+/* Use the approved semantic icon colors for this scene. */
+#meaningDemo .context-challenge-icon{color:var(--amber)}
+#meaningDemo .context-challenge-icon path{fill:var(--amber-soft)}
+#meaningDemo #meaningTitle .meaning-words-icon{color:var(--teal)}
+#meaningDemo .meaning-words-icon rect{fill:#e0f3ef}
+#meaningDemo .meaning-words-icon path{fill:none;stroke:var(--teal)}
+#meaningDemo .meaning-info-icon,#meaningDemo .llm-info-footer>svg{color:var(--blue)}
+#meaningDemo .meaning-info-icon circle,#meaningDemo .llm-info-footer>svg circle{fill:var(--blue-soft)}
+#meaningDemo .meaning-info-icon path{fill:none}
+
+/* Shared context word above the responsive sentence comparison. */
+#meaningSharedWord{text-align:center;margin:16px 0 8px}
+#meaningDemo #meaningWord{display:inline-block;padding:4px 16px;background:var(--green-soft);border-color:var(--green-dark)}
+#meaningSentences>.meaning-sentence{min-width:0}
+@container(min-width:1000px){
+  #meaningSentences.meaning-comparison{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
+}
+
+#meaningDemo .tokens-tile:focus-visible{text-decoration:none;background:#fff}
+
+#meaningDemo .tokens-tile.meaning-target{background:var(--green-soft);text-decoration:none}
+
+#meaningSentences{display:grid;gap:16px}
+#meaningDemo .meaning-visual{padding-bottom:44px}
+#sceneContent #meaningDemo .meaning-sentence>.tokens-feedback{margin:auto 0 0;position:relative;z-index:1}
+#meaningDemo span.tokens-tile{cursor:default}
+
+#meaningDemo .meaning-sentence>.tokens-comparison-header{margin:-12px -16px 12px;padding:10px 16px}
+#meaningDemo .meaning-sentence>.tokens-comparison-header h3{margin:0}
+#meaningDemo .meaning-card-icon{color:var(--teal)}
+#meaningDemo .meaning-card-icon rect{fill:#e0f3ef}
+
+/* Align the opening message with the scene content inset. */
+#sceneContent #meaningDemo>.tokens-feedback:first-child{margin-top:0}

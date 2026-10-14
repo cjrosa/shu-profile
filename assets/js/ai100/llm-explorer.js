@@ -414,6 +414,9 @@
     const isProbability = item.id === 'conditional-probability';
     const isGeneration = item.id === 'generating-language';
     const isLimits = item.id === 'n-gram-limits';
+    const isMeaning = item.id === 'context-matters';
+    $('#meaningDemo').hidden = !isMeaning;
+    if (isMeaning && window.drawMeaningConnections) requestAnimationFrame(window.drawMeaningConnections);
     const isContext = item.id === 'context-windows';
     $('#contextDemo').hidden = !isContext;
     const isTokenizer = item.id === 'tokenizer';
@@ -430,8 +433,8 @@
     if (!isProbability && window.cancelProbabilityReveal) window.cancelProbabilityReveal();
     $('.prob-demo').hidden = !isProbability;
     if (isProbability && window.drawProbability) window.drawProbability();
-    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext;
-    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext;
+    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning;
+    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning;
     $('.count-demo').hidden = !isCounting;
     if (isCounting) drawCounting();
     $('.ngram-demo').hidden = !isNgram;
