@@ -13,6 +13,50 @@ async function fixture(local=true) {
   return {dom,w,get,add(...pieces) { pieces.forEach(piece=>[...get('Vocabulary').querySelectorAll('[data-piece]')].find(b=>b.dataset.piece===piece).click()); },select(value) {get('Preset').value=value;get('Preset').dispatchEvent(new w.Event('change'));}};
 }
 const flush = async()=>{for(let i=0;i<5;i++) await Promise.resolve();};
+test('row comparison toggles by pointer and keyboard and uses actual counts and boundaries',async()=>{
+  const f=await fixture(),{get,w}=f;
+  get('ShowAll').click();await flush();
+  const row=word=>[...get('History').children].find(card=>card.dataset.word===word);
+  row('dogs').click();
+  assert.equal(get('Comparison').hidden,false);
+  assert.match(get('ComparisonText').textContent,/Teaching pieces: 2.*Real tokens: 1/);
+  assert.match(get('ComparisonText').textContent,/but the real tokenizer/);
+  assert.equal(row('dogs').querySelector('.subwords-select-word').getAttribute('aria-pressed'),'true');
+  row('doghouse').focus();
+  row('doghouse').dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));
+  assert.ok(row('doghouse').classList.contains('subwords-selected'));
+  assert.ok(!row('dogs').classList.contains('subwords-selected'));
+  assert.match(get('ComparisonText').textContent,/counts and boundaries happen to match/);
+  row('doghouse').dispatchEvent(new w.KeyboardEvent('keydown',{key:' ',bubbles:true,cancelable:true}));
+  assert.equal(get('Comparison').hidden,true);
+  row('cats').querySelector('.subwords-select-word').click();
+  assert.match(get('ComparisonText').textContent,/Teaching pieces: 2.*Real tokens: 1/);
+  row('cats').querySelector('.subwords-saved-actions button').click();await flush();
+  assert.equal(get('Comparison').hidden,true);
+  f.add('s','dog');get('Save').click();await flush();row('sdog').click();
+  assert.match(get('ComparisonText').textContent,/Teaching pieces: 2.*Real tokens: 2/);
+  assert.match(get('ComparisonText').textContent,/counts match, but the boundaries differ/);
+  // In-place editing follows the selected row and refreshes the explanation.
+  row('sdog').querySelectorAll('.subwords-piece-remove')[1].click();await flush();
+  assert.ok(row('s').classList.contains('subwords-selected'));
+  assert.match(get('ComparisonText').textContent,/Teaching pieces: 1.*Real tokens: 1/);
+  row('s').querySelector('.subwords-piece-remove').click();await flush();
+  assert.equal(get('Comparison').hidden,true);
+  f.dom.window.close();
+});
+test('selection during tokenizer loading follows the latest row and clearing prevents stale feedback',async()=>{
+  const f=await fixture(false),{get,w}=f;
+  get('ShowAll').click();
+  get('History').children[1].click();assert.match(get('ComparisonText').textContent,/Waiting for real tokenizer/);
+  get('History').children[2].click();
+  w.LLMTokenizerVendor=vendor;
+  w.document.querySelector('script[src="../assets/js/vendor/cl100k-tokenizer.js"]').onload();await flush();
+  assert.match(get('ComparisonText').textContent,/^doghouse/);
+  assert.match(get('ComparisonText').textContent,/boundaries happen to match/);
+  get('History').children[2].click();assert.equal(get('Comparison').hidden,true);
+  get('Reset').click();await flush();assert.equal(get('Comparison').hidden,true);
+  f.dom.window.close();
+});
 test('Show all replaces current work with prepared scenario examples',async()=>{
   const f=await fixture(),{get}=f;
   f.add('house','cat');get('Save').click();f.add('s');

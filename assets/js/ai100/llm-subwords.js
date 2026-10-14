@@ -3,12 +3,44 @@
   'use strict';
   const $ = id => document.getElementById('subwords' + id);
   const scenarios = {
-    reuse: {pieces:['dog','s','house','cat'], examples:[['dog'],['dog','s'],['dog','house'],['cat'],['cat','s']], prompt:'Can you build two different words using the same piece? Try dog + s and dog + house.'},
+    reuse: {pieces:['dog','s','house','cat'], examples:[['dog'],['dog','s'],['dog','house'],['cat'],['cat','s']], prompt:'Can you build two different words using at least one shared vocabulary piece?'},
     long: {pieces:['un','believ','able'], examples:[['believ','able'],['un','believ','able']], prompt:'Can you build unbelievable? Join un + believ + able. Pieces join exactly, without spelling changes.'},
     own: {pieces:['dog','s','house','cat','un','believ','able','play','er','ing'], examples:[], prompt:'Combine reusable pieces into a new sequence, then keep it. It need not be a dictionary word.'}
   };
   let pieces = [], saved = new Map(), explored = new Map(), tokenizer, loading, revision = 0, complete = false;
   let editing = null;
+  let selectedWord = null;
+  const comparisons = new Map();
+  function updateSelection() {
+    if (!saved.has(selectedWord)) selectedWord=null;
+    [...$('History').children].forEach(card=>{
+      const active=card.dataset.word===selectedWord;
+      card.classList.toggle('subwords-selected',active);
+      card.querySelector('.subwords-select-word').setAttribute('aria-pressed',String(active));
+      const toggle=card.querySelector('.subwords-expand');
+      toggle.setAttribute('aria-expanded',String(active));
+      toggle.setAttribute('aria-label',`${active?'Collapse':'Expand'} comparison for ${card.dataset.word}`);
+      if(active)card.append($('Comparison'));
+      card.setAttribute('aria-label',`Kept construction: ${card.dataset.word}${active ? ', selected' : ''}`);
+    });
+    $('Comparison').hidden=selectedWord===null;
+    if(selectedWord===null){$('History').after($('Comparison'));$('ComparisonText').textContent='';return;}
+    const entry=saved.get(selectedWord), result=comparisons.get(selectedWord);
+    const teaching=`${entry.length} teaching ${entry.length===1?'piece':'pieces'}`;
+    if(!result){$('ComparisonText').textContent=`${selectedWord}: ${teaching}. Waiting for real tokenizer output.`;return;}
+    if(result.error){$('ComparisonText').textContent=`${selectedWord}: ${teaching}. Real tokens are unavailable; use Retry tokenizer in this row.`;return;}
+    const count=result.tokens.length;
+    let explanation;
+    if(entry.length!==count) explanation=`You used ${teaching}, but the real tokenizer represents this text as ${count} ${count===1?'token':'tokens'}.`;
+    else {
+      let offset=0;
+      const encoder=new TextEncoder();
+      const match=entry.every((piece,index)=>{offset+=encoder.encode(piece).length;return offset===result.tokens[index].end;});
+      explanation=match ? count===1 ? `The teaching example and real tokenizer both use one piece for "${selectedWord}."` : 'The counts and boundaries happen to match.' : 'The counts match, but the boundaries differ: the real tokenizer splits the text at different positions.';
+    }
+    $('ComparisonText').textContent=`${selectedWord} — Teaching pieces: ${entry.length} · Real tokens: ${count}. ${explanation}`;
+  }
+  function selectWord(word) {selectedWord=selectedWord===word?null:word;updateSelection();}
   const scenario = () => scenarios[$('Preset').value];
   function node(tag, text, className) {
     const el = document.createElement(tag); el.textContent = text;
@@ -137,6 +169,8 @@
     $('ShowAll').setAttribute('data-tooltip',scenario().examples.length ? 'Replace current constructions with all prepared examples' : 'No prepared examples in Create Your Own');
     $('ReuseNote').hidden=!shared.length;
     $('ReuseText').textContent=shared.length ? 'Piece reuse: '+shared.map(([piece,count])=>JSON.stringify(piece)+' appears in '+count+' kept constructions').join('; ')+'. You built different sequences by reusing the same vocabulary pieces. Highlighted pieces are shared across cards.' : '';
+    // Preserve the shared comparison element before rebuilding saved rows.
+    $('History').after($('Comparison'));
     $('History').replaceChildren();
     if(saved.size){
       const headings=node('div','','subwords-kept-headings');
@@ -145,6 +179,16 @@
     }else{$('KeptHeadings').replaceChildren();$('KeptHeadings').hidden=true;}
     saved.forEach((entry,word)=>{
       const card=node('article','','subwords-construction-card subwords-saved-card');
+      card.dataset.word=word;
+      card.tabIndex=0;
+      card.setAttribute('aria-describedby','subwordsSelectionHelp');
+      card.addEventListener('click',event=>{
+        if(event.target.closest('button,select,a'))return;
+        selectWord(word);
+      });
+      card.addEventListener('keydown',event=>{
+        if(event.target===card && (event.key==='Enter'||event.key===' ')){event.preventDefault();selectWord(word);}
+      });
       card.setAttribute('aria-label',`Kept construction: ${word}`);
       if (word === editing) card.setAttribute('aria-current','true');
       const teaching=node('div','','subwords-teaching-column');
@@ -155,6 +199,7 @@
         const nextWord=next.join('');
         if (nextWord !== word && saved.has(nextWord)) { feedback.textContent='That construction is already kept. Choose a different sequence.'; return; }
         const row=[...saved.keys()].indexOf(word);
+        if(selectedWord===word)selectedWord=next.length?nextWord:null;
         if (next.length) saved=new Map([...saved].map(([key,value])=>key===word ? [nextWord,next] : [key,value]));
         else saved.delete(word);
         progress();
@@ -230,7 +275,11 @@
 
       const result=node('div','','subwords-word-column');
       result.setAttribute('aria-label','Kept word');
-      result.append(node('p',word,'subwords-saved-word'));
+      const select=node('button',word,'subwords-saved-word subwords-select-word');select.type='button';
+      select.setAttribute('aria-label',`Compare teaching pieces and real tokens for ${word}`);
+      select.setAttribute('aria-pressed','false');
+      select.addEventListener('click',()=>selectWord(word));
+      result.append(select);
       if (word === editing) result.append(node('p','Editing in builder above','subwords-editing-badge'));
       const model=node('div','','subwords-saved-model');
       model.setAttribute('aria-label','Real Tokens');
@@ -247,23 +296,32 @@
         if (editing === word) { editing=null; pieces=[]; }
         render(); $('Vocabulary').querySelector('[data-piece]').focus();
       });
-      actions.append(remove);card.append(teaching,result,model,actions);$('History').append(card);
+      const expand=node('button','','subwords-expand');expand.type='button';
+      expand.innerHTML=icon('<path d="m6 9 6 6 6-6"/>');
+      expand.setAttribute('aria-controls','subwordsComparison');
+      expand.setAttribute('aria-expanded','false');
+      expand.addEventListener('click',()=>selectWord(word));
+      actions.append(remove,expand);card.append(teaching,result,model,actions);$('History').append(card);
       async function tokenize() {
         try {
           const real=await loadTokenizer();
           if (!card.isConnected) return;
           const analysis=window.llmTokenEngine.analyze(word,real);
+          comparisons.set(word,analysis);
           analysis.tokens.forEach(part=>output.append(node('span',part.text === null ? `bytes ${part.bytes.map(b=>b.toString(16).padStart(2,'0')).join(' ')}` : window.llmTokenEngine.visible(part.text),'tokens-tile')));
           status.remove();
+          updateSelection();
         } catch (_) {
           if (!card.isConnected) return;
+          comparisons.set(word,{error:true});updateSelection();
           status.textContent='Tokenizer unavailable. ';
           const retry=node('button','Retry tokenizer');retry.type='button';
-          retry.addEventListener('click',()=>{ status.textContent='Updating real tokens…'; tokenize(); });status.append(retry);
+          retry.addEventListener('click',()=>{ comparisons.delete(word);updateSelection();status.textContent='Updating real tokens…'; tokenize(); });status.append(retry);
         }
       }
       tokenize();
     });
+    updateSelection();
   }
   function progress() {
     $('SelectPrompt').hidden = saved.size > 0;
@@ -304,6 +362,7 @@
     updateRealTokens();
   }
   function reset() {
+    selectedWord=null;comparisons.clear();
     editing = null;
     pieces = []; saved = new Map(); explored = new Map(); complete = false;
     $('Prompt').textContent = scenario().prompt;
@@ -377,6 +436,7 @@
   $('ShowAll').addEventListener('click',()=>{
     if (!scenario().examples.length) return;
     pieces=[]; editing=null;
+    selectedWord=null;
     saved=new Map(scenario().examples.map(entry=>[entry.join(''),[...entry]]));
     render();
   });

@@ -170,3 +170,19 @@
 /* Quiet remove controls; emphasize only during interaction. */
 #subwordsDemo .subwords-piece-remove{width:12px;height:12px;top:-4px;right:-3px;background:var(--line);color:var(--muted);font-size:10px;line-height:12px;font-weight:400}
 #subwordsDemo .subwords-piece-remove:hover,#subwordsDemo .subwords-piece-remove:focus-visible{background:var(--red);color:var(--white,#fff)}
+
+/* Selection uses the existing green selected state and shared feedback box. */
+#subwordsDemo .subwords-saved-card.subwords-selected{background:var(--white,#fff);border-color:var(--line);box-shadow:none}
+#subwordsDemo .subwords-selected .subwords-piece-handle{background:var(--green-soft);border-color:var(--green)}
+#subwordsDemo .subwords-selected .subwords-saved-model .tokens-tile{background:var(--purple-soft);outline:none;font-weight:400}
+#subwordsDemo .subwords-select-word{font-family:Georgia,"Palatino Linotype",Palatino,serif;font-size:var(--passage-font-size,15px);line-height:1.65;letter-spacing:.01em;text-align:left;color:var(--ink);width:100%;cursor:pointer}
+#subwordsDemo .subwords-select-word[aria-pressed=true]{color:var(--green-dark);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.subwords-saved-card:focus-visible{outline:3px solid var(--green);outline-offset:3px}
+
+/* Expand the selected comparison inside its row. */
+.subwords-saved-card{grid-template-columns:minmax(0,1.2fr) minmax(0,.9fr) minmax(0,1fr) 72px}
+.subwords-kept-headings{grid-template-columns:minmax(0,1.2fr) minmax(0,.9fr) minmax(0,1fr) 72px}
+#subwordsDemo .subwords-saved-actions .subwords-expand{color:var(--green-dark)}
+.subwords-expand[aria-expanded=true] svg{transform:rotate(180deg)}
+#subwordsDemo .subwords-saved-card>#subwordsComparison{grid-column:1 / -1;margin:0;border-top:1px solid var(--line);padding-top:10px}
+@container(max-width:640px){.subwords-saved-card{grid-template-columns:minmax(0,1fr) 72px}.subwords-kept-headings{grid-template-columns:repeat(3,minmax(0,1fr))}}
