@@ -1,0 +1,39 @@
+/* Scene-specific layout; typography, tiles and messages reuse Scene 1. */
+.tokens-input-header label[for="contextPreset"]{font-weight:750;color:var(--green-dark)}
+.tokens-input-header #contextPreset{appearance:none;-webkit-appearance:none;padding:8px 34px 8px 12px;border:1px solid var(--green);border-radius:8px;background-color:#f4faf6;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23477750' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;color:var(--green-dark);font-weight:600;cursor:pointer}
+.tokens-input-header #contextPreset:hover{background-color:var(--green-soft);border-color:var(--green-dark)}
+.tokens-input-header #contextPreset option{background:#fff;color:var(--ink);font-weight:400}
+
+#contextDemo .context-control input[type=range]{appearance:none;-webkit-appearance:none;width:100px;height:5px;padding:0;margin:0;background:var(--line);border:0;border-radius:4px;accent-color:var(--green);cursor:pointer}
+#contextDemo .context-control input[type=range]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:13px;height:13px;border-radius:50%;border:2px solid #fff;background:var(--green);box-shadow:0 0 0 1px var(--green)}
+#contextDemo .context-control input[type=range]::-moz-range-thumb{width:10px;height:10px;border-radius:50%;border:2px solid #fff;background:var(--green);box-shadow:0 0 0 1px var(--green)}
+#contextDemo .context-control input[type=range]:focus-visible{outline:2px solid var(--green);outline-offset:5px}
+#contextDemo .context-control{display:flex;align-items:center;flex-wrap:wrap;gap:16px;margin:16px 0;font-size:13px;font-weight:700}
+#contextDemo .context-control input[type=range]{flex:1;min-width:120px;width:auto}
+#contextSizeValue{color:var(--green);min-width:72px;font-variant-numeric:tabular-nums}
+#contextDemo .context-meter{height:5px;border-radius:99px;background:#dfe6e1;overflow:hidden;margin:8px 0 16px}
+#contextFill{transition:none}
+#contextDemo .context-window{border:2px solid var(--green);border-radius:10px;padding:12px 16px;margin:12px 0;background:var(--green-soft)}
+#contextDemo .context-window h3{font-size:14px;margin:0 0 10px;color:var(--green-dark)}
+#contextDemo #contextExcluded .tokens-tile{color:var(--muted);border-color:var(--line);background:#fff}
+#contextDemo #contextIncluded .tokens-tile{background:#fff}
+#contextDemo #contextStatus:empty{display:none}
+#contextDemo textarea{overflow:auto}
+#contextDemo #contextPreset{max-width:320px;white-space:normal}
+@media(max-width:560px){#contextDemo .context-control label{flex-basis:100%}#contextDemo #contextPreset{max-width:100%}}
+
+/* Match the semantic SVG palette used by the approved token scenes. */
+#contextDemo .context-text-icon{color:var(--teal)}
+#contextDemo .context-text-icon rect{fill:#e0f3ef}
+#contextDemo .tokens-input-header .context-text-icon path{fill:none;stroke:var(--teal)}
+#contextDemo .context-token-icon{color:var(--purple)}
+#contextDemo .context-token-icon rect{fill:var(--purple-soft)}
+#contextDemo .context-challenge-icon{color:var(--amber)}
+#contextDemo .context-challenge-icon path{fill:var(--amber-soft)}
+#contextDemo .context-info-icon,#contextDemo .tokens-next-icon{color:var(--blue)}
+#contextDemo .context-info-icon circle{fill:var(--blue-soft)}
+#contextDemo .context-discovery-icon{color:var(--green)}
+#contextDemo .context-discovery-icon circle{fill:#d5efdf}
+#contextDemo .context-bullhorn-icon{color:var(--green)}
+#contextDemo .context-bullhorn-icon path:first-child{fill:#d5efdf}
+#contextWhy{display:block;margin-top:6px}
