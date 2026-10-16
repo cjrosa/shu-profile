@@ -1,17 +1,15 @@
-﻿/* Scene 3.2 uses the NLP visualizer's unchanged renderer, CSS and forward pass. */
+/* Scene 3.2 uses the NLP visualizer's unchanged renderer, CSS and forward pass. */
 (function () {
   'use strict';
   const $ = name => document.getElementById('rnn' + name);
   const model = RNNTraining.initial();
   const examples = {
-    short: 'The cat sleeps.',
-    marie: 'Marie arrived at the conference after a long flight. She was exhausted.',
+    short: 'Marie arrived at the conference. She was exhausted.',
     long: 'Marie arrived at the conference after a long flight, a delayed train, a crowded shuttle ride, and a slow walk through the busy hotel lobby. She was exhausted.'
   };
   let steps = [], position = 0, timer = null, promptLength = 0, influence = [];
   const continuations = {
-    short: 'It curls up on the sofa.',
-    marie: 'She found a quiet place to rest.',
+    short: 'She found a quiet place to rest.',
     long: 'She found a quiet place to rest.'
   };
   function input(word) {
@@ -36,15 +34,17 @@
       $('Diagram').replaceChildren();
       return;
     }
-    const x = i => 74 + i * 542 / Math.max(1,steps.length-1);
-    const y = value => 18 + (2 - Math.log10(Math.max(1e-10,value*100))) / 12 * 132;
+    const x = i => 110 + i * 506 / Math.max(1,steps.length-1);
+    const displayFloorPercent = 1e-10;
+    const y = value => 18 + (2 - Math.log10(Math.max(displayFloorPercent,value*100))) / 12 * 132;
+    const ticks = [[2,'100%'],[0,'1%'],[-2,'0.01%'],[-4,'0.0001%'],[-6,'0.000001%'],[-8,'0.00000001%'],[-10,'0.0000000001%']];
     const points = influence.slice(0,position+1).map((value,i)=>x(i)+','+y(value)).join(' ');
-    $('InfluencePlot').innerHTML = '<g class="rnn-plot-grid">' + [2,-2,-6,-10].map(power=>'<path d="M74 '+y(10**power/100)+'H616"/>').join('') + '</g>' +
-      '<g class="rnn-plot-labels">' + [[2,'100%'],[-2,'0.01%'],[-6,'0.000001%'],[-10,'Near zero']].map(([power,label])=>'<text x="66" y="'+(y(10**power/100)+4)+'" text-anchor="end">'+label+'</text>').join('') +
-      '<text x="74" y="170">1</text><text x="616" y="170" text-anchor="end">'+steps.length+'</text><text class="rnn-current-axis-label" x="'+x(position)+'" y="187" text-anchor="'+(x(position)<160?'start':x(position)>530?'end':'middle')+'"></text><text x="345" y="211" text-anchor="middle">Words processed</text></g>' +
+    $('InfluencePlot').innerHTML = '<g class="rnn-plot-grid">' + ticks.map(([power])=>'<path d="M110 '+y(10**power/100)+'H616"/>').join('') + '</g>' +
+      '<g class="rnn-plot-labels">' + ticks.map(([power,label])=>'<text x="102" y="'+(y(10**power/100)+4)+'" text-anchor="end">'+label+'</text>').join('') +
+      '<text x="110" y="170">0</text><text x="616" y="170" text-anchor="end">'+(steps.length-1)+'</text><text class="rnn-current-axis-label" x="'+x(position)+'" y="187" text-anchor="'+(x(position)<160?'start':x(position)>530?'end':'middle')+'"></text><text x="363" y="211" text-anchor="middle">Words Processed Since &quot;Marie&quot;</text><text x="110" y="-8">Relative Influence of &quot;Marie&quot; (%, log scale)</text></g>' +
       '<line class="rnn-current-guide" x1="'+x(position)+'" x2="'+x(position)+'" y1="150" y2="'+y(influence[position])+'"/><polyline class="rnn-signal-line" points="'+points+'"/><circle class="rnn-signal-point" cx="'+x(position)+'" cy="'+y(influence[position])+'" r="4"/>';
-    $('InfluencePlot').querySelector('.rnn-current-axis-label').textContent = (position+1) + '. ' + step.word;
-    $('InfluencePlot').setAttribute('aria-label','First-word effect on hidden unit 1, step '+(position+1)+' of '+steps.length+'. Logarithmic vertical scale.');
+    $('InfluencePlot').querySelector('.rnn-current-axis-label').textContent = position + '. ' + step.word;
+    $('InfluencePlot').setAttribute('aria-label','First-word effect on hidden unit 1, '+position+' words processed since '+steps[0].word+' out of '+(steps.length-1)+'. Relative influence in percent on a logarithmic vertical scale. Values below 0.0000000001%, including zero, are clipped to the display floor.');
     $('InfluenceCopy').innerHTML = '<svg class="rnn-tracking-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span>Tracking &ldquo;<strong class="rnn-tracked-word"></strong>&rdquo; through <strong class="rnn-tracked-count"></strong> later ' + (position === 1 ? 'word' : 'words') + '</span>';
     $('InfluenceCopy').querySelector('.rnn-tracked-word').textContent = steps[0].word;
     $('InfluenceCopy').querySelector('.rnn-tracked-count').textContent = position;

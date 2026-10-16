@@ -19,7 +19,6 @@
     { id: 'context', title: 'Context', question: 'Why does language prediction require context?', scenes: [
       scene('context-matters', 'Why Context Matters', 'See how surrounding words and earlier information help resolve meaning and guide predictions.', 'Connections between distant words will show how earlier information can change the meaning of a later word.'),
       scene('rnn-approach', 'RNN Refresher', 'Remember how an RNN builds a running impression, one word at a time, and uses it to generate the next word?', 'Revisit how the hidden state carries a running impression through a sequence.'),
-      scene('long-distance', 'The Long-Distance Challenge', 'Explore why information from earlier words can become harder to retain as a sequence grows.', 'A longer sequence will trace how information from an earlier word must travel through successive processing steps.'),
       scene('transformer', 'Enter the Transformer', 'Discover how transformers connect information across a sequence to build context for each token.', 'A comparison of sequential processing and token-to-token connections will introduce the transformer approach to context.')
     ] },
     { id: 'attend', title: 'Attend', question: 'How do transformers incorporate information across tokens?', scenes: [
@@ -414,6 +413,9 @@
     const isProbability = item.id === 'conditional-probability';
     const isGeneration = item.id === 'generating-language';
     const isLimits = item.id === 'n-gram-limits';
+    const isTransformer = item.id === 'transformer';
+    $('#transformerDemo').hidden = !isTransformer;
+    if (isTransformer && window.openTransformerScene) window.openTransformerScene();
     const isRNN = item.id === 'rnn-approach';
     $('#rnnDemo').hidden = !isRNN;
     if (isRNN && window.openRNNScene) window.openRNNScene();
@@ -437,8 +439,8 @@
     if (!isProbability && window.cancelProbabilityReveal) window.cancelProbabilityReveal();
     $('.prob-demo').hidden = !isProbability;
     if (isProbability && window.drawProbability) window.drawProbability();
-    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN;
-    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN;
+    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer;
+    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer;
     $('.count-demo').hidden = !isCounting;
     if (isCounting) drawCounting();
     $('.ngram-demo').hidden = !isNgram;

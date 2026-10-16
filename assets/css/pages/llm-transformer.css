@@ -1,0 +1,14 @@
+/* Reuse Explorer panels, controls and the shared RNN SVG design language. */
+#transformerDemo .ngram-picker button{border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font-weight:750;cursor:pointer}
+#transformerDemo .ngram-picker button[aria-pressed="true"]{background:var(--green-soft);border-color:var(--green);color:var(--green-dark)}
+#transformerDemo button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+#transformerDemo .rnn-sentence-strip{justify-content:flex-start;margin:8px 0}
+#transformerDemo .rnn-sentence-token{cursor:pointer}
+#transformerDemo .outside-context{opacity:.45;border-style:dashed}
+#transformerDemo .transformer-path{fill:none;stroke:var(--purple);stroke-width:2}
+#transformerDemo .tokens-feedback{line-height:1.5}
+#transformerDemo .tokens-toolbar{flex-wrap:wrap}
+#transformerDemo .context-control{flex-wrap:wrap}
+#transformerDemo .context-control input{min-width:120px}
+#transformerDemo .rnn-flow-scroll{margin:8px 0}
+#transformerDemo .tokens-note{margin:8px 0}
