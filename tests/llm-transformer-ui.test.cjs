@@ -2,59 +2,253 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const {JSDOM} = require('../tools/llm-tokenizer/node_modules/jsdom');
-function fixture(reduced = false) {
-  const dom = new JSDOM(fs.readFileSync('ai100/llm_explorer.html','utf8'), {runScripts:'outside-only', url:'http://localhost/ai100/llm_explorer.html?chapter=3&scene=3'});
-  const w = dom.window; w.matchMedia = () => ({matches:reduced});
-  for (const name of ['llm-explorer','llm-transformer']) w.eval(fs.readFileSync(`assets/js/ai100/${name}.js`,'utf8'));
+function fixture(reduced = false, architecture = 'transformer') {
+  const dom = new JSDOM(fs.readFileSync('ai100/llm_explorer.html','utf8'), {runScripts:'outside-only', pretendToBeVisual:true, url:'http://localhost/ai100/llm_explorer.html?chapter=3&scene=3'});
+  const w = dom.window, clocks = new Map(); let id = 0;
+  w.matchMedia = () => ({matches:reduced});
+  w.setTimeout = (fn, delay) => { clocks.set(++id,{fn,delay}); return id; };
+  w.clearTimeout = key => clocks.delete(key);
+  for (const name of ['llm-explorer','llm-transformer']) w.eval(fs.readFileSync('assets/js/ai100/'+name+'.js','utf8'));
   const get = name => w.document.getElementById('transformer'+name);
+  if (architecture === 'transformer') get('Attention').click();
   const change = (name,value,event='change') => {get(name).value=value; get(name).dispatchEvent(new w.Event(event));};
-  return {dom,w,get,change};
+  const tokens = () => [...get('Diagram').querySelectorAll('[data-token]')];
+  const clickToken = i => {  tokens()[i].dispatchEvent(new w.MouseEvent('click',{bubbles:true})); };
+  const tick = () => { const [key,task] = [...clocks][0]; clocks.delete(key); task.fn(); };
+  return {dom,w,get,change,tokens,clickToken,clocks,tick};
 }
-test('scene opens immediately; switching architecture preserves selected sentence and target', () => {
+test('scene initially opens in RNN mode', () => {
+  const {dom,get}=fixture(false,'rnn');
+  assert.equal(get('RNN').getAttribute('aria-pressed'),'true');
+  assert.equal(get('Attention').getAttribute('aria-pressed'),'false');
+  assert.equal(get('ContextControl').hidden,true);
+  assert.equal(get('Step').hidden,false);
+  dom.window.close();
+});
+test('styled context menu supports selection, keyboard navigation and dismissal', () => {
   const {dom,w,get}=fixture();
+  get('ContextButton').click();
+  assert.equal(get('ContextMenu').hidden,false);
+  get('ContextMenu').dispatchEvent(new w.KeyboardEvent('keydown',{key:'End',bubbles:true}));
+  assert.equal(w.document.activeElement.dataset.value,'8');
+  w.document.activeElement.click();
+  assert.equal(get('Context').value,'8');
+  assert.equal(get('ContextMenu').hidden,true);
+  assert.match(get('ContextButton').textContent,/Last 8/);
+  assert.equal(get('Diagram').querySelector('.attention-featured'),null);
+  get('ContextButton').click();
+  get('ContextMenu').dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+  assert.equal(get('ContextMenu').hidden,true);
+  assert.equal(w.document.activeElement,get('ContextButton'));
+  assert.equal(get('Demo').hidden,false);
+  dom.window.close();
+});
+test('representation notes and causal explanations follow the selected mode and target', () => {
+  const {dom,get,change,tokens,clickToken}=fixture();
+  assert.match(get('Heading').dataset.tooltip,/not importance or measured attention weights/);
+  assert.match(get('Summary').textContent,/"She" can attend to Marie/);
+  assert.match(get('Summary').textContent,/Arrows point from the selected word/);
+  for (const distance of ['0','3']) {
+    change('Distance',distance,'input');
+    get('RNN').click();
+    assert.match(get('Heading').dataset.tooltip,/Each hidden state combines the current word with information carried forward from earlier words/);
+    assert.match(get('Heading').dataset.tooltip,/after processing the corresponding word/);
+    tokens().forEach((token,i) => {
+      const node=token.parentElement;
+      assert.equal(node.querySelector('.memory-label'),null);
+      assert.equal(node.querySelectorAll('.transformer-vector-value').length,5);
+    });
+    get('Attention').click();
+    tokens().forEach((token,i)=>assert.equal(token.parentElement.querySelector('.memory-label').textContent,token.textContent));
+  }
+  clickToken(2);
+  assert.match(get('Summary').textContent,/"at" can attend to Marie/);
+  assert.doesNotMatch(get('Summary').textContent,/She/);
+  assert.match(get('Summary').textContent,/Future positions are unavailable/);
+  assert.ok(tokens().slice(3).every(token=>token.parentElement.classList.contains('future')));
+  change('Context','8');clickToken(8);
+  assert.match(get('Summary').textContent,/cannot attend to Marie/);
+  assert.equal(get('Diagram').querySelector('.transformer-path'),null);
+  clickToken(0);assert.match(get('Summary').textContent,/own position/);
+  assert.equal(get('Demo').querySelectorAll('#transformerRepresentationNote').length,0);
+  const visibleNotes=[...get('Demo').querySelectorAll('p:not(.sr-only)')].map(p=>p.textContent);
+  assert.deepEqual(visibleNotes,["What you're seeing: Transformers use attention to connect words directly.", 'Discovery: A transformer can consider multiple earlier words at once, not just Marie.', 'Next: How does attention determine which words matter most?']);
+  dom.window.close();
+});
+test('immediate token-centered comparison preserves layout, selection and sentence', () => {
+  const {dom,w,get,tokens}=fixture();
   assert.equal(get('Demo').hidden,false);
   assert.equal(w.document.querySelector('.placeholder').hidden,true);
-  assert.equal([...get('Tokens').children].map(t=>t.textContent).join(' '),'Marie arrived at the conference after a long flight. She was exhausted.');
-  assert.equal(get('Tokens').querySelector('[aria-pressed="true"]').textContent,'She');
-  assert.match(get('Summary').textContent,/9 sequential updates/);
+  assert.equal(tokens().map(t=>t.textContent).join(' '),'Marie arrived at the conference after a long flight. She was exhausted.');
+  const selected = () => get('Diagram').querySelector('.transformer-token[aria-pressed="true"]').textContent;
+  assert.equal(selected(),'She');
+  const geometry = () => tokens().map(t=>t.querySelector('text').getAttribute('x'));
+  const before = geometry();
   assert.equal(get('Diagram').querySelectorAll('.transformer-path').length,1);
   get('RNN').click();
-  assert.match(get('Diagram').textContent,/8 intermediate/);
-  assert.equal(get('Diagram').querySelectorAll('.transformer-path').length,2);
-  assert.equal(get('Tokens').querySelector('[aria-pressed="true"]').textContent,'She');
+  assert.equal(get('Diagram').querySelectorAll('.transformer-path').length,9);
+  assert.equal(get('Diagram').querySelectorAll('.transformer-state').length,12);
+  assert.deepEqual(geometry(),before); assert.equal(selected(),'She');
+  assert.equal(get('Diagram').querySelector('animateMotion'),null);
   w.document.getElementById('nextBtn').click(); assert.equal(get('Demo').hidden,true);
   w.document.getElementById('prevBtn').click(); assert.equal(get('Demo').hidden,false);
   assert.equal(get('RNN').getAttribute('aria-pressed'),'true');
   dom.window.close();
 });
-test('distance changes recompute exact path lengths and keep She selected', () => {
-  const {dom,get,change}=fixture();
-  for (const value of ['0','1','2','3']) {
-    change('Distance',value,'input');
-    const index=[...get('Tokens').children].findIndex(t=>t.textContent==='She');
-    assert.match(get('Summary').textContent,new RegExp(`${index} sequential updates`));
-    assert.equal(get('Tokens').querySelector('[aria-pressed="true"]').textContent,'She');
-    assert.equal(get('Preset').value,value);
-    assert.match(get('DistanceValue').textContent,new RegExp(`^${index-1} words`));
-  }
-  change('Preset','0'); assert.equal(get('Distance').value,'0');
+test('uses one shared tooltip and leaves the diagram background unobstructed', () => {
+  const {dom,w,get}=fixture();
+  get('Heading').dispatchEvent(new w.Event('pointerover',{bubbles:true}));
+  assert.equal(w.document.querySelectorAll(':is(#llmTooltip, #transformerTooltip):not([hidden])').length,1);
+  assert.equal(w.document.querySelector(':is(#llmTooltip, #transformerTooltip):not([hidden])').id,'llmTooltip');
+  get('Heading').dispatchEvent(new w.MouseEvent('pointerout',{bubbles:true,relatedTarget:get('Diagram')}));
+  get('Diagram').dispatchEvent(new w.Event('pointerover',{bubbles:true}));
+  assert.equal(w.document.querySelectorAll(':is(#llmTooltip, #transformerTooltip):not([hidden])').length,0);
+  get('Diagram').querySelector('[data-source="0"]').dispatchEvent(new w.Event('pointerover',{bubbles:true}));
+  assert.equal(w.document.querySelectorAll(':is(#llmTooltip, #transformerTooltip):not([hidden])').length,1);
+  assert.equal(w.document.getElementById('llmTooltip').textContent,'Click for target; Shift-click for source: Marie');
+  assert.doesNotMatch(get('Heading').textContent,/\?/);
   dom.window.close();
 });
-test('causal context boundary, source and adjacent selections, keyboard and reduced motion', () => {
-  const {dom,w,get,change}=fixture(true);
+test('attention arrows point outward from She to every permitted position', () => {
+  const {dom,get,change}=fixture();
+  const edges=()=>[...get('Diagram').querySelectorAll('[data-attention-from]')];
+  assert.equal(edges().length,10);
+  assert.ok(edges().every(e=>e.dataset.attentionFrom==='9' && !e.hasAttribute('marker-start') && !e.hasAttribute('marker-end')));
+  assert.deepEqual(edges().map(e=>Number(e.dataset.attentionTo)).sort((a,b)=>a-b),[0,1,2,3,4,5,6,7,8,9]);
+  get('Play').click();
+  assert.equal(get('Diagram').querySelector('animateMotion').getAttribute('keyPoints'),'1;0');
+  change('Context','8');
+  assert.deepEqual(edges().map(e=>Number(e.dataset.attentionTo)).sort((a,b)=>a-b),[2,3,4,5,6,7,8,9]);
+  get('RNN').click();assert.equal(edges().length,0);
+  dom.window.close();
+});
+test('RNN vectors start neutral, color only reached states, and reset to neutral', () => {
+  const {dom,get}=fixture();
+  get('RNN').click();
+  assert.equal(get('Diagram').querySelectorAll('.is-colored').length,0);
+  assert.ok([...get('Diagram').querySelectorAll('.transformer-vector-value')].every(n=>n.getAttribute('fill')==='var(--muted)'));
+  get('Step').click();
+  assert.equal(get('Diagram').querySelectorAll('.is-colored').length,2);
+  const vectors=get('Diagram').querySelectorAll('.rnn-state-blocks');
+  assert.notEqual(vectors[0].querySelector('.transformer-vector-value').getAttribute('fill'),vectors[1].querySelector('.transformer-vector-value').getAttribute('fill'));
+  assert.equal(vectors[2].querySelector('.transformer-vector-value').getAttribute('fill'),'var(--muted)');
+  get('Reset').click();
+  assert.equal(get('Diagram').querySelectorAll('.is-colored').length,0);
+  dom.window.close();
+});
+test('Transformer has one block per word and Shift-click selects the source', () => {
+  const {dom,w,get,tokens}=fixture();
+  assert.equal(get('Diagram').querySelectorAll('rect').length,tokens().length);
+  assert.equal(get('Selection'),null);
+  assert.ok(tokens()[0].querySelector('.transformer-role.source'));
+  assert.ok(tokens()[9].querySelector('.transformer-role.target'));
+  assert.ok(tokens()[0].classList.contains('has-source'));
+  assert.ok(tokens()[9].classList.contains('has-target'));
+  
+  tokens()[4].dispatchEvent(new w.MouseEvent('click',{bubbles:true,shiftKey:true}));
+  assert.equal(get('Diagram').querySelector('.transformer-path').dataset.from,'4');
+  assert.equal(get('Diagram').querySelector('.transformer-path').dataset.to,'9');
+  
+  tokens()[8].dispatchEvent(new w.MouseEvent('click',{bubbles:true}));
+  assert.equal(get('Diagram').querySelector('.transformer-path').dataset.to,'8');
+  get('RNN').click();
+  assert.equal(get('Selection'),null);
+  assert.equal(get('Diagram').querySelectorAll('.transformer-vector-value').length,5*tokens().length);
+  assert.equal(get('Diagram').querySelectorAll('.rnn-flow-box').length,2*tokens().length);
+  get('Attention').click();
+  assert.equal(get('Diagram').querySelectorAll('rect').length,tokens().length);
+  assert.equal(get('Diagram').querySelector('.transformer-path').dataset.from,'4');
+  dom.window.close();
+});
+test('all permitted sources, selectable featured edge, self-attention and RNN preservation', () => {
+  const {dom,w,get,change,clickToken}=fixture();
+  const sources = () => [...get('Diagram').querySelectorAll('[data-source]')];
+  const choose = i => sources()[i].dispatchEvent(new w.MouseEvent('click',{bubbles:true,shiftKey:true}));
+  assert.deepEqual(sources().filter(n=>n.classList.contains('available')).map(n=>Number(n.dataset.source)),[0,1,2,3,4,5,6,7,8,9]);
+  get('RNN').click();const originalRNN=get('Diagram').innerHTML;get('Attention').click();
+  choose(4);
+  assert.match(get('Summary').textContent,/"She" can attend to conference/);
+  assert.equal(get('Diagram').querySelector('.transformer-path').dataset.from,'4');
+  assert.equal(get('Diagram').querySelector('.transformer-path').dataset.to,'9');
+  choose(10);assert.equal(get('Diagram').querySelector('.transformer-path').dataset.from,'4');
+  get('RNN').click();assert.equal(get('Diagram').innerHTML,originalRNN);
+  get('Attention').click();assert.equal(get('Diagram').querySelector('.transformer-path').dataset.from,'4');
+  sources()[9].dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,shiftKey:true}));
+  assert.match(get('Summary').textContent,/own position/);
+  const self=get('Diagram').querySelector('.transformer-path');
+  assert.equal(self.dataset.from,'9');assert.equal(self.dataset.to,'9');assert.match(self.getAttribute('d'),/C/);
+  get('Step').click();assert.equal(get('Diagram').querySelectorAll('.traversed').length,1);
+  change('Context','8');
+  assert.deepEqual(sources().filter(n=>n.classList.contains('available')).map(n=>Number(n.dataset.source)),[2,3,4,5,6,7,8,9]);
+  choose(0);assert.equal(get('Diagram').querySelector('.transformer-path').dataset.from,'9');
+  clickToken(3);assert.equal(get('Diagram').querySelector('.transformer-path'),null);
+  assert.match(get('Summary').textContent,/future position/);
+  choose(2);assert.equal(get('Diagram').querySelector('.transformer-path').dataset.to,'3');
+  dom.window.close();
+});
+test('each added word creates a visible recurrent transition, while attention stays direct', () => {
+  const {dom,get,change,tokens}=fixture();
+  let previous = 0;
+  for (const value of ['0','1','2','3']) {
+    change('Distance',value,'input');
+    const index=tokens().findIndex(t=>t.textContent==='She');
+    assert.ok(index > previous); previous=index;
+    get('RNN').click();
+    const edges=[...get('Diagram').querySelectorAll('.transformer-path')];
+    assert.equal(edges.length,index);
+    edges.forEach((e,i)=>{assert.equal(Number(e.dataset.from),i);assert.equal(Number(e.dataset.to),i+1);});
+    get('Attention').click();
+    const edge=get('Diagram').querySelector('.transformer-path');
+    assert.equal(get('Diagram').querySelectorAll('.transformer-path').length,1);
+    assert.equal(edge.dataset.from,'0'); assert.equal(Number(edge.dataset.to),index);
+    assert.equal(get('Diagram').querySelector('.transformer-token[aria-pressed="true"]').textContent,'She');
+    assert.equal(get('Preset'),null);
+  }
+  change('Distance','0','input'); assert.equal(get('Distance').value,'0');
+  assert.ok(get('Distance').closest('.tokens-input-header'));
+  dom.window.close();
+});
+test('causal context boundaries remove the edge and disable tracing', () => {
+  const {dom,get,change,clickToken}=fixture();
   change('Context','8');
   assert.equal(get('Diagram').querySelectorAll('.transformer-path').length,0);
-  assert.match(get('Status').textContent,/outside/);
-  get('RNN').click(); assert.equal(get('Diagram').querySelectorAll('.transformer-path').length,2);
+  assert.equal(get('Play').disabled,true); assert.equal(get('Step').disabled,true);
+  assert.match(get('Summary').textContent,/outside/);
+  get('RNN').click(); assert.equal(get('Diagram').querySelectorAll('.transformer-path').length,9);
   get('Attention').click();
-  get('Tokens').children[7].click(); assert.equal(get('Diagram').querySelectorAll('.transformer-path').length,1);
-  get('Tokens').children[8].click(); assert.equal(get('Diagram').querySelectorAll('.transformer-path').length,0);
-  get('Tokens').children[0].click(); assert.match(get('Summary').textContent,/0 sequential updates/);
-  get('Tokens').children[0].dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));
-  assert.equal(get('Demo').hidden,false);
-  assert.equal(get('Tokens').querySelector('[aria-pressed="true"]').textContent,'arrived');
-  get('RNN').click(); assert.match(get('Summary').textContent,/1 sequential update from/);
-  assert.equal(get('Diagram').querySelectorAll('.transformer-path').length,1);
+  clickToken(7); assert.equal(get('Diagram').querySelectorAll('.transformer-path').length,1);
+  clickToken(8); assert.equal(get('Diagram').querySelectorAll('.transformer-path').length,0);
+  clickToken(0); assert.equal(get('Diagram').querySelectorAll('.transformer-path').length,1);
+  dom.window.close();
+});
+test('manual stepping, reset, brief playback, pause, and changes cancel pending motion', async () => {
+  const {dom,w,get,change,clocks,tick}=fixture();
+  get('RNN').click(); get('Step').click();
+  assert.equal(get('Diagram').querySelectorAll('.traversed').length,1);
+  assert.equal(clocks.size,0);
+  get('Reset').click(); assert.equal(get('Diagram').querySelectorAll('.traversed').length,0);
+  change('Distance','3','input'); get('Play').click();
+  assert.ok(get('Diagram').querySelector('animateMotion')); assert.equal(clocks.size,1);
+  let elapsed=0;
+  while(clocks.size){elapsed += [...clocks.values()][0].delay; tick();}
+  assert.ok(elapsed <= 3601); assert.equal(get('Step').disabled,true);
+  get('Play').click();get('Play').click();assert.equal(clocks.size,0);
+  get('Play').click();get('Attention').click();assert.equal(clocks.size,0);
+  get('Play').click(); change('Context','8');assert.equal(clocks.size,0);
+  change('Context','64');get('Play').click();
+  w.document.getElementById('nextBtn').click();await Promise.resolve(); assert.equal(clocks.size,0);
+  dom.window.close();
+});
+test('reduced motion remains fully step-able and keyboard selection stays in the scene', () => {
+  const {dom,w,get,tokens,clickToken,clocks}=fixture(true);
+  assert.equal(get('Play').disabled,true); assert.equal(get('MotionNote').hidden,false);
+  get('Step').click(); assert.equal(get('Diagram').querySelectorAll('.traversed').length,1);
   assert.equal(get('Diagram').querySelector('animateMotion'),null);
+  get('RNN').click();clickToken(0);
+  tokens()[0].dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));
+  assert.equal(get('Demo').hidden,false);
+  assert.equal(get('Diagram').querySelector('.transformer-token[aria-pressed="true"]').textContent,'arrived');
+  get('Step').click(); assert.equal(get('Diagram').querySelectorAll('.traversed').length,1);
+  assert.equal(clocks.size,0);
   dom.window.close();
 });
