@@ -1,0 +1,62 @@
+/* Shared panels, messages, dropdown classes and SVG typography are unchanged. */
+.canvas:has(#qkDemo:not([hidden])){padding-top:10px}
+#qkDemo > .tokens-feedback:first-child{margin-top:0;margin-bottom:10px}
+#qkDemo .tokens-input-body > .llm-exploration-question:first-child{margin-top:0}
+#qkDemo .rnn-flow-diagram{min-width:640px;max-width:940px}
+#qkDiagram{overflow-x:auto}
+#qkDemo .attention-connection{fill:none;stroke:var(--purple);stroke-opacity:.4;stroke-linecap:round;stroke-linejoin:round}
+#qkDiagram.inspecting .attention-connection:not(.inspected){stroke-opacity:.12}
+#qkDemo .attention-connection.inspected{stroke:var(--blue);stroke-opacity:1}
+#qkDemo .attention-token{cursor:pointer;outline:none}
+#qkDemo .attention-token rect{fill:#fff;stroke:var(--word-color)}
+#qkDemo .attention-token.selected rect{fill:var(--green-soft);stroke:var(--word-color);stroke-width:3}
+#qkDemo .attention-token.selected text{fill:var(--green-dark)}
+#qkDemo .attention-target-icon{color:var(--green-dark);pointer-events:none}
+#qkDemo .attention-info-icon,#qkDemo .tokens-next-icon{color:var(--blue)}
+#qkDemo .attention-info-icon circle{fill:var(--blue-soft)}
+#qkDemo .attention-try-icon{color:var(--amber)}
+#qkDemo .attention-try-icon .attention-bulb{fill:var(--amber-soft)}
+#qkTitle svg{color:var(--purple)}
+#qkTitle svg circle{fill:var(--purple-soft)}
+#qkTitle svg path{fill:none;stroke:var(--purple)}
+#qkDemo .attention-token.future{opacity:.45}
+#qkDemo .attention-token:focus-visible rect{stroke:var(--word-color);stroke-width:3;stroke-dasharray:4 2}
+#qkTarget{font-weight:700}
+#qkDemo .tokenizer-picker-button{display:flex;align-items:center;justify-content:space-between;gap:20px;width:100%;padding:8px 12px;border:1px solid var(--green);border-radius:8px;background:#f4faf6;color:var(--green-dark);font-weight:600;text-align:left}
+#qkDemo .tokenizer-picker-button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+#qkDemo .tokenizer-picker-menu button{display:block;width:100%;padding:8px 12px;border:0;border-radius:5px;text-align:left;white-space:nowrap;font-size:12px}
+#qkDemo .tokenizer-picker-menu button[aria-selected=true]{background:var(--green-soft);color:var(--green-dark);font-weight:700}
+#qkDemo .tokenizer-picker-menu button:hover,#qkDemo .tokenizer-picker-menu button:focus{background:var(--green-soft);outline:2px solid var(--green);outline-offset:-2px}
+
+#qkDemo .attention-percent{fill:var(--muted);font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+#qkDemo .attention-percent[data-inspect]:focus-visible{outline:none;fill:var(--blue);text-decoration:underline}
+#qkBar{display:flex;width:100%;height:34px;margin:8px 0;border-radius:8px;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+#qkInspection{margin:6px 0 0}
+#qkBarTitle{margin:8px 0 0;font-size:13px;font-weight:700;line-height:1.5;color:var(--ink)}
+#qkBarTitle span{font-weight:400;color:var(--muted)}
+#qkDemo .attention-segment{flex:none;min-width:0;box-sizing:border-box;margin:0;padding:0;border:0;border-right:1px solid #fff;border-radius:0;background:color-mix(in srgb,var(--word-color) 35%,transparent);color:var(--ink);font-size:13px;font-weight:700}
+#qkDemo .attention-segment:last-child{border-right:0}
+#qkDemo .attention-segment span{display:block;padding:0 3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:400}
+#qkDemo .attention-segment.inspected span{font-weight:750}
+#qkDemo .attention-segment.inspected{background:color-mix(in srgb,var(--word-color) 55%,transparent)}
+#qkDemo .attention-segment:focus-visible{outline:2px solid #fff;outline-offset:-4px}
+
+#qkDemo .qk-number{color:var(--purple);font-variant-numeric:tabular-nums}
+/* The comparison leads; the unchanged attention diagram is supporting context. */
+#qkComparisonHeading,#qkVisualHeading,#qkDemo .qk-details-heading{margin:0 0 8px;font-size:14px;font-weight:750;color:var(--ink)}
+#qkComparison,#qkVisualComparison{margin:8px 0 12px}
+#qkDemo .qk-comparison{min-width:640px;max-width:940px}
+#qkDemo .qk-comparison .qk-query-label{fill:var(--green-dark)}
+#qkDemo .qk-comparison text{font-variant-numeric:tabular-nums}
+#qkDemo .tokens-about{margin:8px 0 0}
+#qkVisualComparison [data-tooltip]:focus-visible{outline:2px solid var(--green);outline-offset:3px}
+#qkDemo .qk-flow-scroll{overflow-x:auto}
+#qkVisualComparison,#qkDemo .qk-distribution{min-width:640px;max-width:940px;margin:0 auto}
+#qkDemo [data-permitted-score] rect{fill:none;stroke:none}
+#qkDemo .qk-selected-score rect{fill:var(--green-soft);stroke:var(--word-color);stroke-width:3}
+#qkDemo .qk-selected-score text{fill:var(--purple);font-weight:750}
+#qkDemo .attention-segment.inspected{box-shadow:inset 0 0 0 2px var(--word-color)}
+#qkDemo #qkVisualResult rect{fill:color-mix(in srgb,var(--word-color) 10%,white);stroke:var(--word-color)}
+#qkDemo #qkVisualWeight{fill:var(--word-color)}
+#qkDemo #qkVisualQueryLabel,#qkDemo #qkVisualKeyLabel,#qkDemo #qkVisualWeightLabel,
+#qkDemo #qkQueryLabel,#qkDemo #qkKeyLabel{font-weight:750}

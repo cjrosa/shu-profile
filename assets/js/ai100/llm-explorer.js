@@ -23,7 +23,7 @@
     ] },
     { id: 'attend', title: 'Attend', question: 'How do transformers incorporate information across tokens?', scenes: [
       scene('self-attention', 'Introducing Self-Attention', 'Explore how each token draws on other tokens to build a representation of its meaning in context.', 'Connections from one token to other tokens will illustrate which contextual information may be relevant.'),
-      scene('qkv', 'Queries, Keys, and Values', 'See how queries, keys, and values work together to find and combine relevant information from other tokens.', 'A token diagram will distinguish queries, keys, and values and show their roles in forming attention relationships.'),
+      scene('qkv', 'Queries, Keys, and Attention Scores', 'Explore how numerical Query/Key comparisons become attention weights through softmax.', 'A token diagram will distinguish queries, keys, and values and show their roles in forming attention relationships.'),
       scene('attention-weights', 'Attention Weights', 'Compare attention weights and see how they control the information combined from different tokens.', 'Attention weights will be paired with token information to illustrate a weighted combination.'),
       scene('feed-forward', 'Feed-Forward Networks', 'Explore how a network transforms each token representation after attention has added information from context.', 'A contextual token representation will pass through a feed-forward block to show the next transformation.'),
       scene('layers', 'Transformer Layers', 'Follow how repeated attention and processing steps refine token representations through a transformer.', 'Stacked layer blocks will trace repeated attention and feed-forward processing through a transformer.')
@@ -414,6 +414,9 @@
     const isGeneration = item.id === 'generating-language';
     const isLimits = item.id === 'n-gram-limits';
     const isTransformer = item.id === 'transformer';
+    const isQK = item.id === 'qkv';
+    $('#qkDemo').hidden = !isQK;
+    if (isQK && window.openQKScene) window.openQKScene();
     const isSelfAttention = item.id === 'self-attention';
     $('#selfAttentionDemo').hidden = !isSelfAttention;
     if (isSelfAttention && window.openSelfAttentionScene) window.openSelfAttentionScene();
@@ -442,8 +445,8 @@
     if (!isProbability && window.cancelProbabilityReveal) window.cancelProbabilityReveal();
     $('.prob-demo').hidden = !isProbability;
     if (isProbability && window.drawProbability) window.drawProbability();
-    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention;
-    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention;
+    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention || isQK;
+    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention || isQK;
     $('.count-demo').hidden = !isCounting;
     if (isCounting) drawCounting();
     $('.ngram-demo').hidden = !isNgram;

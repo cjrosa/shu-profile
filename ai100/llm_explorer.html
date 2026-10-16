@@ -180,6 +180,7 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 <link rel="stylesheet" href="../assets/css/pages/llm-rnn.css">
 <link rel="stylesheet" href="../assets/css/pages/llm-transformer.css">
 <link rel="stylesheet" href="../assets/css/pages/llm-self-attention.css">
+<link rel="stylesheet" href="../assets/css/pages/llm-qk.css">
 </head>
 <body>
 <main class="shell">
@@ -364,6 +365,39 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 <div class="tokens-feedback"><p><svg class="tokens-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12 3 3 6-6"/></svg><strong>Discovery:</strong> Self-attention combines information from permitted positions with different relative weights.</p><p><svg class="tokens-feedback-icon tokens-next-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg><strong>Next:</strong> How does the transformer calculate these attention weights?</p></div>
 <details class="tokens-about"><summary>About this teaching simulation</summary><div class="tokens-input-body"><p>Real attention weights are computed from token representations using parameters learned during training, rather than assigned manually for each sentence. Scene 2 introduces Query, Key, and Value calculations.</p><p>The attention output combines Value vectors. A large weight does not prove a pronoun's referent, semantic understanding, or explain a model's entire decision. One word per position is a teaching simplification; real token boundaries may differ.</p></div></details>
 </div>
+<div class="tokens-demo" id="qkDemo" hidden>
+<section class="tokens-input-card" aria-labelledby="qkTitle">
+<header class="tokens-input-header"><h3 id="qkTitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="5" cy="5" r="3"/><circle cx="19" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><path d="M8 5h8M7 7l10 10M8 19h8"/></svg>Where do the weights come from?</h3><div class="tokens-toolbar"><label id="qkExampleLabel" for="qkPickerButton">Try an example</label><div id="qkPicker" class="tokenizer-picker"><button id="qkPickerButton" class="tokenizer-picker-button" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="qkPickerMenu"></button><div id="qkPickerMenu" class="tokenizer-picker-menu" role="listbox" aria-labelledby="qkExampleLabel" hidden></div></div><button id="qkReset" type="button">Reset</button></div></header>
+<div class="tokens-input-body">
+<h4 id="qkVisualHeading">Compare Query and Key</h4>
+<div class="qk-flow-scroll rnn-flow-scroll"><div id="qkVisualComparison" role="region" aria-labelledby="qkVisualHeading" tabindex="0"></div>
+<div class="qk-distribution"><h4 id="qkBarTitle">Attention distribution <span>(100%)</span></h4>
+<div id="qkBar" class="attention-stacked-bar" role="group" aria-labelledby="qkBarTitle"></div>
+<div id="qkWeightMeaning" class="tokens-feedback" role="status" aria-live="polite" aria-atomic="true"><p><svg class="tokens-feedback-icon attention-info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01"/></svg><strong id="qkWeightMeaningTitle"></strong></p><p><strong>It IS:</strong> <span id="qkWeightMeaningIs"></span></p><p><strong>It is NOT:</strong> <span id="qkWeightMeaningNot"></span></p></div>
+</div></div>
+<p id="qkInspection" class="sr-only" role="status" aria-live="polite"></p>
+<p id="qkTarget" class="sr-only" role="status"></p>
+<div id="qkDiagram" class="rnn-flow-scroll" role="region" aria-label="Selectable targets and attention connections" tabindex="0"></div>
+
+
+<details class="tokens-about"><summary>Inspect the calculation and teaching parameters</summary><div class="tokens-input-body">
+<h4 id="qkComparisonHeading">Multiply matching dimensions, then add</h4>
+<div id="qkComparison" class="rnn-flow-scroll" role="region" aria-labelledby="qkComparisonHeading" tabindex="0"></div>
+<h4 class="qk-details-heading">Projection rules and teaching parameters</h4>
+<p id="qkProjection"></p>
+<p>For a representation [a, b, c], Query = [b + 0.5c, a − 0.5c]; Key = [a + 0.25c, b − 0.5c]. Score(i, j) = (Qᵢ · Kⱼ) / √2. The same projections apply at every position.</p>
+<p>Fixed representation lookup (case and punctuation ignored): the/and/at/a/after = [−0.5, 0, 0.2]; team/dog/ball/conference/flight/train = [1, 0, 0.2]; pizzas/Marie = [2, 0, 0.2]; they/She = [0.2, 1.5, 0]; got/arrived/chased/was/were = [0, 0.2, 1]; cold/exhausted/long/delayed = [0.5, 0.5, −0.5]. Coordinates are invented teaching numbers, not semantic measurements.</p>
+<h4 class="qk-details-heading">Technical assumptions and limitations</h4>
+<p>Causal masking excludes future positions before stable softmax normalizes the permitted scores. Calculations use full precision; displayed values are rounded. Vector colors match the NLP &amp; RNN Visualizer: blue for positive values, purple for negative, gray for magnitudes below 0.0005; intensity uses one fixed range covering every Query and Key value in the teaching vocabulary (maximum magnitude 2.05), so different magnitudes remain distinct. The sign hues, saturation, and lightness endpoints match the Visualizer. Dimensions are unnamed numerical coordinates, not named semantic features.</p>
+<p>In trained transformers, learned projections produce Query, Key, and Value vectors from each token representation. These teaching parameters are fixed, not learned. This is one head; real transformers generally use multiple heads and layers. One word per position is a simplification; tokenizer boundaries may differ. Weights are numerical compatibility, not probabilities of a pronoun’s referent or proof of understanding. Query and Key descriptions are analogies, not literal semantic questions.</p>
+</div></details>
+
+</div>
+<footer class="tokens-input-footer"><p class="tokens-note">Teaching simulation: calculated weights from fixed parameters; Scene 1 used authored illustrative weights.</p></footer>
+</section>
+<p class="tokens-feedback"><svg class="tokens-feedback-icon attention-try-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="attention-bulb" d="M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 2H9s0-1-1-2Z"/><path d="M9 18h6M10 21h4"/></svg><strong>Try it:</strong> Keep <strong>they</strong> as the target. Alternate <strong>pizzas</strong> and <strong>team</strong> as sources: what stays fixed, and what changes?</p>
+<div class="tokens-feedback"><p><svg class="tokens-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12 3 3 6-6"/></svg><strong>Discovery:</strong> Comparing Queries and Keys produces the scores that determine attention weights.</p><p><svg class="tokens-feedback-icon tokens-next-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg><strong>Next:</strong> How do these weights combine the information in Value vectors?</p></div>
+</div>
 <div class="tokens-demo" id="transformerDemo" hidden>
 <p class="tokens-feedback"><svg class="tokens-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01"/></svg><strong>What you're seeing:</strong> <span id="transformerSeeing">Transformers use attention to connect words directly.</span></p>
 <section class="tokens-input-card" aria-labelledby="transformerTitle">
@@ -412,5 +446,7 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 <script src="../assets/js/ai100/llm-rnn.js"></script>
 <script src="../assets/js/ai100/llm-transformer.js"></script>
 <script src="../assets/js/ai100/llm-self-attention.js"></script>
+<script src="../assets/js/ai100/llm-qk-model.js"></script>
+<script src="../assets/js/ai100/llm-qk.js"></script>
 </body>
 </html>
