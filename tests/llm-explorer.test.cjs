@@ -132,7 +132,7 @@ test('hub enables LLM Explorer and includes it in search', () => {
   assert.doesNotMatch(hub, />Coming soon<\/span>/);
   const html = fs.readFileSync('ai100/llm_explorer.html', 'utf8');
   assert.match(html, /aria-valuemax="22"/);
-  assert.deepEqual([...html.matchAll(/<script src="([^"]+)"/g)].map(match => match[1]), ['../assets/js/ai100/llm-explorer.js', '../assets/js/ai100/llm-probability.js', '../assets/js/ai100/llm-generation.js', '../assets/js/ai100/llm-limits.js', '../assets/js/ai100/llm-token-engine.js', '../assets/js/ai100/llm-tokens.js', '../assets/js/ai100/llm-subwords.js', '../assets/js/ai100/llm-tokenizer.js', '../assets/js/ai100/llm-context.js', '../assets/js/ai100/llm-meaning.js', '../assets/js/ai100/rnn-training.js', '../assets/js/ai100/llm-rnn.js', '../assets/js/ai100/llm-transformer.js']);
+  assert.deepEqual([...html.matchAll(/<script src="([^"]+)"/g)].map(match => match[1]), ['../assets/js/ai100/llm-explorer.js', '../assets/js/ai100/llm-probability.js', '../assets/js/ai100/llm-generation.js', '../assets/js/ai100/llm-limits.js', '../assets/js/ai100/llm-token-engine.js', '../assets/js/ai100/llm-tokens.js', '../assets/js/ai100/llm-subwords.js', '../assets/js/ai100/llm-tokenizer.js', '../assets/js/ai100/llm-context.js', '../assets/js/ai100/llm-meaning.js', '../assets/js/ai100/rnn-training.js', '../assets/js/ai100/llm-rnn.js', '../assets/js/ai100/llm-transformer.js', '../assets/js/ai100/llm-self-attention.js']);
   assert.match(html, /prefers-reduced-motion/);
 });
 

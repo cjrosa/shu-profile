@@ -179,6 +179,7 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 <link rel="stylesheet" href="../assets/css/pages/rnn-training.css">
 <link rel="stylesheet" href="../assets/css/pages/llm-rnn.css">
 <link rel="stylesheet" href="../assets/css/pages/llm-transformer.css">
+<link rel="stylesheet" href="../assets/css/pages/llm-self-attention.css">
 </head>
 <body>
 <main class="shell">
@@ -345,6 +346,24 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 
 
 <div class="tokens-feedback"><p><svg class="tokens-feedback-icon " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12 3 3 6-6"/></svg><strong>Remember:</strong> An RNN updates its running impression one token at a time. That hidden state helps it choose the next word, which feeds back into the next step.</p><p><svg class="tokens-feedback-icon tokens-next-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg><strong>Next:</strong> What if distant words could connect without passing through every intervening recurrent hidden state?</p></div></div>
+<div class="tokens-demo" id="selfAttentionDemo" hidden>
+<p class="tokens-feedback"><svg class="tokens-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01"/></svg><strong>Teaching simulation:</strong> One illustrative attention head. These weights are authored examples, not trained-model results.</p>
+<section class="tokens-input-card" aria-labelledby="selfAttentionTitle">
+<header class="tokens-input-header"><h3 id="selfAttentionTitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="5" cy="5" r="3"/><circle cx="19" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><path d="M8 5h8M7 7l10 10M8 19h8"/></svg>Which words matter?</h3><div class="tokens-toolbar"><label id="selfAttentionExampleLabel" for="selfAttentionPickerButton">Try an example</label><div id="selfAttentionPicker" class="tokenizer-picker"><button id="selfAttentionPickerButton" class="tokenizer-picker-button" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="selfAttentionPickerMenu"></button><div id="selfAttentionPickerMenu" class="tokenizer-picker-menu" role="listbox" aria-labelledby="selfAttentionExampleLabel" hidden></div></div><button id="selfAttentionReset" type="button">Reset</button></div></header>
+<div class="tokens-input-body">
+<p class="llm-exploration-question">How does self-attention combine information from different words?</p>
+<p id="selfAttentionTarget" class="sr-only" role="status"></p>
+<div id="selfAttentionDiagram" class="rnn-flow-scroll" role="region" aria-label="Selectable targets and attention connections" tabindex="0"></div>
+<h4 id="selfAttentionBarTitle">Attention distribution <span>(100%)</span></h4>
+<div id="selfAttentionBar" class="attention-stacked-bar" role="group" aria-labelledby="selfAttentionBarTitle"></div>
+<p id="selfAttentionInspection" class="tokens-note" role="status"></p>
+</div>
+<footer class="tokens-input-footer"><p class="tokens-note">Attention weights determine how strongly information from each permitted position contributes to the attention output. Total: 100% before rounding.</p></footer>
+</section>
+<p class="tokens-feedback"><svg class="tokens-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01"/></svg><strong>Try it:</strong> Select different words. Does the attention pattern change? Hover over a word or select its percentage to inspect a source.</p>
+<div class="tokens-feedback"><p><svg class="tokens-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12 3 3 6-6"/></svg><strong>Discovery:</strong> Self-attention combines information from permitted positions with different relative weights.</p><p><svg class="tokens-feedback-icon tokens-next-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg><strong>Next:</strong> How does the transformer calculate these attention weights?</p></div>
+<details class="tokens-about"><summary>About this teaching simulation</summary><div class="tokens-input-body"><p>Real attention weights are computed from token representations using parameters learned during training, rather than assigned manually for each sentence. Scene 2 introduces Query, Key, and Value calculations.</p><p>The attention output combines Value vectors. A large weight does not prove a pronoun's referent, semantic understanding, or explain a model's entire decision. One word per position is a teaching simplification; real token boundaries may differ.</p></div></details>
+</div>
 <div class="tokens-demo" id="transformerDemo" hidden>
 <p class="tokens-feedback"><svg class="tokens-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01"/></svg><strong>What you're seeing:</strong> <span id="transformerSeeing">Transformers use attention to connect words directly.</span></p>
 <section class="tokens-input-card" aria-labelledby="transformerTitle">
@@ -392,5 +411,6 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 <script src="../assets/js/ai100/rnn-training.js"></script>
 <script src="../assets/js/ai100/llm-rnn.js"></script>
 <script src="../assets/js/ai100/llm-transformer.js"></script>
+<script src="../assets/js/ai100/llm-self-attention.js"></script>
 </body>
 </html>

@@ -414,6 +414,9 @@
     const isGeneration = item.id === 'generating-language';
     const isLimits = item.id === 'n-gram-limits';
     const isTransformer = item.id === 'transformer';
+    const isSelfAttention = item.id === 'self-attention';
+    $('#selfAttentionDemo').hidden = !isSelfAttention;
+    if (isSelfAttention && window.openSelfAttentionScene) window.openSelfAttentionScene();
     $('#transformerDemo').hidden = !isTransformer;
     if (isTransformer && window.openTransformerScene) window.openTransformerScene();
     const isRNN = item.id === 'rnn-approach';
@@ -439,8 +442,8 @@
     if (!isProbability && window.cancelProbabilityReveal) window.cancelProbabilityReveal();
     $('.prob-demo').hidden = !isProbability;
     if (isProbability && window.drawProbability) window.drawProbability();
-    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer;
-    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer;
+    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention;
+    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention;
     $('.count-demo').hidden = !isCounting;
     if (isCounting) drawCounting();
     $('.ngram-demo').hidden = !isNgram;
