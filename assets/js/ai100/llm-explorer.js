@@ -25,7 +25,7 @@
       scene('self-attention', 'Introducing Self-Attention', 'Explore how each token draws on other tokens to build a representation of its meaning in context.', 'Connections from one token to other tokens will illustrate which contextual information may be relevant.'),
       scene('qkv', 'Queries, Keys, and Attention Scores', 'Explore how numerical Query/Key comparisons become attention weights through softmax.', 'A token diagram will distinguish queries, keys, and values and show their roles in forming attention relationships.'),
       scene('attention-weights', 'Combining Values', 'Explore how attention weights combine Value vectors into a new attention output.', 'Attention weights will be paired with token information to illustrate a weighted combination.'),
-      scene('feed-forward', 'Feed-Forward Networks', 'Explore how a network transforms each token representation after attention has added information from context.', 'A contextual token representation will pass through a feed-forward block to show the next transformation.'),
+      scene('feed-forward', 'Inside a Transformer Layer', 'What happens to the attention output as it moves through the rest of a transformer layer?', 'A contextual token representation will pass through a feed-forward block to show the next transformation.'),
       scene('layers', 'Transformer Layers', 'Follow how repeated attention and processing steps refine token representations through a transformer.', 'Stacked layer blocks will trace repeated attention and feed-forward processing through a transformer.')
     ] },
     { id: 'generate', title: 'Generate', question: 'How does an LLM produce text?', scenes: [
@@ -414,6 +414,10 @@
     const isGeneration = item.id === 'generating-language';
     const isLimits = item.id === 'n-gram-limits';
     const isTransformer = item.id === 'transformer';
+    const isLayer = item.id === 'feed-forward';
+    $('#layerDemo').hidden = !isLayer;
+    if (isLayer && window.openLayerScene) window.openLayerScene();
+    if (!isLayer && window.cancelLayerPlayback) window.cancelLayerPlayback();
     const isValues = item.id === 'attention-weights';
     $('#valuesDemo').hidden = !isValues;
     if (isValues && window.openValuesScene) window.openValuesScene();
@@ -448,8 +452,8 @@
     if (!isProbability && window.cancelProbabilityReveal) window.cancelProbabilityReveal();
     $('.prob-demo').hidden = !isProbability;
     if (isProbability && window.drawProbability) window.drawProbability();
-    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention || isQK || isValues;
-    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention || isQK || isValues;
+    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention || isQK || isValues || isLayer;
+    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention || isQK || isValues || isLayer;
     $('.count-demo').hidden = !isCounting;
     if (isCounting) drawCounting();
     $('.ngram-demo').hidden = !isNgram;
