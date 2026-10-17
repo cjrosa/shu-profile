@@ -181,6 +181,7 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 <link rel="stylesheet" href="../assets/css/pages/llm-transformer.css">
 <link rel="stylesheet" href="../assets/css/pages/llm-self-attention.css">
 <link rel="stylesheet" href="../assets/css/pages/llm-qk.css">
+<link rel="stylesheet" href="../assets/css/pages/llm-values.css">
 </head>
 <body>
 <main class="shell">
@@ -398,6 +399,26 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 <p class="tokens-feedback"><svg class="tokens-feedback-icon attention-try-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="attention-bulb" d="M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 2H9s0-1-1-2Z"/><path d="M9 18h6M10 21h4"/></svg><strong>Try it:</strong> Keep <strong>they</strong> as the target. Alternate <strong>pizzas</strong> and <strong>team</strong> as sources: what stays fixed, and what changes?</p>
 <div class="tokens-feedback"><p><svg class="tokens-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12 3 3 6-6"/></svg><strong>Discovery:</strong> Comparing Queries and Keys produces the scores that determine attention weights.</p><p><svg class="tokens-feedback-icon tokens-next-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg><strong>Next:</strong> How do these weights combine the information in Value vectors?</p></div>
 </div>
+<div class="tokens-demo" id="valuesDemo" hidden>
+<p class="tokens-feedback"><svg class="tokens-feedback-icon attention-try-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="attention-bulb" d="M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 2H9s0-1-1-2Z"/><path d="M9 18h6M10 21h4"/></svg><strong>Try it:</strong> Keep <strong>they</strong> as the target. Hover over <strong>pizzas</strong>, then <strong>team</strong> in the Value cards. Compare their weights and weighted Values. What changes?</p>
+<section class="tokens-input-card" aria-labelledby="valuesTitle">
+<header class="tokens-input-header"><h3 id="valuesTitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="5" cy="5" r="3"/><circle cx="19" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><path d="M8 5h8M7 7l10 10M8 19h8"/></svg>How do Values combine?</h3><div class="tokens-toolbar"><label id="valuesExampleLabel" for="valuesPickerButton">Try an example</label><div id="valuesPicker" class="tokenizer-picker"><button id="valuesPickerButton" class="tokenizer-picker-button" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="valuesPickerMenu"></button><div id="valuesPickerMenu" class="tokenizer-picker-menu" role="listbox" aria-labelledby="valuesExampleLabel" hidden></div></div><button id="valuesReset" type="button">Reset</button></div></header>
+<div class="tokens-input-body">
+
+<div id="valuesDiagram" class="rnn-flow-scroll" role="region" aria-label="Select a target" tabindex="0"></div>
+<div class="values-flow-scroll rnn-flow-scroll"><div class="values-distribution"><h4 id="valuesBarTitle">Attention distribution <span>(100%)</span></h4><div id="valuesBar" class="attention-stacked-bar" role="group" aria-labelledby="valuesBarTitle"></div></div>
+<h4 id="valuesVisualHeading">Word values</h4><div id="valuesVisualComparison" role="group" aria-labelledby="valuesVisualHeading"></div></div>
+<p class="tokens-feedback"><svg class="tokens-feedback-icon attention-info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01"/></svg><strong>Attention output:</strong> A new numerical vector formed by combining Value vectors according to their attention weights. It undergoes further transformer processing; it is not a prediction or the complete final token representation.</p>
+<div id="valuesWeightMeaning" class="tokens-feedback" role="status" aria-live="polite" aria-atomic="true"><p><svg class="tokens-feedback-icon attention-info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01"/></svg><strong id="valuesWeightMeaningTitle"></strong></p><p><strong>It IS:</strong> <span id="valuesWeightMeaningIs"></span></p><p><strong>It is NOT:</strong> <span id="valuesWeightMeaningNot"></span></p></div>
+
+<details class="tokens-about"><summary><svg class="values-calculation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="2" width="14" height="20" rx="2"/><rect x="8" y="5" width="8" height="4" rx="1"/><path d="M8 13h2m4 0h2M8 17h2m4 0h2"/></svg>Inspect the Value calculation</summary><div class="tokens-input-body"><h4 id="valuesComparisonHeading">Apply the weight, then combine</h4><div id="valuesComparison" class="rnn-flow-scroll"></div><h4 class="values-details-heading">Projection rules and teaching parameters</h4><p id="valuesProjection"></p><p>For representation [a, b, c], Value = [0.5a − 0.5c, 0.5b − 0.25c]. In X Wᵥ notation, Wᵥ = [[0.5, 0], [0, 0.5], [−0.5, −0.25]]. The same fixed projection applies to every source representation from Scene 2; Query/Key scores and softmax weights are unchanged.</p><p>These are fixed teaching parameters, not learned weights. In trained transformers, Value projections are learned. This scene illustrates one head, with one word per position as a simplification. Future positions are masked and contribute zero. Vector colors use the Visualizer’s fixed magnitude range 0–1; all Values, weighted Values, and outputs fit that range. Coordinates have no assigned semantic names.</p></div></details>
+
+</div>
+<footer class="tokens-input-footer"><p class="tokens-note">Teaching simulation: one attention head with fixed, disclosed parameters.</p></footer>
+</section>
+
+<div class="tokens-feedback"><p><svg class="tokens-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12 3 3 6-6"/></svg><strong>Discovery:</strong> Attention weights control how Value vectors combine into a new numerical representation.</p><p><svg class="tokens-feedback-icon tokens-next-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg><strong>Next:</strong> What happens to this representation as it moves through the rest of a transformer layer?</p></div>
+</div>
 <div class="tokens-demo" id="transformerDemo" hidden>
 <p class="tokens-feedback"><svg class="tokens-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01"/></svg><strong>What you're seeing:</strong> <span id="transformerSeeing">Transformers use attention to connect words directly.</span></p>
 <section class="tokens-input-card" aria-labelledby="transformerTitle">
@@ -448,5 +469,7 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 <script src="../assets/js/ai100/llm-self-attention.js"></script>
 <script src="../assets/js/ai100/llm-qk-model.js"></script>
 <script src="../assets/js/ai100/llm-qk.js"></script>
+<script src="../assets/js/ai100/llm-values-model.js"></script>
+<script src="../assets/js/ai100/llm-values.js"></script>
 </body>
 </html>

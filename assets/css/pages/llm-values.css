@@ -1,0 +1,79 @@
+/* Shared panels, messages, dropdown classes and SVG typography are unchanged. */
+.canvas:has(#valuesDemo:not([hidden])){padding-top:10px}
+#valuesDemo > .tokens-feedback:first-child{margin-top:0;margin-bottom:10px}
+#valuesDemo .tokens-input-body > .llm-exploration-question:first-child{margin-top:0}
+#valuesDemo .rnn-flow-diagram{min-width:640px;max-width:940px}
+#valuesDiagram{overflow-x:auto}
+#valuesDemo .attention-connection{fill:none;stroke:var(--purple);stroke-opacity:.4;stroke-linecap:round;stroke-linejoin:round}
+#valuesDemo .attention-connection.inspected{stroke:var(--blue);stroke-opacity:1}
+#valuesDemo .attention-token{cursor:pointer;outline:none}
+#valuesDemo .attention-token rect{fill:#fff;stroke:var(--word-color)}
+#valuesDemo .attention-token.selected rect{fill:var(--green-soft);stroke:var(--word-color);stroke-width:3}
+#valuesDemo .attention-token.selected text{fill:var(--green-dark)}
+#valuesDemo .attention-target-icon{color:var(--green-dark);pointer-events:none}
+#valuesDemo .attention-info-icon,#valuesDemo .tokens-next-icon{color:var(--blue)}
+#valuesDemo .attention-info-icon circle{fill:var(--blue-soft)}
+#valuesDemo .attention-try-icon{color:var(--amber)}
+#valuesDemo .attention-try-icon .attention-bulb{fill:var(--amber-soft)}
+#valuesTitle svg{color:var(--purple)}
+#valuesTitle svg circle{fill:var(--purple-soft)}
+#valuesTitle svg path{fill:none;stroke:var(--purple)}
+#valuesDemo .attention-token.future{opacity:.45}
+#valuesDemo .attention-token:focus-visible rect{stroke:var(--word-color);stroke-width:3;stroke-dasharray:4 2}
+#valuesTarget{font-weight:700}
+#valuesDemo .tokenizer-picker-button{display:flex;align-items:center;justify-content:space-between;gap:20px;width:100%;padding:8px 12px;border:1px solid var(--green);border-radius:8px;background:#f4faf6;color:var(--green-dark);font-weight:600;text-align:left}
+#valuesDemo .tokenizer-picker-button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+#valuesDemo .tokenizer-picker-menu button{display:block;width:100%;padding:8px 12px;border:0;border-radius:5px;text-align:left;white-space:nowrap;font-size:12px}
+#valuesDemo .tokenizer-picker-menu button[aria-selected=true]{background:var(--green-soft);color:var(--green-dark);font-weight:700}
+#valuesDemo .tokenizer-picker-menu button:hover,#valuesDemo .tokenizer-picker-menu button:focus{background:var(--green-soft);outline:2px solid var(--green);outline-offset:-2px}
+
+#valuesDemo .attention-percent{fill:var(--muted);font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+#valuesDemo .attention-percent[data-inspect]:focus-visible{outline:none;fill:var(--blue);text-decoration:underline}
+#valuesBar{display:flex;width:100%;height:34px;margin:8px 0;border-radius:8px;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+#valuesInspection{margin:6px 0 0}
+#valuesBarTitle{margin:8px 0 0;font-size:13px;font-weight:700;line-height:1.5;color:var(--ink)}
+#valuesBarTitle span{font-weight:400;color:var(--muted)}
+#valuesDemo .attention-segment{flex:none;min-width:0;box-sizing:border-box;margin:0;padding:0;border:0;border-right:1px solid #fff;border-radius:0;background:color-mix(in srgb,var(--word-color) 35%,transparent);color:var(--ink);font-size:13px;font-weight:700}
+#valuesDemo .attention-segment:last-child{border-right:0}
+#valuesDemo .attention-segment span{display:block;padding:0 3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:400}
+#valuesDemo .attention-segment.inspected span{font-weight:750}
+#valuesDemo .attention-segment.inspected{background:color-mix(in srgb,var(--word-color) 55%,transparent)}
+#valuesDemo .attention-segment:focus-visible{outline:2px solid #fff;outline-offset:-4px}
+
+#valuesDemo .values-number{color:var(--purple);font-variant-numeric:tabular-nums}
+#valuesComparisonHeading,#valuesVisualHeading,#valuesDemo .values-details-heading{margin:0 0 8px;font-size:14px;font-weight:750;color:var(--ink)}
+#valuesComparison,#valuesVisualComparison{margin:8px 0 12px}
+#valuesDemo .tokens-about{margin:8px 0 0}
+#valuesVisualComparison [data-tooltip]:focus-visible{outline:2px solid var(--green);outline-offset:3px}
+#valuesDemo .values-flow-scroll{overflow-x:auto}
+#valuesVisualComparison,#valuesDemo .values-distribution{min-width:640px;max-width:940px;margin:0 auto}
+#valuesDemo .attention-segment.inspected{box-shadow:inset 0 0 0 2px var(--word-color)}
+
+#valuesDemo .values-source{cursor:pointer;outline:none}
+#valuesDemo .values-source-frame{fill:#fff;stroke:var(--line)}
+#valuesDemo .values-source.inspected .values-source-frame{stroke:var(--word-color);stroke-width:3}
+#valuesDemo .values-source:focus-visible .values-source-frame{stroke:var(--green);stroke-width:3;stroke-dasharray:4 2}
+#valuesDemo .values-source [data-coordinate]:focus-visible{outline:2px solid var(--green)}
+#valuesDemo .attention-connection{pointer-events:none}
+#valuesTarget{margin:8px 0}
+
+#valuesDemo .rnn-flow-diagram text{font-variant-numeric:tabular-nums}
+
+
+#valuesDiagram.inspecting .attention-connection:not(.inspected){stroke-opacity:.12}
+
+#valuesDemo .values-calculation-icon{color:var(--purple)}
+#valuesDemo .values-calculation-icon>rect:first-child{fill:var(--purple-soft)}
+#valuesDemo .values-calculation-icon>rect:nth-child(2){fill:#fff}
+#valuesDemo .values-calculation-icon path{fill:none}
+
+
+
+#valuesDemo .values-cell-number{visibility:hidden;font-size:12px;pointer-events:none}
+#valuesDemo .values-source.inspected .values-cell-number{visibility:visible}
+
+#valuesDemo .values-weight-label{font-size:10px;visibility:hidden}
+
+#valuesDemo .values-source.inspected .values-weight-label{visibility:visible}
+
+#valuesDemo #valuesVisualHeading{min-width:640px;max-width:940px;margin:20px auto 8px;font-size:13px;font-weight:700;line-height:1.5;color:var(--ink)}
