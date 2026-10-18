@@ -31,9 +31,8 @@
     { id: 'generate', title: 'Generate', question: 'How does an LLM produce text?', scenes: [
       scene('inside-llm', 'From Representations to Predictions', 'Explore how the final representation at the last context position becomes probabilities for possible next tokens.', 'An overview will connect input tokens, transformer layers, and the next-token prediction stage.'),
       scene('next-token', 'Choosing the Next Token', 'Explore how different selection strategies choose a token from the same probability distribution.', 'Candidate next tokens will appear alongside their predicted probabilities for a shared context.'),
-      scene('sampling', 'Temperature and Sampling', 'Explore how temperature and sampling affect which token is chosen and why responses can vary.', 'Contrasting probability distributions and sampling outcomes will show how temperature can affect variation.'),
-      scene('response', 'Generating a Response', 'Follow a response as it grows, with each new token becoming part of the context for the next prediction.', 'A response will be traced through repeated prediction steps, with each selected token added to the context.'),
-      scene('correctness', "Fluent Doesn't Mean Correct", 'Examine why convincing language can contain mistakes and why factual claims still need to be checked.', 'A fluent response will be paired with evidence checks to distinguish plausible language from factual correctness.')
+      scene('response', 'Generating One Token at a Time', 'Follow a response as it grows, with each new token becoming part of the context for the next prediction.', 'Planned: not yet implemented. A response will be traced through repeated prediction steps, with each selected token added to the context.'),
+      scene('putting-it-all-together', 'Putting It All Together', 'Bring the stages of the LLM teaching simulation together.', 'Planned: not yet implemented.')
     ] }
   ];
   const scenes = chapters.flatMap((chapter, chapterIndex) => chapter.scenes.map((item, sceneIndex) => ({ ...item, chapterIndex, sceneIndex })));

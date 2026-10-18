@@ -13,7 +13,7 @@
   const model=root.llmPredictionModel,view=root.llmPredictionView,examples=model.examples;
   const $=name=>document.getElementById('selection'+name);
   const motion=root.matchMedia?.('(prefers-reduced-motion: reduce)');
-  let exampleIndex=0,strategy='greedy',result,selected=null,timer=null;
+  let exampleIndex=0,strategy='greedy',temperature=1,result,selected=null,timer=null;
   let history=[];
   function drawHistory(){
     $('History').hidden=strategy!=='sampling'||history.length<2;
@@ -81,7 +81,8 @@
   function closePicker(focus=false){menu.hidden=true;button.setAttribute('aria-expanded','false');if(focus)button.focus();}
   function reset(){
     history=[];drawHistory();
-    cancel();selected=null;closePicker();result=model.calculate(exampleIndex);
+    cancel();selected=null;closePicker();temperature=1;result=model.calculate(exampleIndex,temperature);
+    $('Temperature').value=temperature;$('TemperatureValue').textContent=temperature.toFixed(1);
     button.textContent=examples[exampleIndex].name;button.setAttribute('aria-label','Try an example: '+button.textContent);
     [...menu.children].forEach((n,i)=>n.setAttribute('aria-selected',String(i===exampleIndex)));
     draw();clearSelection();$('Inspection').textContent='';
@@ -92,12 +93,27 @@
   picker.onkeydown=e=>{if(!['ArrowDown','ArrowUp','Home','End','Escape','Tab'].includes(e.key))return;e.stopPropagation();if(e.key==='Tab'){closePicker();return;}e.preventDefault();if(e.key==='Escape'){closePicker(true);return;}if(menu.hidden){openPicker();return;}const options=[...menu.children],i=options.indexOf(document.activeElement);options[e.key==='Home'?0:e.key==='End'?options.length-1:(i+(e.key==='ArrowDown'?1:-1)+options.length)%options.length].focus();};
   document.addEventListener('click',e=>{if(!picker.contains(e.target))closePicker();});
   $('Demo').addEventListener('click',e=>{const info=e.target.closest('.prediction-info');if(info){e.stopPropagation();info.dispatchEvent(new FocusEvent('focusin',{bubbles:true}));}});
-  $('Reset').onclick=()=>{exampleIndex=0;setStrategy('greedy');$('Demo').querySelector('details').open=false;reset();};
+  $('Reset').onclick=()=>{exampleIndex=0;setStrategy('greedy');$('Demo').querySelectorAll('details').forEach(n=>n.open=false);reset();};
   root.openSelectionScene=()=>{closePicker();view.tokens($('Tokens'),result,examples[exampleIndex].text);};
   root.addEventListener('resize',()=>{if(!$('Demo').hidden)view.tokens($('Tokens'),result,examples[exampleIndex].text);});
   const demo=$('Demo');
   new MutationObserver(()=>{if(demo.isConnected&&demo.hidden){closePicker();if(timer!==null)clearSelection();}}).observe(demo,{attributes:true,attributeFilter:['hidden']});
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&timer!==null)clearSelection();});
   motion?.addEventListener?.('change',()=>{if(timer!==null)clearSelection();});
-  reset();
+    $('Temperature').oninput=()=>{
+      temperature=Number($('Temperature').value);
+      clearSelection();history=[];drawHistory();$('Inspection').textContent='';
+      result=model.calculate(exampleIndex,temperature);
+      $('TemperatureValue').textContent=temperature.toFixed(1);
+      // Update existing nodes so focus is preserved and bar widths transition.
+      [...$('Probabilities').children].forEach((node,i)=>{
+        const c=result.shown[i],p=c?c.probability:result.other;
+        node.querySelector(':scope > span').textContent=view.percent(p);
+        node.querySelector('.count-bar').style.width=p*100+'%';
+        if(c)node.setAttribute('aria-label','Inspect '+c.token+': '+view.percent(p));
+      });
+    };
+    $('Temperature').onkeydown=e=>e.stopPropagation();
+  reset();setStrategy(strategy);
+
 })(typeof window==='undefined'?globalThis:window);

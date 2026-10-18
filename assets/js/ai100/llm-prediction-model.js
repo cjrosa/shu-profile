@@ -22,13 +22,14 @@
   // softmax is always calculated, never stored as authored percentages.
   const projection=[[[.8,.2,-.3],1.1],[[.3,.1,.4],.9],[[.1,-.2,.3],.8],[[-.2,.5,.1],.7],[[.2,-.1,-.2],.4],[[-.3,.2,.1],-.5],[[.2,.1,-.1],-.6],[[-.1,.2,.2],-.8],[[.1,-.2,.1],-.9],[[-.2,.1,-.1],-1]];
   function vocabularyFor(index){return tokenSets[examples[index].vocabulary].map((token,i)=>[token,...projection[i]]);}
-  function calculate(index=0){
+  function calculate(index=0,temperature=1){
+    if(!Number.isFinite(temperature)||temperature<=0)throw new RangeError("Temperature must be finite and positive");
     const words=examples[index].text.split(' '),target=words.length-1;
     // Treat the approved Scene 5 layer as the final layer in this small simulation.
     const representation=layer.calculate(examples[index].lookup||words,target).output;
     const activeVocabulary=vocabularyFor(index);
     const scores=activeVocabulary.map(([,w,b])=>w.reduce((s,v,d)=>s+v*representation[d],b));
-    const max=Math.max(...scores),exp=scores.map(s=>Math.exp(s-max)),sum=exp.reduce((a,b)=>a+b,0);
+    const max=Math.max(...scores),exp=scores.map(s=>Math.exp((s-max)/temperature)),sum=exp.reduce((a,b)=>a+b,0);
     const candidates=activeVocabulary.map(([token],i)=>({token,score:scores[i],probability:exp[i]/sum})).sort((a,b)=>b.score-a.score);
     return {words,target,representation,candidates,shown:candidates.slice(0,5),other:candidates.slice(5).reduce((s,c)=>s+c.probability,0)};
   }
