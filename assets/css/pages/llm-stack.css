@@ -1,0 +1,113 @@
+.canvas:has(#stackDemo:not([hidden])){padding-top:10px}
+#stackDemo > .tokens-feedback:first-child{margin-top:0;margin-bottom:10px}
+#stackDemo .attention-token{cursor:pointer;outline:none}
+#stackDemo .attention-token rect{fill:#fff;stroke:var(--word-color)}
+#stackDemo .attention-token.selected rect{fill:var(--green-soft);stroke:var(--word-color);stroke-width:3}
+#stackDemo .attention-token.selected text{fill:var(--green-dark)}
+#stackDemo .attention-target-icon{color:var(--green-dark);pointer-events:none}
+#stackDemo .attention-info-icon,#stackDemo .tokens-next-icon{color:var(--blue)}
+#stackDemo .attention-info-icon circle{fill:var(--blue-soft)}
+#stackDemo .attention-try-icon{color:var(--amber)}
+#stackDemo .attention-try-icon .attention-bulb{fill:var(--amber-soft)}
+#stackTitle svg{color:var(--purple)}
+#stackTitle svg circle{fill:var(--purple-soft)}
+#stackTitle svg path{fill:none;stroke:var(--purple)}
+#stackDemo .attention-token:focus-visible rect{stroke:var(--word-color);stroke-width:3;stroke-dasharray:4 2}
+#stackDemo .tokenizer-picker-button{display:flex;align-items:center;justify-content:space-between;gap:20px;width:100%;padding:8px 12px;border:1px solid var(--green);border-radius:8px;background:#f4faf6;color:var(--green-dark);font-weight:600;text-align:left}
+#stackDemo .tokenizer-picker-button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+#stackDemo .tokenizer-picker-menu button{display:block;width:100%;padding:8px 12px;border:0;border-radius:5px;text-align:left;white-space:nowrap;font-size:12px}
+#stackDemo .tokenizer-picker-menu button[aria-selected=true]{background:var(--green-soft);color:var(--green-dark);font-weight:700}
+#stackDemo .tokenizer-picker-menu button:hover,#stackDemo .tokenizer-picker-menu button:focus{background:var(--green-soft);outline:2px solid var(--green);outline-offset:-2px}
+#stackDemo .rnn-flow-diagram{min-width:640px;max-width:940px}
+#stackDemo [role="button"]{cursor:pointer;outline:none}
+#stackDemo [role="button"]:focus-visible .rnn-flow-box,#stackDemo [role="button"]:focus-visible .layer-vector-frame{stroke:var(--green);stroke-width:3;stroke-dasharray:4 2}
+#stackDemo [data-stage].selected .rnn-flow-box,#stackDemo [data-stage].selected .layer-vector-frame{stroke:var(--green);stroke-width:3;fill:var(--green-soft)}
+#stackDemo .layer-vector-frame{fill:none;stroke:transparent;stroke-width:1.5}
+#stackDemo .layer-path{fill:none;stroke:var(--purple);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#stack-arrow)}
+#stackDemo .layer-path.selected{stroke:var(--green);stroke-width:3}
+#stackDemo .rnn-flow-diagram text{font-variant-numeric:tabular-nums}
+@media(prefers-reduced-motion:reduce){#stackDemo *{animation:none!important;transition:none!important}}
+
+
+#stackDemo [data-stage]:hover .rnn-flow-box{stroke:var(--green);stroke-width:3}
+
+/* Keep the overview compact without changing the shared scene styles. */
+#stackDiagram .rnn-flow-diagram{max-width:780px}
+#stackTokens .rnn-flow-diagram{max-width:940px}
+#stackDemo .tokens-input-body > p:first-child{margin:0 0 8px}
+#stackTarget{margin:6px 0}
+
+#stackDemo .attention-connection{fill:none;stroke:var(--purple);stroke-opacity:.4;stroke-linecap:round;stroke-linejoin:round}
+#stackConnections.inspecting .attention-connection:not(.inspected){stroke-opacity:.12}
+#stackDemo .attention-connection.inspected{stroke:var(--blue);stroke-opacity:1}
+#stackTokens .attention-token.future{opacity:.45}
+#stackTokens .attention-percent{fill:var(--muted);font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+#stackTokens .attention-token.inspected rect{stroke:var(--blue);stroke-width:3}
+
+#stackVisual{position:relative;isolation:isolate}
+#stackConnections{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:hidden;z-index:2}
+#stackTokens .rnn-flow-diagram{min-width:0}
+#stackTokens [data-inspect]{cursor:pointer;fill:var(--blue)}
+#stackTokens [data-inspect]:focus-visible{outline:none;text-decoration:underline}
+#stackConnections .target-connection{stroke:var(--green);stroke-opacity:.85}
+#stackConnections .target-connection.inspected{stroke:var(--blue);stroke-opacity:1}
+
+#stackTarget{position:relative;z-index:3;background:#fff}
+
+#stackDemo .stack-token-label rect{fill:var(--green-soft);stroke:var(--green);stroke-width:1.5}
+#stackDemo .stack-token-label text{fill:var(--green-dark)}
+
+#stackDiagram{margin-top:16px}
+
+/* NLP & RNN header transport styling, scoped to this scene. */
+#stackDemo .map-transport{display:flex;align-items:center;gap:3px;padding:5px 7px;border:1px solid #39445e;border-radius:8px;background:#1b2233;box-shadow:0 4px 12px rgba(15,20,31,.18);flex-wrap:nowrap;margin-left:auto}
+#stackDemo .map-transport button{display:grid;place-items:center;box-sizing:border-box;flex:0 0 30px;width:30px;min-width:30px;height:30px;min-height:0;padding:0;border:1px solid #4b5874;border-radius:5px;background:#293248;color:#f4f6fb;cursor:pointer;font-size:12px;font-weight:900}
+#stackDemo .map-transport button:hover:not(:disabled){border-color:#7d8aa7;background:#35405a}
+#stackDemo .map-transport button:disabled{opacity:.4;cursor:not-allowed;border-color:#343d52;background:#222a3c;color:#69738a}
+#stackDemo .map-transport button[aria-pressed="true"]{background:#5b9467;border-color:#80b78b}
+#stackDemo .map-transport button:focus-visible{outline:2px solid #a8d8b5;outline-offset:2px}
+#stackDemo .map-transport button svg{display:block;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#stackDemo .stack-phase-copy{text-anchor:start}
+#stackDemo .stack-pulse{fill:var(--purple);pointer-events:none}
+#stackDemo .stack-pulse.target-pulse{fill:var(--green)}
+#stackConnections.stack-gathering .attention-connection{stroke-opacity:.8}
+#stackDemo .stack-active-flow{stroke:var(--green);stroke-width:3}
+#stackDemo .stack-active-vector rect{stroke:var(--green);stroke-width:2}
+#stackDemo .stack-processing rect{animation:stack-process .9s ease;stroke:var(--green);stroke-width:3}
+@keyframes stack-process{50%{stroke-width:4;fill:var(--green-soft)}}
+@media(prefers-reduced-motion:reduce){#stackDemo .stack-pulse{display:none}#stackDemo .stack-processing rect{animation:none}}
+
+#stackDemo[data-playing="false"] .stack-processing rect{animation-play-state:paused}
+
+#stackDemo .stack-transient{pointer-events:none}
+#stackDemo .stack-particle-halo{fill:var(--amber);opacity:.22}
+#stackDemo .stack-particle-core{fill:var(--amber);stroke:#fff;stroke-width:.7}
+#stackDemo .stack-moving-vector rect{stroke:var(--green);stroke-width:3}
+#stackDemo .stack-token-flight rect{fill:var(--green-soft);stroke:var(--green);stroke-width:2}
+#stackDemo .stack-token-flight text{text-anchor:middle;fill:var(--green-dark);font-family:inherit;font-weight:750}
+#stackDemo .stack-flight-destination{opacity:0}
+#stackDemo .stack-processing-sweep{stroke:var(--green);stroke-width:5;stroke-linecap:round}
+#stackDemo .stack-processing rect{animation-duration:.7s}
+@media(prefers-reduced-motion:reduce){#stackDemo .stack-transient{display:none}}
+
+#stackDemo .stack-phase-indicator .stack-phase-link{fill:none;stroke:var(--line);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+#stackDemo .stack-phase-icon{fill:none;stroke:var(--muted);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#stackDemo .stack-phase-indicator.pending{opacity:.45}
+#stackDemo .stack-phase-indicator.active text{fill:var(--green-dark);font-weight:750}
+#stackDemo .stack-phase-indicator.active .stack-phase-icon,#stackDemo .stack-phase-indicator.active .stack-phase-link{stroke:var(--green);stroke-width:2}
+#stackDemo .stack-phase-indicator.completed text{fill:var(--green-dark)}
+#stackDemo .stack-phase-indicator.completed .stack-phase-icon,#stackDemo .stack-phase-indicator.completed .stack-phase-link{stroke:var(--green);opacity:.7}
+#stackDemo .stack-arriving rect{animation:stack-arrival .65s ease}
+@keyframes stack-arrival{50%{stroke:var(--green);stroke-width:4;fill:var(--green-soft)}}
+#stackDemo[data-playing="false"] .stack-arriving rect{animation-play-state:paused}
+@media(prefers-reduced-motion:reduce){#stackDemo .stack-arriving rect{animation:none;stroke:var(--green);stroke-width:3}}
+
+#stackQKVInfo{cursor:pointer;outline:none}
+#stackQKVInfo:focus-visible{outline:2px solid var(--green);outline-offset:3px}
+
+#stackDemo .stack-target-icon{color:var(--green-dark);pointer-events:none}
+
+#stackAbout .stack-about-icon{display:inline-block;vertical-align:-3px;margin-right:4px}
+
+#stackDemo .stack-layer-icon{color:var(--purple);pointer-events:none}
+#stackDemo [data-stage].selected .stack-layer-icon,#stackDemo [data-stage]:hover .stack-layer-icon{color:var(--green)}

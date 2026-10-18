@@ -83,3 +83,7 @@
 .limits-demo .limits-context-message[data-severity="success"] svg circle,
 .limits-demo #limitsDiscovery svg circle{fill:#d5efdf}
 .limits-demo .limits-context-message[data-severity="warning"] svg path:first-child{fill:var(--amber-soft)}
+
+/* A friendly face marks prompts inviting learner interaction. */
+.try-face-icon{color:var(--amber)}
+.try-face-icon .try-face-disc{fill:var(--amber-soft)}

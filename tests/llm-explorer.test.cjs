@@ -69,11 +69,11 @@ test('Scene 4 navigation cancels generation and preserves manual pacing on retur
   f.click('#prevBtn'); assert.equal(f.generationJobs.size, 0);
   assert.equal(f.query('.gen-demo').hidden, false);
 });
-test('all requested chapters and 22 unique scene records are complete', () => {
+test('all requested chapters and 23 unique scene records are complete', () => {
   assert.deepEqual(chapters.map(c => c.title), ['Predict', 'Tokenize', 'Context', 'Attend', 'Generate']);
-  assert.deepEqual(chapters.map(c => c.scenes.length), [5, 4, 3, 5, 5]);
-  assert.equal(new Set(scenes.map(s => s.id)).size, 22);
-  assert.deepEqual(chapters.map((_, i) => chapterStart(i)), [0, 5, 9, 12, 17]);
+  assert.deepEqual(chapters.map(c => c.scenes.length), [5, 4, 3, 6, 5]);
+  assert.equal(new Set(scenes.map(s => s.id)).size, 23);
+  assert.deepEqual(chapters.map((_, i) => chapterStart(i)), [0, 5, 9, 12, 18]);
   for (const item of scenes) for (const key of ['title', 'description', 'placeholder']) assert.ok(item[key].length > 0);
 });
 test('all scenes render with correct metadata, chapter selection and progress', () => {
@@ -86,7 +86,7 @@ test('all scenes render with correct metadata, chapter selection and progress', 
     assert.equal(f.query('#chapterQuestion').textContent, chapters[item.chapterIndex].question);
     assert.equal(f.query('#sceneCount').textContent, `${chapters[item.chapterIndex].title} · Scene ${item.sceneIndex + 1} of ${chapters[item.chapterIndex].scenes.length}`);
     assert.equal(f.query('.progress').attributes['aria-valuenow'], String(index + 1));
-    assert.equal(f.query('#progressFill').style.width, `${(index + 1) / 22 * 100}%`);
+    assert.equal(f.query('#progressFill').style.width, `${(index + 1) / 23 * 100}%`);
     assert.equal(f.query('#prevBtn').disabled, index === 0);
     assert.equal(f.query('.chapter-bar').children.filter(b => b.attributes['aria-current']).length, 1);
     assert.equal(f.query('.chapter-bar').children[item.chapterIndex].attributes['aria-current'], 'step');
@@ -131,8 +131,8 @@ test('hub enables LLM Explorer and includes it in search', () => {
   assert.doesNotMatch(hub, /aria-disabled="true"/);
   assert.doesNotMatch(hub, />Coming soon<\/span>/);
   const html = fs.readFileSync('ai100/llm_explorer.html', 'utf8');
-  assert.match(html, /aria-valuemax="22"/);
-  assert.deepEqual([...html.matchAll(/<script src="([^"]+)"/g)].map(match => match[1]), ['../assets/js/ai100/llm-explorer.js', '../assets/js/ai100/llm-probability.js', '../assets/js/ai100/llm-generation.js', '../assets/js/ai100/llm-limits.js', '../assets/js/ai100/llm-token-engine.js', '../assets/js/ai100/llm-tokens.js', '../assets/js/ai100/llm-subwords.js', '../assets/js/ai100/llm-tokenizer.js', '../assets/js/ai100/llm-context.js', '../assets/js/ai100/llm-meaning.js', '../assets/js/ai100/rnn-training.js', '../assets/js/ai100/llm-rnn.js', '../assets/js/ai100/llm-transformer.js', '../assets/js/ai100/llm-self-attention.js', '../assets/js/ai100/llm-qk-model.js', '../assets/js/ai100/llm-qk.js', '../assets/js/ai100/llm-values-model.js', '../assets/js/ai100/llm-values.js','../assets/js/ai100/llm-layer-model.js','../assets/js/ai100/llm-layer.js']);
+  assert.match(html, /aria-valuemax="23"/);
+  assert.deepEqual([...html.matchAll(/<script src="([^"]+)"/g)].map(match => match[1]), ['../assets/js/ai100/llm-explorer.js', '../assets/js/ai100/llm-probability.js', '../assets/js/ai100/llm-generation.js', '../assets/js/ai100/llm-limits.js', '../assets/js/ai100/llm-token-engine.js', '../assets/js/ai100/llm-tokens.js', '../assets/js/ai100/llm-subwords.js', '../assets/js/ai100/llm-tokenizer.js', '../assets/js/ai100/llm-context.js', '../assets/js/ai100/llm-meaning.js', '../assets/js/ai100/rnn-training.js', '../assets/js/ai100/llm-rnn.js', '../assets/js/ai100/llm-transformer.js', '../assets/js/ai100/llm-self-attention.js', '../assets/js/ai100/llm-qk-model.js', '../assets/js/ai100/llm-qk.js', '../assets/js/ai100/llm-values-model.js', '../assets/js/ai100/llm-values.js','../assets/js/ai100/llm-layer-model.js','../assets/js/ai100/llm-layer.js','../assets/js/ai100/llm-stack.js']);
   assert.match(html, /prefers-reduced-motion/);
 });
 

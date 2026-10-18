@@ -1,6 +1,6 @@
-# Chapter 4, Scene 4: Inside a Transformer Layer
+# Chapter 4, Scene 5: Inside a Transformer Layer
 
-Scene 4 uses one pre-normalization causal decoder layer. It is an inference-time teaching simulation with fixed parameters, not a trained model. One word per position remains a simplification. No prediction head or additional layer is simulated.
+Scene 5 uses one pre-normalization causal decoder layer. It is an inference-time teaching simulation with fixed parameters, not a trained model. One word per position remains a simplification. No prediction head or additional layer is simulated.
 
 The residual stream has three coordinates. Each sublayer receives a normalized copy of its input, while a bypass carries the unnormalized input to an addition point. The first addition precedes the second normalization. The final addition produces the layer output; there is no post-addition normalization in this diagram.
 
@@ -10,7 +10,7 @@ The residual stream has three coordinates. Each sublayer receives a normalized c
 
 Normalization subtracts the coordinate mean and divides by the square root of the population variance plus 0.00001. Its scale is one and offset zero. This is applied independently to every position before attention, and to the first residual sum before feed-forward processing.
 
-Attention uses the approved Query/Key/Value projection parameters on **normalized** representations. Scores are divided by the square root of two, future positions are masked, and a maximum-subtracted softmax supplies the weights. Consequently Scene 4 attention weights differ from Scene 3; Scene 3 itself remains unchanged. The two-coordinate weighted Value sum is projected to the three-coordinate residual stream using the following rows:
+Attention uses the approved Query/Key/Value projection parameters on **normalized** representations. Scores are divided by the square root of two, future positions are masked, and a maximum-subtracted softmax supplies the weights. Consequently Scene 5 attention weights differ from Scene 3; Scene 3 itself remains unchanged. The two-coordinate weighted Value sum is projected to the three-coordinate residual stream using the following rows:
 
 ```
 WO = [[0.25, 0], [0, 0.25], [0.125, -0.125]]

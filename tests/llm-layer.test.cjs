@@ -34,7 +34,7 @@ test('every example and target matches independent pre-norm reference and color 
   vectorNear(model.normalize([0,1,2]),[-1/Math.sqrt(2/3+.00001),0,1/Math.sqrt(2/3+.00001)]);
 });
 function fixture(reduced=false){
-  const dom=new JSDOM(fs.readFileSync('ai100/llm_explorer.html','utf8'),{runScripts:'outside-only',pretendToBeVisual:true,url:'http://localhost/ai100/llm_explorer.html?chapter=4&scene=4'});
+  const dom=new JSDOM(fs.readFileSync('ai100/llm_explorer.html','utf8'),{runScripts:'outside-only',pretendToBeVisual:true,url:'http://localhost/ai100/llm_explorer.html?chapter=4&scene=5'});
   const w=dom.window,clocks=new Map();let id=0,changeMotion;
   const motion={matches:reduced,addEventListener:(name,fn)=>{changeMotion=fn;}};w.matchMedia=()=>motion;
   w.setTimeout=fn=>{clocks.set(++id,fn);return id;};w.clearTimeout=id=>clocks.delete(id);

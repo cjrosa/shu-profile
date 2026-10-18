@@ -87,7 +87,7 @@
     status.className = 'gen-message limits-context-message';
     status.setAttribute('data-severity', message.severity);
     const graphic = element('span');
-    const shape = message.severity === 'warning' ? '<path d="m12 3 10 18H2L12 3Z"/><path d="M12 9v5m0 3h.01"/>' : message.severity === 'success' ? '<circle cx="12" cy="12" r="9.5"/><path d="m7.5 12 3 3 6-6"/>' : '<circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01"/>';
+    const shape = message.severity === 'warning' ? '<path d="m12 3 10 18H2L12 3Z"/><path d="M12 9v5m0 3h.01"/>' : message.severity === 'success' ? '<circle cx="12" cy="12" r="9.5"/><path d="m7.5 12 3 3 6-6"/>' : '<circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01" stroke-linecap="round"/>';
     graphic.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + shape + '</svg>';
     const copy = element('span'); copy.append(element('strong', message.title + ': '), document.createTextNode(message.text));
     status.replaceChildren(graphic, copy);
@@ -156,7 +156,7 @@
       const track = element('span', '', 'count-track'), bar = element('span', '', 'count-bar');
       bar.style.width = `${100 * item.repeated / item.unique}%`; track.setAttribute('aria-hidden', 'true'); track.append(bar);
       const info = element('span', '', 'limits-kpi-info');
-      info.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01"/></svg>';
+      info.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01" stroke-linecap="round"/></svg>';
       const value = element('span', `${item.repeated}/${item.unique}`, 'limits-kpi-value');
       value.setAttribute('aria-label', `${item.repeated} of ${item.unique} distinct ${groupName} repeat`);
       card.append(element('strong', ['Unigram', 'Bigram', 'Trigram', '4-gram', '5-gram'][n - 1]), value, element('small', 'distinct groups repeat'), info, track);
@@ -320,7 +320,7 @@
     if (challenge === 3) {
       controls.hidden = true;
       const status = $('limitsStatus'), info = element('span', '', 'limits-placeholder-icon');
-      info.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01"/></svg>';
+      info.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01" stroke-linecap="round"/></svg>';
       status.className = 'gen-status limits-placeholder';
       status.replaceChildren(info, document.createTextNode('Select Generate to begin.'));
     }

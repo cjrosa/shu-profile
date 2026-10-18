@@ -25,8 +25,9 @@
       scene('self-attention', 'Introducing Self-Attention', 'Explore how each token draws on other tokens to build a representation of its meaning in context.', 'Connections from one token to other tokens will illustrate which contextual information may be relevant.'),
       scene('qkv', 'Queries, Keys, and Attention Scores', 'Explore how numerical Query/Key comparisons become attention weights through softmax.', 'A token diagram will distinguish queries, keys, and values and show their roles in forming attention relationships.'),
       scene('attention-weights', 'Combining Values', 'Explore how attention weights combine Value vectors into a new attention output.', 'Attention weights will be paired with token information to illustrate a weighted combination.'),
+      scene('what-is-a-layer', 'What Is a Transformer Layer?', 'What is a transformer layer, and how does it fit into a transformer neural network?', 'Explore one processing stage within a transformer neural network.'),
       scene('feed-forward', 'Inside a Transformer Layer', 'What happens to the attention output as it moves through the rest of a transformer layer?', 'A contextual token representation will pass through a feed-forward block to show the next transformation.'),
-      scene('layers', 'Transformer Layers', 'Follow how repeated attention and processing steps refine token representations through a transformer.', 'Stacked layer blocks will trace repeated attention and feed-forward processing through a transformer.')
+      scene('layers', 'Stacking Transformer Layers', 'Follow how repeated attention and processing steps refine token representations through a transformer.', 'Stacked layer blocks will trace repeated attention and feed-forward processing through a transformer.')
     ] },
     { id: 'generate', title: 'Generate', question: 'How does an LLM produce text?', scenes: [
       scene('inside-llm', 'Inside an LLM', 'Connect tokenization, transformer layers, and prediction to see how text moves through a language model.', 'An overview will connect input tokens, transformer layers, and the next-token prediction stage.'),
@@ -184,7 +185,7 @@
     $('#countChallengeLabel').textContent = progress.complete ? 'Challenge complete!' : 'Try it:';
     $('#countChallengeText').textContent = progress.complete ? progress.feedback : challenge.prompt;
     $('.count-challenge').classList.toggle('challenge-complete', progress.complete);
-    $('#countChallengeIcon').innerHTML = progress.complete ? '<circle cx="12" cy="12" r="9.5"/><path d="m7.5 12 3 3 6-6"/>' : '<path d="M9 18h6M10 21h4M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 2H9s0-1-1-2Z"/>';
+    $('#countChallengeIcon').innerHTML = progress.complete ? '<circle cx="12" cy="12" r="9.5"/><path d="m7.5 12 3 3 6-6"/>' : "<circle class=\"try-face-disc\" cx=\"12\" cy=\"12\" r=\"9.5\"/><path d=\"M8 9h.01M16 9h.01M7.5 14a5 5 0 0 0 9 0\"/>";
     $('#countHintText').textContent = challenge.hint;
     const matches = revealed ? findPattern(corpus, countPattern, countSize) : [];
     $('#countResult').textContent = revealed ? `Found ${matches.length} ${matches.length === 1 ? 'occurrence' : 'occurrences'} of “${countPattern}”` : '';
@@ -414,6 +415,10 @@
     const isGeneration = item.id === 'generating-language';
     const isLimits = item.id === 'n-gram-limits';
     const isTransformer = item.id === 'transformer';
+    const isStack = item.id === 'what-is-a-layer';
+    $('#stackDemo').hidden = !isStack;
+    if (isStack && window.openStackScene) window.openStackScene();
+    if (!isStack && window.closeStackScene) window.closeStackScene();
     const isLayer = item.id === 'feed-forward';
     $('#layerDemo').hidden = !isLayer;
     if (isLayer && window.openLayerScene) window.openLayerScene();
@@ -452,8 +457,8 @@
     if (!isProbability && window.cancelProbabilityReveal) window.cancelProbabilityReveal();
     $('.prob-demo').hidden = !isProbability;
     if (isProbability && window.drawProbability) window.drawProbability();
-    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention || isQK || isValues || isLayer;
-    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention || isQK || isValues || isLayer;
+    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention || isQK || isValues || isLayer || isStack;
+    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention || isQK || isValues || isLayer || isStack;
     $('.count-demo').hidden = !isCounting;
     if (isCounting) drawCounting();
     $('.ngram-demo').hidden = !isNgram;
