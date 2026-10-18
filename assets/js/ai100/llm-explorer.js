@@ -26,8 +26,7 @@
       scene('qkv', 'Queries, Keys, and Attention Scores', 'Explore how numerical Query/Key comparisons become attention weights through softmax.', 'A token diagram will distinguish queries, keys, and values and show their roles in forming attention relationships.'),
       scene('attention-weights', 'Combining Values', 'Explore how attention weights combine Value vectors into a new attention output.', 'Attention weights will be paired with token information to illustrate a weighted combination.'),
       scene('what-is-a-layer', 'What Is a Transformer Layer?', 'What is a transformer layer, and how does it fit into a transformer neural network?', 'Explore one processing stage within a transformer neural network.'),
-      scene('feed-forward', 'Inside a Transformer Layer', 'What happens to the attention output as it moves through the rest of a transformer layer?', 'A contextual token representation will pass through a feed-forward block to show the next transformation.'),
-      scene('layers', 'Stacking Transformer Layers', 'Follow how repeated attention and processing steps refine token representations through a transformer.', 'Stacked layer blocks will trace repeated attention and feed-forward processing through a transformer.')
+      scene('feed-forward', 'Inside a Transformer Layer', 'What happens to the attention output as it moves through the rest of a transformer layer?', 'A contextual token representation will pass through a feed-forward block to show the next transformation.')
     ] },
     { id: 'generate', title: 'Generate', question: 'How does an LLM produce text?', scenes: [
       scene('inside-llm', 'Inside an LLM', 'Connect tokenization, transformer layers, and prediction to see how text moves through a language model.', 'An overview will connect input tokens, transformer layers, and the next-token prediction stage.'),

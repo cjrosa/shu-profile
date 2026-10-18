@@ -10,7 +10,7 @@ test('stack scene, keyboard selection, flow edges, and exact representation hand
  const {dom,w,get,key}=fixture();
  assert.equal(get('Demo').hidden,false);
  assert.equal(w.document.querySelector('.placeholder').hidden,true);
- assert.match(w.document.getElementById('sceneCount').textContent,/Scene 4 of 6/);
+ assert.match(w.document.getElementById('sceneCount').textContent,/Scene 4 of 5/);
  const blocks=[...get('Diagram').querySelectorAll('[data-stage]')];assert.equal(blocks.length,3);
  let previousOutput;
  blocks.forEach((block,i)=>{
