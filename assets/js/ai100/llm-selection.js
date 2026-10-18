@@ -10,6 +10,7 @@
   }
   if(typeof module!=='undefined'&&module.exports)module.exports={choose};
   if(typeof document==='undefined')return;
+  root.llmChooseToken=choose;
   const model=root.llmPredictionModel,view=root.llmPredictionView,examples=model.examples;
   const $=name=>document.getElementById('selection'+name);
   const motion=root.matchMedia?.('(prefers-reduced-motion: reduce)');

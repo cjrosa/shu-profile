@@ -76,7 +76,7 @@ test('all examples match Scene 2 at 1.0 and temperature changes cancel pending d
  }
  dom.window.close();
 });
-test('Chapter 5 has exactly four ordered scenes; later scenes remain explicit previews',()=>{
+test('Chapter 5 has exactly four ordered scenes; Scene 3 is integrated and Scene 4 remains an explicit preview',()=>{
  const {chapters}=require('../assets/js/ai100/llm-explorer.js');
  assert.deepEqual(chapters[4].scenes.map(s=>s.title),['From Representations to Predictions','Choosing the Next Token','Generating One Token at a Time','Putting It All Together']);
  assert.equal(chapters[4].scenes[2].id,'response');
@@ -88,8 +88,8 @@ test('Chapter 5 has exactly four ordered scenes; later scenes remain explicit pr
  for(let i=1;i<=4;i++){
   assert.equal(d.getElementById('sceneCount').textContent,`Generate \u00b7 Scene ${i} of 4`);
   assert.equal(new URL(w.location.href).searchParams.get('scene'),String(i));
-  assert.equal(d.querySelector('.placeholder').hidden,i<=2);
-  if(i>2){assert.match(d.getElementById('placeholderCopy').textContent,/Planned: not yet implemented/);assert.equal(get('Demo').hidden,true);}
+  assert.equal(d.querySelector('.placeholder').hidden,i<=3);
+  if(i>3){assert.match(d.getElementById('placeholderCopy').textContent,/Planned: not yet implemented/);assert.equal(get('Demo').hidden,true);}
   if(i<4)d.getElementById('nextBtn').click();
  }
  assert.equal(d.querySelector('.progress').getAttribute('aria-valuemax'),'21');

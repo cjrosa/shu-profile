@@ -1,0 +1,47 @@
+#responseDemo .context-control input[type=range]{appearance:none;-webkit-appearance:none;width:100px;height:5px;padding:0;margin:0;background:var(--line);border:0;border-radius:4px;accent-color:var(--green);cursor:pointer}
+#responseDemo .context-control input[type=range]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:13px;height:13px;border-radius:50%;border:2px solid #fff;background:var(--green);box-shadow:0 0 0 1px var(--green)}
+#responseDemo .context-control input[type=range]::-moz-range-thumb{width:10px;height:10px;border-radius:50%;border:2px solid #fff;background:var(--green);box-shadow:0 0 0 1px var(--green)}
+#responseDemo .context-control input[type=range]:focus-visible{outline:2px solid var(--green);outline-offset:5px}
+#responseDemo .context-control{display:flex;align-items:center;flex-wrap:wrap;gap:16px;margin:16px 0;font-size:13px;font-weight:700}
+#responseDemo .context-control input[type=range]{flex:1;min-width:120px;width:auto}
+#responseDemo .temperature-scale{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+#responseDemo output{color:var(--purple);font-variant-numeric:tabular-nums}
+#responseDemo .count-bar{transition:width .2s ease}
+@media(prefers-reduced-motion:reduce){#responseDemo .count-bar{transition:none}}
+#responseDemo .response-temperature-info{display:flex;align-items:flex-start;gap:12px;padding:16px;border-radius:14px;background:#f6f6f6;font-size:13px;line-height:1.6}
+#responseDemo .response-temperature-info>svg{flex:0 0 18px;width:18px;height:18px;margin-top:2px;color:var(--blue)}
+#responseDemo .response-temperature-info p{margin:0}
+#responseDemo .response-temperature-info p+p{margin-top:8px}
+#responseTemperatureSection:not([open])>summary .context-control{margin:10px 0 0;cursor:default}
+#responseTemperatureSection>summary .context-control svg{margin:0;vertical-align:middle}
+#responseDemo .response-cycle{display:grid;grid-template-columns:minmax(180px,1fr) 48px minmax(240px,1fr);align-items:center;gap:18px;margin:16px 0;padding:16px;border:1px solid var(--line);border-radius:12px;background:#fff}
+#responseDemo .response-process{padding:12px;text-align:center}
+#responseDemo .response-preview .prob-branch{border:0;background:transparent;box-shadow:none}
+#responseDemo .response-preview .prob-branch.selected,#responseDemo .response-preview .prob-branch:hover{background:var(--green-soft)}
+#responseDemo .response-process p{font-size:13px;min-height:20px;margin:6px 0 0}
+#responseDemo .response-preview h4{margin:0 0 8px}
+#responseDemo .prediction-connector{width:36px;height:48px;stroke-width:2.5;transform:rotate(-90deg)}
+#responseDemo .response-selected,.response-flight{display:inline-block;padding:8px 12px;border:2px solid var(--green);border-radius:8px;background:var(--green-soft);color:var(--green-dark);font-weight:700}
+.response-flight{position:fixed;z-index:1000;pointer-events:none}
+#responseDemo .response-generated rect{stroke-dasharray:5 2}
+#responseDemo .response-generated.selected rect{stroke:var(--green);stroke-dasharray:none}
+#responseDemo .response-generated-key{border-bottom:2px dashed var(--green)}
+#responseStrategy{justify-content:flex-start}
+#responseDemo .ngram-picker button[aria-pressed="true"]{background:var(--green-soft);border-color:var(--green);color:var(--green-dark)}
+#responseTokens .rnn-flow-diagram{width:100%;min-width:0}
+#responseDemo .response-preview{min-width:0}
+@media(max-width:650px){#responseDemo .response-cycle{grid-template-columns:1fr;gap:8px;padding:12px}#responseDemo .prediction-connector{transform:none}#responseDemo .tokens-toolbar{flex-wrap:wrap}#responseDemo .response-process{padding:12px}}
+
+/* Chapter 4 miniature-network colors, white node strokes, and purple synapses. */
+#responseDemo .response-engine-area{position:relative}
+#responseSignals{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:1}
+#responseNetwork{display:block;width:min(100%,120px);height:auto;aspect-ratio:3 / 2;margin:6px auto 0;overflow:visible}
+#responseDemo .response-synapse{fill:none;stroke:var(--purple);stroke-width:1.5;opacity:.5}
+#responseDemo .response-neuron{opacity:1}
+#responseDemo .response-engine-pulse{fill:var(--purple);stroke:#fff;stroke-width:.7;opacity:0;pointer-events:none}
+#responseEngineStages{position:relative;height:0;font-size:13px}
+#responseEngineStages span{position:absolute;left:0;top:6px;width:100%;opacity:0}
+#responseDemo[data-phase="0"] #responsePhase{clip-path:inset(50%)}
+#responseDemo .response-preview{outline:1px solid transparent;outline-offset:4px;border-radius:8px}
+#responseDemo .response-process>.prediction-info{padding:0;border:0;background:transparent}
+@media(prefers-reduced-motion:reduce){#responseDemo .response-engine-pulse{display:none}}
