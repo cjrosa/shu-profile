@@ -6,8 +6,15 @@
 #selectionDemo .gen-primary:hover:not(:disabled){background:var(--green-dark);color:#fff}
 #selectionDemo .selection-result{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:8px;background:#f8faf9}
 #selectionDemo .selection-result h4{margin:0 0 8px}
-#selectionDemo .selection-token{display:inline-block;padding:6px 12px;border:1px solid var(--green);border-radius:8px;color:var(--green-dark);background:var(--green-soft)}
-#selectionDemo .selection-continuation{margin:8px 0 0;overflow-wrap:anywhere}
+#selectionDemo .selection-token{display:inline-block;padding:10px 16px;border:2px solid var(--green);border-radius:8px;color:var(--green-dark);background:var(--green-soft)}
+#selectionResult{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+#selectionDemo .selection-continuation{margin:0;min-width:0;overflow-wrap:anywhere}
+#selectionDemo .selection-arrow{color:var(--muted)}
+#selectionDemo .selection-probability{color:var(--muted);font-variant-numeric:tabular-nums}
+#selectionDemo .selection-history{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}
+#selectionDemo .selection-history .tokens-note{margin:0 0 6px}
+#selectionDemo .selection-history ol{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}
+#selectionDemo .selection-history li{padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:#fff}
 #selectionDemo .prediction-other.selected,#selectionDemo .prediction-other.selected:hover{background:var(--green-soft);border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}
 #selectionDemo .prediction-other.selected strong{color:var(--green-dark)}
 #selectionDemo .selection-pending{outline:2px solid var(--purple);outline-offset:-2px}

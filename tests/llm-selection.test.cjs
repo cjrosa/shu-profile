@@ -27,6 +27,29 @@ function fixture(reduced=false){
   for(const name of ['explorer','qk-model','values-model','layer-model','prediction-model','prediction-view','prediction','selection'])w.eval(fs.readFileSync('assets/js/ai100/llm-'+name+'.js','utf8'));
   return {dom,w,jobs,get:n=>w.document.getElementById('selection'+n),tick(){for(const [id,fn] of jobs){jobs.delete(id);fn();}}};
 }
+test('result separates prompt, selected token and probability; history keeps five completed samples only',()=>{
+  const f=fixture(),{get,w}=f;
+  get('Choose').click();f.tick();
+  assert.equal(get('Result').querySelector('p').textContent,'New Haven');
+  assert.equal(get('Result').querySelector('.selection-token').textContent,'pizza');
+  assert.equal(get('Result').querySelector('.selection-probability').textContent,'54.8%');
+  assert.equal(get('History').hidden,true);
+  get('Sampling').click();
+  const expected=[];
+  for(const draw of [0,.6,.8,.9,.999,0,.6]){
+    w.Math.random=()=>draw;get('Choose').click();f.tick();
+    expected.push(choose(model.calculate(0).candidates,'sampling',()=>draw).token);
+    assert.equal(get('History').hidden,expected.length<2);
+    assert.deepEqual([...get('HistoryTokens').children].map(n=>n.textContent),expected.slice(-5));
+  }
+  get('Choose').click();get('Greedy').click();f.tick();
+  assert.equal(get('History').hidden,true);
+  get('Sampling').click();assert.deepEqual([...get('HistoryTokens').children].map(n=>n.textContent),expected.slice(-5));
+  get('PickerMenu').children[1].click();assert.equal(get('History').hidden,true);assert.equal(get('HistoryTokens').children.length,0);
+  for(let i=0;i<2;i++){get('Choose').click();f.tick();}
+  assert.equal(get('History').hidden,false);get('Reset').click();assert.equal(get('History').hidden,true);assert.equal(get('HistoryTokens').children.length,0);
+  f.dom.window.close();
+});
 test('all five examples reuse exact Scene 1 bars and prompts; repeated trials do not append context',()=>{
   const f=fixture(),{get,w}=f;assert.equal(get('Demo').hidden,false);
   assert.equal(get('PickerButton').textContent,'New Haven');assert.equal(get('PickerMenu').children.length,5);

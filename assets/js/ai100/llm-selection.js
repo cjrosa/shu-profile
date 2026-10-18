@@ -14,6 +14,11 @@
   const $=name=>document.getElementById('selection'+name);
   const motion=root.matchMedia?.('(prefers-reduced-motion: reduce)');
   let exampleIndex=0,strategy='greedy',result,selected=null,timer=null;
+  let history=[];
+  function drawHistory(){
+    $('History').hidden=strategy!=='sampling'||history.length<2;
+    $('HistoryTokens').replaceChildren(...history.map(label=>{const item=document.createElement('li');item.textContent=label;return item;}));
+  }
   function cancel(){
     clearTimeout(timer);timer=null;
     $('Probabilities').classList.remove('selection-sampling');
@@ -48,9 +53,12 @@
   function reveal(candidate){
     cancel();selected=candidate;highlight();
     const token=document.createElement('strong');token.className='selection-token';token.textContent=candidate.token;
-    const probability=document.createElement('span');probability.textContent=` ${view.percent(candidate.probability)}${result.shown.some(c=>c.token===candidate.token)?'':' · From Other tokens'}`;
-    const continuation=document.createElement('p');continuation.className='selection-continuation';continuation.textContent=`${examples[exampleIndex].text} → ${candidate.token}`;
-    $('Result').replaceChildren(token,probability,continuation);
+    const probability=document.createElement('span');probability.className='selection-probability';probability.textContent=`${view.percent(candidate.probability)}${result.shown.some(c=>c.token===candidate.token)?'':' · From Other tokens'}`;
+    const prompt=document.createElement('p');prompt.className='selection-continuation';prompt.textContent=examples[exampleIndex].text;
+    const arrow=document.createElement('span');arrow.className='selection-arrow';arrow.textContent='\u2192';arrow.setAttribute('aria-hidden','true');
+    $('Result').replaceChildren(prompt,arrow,token,probability);
+    if(strategy==='sampling'){history.push(candidate.token);history=history.slice(-5);}
+    drawHistory();
   }
   $('Choose').onclick=()=>{
     clearSelection();
@@ -63,7 +71,7 @@
     else [...$('Probabilities').children].find(n=>n.dataset.candidate===candidate.token)?.classList.add('selection-pending');
     timer=setTimeout(()=>reveal(candidate),450);
   };
-  function setStrategy(next){clearSelection();strategy=next;$('Greedy').setAttribute('aria-pressed',String(strategy==='greedy'));$('Sampling').setAttribute('aria-pressed',String(strategy==='sampling'));}
+  function setStrategy(next){clearSelection();strategy=next;drawHistory();$('Greedy').setAttribute('aria-pressed',String(strategy==='greedy'));$('Sampling').setAttribute('aria-pressed',String(strategy==='sampling'));}
   $('Greedy').onclick=()=>setStrategy('greedy');$('Sampling').onclick=()=>setStrategy('sampling');
   $('Strategy').onkeydown=e=>{
     if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;
@@ -72,6 +80,7 @@
   const picker=$('Picker'),button=$('PickerButton'),menu=$('PickerMenu');
   function closePicker(focus=false){menu.hidden=true;button.setAttribute('aria-expanded','false');if(focus)button.focus();}
   function reset(){
+    history=[];drawHistory();
     cancel();selected=null;closePicker();result=model.calculate(exampleIndex);
     button.textContent=examples[exampleIndex].name;button.setAttribute('aria-label','Try an example: '+button.textContent);
     [...menu.children].forEach((n,i)=>n.setAttribute('aria-selected',String(i===exampleIndex)));
