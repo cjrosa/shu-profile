@@ -41,6 +41,7 @@
 #predictionDemo [tabindex]:focus-visible rect{stroke:var(--green);stroke-width:3;stroke-dasharray:4 2}
 #predictionDemo .rnn-weight-table caption{text-align:left}
 /* Tighten empty space without changing the established type scale. */
+#predictionDemo .tokens-input-card > .tokens-input-body > .tokens-note:first-child{margin-top:0}
 #predictionDemo .tokens-input-body > h4{margin:8px 0 6px}
 #predictionDemo .prediction-scores{gap:6px}
 #predictionDemo .prediction-scores button{padding:6px 10px}
