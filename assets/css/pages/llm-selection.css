@@ -33,3 +33,11 @@
 #selectionDemo output{color:var(--purple);font-variant-numeric:tabular-nums}
 #selectionDemo .count-bar{transition:width .2s ease}
 @media(prefers-reduced-motion:reduce){#selectionDemo .count-bar{transition:none}}
+
+#selectionDemo .selection-temperature-info{display:flex;align-items:flex-start;gap:12px;padding:16px;border-radius:14px;background:#f6f6f6;font-size:13px;line-height:1.6}
+#selectionDemo .selection-temperature-info>svg{flex:0 0 18px;width:18px;height:18px;margin-top:2px;color:var(--blue)}
+#selectionDemo .selection-temperature-info p{margin:0}
+#selectionDemo .selection-temperature-info p+p{margin-top:8px}
+
+#selectionTemperatureSection:not([open])>summary .context-control{margin:10px 0 0;cursor:default}
+#selectionTemperatureSection>summary .context-control svg{margin:0;vertical-align:middle}

@@ -114,6 +114,20 @@
       });
     };
     $('Temperature').onkeydown=e=>e.stopPropagation();
+  const temperatureSection=$('TemperatureSection');
+  const temperatureSummary=temperatureSection.querySelector('summary');
+  const temperatureControl=$('Temperature').closest('.context-control');
+  function placeTemperatureControl(){
+    if(temperatureSection.open)$('Scale').before(temperatureControl);
+    else temperatureSummary.append(temperatureControl);
+  }
+  temperatureSection.addEventListener('toggle',placeTemperatureControl);
+  new MutationObserver(placeTemperatureControl).observe(temperatureSection,{attributes:true,attributeFilter:['open']});
+  // Controls remain independent of the disclosure's activation behavior.
+  temperatureControl.addEventListener('click',e=>{
+    if(!e.target.closest('input,button,label'))e.preventDefault();
+  });
+  placeTemperatureControl();
   reset();setStrategy(strategy);
 
 })(typeof window==='undefined'?globalThis:window);

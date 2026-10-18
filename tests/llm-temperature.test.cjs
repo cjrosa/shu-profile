@@ -108,3 +108,12 @@ test('optional temperature disclosure and strategy changes preserve settings unt
  section.querySelector('summary').click();get('Reset').click();assert.equal(section.open,false);assert.equal(get('Temperature').value,'1');assert.equal(get('HistoryTokens').children.length,0);
  f.dom.window.close();
 });
+test('one temperature control moves between collapsed header and expanded body',async()=>{
+ const f=fixture(),{get,w}=f,section=get('TemperatureSection'),slider=get('Temperature'),summary=section.querySelector('summary');
+ assert.ok(summary.contains(slider));f.set(1.3);
+ summary.click();await Promise.resolve();assert.equal(section.open,true);assert.equal(summary.contains(slider),false);assert.ok(section.querySelector('.tokens-input-body').contains(slider));assert.equal(slider.value,'1.3');
+ summary.click();await Promise.resolve();assert.equal(section.open,false);assert.ok(summary.contains(slider));assert.equal(w.document.querySelectorAll('#selectionTemperature').length,1);
+ slider.click();assert.equal(section.open,false);
+ summary.click();await Promise.resolve();get('Reset').click();await Promise.resolve();assert.ok(summary.contains(slider));assert.equal(slider.value,'1');
+ f.dom.window.close();
+});
