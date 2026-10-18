@@ -184,6 +184,7 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 <link rel="stylesheet" href="../assets/css/pages/llm-values.css">
 <link rel="stylesheet" href="../assets/css/pages/llm-layer.css">
 <link rel="stylesheet" href="../assets/css/pages/llm-prediction.css">
+<link rel="stylesheet" href="../assets/css/pages/llm-selection.css">
 <link rel="stylesheet" href="../assets/css/pages/llm-stack.css">
 </head>
 <body>
@@ -488,6 +489,22 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 <p>New Haven reuses the incomplete prompt from Chapter 1, with a separate authored vocabulary of continuations and the same projection rows. Its initial teaching vectors are New = [1, 0, 0.2] and Haven = [2, 0, 0.2], reusing existing numerical lookup entries before the unchanged layer calculation. These assigned coordinates do not imply semantic equivalence to those entries or learned knowledge of the city.</p><p id="predictionVectorDetails"></p>
 <div class="rnn-flow-scroll"><table class="rnn-weight-table"><caption>Shared output-projection parameters and calculated scores</caption><thead><tr><th>Token</th><th>W</th><th>Bias</th><th>Score</th><th>Probability</th></tr></thead><tbody id="predictionParameters"></tbody></table></div>
 </div></details></div>
+<div class="tokens-demo" id="selectionDemo" hidden>
+<p class="tokens-feedback"><svg class="tokens-feedback-icon try-face-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle class="try-face-disc" cx="12" cy="12" r="9.5"/><path d="M8 9h.01M16 9h.01M7.5 14a5 5 0 0 0 9 0"/></svg><strong>Try it:</strong> Choose the next token several times using Highest Probability. Then switch to Sampling and choose several more times?you may need multiple attempts to see a different token. What changes?</p>
+<section class="tokens-input-card" aria-labelledby="selectionTitle">
+<header class="tokens-input-header"><h3 id="selectionTitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="5" cy="5" r="3"/><circle cx="19" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><path d="M8 5h8M7 7l10 10M8 19h8"/></svg>How is the next token chosen?</h3><div class="tokens-toolbar"><label id="selectionExampleLabel" for="selectionPickerButton">Try an example</label><div id="selectionPicker" class="tokenizer-picker"><button id="selectionPickerButton" class="tokenizer-picker-button" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="selectionPickerMenu"></button><div id="selectionPickerMenu" class="tokenizer-picker-menu" role="listbox" aria-labelledby="selectionExampleLabel" hidden></div></div><button id="selectionReset" type="button">Reset</button></div></header>
+<div class="tokens-input-body">
+<h4>Current Prompt</h4><div id="selectionTokens" class="rnn-flow-scroll" role="region" aria-label="Current prompt; final position highlighted"></div>
+<h4>Next-Token Probabilities <span class="tokens-note">(100%)</span></h4>
+<div id="selectionProbabilities" role="group" aria-label="Inspect next-token probabilities"></div>
+<p id="selectionInspection" class="sr-only" role="status"></p>
+<h4 id="selectionStrategyLabel">Selection Strategy</h4>
+<div class="selection-controls"><div class="ngram-picker" id="selectionStrategy" role="group" aria-labelledby="selectionStrategyLabel"><button id="selectionGreedy" type="button" aria-pressed="true">Highest Probability</button><button id="selectionSampling" type="button" aria-pressed="false">Sampling</button></div><button class="gen-primary" id="selectionChoose" type="button">Choose Next Token</button></div>
+<section class="selection-result" aria-labelledby="selectionResultLabel"><h4 id="selectionResultLabel">Selected Next Token</h4><div id="selectionResult" role="status" aria-live="polite" aria-atomic="true">Choose a token to see the result.</div></section>
+</div><footer class="tokens-input-footer"><p class="tokens-note">The probability is the token's likelihood before selection, not the probability that the continuation is correct.</p></footer></section>
+<div class="tokens-feedback"><p><svg class="tokens-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12 3 3 6-6"/></svg><strong>Discovery:</strong> Highest Probability always chooses the top candidate. Sampling selects tokens randomly, weighted by their probabilities.</p><p><svg class="tokens-feedback-icon tokens-next-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg><strong>Next:</strong> How does temperature change the probability distribution before sampling?</p></div>
+<details class="tokens-about"><summary>About this teaching simulation</summary><div class="tokens-input-body"><p>Probabilities come from the shared simplified teaching model, not a trained language model. Highest Probability is deterministic; Sampling uses probability-weighted random selection across the complete teaching vocabulary.</p><p>Other tokens combines omitted vocabulary probability mass. When an omitted token is selected, its actual label and individual probability are shown. The brief animation illustrates a selection; it does not represent a model scanning candidates.</p><p>Repeated selections use the same unchanged distribution. The selected token does not become new context until a later scene.</p></div></details>
+</div>
 <div class="tokens-demo" id="transformerDemo" hidden>
 <p class="tokens-feedback"><svg class="tokens-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01" stroke-linecap="round"/></svg><strong>What you're seeing:</strong> <span id="transformerSeeing">Transformers use attention to connect words directly.</span></p>
 <section class="tokens-input-card" aria-labelledby="transformerTitle">
@@ -543,7 +560,9 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 <script src="../assets/js/ai100/llm-layer-model.js"></script>
 <script src="../assets/js/ai100/llm-layer.js"></script>
 <script src="../assets/js/ai100/llm-prediction-model.js"></script>
+<script src="../assets/js/ai100/llm-prediction-view.js"></script>
 <script src="../assets/js/ai100/llm-prediction.js"></script>
+<script src="../assets/js/ai100/llm-selection.js"></script>
 <script src="../assets/js/ai100/llm-stack.js"></script>
 </body>
 </html>

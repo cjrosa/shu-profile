@@ -30,7 +30,7 @@
     ] },
     { id: 'generate', title: 'Generate', question: 'How does an LLM produce text?', scenes: [
       scene('inside-llm', 'From Representations to Predictions', 'Explore how the final representation at the last context position becomes probabilities for possible next tokens.', 'An overview will connect input tokens, transformer layers, and the next-token prediction stage.'),
-      scene('next-token', 'Predicting the Next Token', 'Compare possible next tokens and the probabilities a model assigns based on the available context.', 'Candidate next tokens will appear alongside their predicted probabilities for a shared context.'),
+      scene('next-token', 'Choosing the Next Token', 'Explore how different selection strategies choose a token from the same probability distribution.', 'Candidate next tokens will appear alongside their predicted probabilities for a shared context.'),
       scene('sampling', 'Temperature and Sampling', 'Explore how temperature and sampling affect which token is chosen and why responses can vary.', 'Contrasting probability distributions and sampling outcomes will show how temperature can affect variation.'),
       scene('response', 'Generating a Response', 'Follow a response as it grows, with each new token becoming part of the context for the next prediction.', 'A response will be traced through repeated prediction steps, with each selected token added to the context.'),
       scene('correctness', "Fluent Doesn't Mean Correct", 'Examine why convincing language can contain mistakes and why factual claims still need to be checked.', 'A fluent response will be paired with evidence checks to distinguish plausible language from factual correctness.')
@@ -418,6 +418,9 @@
     $('#stackDemo').hidden = !isStack;
     if (isStack && window.openStackScene) window.openStackScene();
     if (!isStack && window.closeStackScene) window.closeStackScene();
+    const isSelection = item.id === 'next-token';
+    $('#selectionDemo').hidden = !isSelection;
+    if (isSelection && window.openSelectionScene) window.openSelectionScene();
     const isPrediction = item.id === 'inside-llm';
     $('#predictionDemo').hidden = !isPrediction;
     if (isPrediction && window.openPredictionScene) window.openPredictionScene();
@@ -459,8 +462,8 @@
     if (!isProbability && window.cancelProbabilityReveal) window.cancelProbabilityReveal();
     $('.prob-demo').hidden = !isProbability;
     if (isProbability && window.drawProbability) window.drawProbability();
-    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention || isQK || isValues || isLayer || isStack || isPrediction;
-    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention || isQK || isValues || isLayer || isStack || isPrediction;
+    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention || isQK || isValues || isLayer || isStack || isPrediction || isSelection;
+    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention || isQK || isValues || isLayer || isStack || isPrediction || isSelection;
     $('.count-demo').hidden = !isCounting;
     if (isCounting) drawCounting();
     $('.ngram-demo').hidden = !isNgram;

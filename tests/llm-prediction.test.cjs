@@ -25,7 +25,7 @@ test('every example uses the last contextualized position and full-vocabulary so
 });
 function fixture(){
   const dom=new JSDOM(fs.readFileSync('ai100/llm_explorer.html','utf8'),{runScripts:'outside-only',pretendToBeVisual:true,url:'http://localhost/ai100/llm_explorer.html?chapter=5&scene=1'});
-  for(const name of ['explorer','qk-model','values-model','layer-model','prediction-model','prediction'])dom.window.eval(fs.readFileSync('assets/js/ai100/llm-'+name+'.js','utf8'));
+  for(const name of ['explorer','qk-model','values-model','layer-model','prediction-model','prediction-view','prediction'])dom.window.eval(fs.readFileSync('assets/js/ai100/llm-'+name+'.js','utf8'));
   return {dom,w:dom.window,get:n=>dom.window.document.getElementById('prediction'+n)};
 }
 test('scene opens completely, without selecting a generated token; candidate highlights stay linked',()=>{

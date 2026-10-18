@@ -31,9 +31,7 @@
   function draw(){
     result=model.calculate(exampleIndex);
     const {words,target,representation}=result;
-    const columns=Math.max(3,Math.min(8,Math.floor(($('Tokens').clientWidth||940)/115)));
-    const palette=['--blue','--purple','--teal','--amber','--red','--green'];
-    $('Tokens').innerHTML=`<svg class="rnn-flow-diagram" viewBox="0 0 ${columns*115+20} ${Math.ceil(words.length/columns)*60}" role="img" aria-label="${examples[exampleIndex].text} Last position: ${words[target]}">${words.map((word,i)=>{const x=66+i%columns*115,y=24+Math.floor(i/columns)*60;return `<g class="attention-token${i===target?' selected':''}" style="--word-color:var(${palette[i%6]})"><rect class="rnn-flow-box memory" x="${x-52}" y="${y-19}" width="104" height="38" rx="8"/>${i===target?`<svg class="attention-target-icon" x="${x-44}" y="${y-8}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">${targetIcon}</svg>`:''}<text class="rnn-svg-title" x="${x+(i===target?12:0)}" y="${y+5}">${word}</text></g>`;}).join('')}</svg>`;
+    window.llmPredictionView.tokens($('Tokens'),result,examples[exampleIndex].text);
     $('Target').textContent=`Last position: ${words[target]} · Already contextualized by transformer processing.`;
     const labelWidth=Math.max(66,words[target].length*8+38),left=300-labelWidth;
     $('Diagram').innerHTML=`<svg class="rnn-flow-diagram" viewBox="0 0 700 197" role="group" aria-label="Final token representation enters the output projection"><defs><marker id="prediction-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker></defs>
@@ -45,7 +43,7 @@
       <text class="rnn-svg-small" x="350" y="160">Learned parameters produce a score for every vocabulary token.</text>
       <path class="prediction-path" d="M350 168V190"/></svg>`;
     $('Scores').innerHTML=result.shown.map(c=>`<button type="button" data-candidate="${c.token}" aria-pressed="false" data-tooltip="${c.token}: score ${c.score.toFixed(3)}, probability ${percent(c.probability)}"><span>${c.token}</span><strong>${c.score.toFixed(3)}</strong></button>`).join('');
-    $('Probabilities').innerHTML=result.shown.map(c=>`<button type="button" class="prob-branch" data-candidate="${c.token}" aria-pressed="false" aria-label="Inspect ${c.token}: ${percent(c.probability)}"><strong>${c.token}</strong><span>${percent(c.probability)}</span><span class="count-track" aria-hidden="true"><span class="count-bar" style="width:${c.probability*100}%"></span></span></button>`).join('') + `<div class="prob-branch prediction-other"><strong>Other tokens <button type="button" class="prediction-info" aria-label="About Other tokens" data-tooltip="Other tokens: The combined probability of vocabulary tokens not shown individually."><svg class="attention-info-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01"/></svg></button></strong><span>${percent(result.other)}</span><span class="count-track" aria-hidden="true"><span class="count-bar" style="width:${result.other*100}%"></span></span></div>`;
+    window.llmPredictionView.probabilities($('Probabilities'),result);
     $('VectorDetails').textContent=`Last-position vector: [${representation.map(v=>v.toFixed(6)).join(', ')}]. The table below uses the same shared parameters for all examples.`;
     $('Parameters').innerHTML=model.vocabularyFor(exampleIndex).map(([token,w,b])=>{const c=result.candidates.find(c=>c.token===token);return `<tr><th>${token}</th><td>[${w.join(', ')}]</td><td>${b}</td><td>${c.score.toFixed(6)}</td><td>${percent(c.probability)}</td></tr>`;}).join('');
     bindCandidates();inspect(selected);
