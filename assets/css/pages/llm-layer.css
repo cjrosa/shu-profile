@@ -21,9 +21,8 @@
 #layerDemo .tokenizer-picker-menu button:hover,#layerDemo .tokenizer-picker-menu button:focus{background:var(--green-soft);outline:2px solid var(--green);outline-offset:-2px}
 #layerDemo .rnn-flow-diagram{min-width:640px;max-width:940px}
 #layerDemo [role="button"]{cursor:pointer;outline:none}
-#layerDemo [role="button"]:focus-visible .rnn-flow-box,#layerDemo [role="button"]:focus-visible .layer-vector-frame{stroke:var(--green);stroke-width:3;stroke-dasharray:4 2}
-#layerDemo [data-stage].selected .rnn-flow-box,#layerDemo [data-stage].selected .layer-vector-frame{stroke:var(--green);stroke-width:3;fill:var(--green-soft)}
-#layerDemo .layer-vector-frame{fill:none;stroke:transparent;stroke-width:1.5}
+#layerDemo [role="button"]:focus-visible .rnn-flow-box{stroke:var(--green);stroke-width:3;stroke-dasharray:4 2}
+#layerDemo [data-stage].selected .rnn-flow-box{stroke:var(--green);stroke-width:3;fill:var(--green-soft)}
 #layerDemo .layer-hit{fill:transparent}
 #layerDemo .layer-path{fill:none;stroke:var(--purple);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#layer-arrow)}
 #layerDemo .layer-path.selected{stroke:var(--green);stroke-width:3}
@@ -41,3 +40,50 @@
 #layerDemo .layer-calculation-icon>rect:first-child{fill:var(--purple-soft)}
 #layerDemo .layer-calculation-icon>rect:nth-child(2){fill:#fff}
 #layerDemo .layer-calculation-icon path{fill:none}
+
+#layerDemo .map-transport{display:flex;align-items:center;gap:3px;padding:5px 7px;border:1px solid #39445e;border-radius:8px;background:#1b2233;box-shadow:0 4px 12px rgba(15,20,31,.18);flex-wrap:nowrap;margin-left:auto}
+#layerDemo .map-transport button{display:grid;place-items:center;box-sizing:border-box;flex:0 0 30px;width:30px;min-width:30px;height:30px;min-height:0;padding:0;border:1px solid #4b5874;border-radius:5px;background:#293248;color:#f4f6fb;cursor:pointer;font-size:12px;font-weight:900}
+#layerDemo .map-transport button:hover:not(:disabled){border-color:#7d8aa7;background:#35405a}
+#layerDemo .map-transport button:disabled{opacity:.4;cursor:not-allowed;border-color:#343d52;background:#222a3c;color:#69738a}
+#layerDemo .map-transport button[aria-pressed="true"]{background:#5b9467;border-color:#80b78b}
+#layerDemo .map-transport button:focus-visible{outline:2px solid #a8d8b5;outline-offset:2px}
+#layerDemo .map-transport button svg{display:block;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+#layerVisual{position:relative;isolation:isolate}
+#layerConnections{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:hidden;z-index:2}
+#layerConnections .attention-connection{fill:none;stroke:var(--purple);stroke-opacity:.65;stroke-linecap:round;stroke-linejoin:round}
+#layerConnections .target-connection{stroke:var(--green)}
+#layerTokens .rnn-flow-diagram{min-width:0}
+#layerDemo .stack-token-label rect{fill:var(--green-soft);stroke:var(--green);stroke-width:1.5}
+#layerDemo .stack-token-label text{fill:var(--green-dark)}
+#layerDemo .stack-target-icon{color:var(--green-dark);fill:none}
+#layerDemo .layer-transient{pointer-events:none}
+#layerDemo .layer-combining{fill:none;stroke:var(--green);stroke-width:3}
+#layerDemo .stack-particle-halo{fill:var(--amber);opacity:.22}
+#layerDemo .stack-particle-core{fill:var(--amber);stroke:#fff;stroke-width:.7}
+#layerDemo .layer-processing .layer-network-demo .layer-synapse{stroke:var(--green);opacity:1}
+#layerDemo .layer-active-vector [data-state-value] rect{stroke:var(--green);stroke-width:2}
+#layerDiagram{margin-top:16px}
+
+#layerDemo [data-stage][role="button"]:focus-visible .stack-token-label rect{stroke:var(--green);stroke-width:3;stroke-dasharray:4 2}
+
+#layerDemo .layer-about-icon{display:inline-block;vertical-align:-3px;margin-right:4px}
+
+#layerDemo .layer-step-icon{pointer-events:none}
+#layerDemo .layer-step-icon.normalize{color:var(--blue)}
+#layerDemo .layer-step-icon.normalize circle{fill:var(--blue-soft)}
+#layerDemo .layer-step-icon.attention{color:var(--purple)}
+#layerDemo .layer-step-icon.attention circle{fill:var(--purple-soft)}
+#layerDemo .layer-step-icon.residual{color:var(--green)}
+
+#layerDemo .layer-junction{fill:#fff;stroke:var(--purple);stroke-width:2.5;pointer-events:none}
+#layerDemo .layer-junction.selected{fill:var(--green-soft);stroke:var(--green)}
+
+/* Larger animated network below the static title icon. */
+#layerDemo .layer-processing .layer-network-demo .layer-synapse{stroke-dasharray:5 4;stroke-width:2.5;animation:layer-network-flow .7s linear infinite}
+#layerDemo .layer-processing .layer-network-demo circle{animation:layer-network-pulse .7s ease-in-out infinite}
+#layerDemo[data-playing="false"] .layer-processing .layer-network-demo *{animation-play-state:paused}
+@keyframes layer-network-flow{to{stroke-dashoffset:-18}}
+@keyframes layer-network-pulse{0%,100%{opacity:.65;stroke-width:2}50%{opacity:1;stroke-width:4}}
+
+#layerDemo .layer-processing .layer-network-demo .layer-synapse,#layerDemo .layer-processing .layer-network-demo circle{animation-delay:1.35s}
