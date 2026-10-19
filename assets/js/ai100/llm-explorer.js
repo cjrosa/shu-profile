@@ -191,6 +191,7 @@
     const passage = $('#countPassage');
     passage.replaceChildren();
     const wordButtons = [];
+    const comparisonRows = [];
     let hoverStart = null, focusStart = null, hoveredPattern = null, focusedPattern = null;
     function showGroup() {
       passage.querySelectorAll('.count-group-border').forEach(border => border.remove());
@@ -210,6 +211,7 @@
         const fills = colors[index];
         button.style.background = fills.length ? `linear-gradient(to bottom, ${fills.map((fill, i) => `${fill} ${i / fills.length * 100}% ${(i + 1) / fills.length * 100}%`).join(', ')})` : '';
       });
+      comparisonRows.forEach(({ row }) => row.classList.toggle('count-showing-all', showAll));
       if (!layers.size) return;
       const bounds = passage.getBoundingClientRect();
       layers.forEach(entry => {
@@ -260,6 +262,9 @@
     [...explored.values()].sort((a, b) => b.count - a.count).forEach(entry => {
       const row = document.createElement('li'), label = document.createElement('span'), track = document.createElement('span'), bar = document.createElement('span'), value = document.createElement('strong');
       row.className = 'count-row'; label.textContent = entry.pattern; value.textContent = entry.count;
+      row.style['--count-row-color'] = entry.color.ink;
+      row.style['--count-row-fill'] = entry.color.fill;
+      comparisonRows.push({ row, entry });
       const size = wordSpans(entry.pattern).length;
       const badge = document.createElement('span');
       badge.className = 'count-gram-badge';

@@ -14,6 +14,10 @@
 #qkDemo .attention-target-icon{color:var(--green-dark);pointer-events:none}
 #qkDemo .attention-info-icon,#qkDemo .tokens-next-icon{color:var(--blue)}
 #qkDemo .attention-info-icon circle{fill:var(--blue-soft)}
+#qkDemo .qk-calculation-icon{color:var(--purple)}
+#qkDemo .qk-calculation-icon>rect:first-child{fill:var(--purple-soft)}
+#qkDemo .qk-calculation-icon>rect:nth-child(2){fill:#fff}
+#qkDemo .qk-calculation-icon path{fill:none}
 #qkDemo .attention-try-icon{color:var(--amber)}
 #qkDemo .attention-try-icon .attention-bulb{fill:var(--amber-soft)}
 #qkTitle svg{color:var(--purple)}

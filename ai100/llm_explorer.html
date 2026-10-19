@@ -143,6 +143,7 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 .count-bars{list-style:none;padding:16px;margin:0;display:grid;gap:10px;min-height:64px;max-height:230px;overflow:auto}
 .count-corpus-details{margin-top:16px;background:#fff}
 .count-corpus-details>summary{padding:12px 16px;cursor:pointer;color:var(--green-dark);font-size:14px;font-weight:750}
+.count-corpus-details>summary svg{display:inline-block;width:18px;height:18px;margin-right:8px;vertical-align:-3px;color:var(--green);fill:none}
 .count-corpus-details>summary:focus-visible{outline:none;background:var(--green-soft)}
 .count-corpus-details[open]>summary{border-bottom:1px solid var(--line)}
 .count-corpus-summary{margin:12px 16px 0;color:var(--muted);font-size:13px;line-height:1.5}
@@ -156,6 +157,7 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 .count-full-scroll th{position:sticky;top:0;background:#fff}
 .count-full-scroll td:last-child,.count-full-scroll th:last-child{text-align:right}
 .count-row{display:grid;grid-template-columns:minmax(110px,1fr) 2fr 2ch;gap:12px;align-items:center;font-size:15px;overflow-wrap:anywhere}
+.count-row.count-showing-all{margin:-4px -6px;padding:4px 6px;border-left:3px solid var(--count-row-color);border-radius:5px;background:var(--count-row-fill)}
 .count-pattern-label{display:flex;align-items:center;gap:8px}
 .count-gram-badge{display:inline-flex;align-items:center;justify-content:center;flex:0 0 38px;height:24px;border:1px solid var(--line);border-radius:6px;background:var(--green-soft);color:var(--green-dark)}
 .count-gram-badge svg{width:32px;height:16px}
@@ -228,9 +230,9 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
      <button id="countSize3" type="button" aria-pressed="false">Trigram<small>3 consecutive words</small></button>
     </div>
     <p class="sr-only" id="countResult" role="status" aria-live="polite" aria-atomic="true"></p>
-    <section class="count-training count-comparison" id="countComparison" aria-labelledby="countComparisonTitle"><div class="count-comparison-header"><h3 id="countComparisonTitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 4v16h16M8 8h10M8 12h6M8 16h8"/></svg>Compare your explored patterns</h3><div class="count-header-actions"><label><input id="countShowAll" type="checkbox"> Show all</label><button id="countReset" type="button">Reset</button></div></div><p class="count-empty" id="countEmpty">Click or tap a word in the passage to add its n-gram and count here.</p><ul class="count-bars" id="countBars"></ul></section>
+    <section class="count-training count-comparison" id="countComparison" aria-labelledby="countComparisonTitle"><div class="count-comparison-header"><h3 id="countComparisonTitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 4v16h16M8 8h10M8 12h6M8 16h8"/></svg>Compare your explored patterns</h3><div class="count-header-actions"><label><input id="countShowAll" type="checkbox"> Highlight all in text</label><button id="countReset" type="button">Reset</button></div></div><p class="count-empty" id="countEmpty">Click or tap a word in the passage to add its n-gram and count here.</p><ul class="count-bars" id="countBars"></ul></section>
     <div class="panel count-discovery" id="countDiscovery" hidden><p><svg class="count-discovery-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12 3 3 6-6"/></svg><strong>Discovery:</strong> Some word sequences occur more often than others. By counting these patterns, we can begin to identify which sequences are common in the training text.</p><p><strong>Next:</strong> If we know how often different word sequences occur, can we use those counts to predict which word comes next?</p></div>
-    <details class="count-training count-corpus-details" id="countCorpusComparison"><summary>Explore frequencies across the complete training text.</summary>
+    <details class="count-training count-corpus-details" id="countCorpusComparison"><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 4v16h16M8 8h10M8 12h6M8 16h8"/></svg>Explore frequencies across the complete training text.</summary>
      <h3 id="countCorpusTitle"><svg id="countCorpusIcon" viewBox="0 0 36 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false"></svg><span id="countCorpusTitleText">Complete corpus</span></h3>
      <p class="count-corpus-summary" id="countCorpusSummary"></p>
      <ol class="count-bars count-corpus-bars" id="countCorpusBars" aria-label="Top ten patterns by occurrence count"></ol>
@@ -370,7 +372,7 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 </section>
 <p class="tokens-feedback"><svg class="tokens-feedback-icon try-face-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle class="try-face-disc" cx="12" cy="12" r="9.5"/><path d="M8 9h.01M16 9h.01M7.5 14a5 5 0 0 0 9 0"/></svg><strong>Try it:</strong> Select <strong>they</strong>, then <strong>cold</strong>. How do the available words and attention weights change?</p>
 <div class="tokens-feedback"><p><svg class="tokens-feedback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12 3 3 6-6"/></svg><strong>Discovery:</strong> Self-attention combines information from permitted positions with different relative weights.</p><p><svg class="tokens-feedback-icon tokens-next-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg><strong>Next:</strong> How does the transformer calculate these attention weights?</p></div>
-<details class="tokens-about"><summary>About this teaching simulation</summary><div class="tokens-input-body"><p>Real attention weights are computed from token representations using parameters learned during training, rather than assigned manually for each sentence. Scene 2 introduces Query, Key, and Value calculations.</p><p>The attention output combines Value vectors. A large weight does not prove a pronoun's referent, semantic understanding, or explain a model's entire decision. One word per position is a teaching simplification; real token boundaries may differ.</p></div></details>
+<details class="tokens-about"><summary><svg class="attention-info-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01" stroke-linecap="round"/></svg>About this teaching simulation</summary><div class="tokens-input-body"><p>Real attention weights are computed from token representations using parameters learned during training, rather than assigned manually for each sentence. Scene 2 introduces Query, Key, and Value calculations.</p><p>The attention output combines Value vectors. A large weight does not prove a pronoun's referent, semantic understanding, or explain a model's entire decision. One word per position is a teaching simplification; real token boundaries may differ.</p></div></details>
 </div>
 <div class="tokens-demo" id="qkDemo" hidden>
 <section class="tokens-input-card" aria-labelledby="qkTitle">
@@ -387,7 +389,7 @@ h1{margin:5px 0 6px;overflow-wrap:anywhere;font-size:clamp(27px,4vw,39px);letter
 <div id="qkDiagram" class="rnn-flow-scroll" role="region" aria-label="Selectable targets and attention connections" tabindex="0"></div>
 
 
-<details class="tokens-about"><summary>Inspect the calculation and teaching parameters</summary><div class="tokens-input-body">
+<details class="tokens-about"><summary><svg class="qk-calculation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="2" width="14" height="20" rx="2"/><rect x="8" y="5" width="8" height="4" rx="1"/><path d="M8 13h2m4 0h2M8 17h2m4 0h2"/></svg>Inspect the calculation and teaching parameters</summary><div class="tokens-input-body">
 <h4 id="qkComparisonHeading">Multiply matching dimensions, then add</h4>
 <div id="qkComparison" class="rnn-flow-scroll" role="region" aria-labelledby="qkComparisonHeading" tabindex="0"></div>
 <h4 class="qk-details-heading">Projection rules and teaching parameters</h4>

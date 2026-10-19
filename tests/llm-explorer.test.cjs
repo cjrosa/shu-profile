@@ -27,7 +27,7 @@ function fixture(href = 'https://example.test/ai100/llm_explorer.html', animatio
   const elements = new Map(), events = {};
   function element() {
     return { animate: animationDriver, textContent: '', dataset: {}, style: {}, attributes: {}, children: [], disabled: false,
-      classList: { values: new Set(), toggle() {}, add(value) { this.values.add(value); } }, handlers: {},
+      classList: { values: new Set(), toggle(value, force) { const enabled = force === undefined ? !this.values.has(value) : force; if (enabled) this.values.add(value); else this.values.delete(value); return enabled; }, add(value) { this.values.add(value); }, remove(value) { this.values.delete(value); } }, handlers: {},
       setAttribute(key, value) { this.attributes[key] = String(value); },
       removeAttribute(key) { delete this.attributes[key]; },
       addEventListener(key, fn) { this.handlers[key] = fn; },
@@ -75,6 +75,15 @@ test('all requested chapters and 21 unique scene records have metadata', () => {
   assert.equal(new Set(scenes.map(s => s.id)).size, 21);
   assert.deepEqual(chapters.map((_, i) => chapterStart(i)), [0, 5, 9, 12, 17]);
   for (const item of scenes) for (const key of ['title', 'description', 'placeholder']) assert.ok(item[key].length > 0);
+});
+test('every teaching-simulation disclosure includes an information icon', () => {
+  const html = fs.readFileSync('ai100/llm_explorer.html', 'utf8');
+  const summaries = [...html.matchAll(/<summary>([\s\S]*?)About this teaching simulation<\/summary>/g)];
+  assert.equal(summaries.length, 7);
+  for (const [, summary] of summaries) {
+    assert.match(summary, /<svg\b[^>]*\bclass="[^"]*attention-info-icon[^"]*"/);
+    assert.match(summary, /aria-hidden="true"/);
+  }
 });
 test('all scenes render with correct metadata, chapter selection and progress', () => {
   const f = fixture();
@@ -365,6 +374,7 @@ test('colored comparison previews and Show all clear without changing exploratio
   f.query('#countShowAll').handlers.change({ target: { checked: true } });
   assert.ok(words()[1].style.background.includes(badge(rows[0]).style.background));
   assert.ok(words()[1].style.background.includes(badge(rows[1]).style.background));
+  assert.ok(rows.every(row => row.classList.values.has('count-showing-all')));
   assert.equal(f.query('#countBars').children.length, 2);
   f.click('#countSize1');
   assert.equal(f.query('#countShowAll').checked, false);
