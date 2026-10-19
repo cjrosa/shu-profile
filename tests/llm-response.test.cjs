@@ -30,7 +30,7 @@ function fixture(reduced=false){
  const dom=new JSDOM(fs.readFileSync('ai100/llm_explorer.html','utf8'),{runScripts:'outside-only',pretendToBeVisual:true,url:'http://localhost/ai100/llm_explorer.html?chapter=5&scene=3'}),w=dom.window,jobs=new Map();let seq=0;
  w.matchMedia=()=>({matches:reduced,addEventListener(){}});w.setTimeout=(fn)=>{jobs.set(++seq,fn);return seq;};w.clearTimeout=id=>jobs.delete(id);
  const animations=[];w.Element.prototype.animate=function(frames,options){const a={element:this,frames,options,state:'running',currentTime:0,cancel(){this.state='cancelled';},pause(){this.state='paused';},play(){this.state='running';}};animations.push(a);return a;};
- for(const name of ['explorer','qk-model','values-model','layer-model','layer','prediction-model','prediction-view','prediction','selection','response-model','response'])w.eval(fs.readFileSync('assets/js/ai100/llm-'+name+'.js','utf8'));
+ for(const name of ['explorer','qk-model','values-model','layer-model','layer','prediction-model','prediction-view','prediction','selection','response-model','generation-playback','response'])w.eval(fs.readFileSync('assets/js/ai100/llm-'+name+'.js','utf8'));
  const get=n=>w.document.getElementById('response'+n);
  return {dom,w,get,jobs,animations,tick(){const entry=jobs.entries().next().value;assert.ok(entry,'pending timer');jobs.delete(entry[0]);entry[1]();},drain(){let n=0;while(jobs.size){assert.ok(++n<100);this.tick();}},words(){return [...get('Tokens').querySelectorAll('text')].map(n=>n.textContent);}};
 }

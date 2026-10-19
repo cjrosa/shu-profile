@@ -3,7 +3,7 @@
   const model=root.llmResponseModel,initial=root.llmPredictionModel,view=root.llmPredictionView;
   const $=name=>document.getElementById('response'+name),motion=root.matchMedia('(prefers-reduced-motion: reduce)');
   let index=0,generated=[],temperature=1,strategy='greedy',result,chosen=null,phase=-1,ended=false;
-  let playing=false,active=false,timer=null,remaining=0,started=0,revision=0,flight=null,animation=null;
+  let playing=false,active=false,remaining=0,flight=null,animation=null;
   const durations=[1300,700,650,650];
   // One finite forward pass owned by the existing prediction phase, never a loop.
   let engineAnimations=[];
@@ -75,13 +75,12 @@
   }
   function rebuildEngine(){
     if(phase!==0)return;
-    const elapsed=durations[0]-remaining+(timer!==null?performance.now()-started:0);
+    const elapsed=playback.elapsed;
     startEngine();engineAnimations.forEach(a=>{a.currentTime=Math.min(durations[0],elapsed);if(!active)a.pause();});
   }
   function clearFlight(){animation?.cancel();animation=null;flight?.remove();flight=null;}
-  function stopTimer(){if(timer!==null){clearTimeout(timer);remaining=Math.max(0,remaining-(performance.now()-started));timer=null;}revision++;}
-  function pause(){stopTimer();playing=false;active=false;animation?.pause();engineAnimations.forEach(a=>a.pause());controls();}
-  function cancelPending(){pause();phase=-1;chosen=null;clearFlight();clearEngine();refresh();}
+  function pause(){playback.pause();}
+  function cancelPending(){playback.reset();chosen=null;clearFlight();clearEngine();refresh();}
   function controls(){
     const label=active?'Pause':'Play';
     $('Play').setAttribute('aria-label',label);$('Play').dataset.tooltip=label;$('Play').setAttribute('aria-pressed',String(active));
@@ -105,10 +104,6 @@
     $('Phase').textContent=ended?(generated.length>=model.limit?'Teaching demonstration limit reached: eight generated tokens.':'Complete: end-of-sequence selected.'):'Ready: use the current context to predict.';
     controls();
   }
-  function schedule(){
-    const version=++revision;started=performance.now();
-    timer=setTimeout(()=>{timer=null;if(version!==revision||!active)return;advance();},remaining);
-  }
   function moveToken(){
     if(motion.matches)return;
     // The highlighted row still belongs to the distribution used for this draw.
@@ -119,8 +114,8 @@
     Object.assign(flight.style,{left:source.left+'px',top:source.top+'px'});document.body.append(flight);
     animation=flight.animate([{transform:'translate(0,0)'},{transform:`translate(${destination.left-source.left}px,${destination.top-source.top}px)`}],{duration:650,easing:'ease-in-out',fill:'forwards'});
   }
-  function advance(){
-    clearFlight();phase++;
+  function enterPhase(nextPhase){
+    phase=nextPhase;clearFlight();
     if(phase===0){result=model.calculate(index,generated,temperature);$('Phase').textContent='Predict: final-position representation to scores and probabilities.';startEngine();}
     if(phase===1){
       clearEngine();
@@ -131,16 +126,22 @@
       $('Probabilities').querySelectorAll('.prob-branch').forEach(n=>n.classList.toggle('selected',shown?n.dataset.candidate===chosen.token:n.classList.contains('prediction-other')));
     }
     if(phase===2){
-      if(chosen.token===model.EOS){ended=true;pause();refresh();return;}
+      if(chosen.token===model.EOS){ended=true;refresh();return false;}
       generated.push(chosen.token);tokens();moveToken();
       ended=generated.length>=model.limit;
       refresh();$('Phase').textContent='Append: the selected token is now part of the context.';
     }
     if(phase===3){$('Phase').textContent='Repeat: the updated context produces a new prediction.';}
-    if(phase===4){phase=-1;chosen=null;if(ended){pause();refresh();return;}if(playing){advance();return;}pause();refresh();return;}
-    remaining=motion.matches&&phase!==0?100:durations[phase];controls();schedule();
+    controls();
   }
-  function start(auto){if(ended)return;playing=auto;active=true;animation?.play();engineAnimations.forEach(a=>a.play());if(phase<0)advance();else{controls();schedule();}}
+  const playback=root.llmGenerationPlayback({
+    durations,duration:p=>motion.matches&&p!==0?100:durations[p],isEnded:()=>ended,
+    onPhase:enterPhase,onCycleEnd:()=>{phase=-1;chosen=null;refresh();},
+    onState:s=>{phase=s.phase;active=s.active;playing=s.playing;remaining=s.remaining;controls();},
+    pauseEffects:()=>{animation?.pause();engineAnimations.forEach(a=>a.pause());},
+    resumeEffects:()=>{animation?.play();engineAnimations.forEach(a=>a.play());}
+  });
+  function start(auto){playback.start(auto);}
   $('Play').onclick=()=>active?pause():start(true);
   $('Step').onclick=()=>{if(!active)start(false);};
   function setting(next){cancelPending();next();refresh();}
@@ -153,7 +154,7 @@
   const picker=$('Picker'),button=$('PickerButton'),menu=$('PickerMenu');
   function closePicker(focus=false){menu.hidden=true;button.setAttribute('aria-expanded','false');if(focus)button.focus();}
   function reset(){
-    pause();clearFlight();clearEngine();generated=[];chosen=null;phase=-1;ended=false;temperature=1;
+    playback.reset();clearFlight();clearEngine();generated=[];chosen=null;phase=-1;ended=false;temperature=1;
     $('Temperature').value=1;$('TemperatureValue').textContent='1.0';closePicker();
     button.textContent=initial.examples[index].name;button.setAttribute('aria-label','Try an example: '+button.textContent);
     [...menu.children].forEach((n,i)=>n.setAttribute('aria-selected',String(i===index)));refresh();

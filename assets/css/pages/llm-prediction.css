@@ -1,57 +1,57 @@
-:is(#predictionDemo,#selectionDemo,#responseDemo) .attention-token{cursor:pointer;outline:none}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .attention-token rect{fill:#fff;stroke:var(--word-color)}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .attention-token.selected rect{fill:var(--green-soft);stroke:var(--word-color);stroke-width:3}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .attention-token.selected text{fill:var(--green-dark)}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .attention-target-icon{color:var(--green-dark);pointer-events:none}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .attention-token:focus-visible rect{stroke:var(--word-color);stroke-width:3;stroke-dasharray:4 2}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .tokenizer-picker-button{display:flex;align-items:center;justify-content:space-between;gap:20px;width:100%;padding:8px 12px;border:1px solid var(--green);border-radius:8px;background:#f4faf6;color:var(--green-dark);font-weight:600;text-align:left}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .tokenizer-picker-button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .tokenizer-picker-menu button{display:block;width:100%;padding:8px 12px;border:0;border-radius:5px;text-align:left;white-space:nowrap;font-size:12px}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .tokenizer-picker-menu button[aria-selected=true]{background:var(--green-soft);color:var(--green-dark);font-weight:700}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .tokenizer-picker-menu button:hover,:is(#predictionDemo,#selectionDemo,#responseDemo) .tokenizer-picker-menu button:focus{background:var(--green-soft);outline:2px solid var(--green);outline-offset:-2px}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .stack-token-label rect{fill:var(--green-soft);stroke:var(--green);stroke-width:1.5}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .stack-token-label text{fill:var(--green-dark)}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .stack-target-icon{color:var(--green-dark);fill:none}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .attention-token{cursor:pointer;outline:none}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .attention-token rect{fill:#fff;stroke:var(--word-color)}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .attention-token.selected rect{fill:var(--green-soft);stroke:var(--word-color);stroke-width:3}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .attention-token.selected text{fill:var(--green-dark)}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .attention-target-icon{color:var(--green-dark);pointer-events:none}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .attention-token:focus-visible rect{stroke:var(--word-color);stroke-width:3;stroke-dasharray:4 2}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .tokenizer-picker-button{display:flex;align-items:center;justify-content:space-between;gap:20px;width:100%;padding:8px 12px;border:1px solid var(--green);border-radius:8px;background:#f4faf6;color:var(--green-dark);font-weight:600;text-align:left}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .tokenizer-picker-button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .tokenizer-picker-menu button{display:block;width:100%;padding:8px 12px;border:0;border-radius:5px;text-align:left;white-space:nowrap;font-size:12px}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .tokenizer-picker-menu button[aria-selected=true]{background:var(--green-soft);color:var(--green-dark);font-weight:700}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .tokenizer-picker-menu button:hover,:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .tokenizer-picker-menu button:focus{background:var(--green-soft);outline:2px solid var(--green);outline-offset:-2px}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .stack-token-label rect{fill:var(--green-soft);stroke:var(--green);stroke-width:1.5}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .stack-token-label text{fill:var(--green-dark)}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .stack-target-icon{color:var(--green-dark);fill:none}
 /* Scene-local extensions of approved token, vector and probability conventions. */
-.canvas:has(:is(#predictionDemo,#selectionDemo,#responseDemo):not([hidden])){padding-top:10px}
-:is(#predictionDemo,#selectionDemo,#responseDemo) > .tokens-feedback:first-child{margin-top:0;margin-bottom:10px}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .attention-token{cursor:default}
-:is(#predictionTokens,#selectionTokens,#responseTokens) .rnn-flow-diagram{min-width:0;max-width:940px}
+.canvas:has(:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo):not([hidden])){padding-top:10px}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) > .tokens-feedback:first-child{margin-top:0;margin-bottom:10px}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .attention-token{cursor:default}
+:is(#predictionTokens,#selectionTokens,#responseTokens,#capstoneTokens) .rnn-flow-diagram{min-width:0;max-width:940px}
 #predictionDiagram .rnn-flow-diagram{min-width:600px;max-width:700px}
-:is(#predictionTitle,#selectionTitle,#responseTitle) svg{color:var(--purple)}
-:is(#predictionTitle,#selectionTitle,#responseTitle) svg circle{fill:var(--purple-soft)}
-:is(#predictionTitle,#selectionTitle,#responseTitle) svg path{fill:none;stroke:var(--purple)}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prediction-path{fill:none;stroke:var(--purple);stroke-width:2;marker-end:url(#prediction-arrow)}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prediction-scores{display:flex;flex-wrap:wrap;gap:8px}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prediction-scores button{flex:1 1 100px;display:flex;justify-content:space-between;gap:12px;font-variant-numeric:tabular-nums}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prediction-scores strong{color:var(--purple)}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .selected,:is(#predictionDemo,#selectionDemo,#responseDemo) [data-candidate]:hover{background:var(--green-soft);border-color:var(--green)}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .selected strong{color:var(--green-dark)}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prediction-softmax{text-align:center}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prediction-connector{display:block;width:24px;height:32px;margin:8px auto;fill:none;stroke:var(--purple);stroke-width:2}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prediction-info{display:inline-flex;align-items:center;gap:8px;padding:4px 8px;color:var(--purple);vertical-align:middle}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .attention-info-icon{color:var(--blue)}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .attention-info-icon circle{fill:var(--blue-soft)}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prediction-about-icon{display:inline-block;vertical-align:-3px;margin-right:4px}
-:is(#predictionProbabilities,#selectionProbabilities,#responseProbabilities){display:grid;gap:6px}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prob-branch{width:100%;text-align:left}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prob-branch:before{content:none}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prob-branch .count-track{height:8px}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .rnn-flow-diagram text{font-variant-numeric:tabular-nums}
-:is(#predictionDemo,#selectionDemo,#responseDemo) [tabindex]:focus-visible rect{stroke:var(--green);stroke-width:3;stroke-dasharray:4 2}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .rnn-weight-table caption{text-align:left}
+:is(#predictionTitle,#selectionTitle,#responseTitle,#capstoneTitle) svg{color:var(--purple)}
+:is(#predictionTitle,#selectionTitle,#responseTitle,#capstoneTitle) svg circle{fill:var(--purple-soft)}
+:is(#predictionTitle,#selectionTitle,#responseTitle,#capstoneTitle) svg path{fill:none;stroke:var(--purple)}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prediction-path{fill:none;stroke:var(--purple);stroke-width:2;marker-end:url(#prediction-arrow)}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prediction-scores{display:flex;flex-wrap:wrap;gap:8px}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prediction-scores button{flex:1 1 100px;display:flex;justify-content:space-between;gap:12px;font-variant-numeric:tabular-nums}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prediction-scores strong{color:var(--purple)}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .selected,:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) [data-candidate]:hover{background:var(--green-soft);border-color:var(--green)}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .selected strong{color:var(--green-dark)}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prediction-softmax{text-align:center}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prediction-connector{display:block;width:24px;height:32px;margin:8px auto;fill:none;stroke:var(--purple);stroke-width:2}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prediction-info{display:inline-flex;align-items:center;gap:8px;padding:4px 8px;color:var(--purple);vertical-align:middle}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .attention-info-icon{color:var(--blue)}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .attention-info-icon circle{fill:var(--blue-soft)}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prediction-about-icon{display:inline-block;vertical-align:-3px;margin-right:4px}
+:is(#predictionProbabilities,#selectionProbabilities,#responseProbabilities,#capstoneProbabilities){display:grid;gap:6px}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prob-branch{width:100%;text-align:left}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prob-branch:before{content:none}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prob-branch .count-track{height:8px}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .rnn-flow-diagram text{font-variant-numeric:tabular-nums}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) [tabindex]:focus-visible rect{stroke:var(--green);stroke-width:3;stroke-dasharray:4 2}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .rnn-weight-table caption{text-align:left}
 /* Tighten empty space without changing the established type scale. */
-:is(#predictionDemo,#selectionDemo,#responseDemo) .tokens-input-card > .tokens-input-body > .tokens-note:first-child{margin-top:0}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .tokens-input-body > h4{margin:8px 0 6px}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prediction-scores{gap:6px}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prediction-scores button{padding:6px 10px}
-:is(#predictionDemo,#selectionDemo,#responseDemo) [data-candidate].selected{background:var(--green-soft);border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prediction-connector{height:20px;margin:2px auto}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prediction-softmax .tokens-note{margin:2px 0}
-:is(#predictionProbabilities,#selectionProbabilities,#responseProbabilities){gap:4px}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prob-branch{padding:5px 10px;box-sizing:border-box}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prediction-other{background:#f8faf9;color:var(--muted)}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prediction-other strong{color:var(--muted)}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prediction-other .count-bar{background:var(--muted)}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prediction-other:hover{background:#f8faf9;border-color:var(--line)}
-:is(#predictionDemo,#selectionDemo,#responseDemo) .prediction-other .prediction-info{padding:0;border:0;background:transparent}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .tokens-input-card > .tokens-input-body > .tokens-note:first-child{margin-top:0}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .tokens-input-body > h4{margin:8px 0 6px}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prediction-scores{gap:6px}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prediction-scores button{padding:6px 10px}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) [data-candidate].selected{background:var(--green-soft);border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prediction-connector{height:20px;margin:2px auto}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prediction-softmax .tokens-note{margin:2px 0}
+:is(#predictionProbabilities,#selectionProbabilities,#responseProbabilities,#capstoneProbabilities){gap:4px}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prob-branch{padding:5px 10px;box-sizing:border-box}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prediction-other{background:#f8faf9;color:var(--muted)}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prediction-other strong{color:var(--muted)}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prediction-other .count-bar{background:var(--muted)}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prediction-other:hover{background:#f8faf9;border-color:var(--line)}
+:is(#predictionDemo,#selectionDemo,#responseDemo,#capstoneDemo) .prediction-other .prediction-info{padding:0;border:0;background:transparent}

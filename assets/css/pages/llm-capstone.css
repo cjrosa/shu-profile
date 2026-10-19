@@ -1,0 +1,62 @@
+#capstoneDemo .context-control input[type=range]{appearance:none;-webkit-appearance:none;width:100px;height:5px;padding:0;margin:0;background:var(--line);border:0;border-radius:4px;accent-color:var(--green);cursor:pointer}
+#capstoneDemo .context-control input[type=range]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:13px;height:13px;border-radius:50%;border:2px solid #fff;background:var(--green);box-shadow:0 0 0 1px var(--green)}
+#capstoneDemo .context-control input[type=range]::-moz-range-thumb{width:10px;height:10px;border-radius:50%;border:2px solid #fff;background:var(--green);box-shadow:0 0 0 1px var(--green)}
+#capstoneDemo .context-control input[type=range]:focus-visible{outline:2px solid var(--green);outline-offset:5px}
+#capstoneDemo .context-control{display:flex;align-items:center;flex-wrap:wrap;gap:16px;margin:16px 0;font-size:13px;font-weight:700}
+#capstoneDemo .context-control input[type=range]{flex:1;min-width:120px;width:auto}
+#capstoneDemo .temperature-scale{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+#capstoneDemo output{color:var(--purple);font-variant-numeric:tabular-nums}
+#capstoneDemo .count-bar{transition:width .2s ease}
+@media(prefers-reduced-motion:reduce){#capstoneDemo .count-bar{transition:none}}
+#capstoneDemo .capstone-temperature-info{display:flex;align-items:flex-start;gap:12px;padding:16px;border-radius:14px;background:#f6f6f6;font-size:13px;line-height:1.6}
+#capstoneDemo .capstone-temperature-info>svg{flex:0 0 18px;width:18px;height:18px;margin-top:2px;color:var(--blue)}
+#capstoneDemo .capstone-temperature-info p{margin:0}
+#capstoneDemo .capstone-temperature-info p+p{margin-top:8px}
+#capstoneTemperatureSection:not([open])>summary .context-control{margin:10px 0 0;cursor:default}
+#capstoneTemperatureSection>summary .context-control svg{margin:0;vertical-align:middle}
+#capstoneDemo .capstone-pipeline{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 36px minmax(0,1fr);align-items:stretch;gap:8px;width:100%;margin-inline:auto;box-sizing:border-box}
+#capstoneDemo .capstone-stage{min-width:0;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}
+#capstoneDemo .capstone-stage[data-stage="0"]{position:relative;padding:14px 12px}
+#capstoneDemo .capstone-stage[data-stage="0"] .capstone-inspect{padding-bottom:2px;padding-right:170px}
+#capstoneCount{position:absolute;top:15px;right:12px;margin:0!important}
+#capstoneDemo .capstone-stage[data-stage="0"],#capstoneDemo .capstone-stage[data-stage="1"],#capstoneDemo .capstone-input-arrow{grid-column:1/-1}
+#capstoneDemo .capstone-stage[data-stage="2"]{grid-column:1}
+#capstoneDemo .capstone-stage[data-stage="3"]{grid-column:3}
+#capstoneDemo .capstone-inspect{display:block;width:100%;text-align:left;border:0;background:transparent;padding:0 0 8px;font-weight:700;font-size:14px;color:var(--ink)}
+#capstoneDemo .capstone-inspect[aria-pressed=true]{color:var(--green-dark)}
+#capstoneDemo .capstone-stage:has(.capstone-inspect[aria-pressed="true"]),#capstoneDemo .capstone-stage:focus-within{outline:2px solid var(--green);outline-offset:2px}
+#capstoneDemo .prediction-connector{align-self:center;width:24px;height:24px;margin:0 auto}
+#capstoneDemo .capstone-predict-arrow{transform:rotate(-90deg)}
+#capstoneDemo .capstone-internal-arrow{margin:6px auto}
+#capstoneTokens .rnn-flow-diagram{width:100%;min-width:0;max-width:940px}
+#capstoneTokens{min-height:0!important;padding:0}
+#capstoneDemo .response-generated rect{stroke-dasharray:5 2}
+#capstoneDemo .response-generated.selected rect{stroke:var(--green);stroke-dasharray:none}
+#capstoneInputs{display:flex;flex-wrap:wrap;gap:10px 16px}
+#capstoneInputs figure{margin:0;width:96px;font-size:13px;text-align:center}
+#capstoneInputs svg{display:block;width:100%;height:auto}
+#capstoneDemo .tokens-note{margin:6px 0 0}
+#capstoneLayers.rnn-flow-diagram{display:block;min-width:0;max-width:100%;width:310px;height:auto;margin:0 auto;overflow:visible}
+#capstoneLayers .stack-layer-icon{color:var(--purple)}
+#capstoneLayers .layer-path{fill:none;stroke:var(--purple);stroke-width:2;marker-end:url(#capstone-arrow)}
+#capstoneLayers .stack-processing rect{stroke:var(--green);stroke-width:3;fill:var(--green-soft)}
+#capstoneFinal{text-align:center;font-size:13px;margin-top:6px}
+#capstoneVector svg{display:block;width:164px;max-width:100%;height:30px;margin:8px auto}
+#capstoneDemo .capstone-projection{border:1px solid var(--purple);border-radius:8px;background:var(--purple-soft);text-align:center;padding:8px;font-size:13px}
+#capstoneNetwork{display:block;width:120px;height:80px;max-width:100%;margin:4px auto;overflow:visible}
+#capstoneDemo .layer-synapse{fill:none;stroke:var(--purple);stroke-width:1.5;opacity:.5}
+#capstoneDemo .response-engine-pulse{fill:var(--purple);stroke:#fff;stroke-width:.7;opacity:0}
+#capstoneProbabilityArea{border-radius:8px;outline:1px solid transparent;outline-offset:3px}
+#capstoneProbabilityArea h4{margin:0 0 6px}
+#capstoneDemo .capstone-selection{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:12px;font-size:13px}
+#capstoneDemo .response-selected{display:inline-block;padding:6px 10px;border:2px solid var(--green);border-radius:8px;background:var(--green-soft);color:var(--green-dark);font-weight:700}
+#capstoneStrategy{justify-content:flex-start}
+#capstoneDemo .ngram-picker button[aria-pressed="true"]{background:var(--green-soft);border-color:var(--green);color:var(--green-dark)}
+#capstoneConnections{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:2}
+#capstoneDemo .stack-moving-vector rect{stroke:var(--green);stroke-width:3}
+#capstoneDemo .stack-processing-sweep{stroke:var(--green);stroke-width:5;stroke-linecap:round}
+#capstoneDemo .stack-token-flight rect{fill:var(--green-soft);stroke:var(--green);stroke-width:2}
+#capstoneDemo .stack-token-flight text{text-anchor:middle;fill:var(--green-dark);font-family:inherit;font-weight:750;font-size:17px}
+#capstoneDemo[data-ended=true] #capstonePhase{color:var(--green-dark);background:var(--green-soft);padding:8px;border-radius:8px}
+@media(max-width:700px){#capstoneDemo .capstone-pipeline{grid-template-columns:minmax(0,1fr)}#capstoneDemo .capstone-stage,#capstoneDemo .prediction-connector{grid-column:1!important}#capstoneDemo .capstone-predict-arrow{transform:none}#capstoneDemo .tokens-toolbar{flex-wrap:wrap}#capstoneDemo .capstone-stage{padding:10px}#capstoneDemo .capstone-stage[data-stage="0"] .capstone-inspect{padding-right:0}#capstoneCount{position:static;display:block;margin:2px 0!important}}
+@media(prefers-reduced-motion:reduce){#capstoneDemo *{animation:none!important;transition:none!important}}

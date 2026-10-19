@@ -173,3 +173,49 @@ compare exact SVG geometry and presentation attributes, synapse CSS, coordinate
 projections at equal 90- and 120-pixel widths, and the untouched source SVG after
 playback/reset. Browser inventory remains empty: these checks establish artwork
 identity and animation lifecycle, but do not replace rendered side-by-side QA.
+
+## Chapter 5, Scene 4: Putting It All Together
+
+The capstone uses `llmResponseModel.calculate`, `llmChooseToken`, and the shared
+prediction token/probability renderers. It adds no logits, continuation paths,
+temperature calculation, generation limit, or decoding strategy. Input cells
+reuse the Q/K/V lookup (including the approved New Haven lookup aliases);
+undefined continuation input vectors are explicitly schematic gray cells.
+The final vector comes directly from the shared prediction/continuation result.
+Transformer layers and the miniature projection clone existing Chapter 4 SVGs.
+
+Four sections form the pipeline: Text & Tokens, Numerical Representations,
+Transformer Processing, and Predict & Select. The stack retains Chapter 4's
+layer groups, icons, and connector paths. Schematic intermediate vector colors
+carry no numeric coordinates; each displayed layer output is retained during
+its handoff to the next layer. Only the final vector carries the shared model's
+actual teaching representation. The capstone uses moving vectors without
+persistent guide lines between processing sections.
+
+Fourteen timed visual phases form one Step cycle. Scene 3's timer/state lifecycle
+was extracted into `llm-generation-playback.js` and is used by both scenes.
+Scene 3 retains its original phase durations, projection animation and generation
+behavior. The capstone extends the phase sequence with contextual pulses, vector
+handoffs, the same projection-forward-pass offsets, and a green SVG return path.
+Selection happens once; append happens only after the return phase finishes.
+All animations are owned by the same pause/resume/reset lifecycle. Resize rebuilds
+visual geometry at the saved elapsed time without repeating selection or append.
+Reduced motion retains the sequence and emphasis without traveling effects.
+
+Settings cancel an unfinished cycle while retaining committed tokens. Inspection
+changes only explanatory UI, which stays hidden until requested. Reset restores
+New Haven, greedy, and 1.0 and removes transient effects. EOS and the shared
+eight-token limit stop playback without clearing the scene.
+
+Validation: 178 LLM tests run; 172 pass. The six failing RNN UI tests also failed
+against the original HEAD HTML/navigation sources in the initial implementation.
+Nine capstone tests cover all phases, repeated Step, pause/resume, inspection
+randomness isolation, example switching, settings, stale callbacks, EOS/limit,
+reduced motion, artwork reuse, projection ordering and return-before-append.
+All fourteen Scene 3 tests pass after extracting the playback controller.
+
+Rendered desktop/mobile layout and projector readability remain unverified.
+The browser connector has no sessions. Automatic approval review rejected
+inspection of an unrelated personal Edge window, and Computer Use was not
+approved for the task-specific VS Code preview. Approval for that preview was
+requested; DOM and animation-lifecycle tests are not browser visual verification.

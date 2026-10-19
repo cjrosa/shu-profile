@@ -32,7 +32,7 @@
       scene('inside-llm', 'From Representations to Predictions', 'Explore how the final representation at the last context position becomes probabilities for possible next tokens.', 'An overview will connect input tokens, transformer layers, and the next-token prediction stage.'),
       scene('next-token', 'Choosing the Next Token', 'Explore how different selection strategies choose a token from the same probability distribution.', 'Candidate next tokens will appear alongside their predicted probabilities for a shared context.'),
       scene('response', 'Generating One Token at a Time', 'Watch how each generated token becomes part of the context for the next prediction.', 'A response grows through repeated context-dependent predictions.'),
-      scene('putting-it-all-together', 'Putting It All Together', 'Bring the stages of the LLM teaching simulation together.', 'Planned: not yet implemented.')
+      scene('putting-it-all-together', 'Putting It All Together', 'Follow how tokens, context, attention, and prediction work together to generate a response.', 'Repeated context-dependent next-token generation.')
     ] }
   ];
   const scenes = chapters.flatMap((chapter, chapterIndex) => chapter.scenes.map((item, sceneIndex) => ({ ...item, chapterIndex, sceneIndex })));
@@ -417,6 +417,9 @@
     $('#stackDemo').hidden = !isStack;
     if (isStack && window.openStackScene) window.openStackScene();
     if (!isStack && window.closeStackScene) window.closeStackScene();
+    const isCapstone = item.id === 'putting-it-all-together';
+    $('#capstoneDemo').hidden = !isCapstone;
+    if (isCapstone && window.openCapstoneScene) window.openCapstoneScene();
     const isResponse = item.id === 'response';
     $('#responseDemo').hidden = !isResponse;
     if (isResponse && window.openResponseScene) window.openResponseScene();
@@ -464,8 +467,8 @@
     if (!isProbability && window.cancelProbabilityReveal) window.cancelProbabilityReveal();
     $('.prob-demo').hidden = !isProbability;
     if (isProbability && window.drawProbability) window.drawProbability();
-    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention || isQK || isValues || isLayer || isStack || isPrediction || isSelection || isResponse;
-    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention || isQK || isValues || isLayer || isStack || isPrediction || isSelection || isResponse;
+    $('.placeholder').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention || isQK || isValues || isLayer || isStack || isPrediction || isSelection || isResponse || isCapstone;
+    $('#chapterQuestion').hidden = isNgram || isCounting || isProbability || isGeneration || isLimits || isTokens || isSubwords || isTokenizer || isContext || isMeaning || isRNN || isTransformer || isSelfAttention || isQK || isValues || isLayer || isStack || isPrediction || isSelection || isResponse || isCapstone;
     $('.count-demo').hidden = !isCounting;
     if (isCounting) drawCounting();
     $('.ngram-demo').hidden = !isNgram;
