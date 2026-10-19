@@ -3,6 +3,13 @@
 const C=InternetChecksum,$=id=>document.getElementById(id);
 let protocol='udp',base=10,receiver=false,cursor=0,timer=null,flight=null,invalid=false;
 const senders={udp:C.serialize('udp'),tcp:C.serialize('tcp')};
+const senderExamples={udp:'default',tcp:'default'};
+let receiverExample=null;
+function updateExamples(){
+  const selected=receiver?receiverExample:senderExamples[protocol];
+  document.querySelectorAll('[data-preset]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.preset===selected)));
+}
+function clearExample(){if(receiver)receiverExample=null;else senderExamples[protocol]=null;updateExamples();}
 let transmitted=null,received=null,result=null,events=[];
 const hex=(n,width=16)=>'0x'+n.toString(16).toUpperCase().padStart(Math.ceil(width/4),'0');
 const inputValue=(n,width)=>base===10?String(n):n.toString(base).toUpperCase().padStart(base===2?width:Math.ceil(width/4),'0');
@@ -11,6 +18,7 @@ const bitValues=n=>Array.from({length:16},(_,i)=>(n>>>(15-i))&1);
 const motion=matchMedia('(prefers-reduced-motion: reduce)');
 function pause(){clearTimeout(timer);timer=null;$('play').disabled=invalid;$('pause').disabled=true;if(flight){flight.cancel();flight=null;}}
 function editors(){
+  updateExamples();
   $('field-editors').innerHTML=C.metadata(protocol).filter(f=>f.key!=='checksum'&&!f.fixed).map(f=>`<div class="field"><label for="input-${f.key}">${f.label} <small>${f.bits} bits</small></label><input id="input-${f.key}" data-key="${f.key}" value="${inputValue(C.readField(currentBytes(),f),f.bits)}" spellcheck="false" autocomplete="off" aria-describedby="error"></div>`).join('');
   $('header-constraint').textContent=protocol==='tcp'?'20-byte header: data offset = 5; reserved = 0; no options. Flags: CWR ECE URG ACK PSH RST SYN FIN.':'Length is the UDP length field value. Only the four header words enter this calculation.';
   $('protocol').value=protocol;$('base').value=String(base);
@@ -41,8 +49,9 @@ function commitEditors(){
       try{bytes=C.edit(protocol,bytes,f.key,C.parseNumber(el.value,f.bits,base,f.label));}
       catch(error){el.setAttribute('aria-invalid','true');throw error;}
     }
+    if(bytes.some((value,index)=>value!==currentBytes()[index]))clearExample();
     if(receiver)received=bytes;else senders[protocol]=bytes;rebuild();return true;
-  }catch(error){invalidInput(error);return false;}
+  }catch(error){clearExample();invalidInput(error);return false;}
 }
 function renderHeader(event,done){
   const bytes=!receiver&&done?C.complete(protocol,senders[protocol]).bytes:currentBytes();
@@ -74,7 +83,8 @@ function additionRows(addition,processed,options){
   return labels()+workRow('Carry into column',waiting||inTransit?Array(16).fill(''):carryValues,{kind:'carry-row',overflow:processed===15?addition.carry:'',active:processed>=0&&processed<15?processed+1:-1})+
     workRow(source,bitValues(addition.a),{kind:'source-row',value:hex(addition.a),active:processed})+
     workRow(waiting?'Waiting for header word':next,waiting?Array(16).fill(''):bitValues(addition.b),{kind:`next-row${waiting?' operand-empty':''}${inTransit?' operand-in-transit':''}`,operator:waiting?'':'+',value:waiting?'':hex(addition.b),active:processed,changed:waiting?0:changed,editable:receiver&&!waiting&&!inTransit&&!wrapped&&word&&!word.checksum,wordIndex:word?word.index:0})+
-    workRow(done?'Updated running sum':wrapped?'End-around result':'Binary result',resultBits,{kind:'result-row',overflow:processed===15?addition.carry:'',value:processed===15?hex(addition.raw,addition.carry?17:16):'…',active:processed});
+    workRow(done?'Updated running sum':wrapped?'End-around result':'Binary result',resultBits,{kind:'result-row',overflow:processed===15?addition.carry:'',value:processed===15?hex(addition.raw,addition.carry?17:16):'…',active:processed})+
+    (processed===15&&!wrapped&&addition.carry?`<div class="work-row result-split"><span class="overflow-label">Overflow = 1 ↑</span><span class="lower-bits-bracket">Lower 16 bits (15–0) = <strong>${hex(addition.low)}</strong><small>Keep these bits; next add the overflow 1 back at bit 0.</small></span></div>`:'');
 }
 function renderWorkbench(event){
   const step=event.index===undefined?null:result.steps[event.index],word=step?result.words[event.index]:null;
@@ -84,7 +94,7 @@ function renderWorkbench(event){
     const operation=wrap?step.wrap:step;
     const processed=['select','transfer','loaded','wrap'].includes(event.kind)?-1:['add','wrapAdd'].includes(event.kind)?event.bit:15;
     const label=word.checksum?(receiver?'Transmitted Checksum':'Checksum Placeholder'):word.label;
-    if(wrap)html=`<div class="wrap-summary"><span>Previous raw sum: <strong>${hex(step.raw,17)}</strong></span><span>Overflow 1 + lower 16 bits ${hex(step.low)}</span></div><div class="carry-track ${event.kind==='wrap'?'wrapping':''}" aria-label="End-around carry: overflow 1 travels to bit 0"><span class="carry-traveler">1</span><span class="carry-direction">End-around carry → bit 0</span></div>`;
+    if(wrap)html=`<div class="wrap-summary"><span>Previous raw sum: <strong>${hex(step.raw,17)}</strong></span><span>${event.kind==='wrap'?`Overflow 1 + lower 16 bits ${hex(step.low)}`:'The overflow 1 is now the +0001 operand below—not an extra carry.'}</span></div>${event.kind==='wrap'?'<div class="carry-track wrapping" aria-label="End-around carry: overflow 1 becomes the +0001 operand"><span class="carry-traveler">1</span><span class="carry-direction">Overflow 1 → +0001 operand</span></div>':''}`;
     html+=additionRows(operation,processed,{source:wrap?'Lower 16 bits':'Running sum',next:wrap?'End-around carry = 1':label,wrapped:wrap,word,done:event.kind==='fold',waiting:event.kind==='select',inTransit:event.kind==='transfer'});
     if(['promote','fold'].includes(event.kind)){
       html=labels()+workRow('Carry into column',Array(16).fill(''),{kind:'carry-row'})+
@@ -98,7 +108,7 @@ function renderWorkbench(event){
     else if(event.kind==='loaded')explanation=`${label} has arrived: ${hex(word.value)}. Now add it to ${hex(step.before)}, starting at bit 0 on the right.`;
     else if(event.kind==='add'||event.kind==='wrapAdd'){
       const col=operation.columns[event.bit];explanation=`${wrap?'End-around addition. ':''}Bit ${col.bit}: ${col.a} + ${col.b} + carry ${col.carryIn} = ${col.total}. Write ${col.result}${col.carryOut?`, carry 1 ${col.bit===15?'beyond bit 15':'to bit '+(col.bit+1)}`:', carry 0'}.`;
-    }else if(event.kind==='raw')explanation=step.carry?`The 17-bit result is ${hex(step.raw,17)}. Its overflow 1 must wrap around; do not discard it.`:`The addition is ${hex(step.low)}. No overflow left bit 15, so no end-around carry is needed.`;
+    }else if(event.kind==='raw')explanation=step.carry?`Split the 17-bit result ${hex(step.raw,17)} into overflow 1 and the bracketed lower 16 bits ${hex(step.low)}. Next, wrap the 1 back to bit 0: ${hex(step.low)} + 0x0001.`:`The addition is ${hex(step.low)}. No overflow left bit 15, so no end-around carry is needed.`;
     else if(event.kind==='wrap')explanation=`Ordinary carries moved left between columns. Now wrap the overflow 1 from the far left to bit 0: ${hex(step.low)} + 0x0001.`;
     else if(event.kind==='promote')explanation=`Move the ${step.carry?'folded ':''}binary result ${hex(step.sum)} up into the running sum. The next header word waits until it arrives.`;
     else explanation=`The folded running sum is now ${hex(step.sum)}.${event.index===result.words.length-1?' All header words have been added.':' Continue to the next header word.'}`;
@@ -190,24 +200,25 @@ function play(){
 }
 function changeMode(value){
   if(value===receiver)return;
-  if(value){if(!commitEditors())return;transmitted=C.complete(protocol,senders[protocol]).bytes;received=transmitted.slice();}
+  if(value){if(!commitEditors())return;transmitted=C.complete(protocol,senders[protocol]).bytes;received=transmitted.slice();receiverExample=senderExamples[protocol];}
   receiver=value;editors();rebuild();
 }
 function introduceError(word,bit){
   if(!receiver||invalid)return;
   const selected=result.words[word];if(!selected||selected.checksum)return;
-  received=C.flipBit(protocol,received,word,bit);editors();rebuild();
+  clearExample();received=C.flipBit(protocol,received,word,bit);editors();rebuild();
   cursor=events.findIndex(e=>e.kind==='select'&&e.index===word);render();
 }
 function preset(name){
   receiver=false;let values={...C.defaults};
+  senderExamples[protocol]=name;
   if(name==='carry'){values.sourcePort=65535;values.destinationPort=1;}
   if(name==='chain'){values.sourcePort=0x0fff;values.destinationPort=1;}
   senders[protocol]=C.serialize(protocol,values);editors();rebuild();
 }
 $('field-editors').addEventListener('input',commitEditors);
 $('sender-mode').addEventListener('click',()=>changeMode(false));$('receiver-mode').addEventListener('click',()=>changeMode(true));
-$('protocol').addEventListener('change',()=>{protocol=$('protocol').value;if(receiver){transmitted=C.complete(protocol,senders[protocol]).bytes;received=transmitted.slice();}editors();rebuild();});
+$('protocol').addEventListener('change',()=>{protocol=$('protocol').value;if(receiver){transmitted=C.complete(protocol,senders[protocol]).bytes;received=transmitted.slice();receiverExample=senderExamples[protocol];}editors();rebuild();});
 $('base').addEventListener('change',()=>{const nextBase=Number($('base').value);if(!commitEditors()){$('base').value=String(base);return;}base=nextBase;editors();rebuild();});
 $('previous').addEventListener('click',()=>go(cursor-1));$('next').addEventListener('click',()=>go(cursor+1));$('show-all').addEventListener('click',()=>go(events.length-1));
 $('play').addEventListener('click',play);$('pause').addEventListener('click',()=>{pause();render(false);});
@@ -215,8 +226,8 @@ $('speed').addEventListener('change',()=>{if(timer!==null){pause();play();}});
 $('word-dots').addEventListener('click',event=>{const index=event.target.dataset.index;if(index!==undefined)go(events.findIndex(e=>index==='final'?e.kind==='sum':e.kind==='select'&&e.index===Number(index)));});
 $('flip').addEventListener('click',()=>introduceError(Number($('error-word').value),Number($('error-bit').value)));
 $('workbench').addEventListener('click',event=>{const {word,bit}=event.target.dataset;if(word!==undefined&&bit!==undefined)introduceError(Number(word),Number(bit));});
-$('restore').addEventListener('click',()=>{if(receiver){received=transmitted.slice();editors();rebuild();}});
+$('restore').addEventListener('click',()=>{if(receiver){received=transmitted.slice();receiverExample=senderExamples[protocol];editors();rebuild();}});
 document.querySelectorAll('[data-preset]').forEach(button=>button.addEventListener('click',()=>preset(button.dataset.preset)));
-$('reset').addEventListener('click',()=>{protocol='udp';base=10;senders.tcp=C.serialize('tcp');preset('default');});
+$('reset').addEventListener('click',()=>{protocol='udp';base=10;senders.tcp=C.serialize('tcp');senderExamples.tcp='default';preset('default');});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){pause();if(!invalid)render(false);}});motion.addEventListener('change',()=>{pause();if(!invalid)render(false);});
 editors();rebuild();
