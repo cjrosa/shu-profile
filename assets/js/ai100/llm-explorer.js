@@ -494,10 +494,10 @@
         window.parent.postMessage({ type: 'llm-explorer-navigation', chapter: item.chapterIndex + 1, scene: item.sceneIndex + 1 }, window.location.origin);
       }
     }
-    $('#sceneKicker').textContent = `Chapter ${item.chapterIndex + 1} · ${chapter.title} / Scene ${item.sceneIndex + 1}`;
+    $('#sceneKicker').textContent = `Chapter ${item.chapterIndex + 1} · ${chapter.title}`;
     $('#sceneTitle').textContent = item.title;
     $('#sceneCopy').textContent = item.description;
-    $('#sceneCount').textContent = `${chapter.title} · Scene ${item.sceneIndex + 1} of ${chapter.scenes.length}`;
+    $('#sceneCount').textContent = `Scene ${item.sceneIndex + 1} of ${chapter.scenes.length}`;
     renderPlaceholder(item, chapter);
     buttons.forEach((button, index) => {
       button.classList.toggle('active', index === item.chapterIndex);

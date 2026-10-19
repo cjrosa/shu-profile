@@ -86,7 +86,7 @@ test('Chapter 5 has exactly four ordered scenes; Scene 3 is integrated and Scene
  const ids=[...d.querySelectorAll('[id]')].map(n=>n.id);assert.equal(new Set(ids).size,ids.length);
  d.getElementById('prevBtn').click();
  for(let i=1;i<=4;i++){
-  assert.equal(d.getElementById('sceneCount').textContent,`Generate \u00b7 Scene ${i} of 4`);
+  assert.equal(d.getElementById('sceneCount').textContent,`Scene ${i} of 4`);
   assert.equal(new URL(w.location.href).searchParams.get('scene'),String(i));
   assert.equal(d.querySelector('.placeholder').hidden,true);
   if(i>3){assert.equal(d.getElementById('capstoneDemo').hidden,false);assert.equal(get('Demo').hidden,true);}

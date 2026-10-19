@@ -93,7 +93,8 @@ test('all scenes render with correct metadata, chapter selection and progress', 
     assert.equal(f.query('#sceneCopy').textContent, item.description);
     assert.equal(f.query('#placeholderCopy').textContent, item.placeholder);
     assert.equal(f.query('#chapterQuestion').textContent, chapters[item.chapterIndex].question);
-    assert.equal(f.query('#sceneCount').textContent, `${chapters[item.chapterIndex].title} · Scene ${item.sceneIndex + 1} of ${chapters[item.chapterIndex].scenes.length}`);
+    assert.equal(f.query('#sceneKicker').textContent, `Chapter ${item.chapterIndex + 1} · ${chapters[item.chapterIndex].title}`);
+    assert.equal(f.query('#sceneCount').textContent, `Scene ${item.sceneIndex + 1} of ${chapters[item.chapterIndex].scenes.length}`);
     assert.equal(f.query('.progress').attributes['aria-valuenow'], String(index + 1));
     assert.equal(f.query('#progressFill').style.width, `${(index + 1) / 21 * 100}%`);
     assert.equal(f.query('#prevBtn').disabled, index === 0);
@@ -117,21 +118,21 @@ test('chapter jumps, reselection, reverse boundaries and restart follow the refe
   }
   f.click('#restartBtn');
   assert.equal(f.query('#prevBtn').disabled, true);
-  assert.equal(f.query('#sceneCount').textContent, 'Predict · Scene 1 of 5');
+  assert.equal(f.query('#sceneCount').textContent, 'Scene 1 of 5');
   assert.equal(f.query('#nextBtn').textContent, 'Next →');
 });
 test('arrow keys navigate, clamp at the start, and ignore editable or modified input', () => {
   const f = fixture();
   assert.equal(f.key('ArrowLeft'), true);
-  assert.equal(f.query('#sceneCount').textContent, 'Predict · Scene 1 of 5');
+  assert.equal(f.query('#sceneCount').textContent, 'Scene 1 of 5');
   assert.equal(f.key('ArrowRight'), true);
-  assert.equal(f.query('#sceneCount').textContent, 'Predict · Scene 2 of 5');
+  assert.equal(f.query('#sceneCount').textContent, 'Scene 2 of 5');
   for (const target of [{ closest: () => ({}) }, { isContentEditable: true }]) assert.equal(f.key('ArrowRight', target), false);
   for (const modifier of ['ctrlKey', 'altKey', 'metaKey', 'shiftKey', 'defaultPrevented']) assert.equal(f.key('ArrowRight', undefined, { [modifier]: true }), false);
   assert.equal(f.key('Enter'), false);
-  assert.equal(f.query('#sceneCount').textContent, 'Predict · Scene 2 of 5');
+  assert.equal(f.query('#sceneCount').textContent, 'Scene 2 of 5');
   f.key('ArrowLeft');
-  assert.equal(f.query('#sceneCount').textContent, 'Predict · Scene 1 of 5');
+  assert.equal(f.query('#sceneCount').textContent, 'Scene 1 of 5');
 });
 test('hub enables LLM Explorer and includes it in search', () => {
   const hub = fs.readFileSync('ai100/index.html', 'utf8');
