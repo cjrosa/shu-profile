@@ -265,7 +265,7 @@
           <div class="cat-title-area">
             <div class="cat-name">Hash Tables</div>
             <div class="cat-tagline">Chaining &middot; Linear Probing &middot; Quadratic Probing &middot; Clustering &middot; Collision</div>
-            <span class="cat-tool-count">3 Tools</span>
+            <span class="cat-tool-count">4 Tools</span>
           </div>
           <div class="cat-chevron">
             <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg>
@@ -274,6 +274,25 @@
       </button>
       <div class="cat-body">
         <div class="tools-grid">
+          <a class="tool-card" href="../viewer.html?tool=cs112/birthday_infographic.html&course=CS112&label=Data%20Structures&name=Birthday%20Problem%20Infographic&back=cs112/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon" style="background:var(--red-l)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+              </div>
+              <div>
+                <div class="tool-subtitle" style="color:var(--red)">Collision Probability</div>
+                <div class="tool-title">Birthday Problem Infographic</div>
+              </div>
+            </div>
+            <div class="tool-body">
+              <p class="tool-desc">Explore why just 23 people give a greater than 50% chance of a shared birthday, and how the same math explains hash table collisions.</p>
+              <div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--red)"></div>Step-by-step probability calculation</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--red)"></div>Collision probability by group size</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--red)"></div>Connection to hash table slots and keys</div></div>
+            </div>
+            <div class="tool-footer">
+              <span class="tool-cta" style="color:var(--red)">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span>
+              <span class="tool-tag" style="background:var(--red-l);color:var(--red)">Infographic</span>
+            </div>
+          </a>
           <a class="tool-card" href="../viewer.html?tool=cs112/chaining_animation.html&course=CS112&label=Data%20Structures&name=Hash%20Table%20Chaining&back=cs112/index.html">
             <div class="tool-card-header">
               <div class="tool-icon" style="background:var(--red-l)">
@@ -736,6 +755,7 @@
 const PROXY_URL = 'https://red-union-6b9e.crosa.workers.dev';
 
 const TOOLS = [
+  { name:'Birthday Problem Infographic', file:'birthday_infographic.html', cat:'Hash', desc:'birthday problem paradox collision probability hash table slots keys', keywords:['birthday','birthday problem','birthday paradox','probability','collision','hash','23','365'] },
   { name:'Python Classes, Inheritance & Composition', file:'python_classes.html', cat:'Foundations', desc:'Python classes objects methods self constructors dunder methods inheritance composition delegation', keywords:['class','classes','object','objects','oop','self','constructor','__init__','dunder','method','inheritance','subclass','super','override','polymorphism','composition','has-a','delegation'] },
   { name:'BST Insert Animation',   file:'bst_insert_animation.html',        cat:'Trees', desc:'BST insertion, comparison path, left right decision', keywords:['bst','insert','insertion','binary search tree','add node','place'] },
   { name:'Insert Order Effect',    file:'bst_insert_order.html',            cat:'Trees', desc:'Insertion order, tree shape, balanced vs degenerate', keywords:['insert order','balanced','degenerate','skewed','tree shape','height'] },
