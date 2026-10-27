@@ -2,6 +2,7 @@
  'use strict';
  const E=window.TCPSequence,$=id=>document.getElementById(id),presets=window.TCPScenarios;
  let s=E.create(),selected=null,timer=null,lastAnimated=0;
+ let interceptArmed=false,intercepted=null;const inspected=new Set();
  const fields=[['a','Host A ISN',0,1000000],['size','A message bytes',1,256],['mss','A MSS',1,64],['b','Host B ISN',0,1000000],['sizeB','B message bytes',1,256],['mssB','B MSS',1,64]];
  const setting=(key)=>{const [,label,min,max]=fields.find(f=>f[0]===key);return `<div class="field"><label for="cfg-${key}">${label}</label><input id="cfg-${key}" type="number" min="${min}" max="${max}" step="1" value="${s.c[key]}"></div>`;};
  const layerSettings=(id,layer)=>{const app=layer==='Application',name=id+'-'+(app?'app':'tcp')+'-settings',keys=app?[id==='A'?'size':'sizeB']:(id==='A'?['a','mss']:['b','mssB']);return `<button class="layer-settings-button" popovertarget="${name}" aria-label="Host ${id} ${layer} settings">...</button><div id="${name}" class="layer-settings-overlay" popover aria-labelledby="${name}-title"><div class="settings-heading"><h3 id="${name}-title">Host ${id} &middot; ${layer}</h3><button popovertarget="${name}" popovertargetaction="hide" aria-label="Close settings">&times;</button></div>${keys.map(setting).join('')}<p class="hint">Reset the connection to change settings.</p></div>`;};
@@ -10,11 +11,38 @@
  $('preset').innerHTML=presets.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
  function stop(){clearInterval(timer);timer=null;$('auto').textContent='Auto';}
  function sync(){for(const [k] of fields)$('cfg-'+k).value=s.c[k];$('ack-mode').value=s.c.ackMode;$('auto-read').checked=s.c.autoRead;}
- function fresh(c){stop();s=E.create(c);selected=null;lastAnimated=0;$('error').textContent='';sync();render();}
+ function fresh(c){stop();closeIntercept();interceptArmed=false;inspected.clear();s=E.create(c);selected=null;lastAnimated=0;$('error').textContent='';sync();render();}
  function configure(){try{const c={...s.c,ackMode:$('ack-mode').value};for(const [k] of fields)c[k]=$('cfg-'+k).value===''?NaN:Number($('cfg-'+k).value);fresh(c);}catch(e){stop();$('error').textContent=e.message;}}
  for(const [k] of fields)$('cfg-'+k).addEventListener('change',configure);$('ack-mode').onchange=configure;
  function act(fn){if($('error').textContent)return;try{fn();selected=null;render();}catch(e){stop();$('error').textContent=e.message;}}
  function options(id,list,label){const old=$(id).value;$(id).innerHTML=list.length?list.map(p=>`<option value="${p.id}">${label(p)}</option>`).join(''):'<option value="">None pending</option>';if(list.some(p=>String(p.id)===old))$(id).value=old;}
+ function transitPackets(){return s.packets.filter(p=>['pending','queued'].includes(p.status));}
+ function closeIntercept(){intercepted=null;if($('intercept-dialog').open)$('intercept-dialog').close();}
+ function openIntercept(p){
+  stop();interceptArmed=false;intercepted=p.id;inspected.add(p.id);
+  $('intercept-route').textContent=`Host ${p.from} - ${p.from==='A'?'Client':'Server'} → Host ${p.to} - ${p.to==='A'?'Client':'Server'}${p.retransmission?' | Retransmission':''}`;
+  $('intercept-seq').textContent=String(p.seq);$('intercept-ack').textContent=p.ack===null?'Not set':String(p.ack);$('intercept-flags').textContent=p.flags;
+  for(const flag of ['CWR','ECE','URG','ACK','PSH','RST','SYN','FIN']){const active=p.flags.split(/[, ]+/).includes(flag),cell=$('intercept-flag-'+flag.toLowerCase());cell.setAttribute('class','wire-field wire-flag'+(active?' flag-set':''));cell.setAttribute('aria-label',flag+(active?' set':' not set'));cell.setAttribute('tabindex','0');}
+  $('intercept-payload').textContent=p.len?`${p.len} bytes | ${p.seq}–${p.seq+p.len-1}`:'0 bytes (pure ACK)';
+  $('intercept-explanation').textContent=p.len?`These bytes have left Host ${p.from}, but have not reached Host ${p.to}. Deliver passes them to TCP; Drop simulates network loss.`:`ACK ${p.ack} reports the next byte Host ${p.from} expects. Host ${p.to} will process it only after delivery.`;
+  if(!$('intercept-dialog').open)$('intercept-dialog').showModal();
+ }
+ function updateIntercept(){
+  const pending=transitPackets();
+  if(intercepted!==null&&!pending.some(p=>p.id===intercepted))closeIntercept();
+  if(intercepted===null){const next=pending.find(p=>!inspected.has(p.id));if(next&&($('auto-intercept').checked||interceptArmed))openIntercept(next);}
+  $('intercept-next').textContent=interceptArmed?'Cancel intercept':'Intercept next';
+  $('intercept-next').setAttribute('aria-pressed',String(interceptArmed));
+  $('intercept-status').textContent=intercepted!==null?'Playback paused for packet inspection.':interceptArmed?'Waiting for the next data segment or ACK.':'';
+ }
+ $('auto-intercept').onchange=()=>{interceptArmed=false;updateIntercept();};
+ $('intercept-next').onclick=()=>{
+  if(interceptArmed){interceptArmed=false;}else{const pending=transitPackets(),next=pending.find(p=>!inspected.has(p.id))||pending[0];if(next)openIntercept(next);else interceptArmed=true;}
+  updateIntercept();
+ };
+ $('intercept-close').onclick=()=>{closeIntercept();$('intercept-status').textContent='Packet left in transit.';};
+ $('intercept-dialog').addEventListener('cancel',e=>{e.preventDefault();closeIntercept();$('intercept-status').textContent='Packet left in transit.';});
+ for(const action of ['deliver','drop'])$('intercept-'+action).onclick=()=>{const id=intercepted;closeIntercept();if(id!==null)act(()=>E[action](s,id));};
  function windowView(id,type,ev){
   const h=s.hosts[id],peer=s.hosts[E.other(id)],send=type==='send',live=E.established(s),base=send?h.start:peer.start,start=send?h.una:h.rcv,end=send?h.right:peer.start+peer.size,next=send?h.nxt:h.read;
   const prefix=id+'-'+type,stream=send?id:E.other(id),range=ev?.stream===stream?ev.range:null;
@@ -78,6 +106,7 @@
   cards('data-cards',data,false);cards('ack-cards',acks,true);
   if(!selected){$('packets').scrollTop=$('packets').scrollHeight;const log=$('log').closest('.log-scroll');log.scrollTop=log.scrollHeight;}
   lastAnimated=s.events.length;
+  updateIntercept();
  }
  document.addEventListener('click',e=>{const b=e.target.closest('[data-event], [data-packet]');if(!b)return;const ev=b.dataset.event?s.events.find(x=>x.id===Number(b.dataset.event)):[...s.events].reverse().find(x=>x.packetId===Number(b.dataset.packet));if(ev){stop();selected=ev.id;render();}});
  for(const id of ['A','B']){

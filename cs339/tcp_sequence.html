@@ -1,16 +1,17 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TCP SEQ/ACK Visualizer</title><link rel="stylesheet" href="../assets/css/pages/checksum-explorer.css"><link rel="stylesheet" href="../assets/css/pages/tcp-sequence.css"><link rel="stylesheet" href="../assets/css/pages/tcp-sequence-layered.css"></head>
-<body><header><div><div class="eyebrow">CS-339 · Sacred Heart University · Transport layer</div><h1>TCP SEQ/ACK Visualizer</h1><p>Applications produce and read data. TCP segments, buffers, and acknowledges the bytes.</p></div></header>
+<body><header><div><div class="eyebrow">CS-339 · Sacred Heart University · Transport layer</div><h1>TCP SEQ/ACK Visualizer</h1><p>Applications produce and read data. TCP segments, buffers, and acknowledges the bytes.</p></div><button id="reset" class="header-reset">Reset</button></header>
 <main>
 
 <section id="layered-hosts" class="layered-hosts" aria-label="Application and TCP layers on both hosts"></section>
 <section class="panel transport-controls" aria-labelledby="intercept-title">
 <div class="intercept-heading"><h2 id="intercept-title"><svg class="intercept-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 8h6m8 0h6m-3-3 3 3-3 3M22 16h-6m-8 0H2m3-3-3 3 3 3"/><rect x="8" y="4" width="8" height="16" rx="2"/><path d="M11 9h2m-2 6h2"/></svg><span>In-transit intercept tools</span></h2><p>Packets have left the sending host. Deliver them to the other host, or drop them to simulate network loss.</p></div>
+<div class="intercept-toolbar"><label><input id="auto-intercept" type="checkbox" data-tooltip="Automatically inspect each data segment and ACK before delivery."> Auto-intercept</label><button id="intercept-next" data-tooltip="Inspect a waiting packet, or intercept the next data segment or ACK sent.">Intercept next</button><span id="intercept-status" role="status"></span></div>
 <div class="transport-step"><h2>Data segments in transit</h2><div id="data-cards" class="transit-cards"></div></div>
 <div class="transport-step"><h2>ACKs in transit</h2><div id="ack-cards" class="transit-cards"></div></div>
 </section>
-<section class="panel connection-panel" aria-label="Connection and simulation controls">
- <div class="connection-row"><div class="actions"><button id="step" disabled>Next Step</button><button id="auto" class="primary" disabled>Auto</button><button id="reset">Reset</button></div><button id="duplex" aria-pressed="false">Full Duplex: OFF</button><span id="status" class="badge">Disconnected</span></div>
+<section class="panel connection-panel" aria-label="Connection and simulation controls" hidden>
+ <div class="connection-row"><div class="actions"><button id="step" disabled>Next Step</button><button id="auto" class="primary" disabled>Auto</button></div><button id="duplex" aria-pressed="false">Full Duplex: OFF</button><span id="status" class="badge">Disconnected</span></div>
  <div class="options-row"><label>Speed <select id="speed"><option value="1000">Normal</option><option value="1800">Slow</option><option value="450">Fast</option></select></label><label><input id="auto-read" type="checkbox"> Auto application reads</label><span id="mode-note" class="hint">Reset before changing modes during a connection.</span></div>
  <label class="ack-setting">ACK behavior <select id="ack-mode"><option value="manual">Manual ACK</option><option value="immediate">Immediate ACK</option><option value="delayed">Delayed ACK</option></select></label>
  <div class="scenario-row"><label for="preset">Guided scenario</label><select id="preset"></select><button id="load">Load scenario</button><span id="objective"></span></div>
@@ -23,4 +24,24 @@
  <div id="log-panel" role="tabpanel" aria-labelledby="log-tab" hidden><div class="section-heading"><h2>Transmission log</h2><button id="latest">Follow latest event</button></div><p id="snapshot" class="hint"></p><div class="log-scroll"><table><thead><tr><th>Step</th><th>Event</th><th>Host / path</th><th>Flags</th><th>SEQ</th><th>ACK</th><th>LEN</th><th>Explanation</th></tr></thead><tbody id="log"></tbody></table></div></div>
 </section>
 <p class="model-note">Educational model: fixed sender teaching windows and enough receive storage for each message. Receiver flow control is omitted. TCP acknowledgments confirm receipt independently of application reads. Sequence wraparound, congestion control, and teardown are outside this lesson.</p>
-</main><script src="../assets/js/tcp-sequence-engine.js"></script><script src="../assets/js/tcp-sequence-scenarios.js"></script><script src="../assets/js/tcp-sequence.js"></script><script src="../assets/js/tcp-sequence-tabs.js"></script><script src="../assets/js/checksum-tooltips.js"></script></body></html>
+</main>
+<dialog id="intercept-dialog" class="intercept-dialog" aria-labelledby="intercept-dialog-title" aria-describedby="intercept-route">
+ <div class="intercept-dialog-heading"><div><p class="intercept-eyebrow">Packet intercepted</p><h2 id="intercept-dialog-title">TCP segment header</h2></div><button id="intercept-close" aria-label="Close and leave packet in transit" autofocus>&times;</button></div>
+ <p id="intercept-route" class="intercept-route"></p>
+ <div class="tcp-bit-ruler"><span></span><strong>32 bits</strong><span></span></div>
+ <div class="tcp-wire-header" aria-label="TCP segment layout, 32 bits per row">
+  <div class="wire-field wire-half muted">Source port<small>Not modeled</small></div><div class="wire-field wire-half muted">Destination port<small>Not modeled</small></div>
+  <div class="wire-field wire-full live-field">Sequence number<strong id="intercept-seq"></strong></div>
+  <div class="wire-field wire-full live-field">Acknowledgment number<strong id="intercept-ack"></strong></div>
+  <div class="wire-field wire-four muted">Header<br>length</div><div class="wire-field wire-four muted">Reserved</div>
+  <div id="intercept-flag-cwr" class="wire-field wire-flag" data-tooltip="Congestion Window Reduced">C</div><div id="intercept-flag-ece" class="wire-field wire-flag" data-tooltip="ECN Echo">E</div><div id="intercept-flag-urg" class="wire-field wire-flag" data-tooltip="Urgent">U</div><div id="intercept-flag-ack" class="wire-field wire-flag" data-tooltip="Acknowledgment">A</div><div id="intercept-flag-psh" class="wire-field wire-flag" data-tooltip="Push">P</div><div id="intercept-flag-rst" class="wire-field wire-flag" data-tooltip="Reset">R</div><div id="intercept-flag-syn" class="wire-field wire-flag" data-tooltip="Synchronize">S</div><div id="intercept-flag-fin" class="wire-field wire-flag" data-tooltip="Finish">F</div>
+  <div class="wire-field wire-half muted">Receive window<small>Not modeled</small></div>
+  <div class="wire-field wire-half muted">Checksum<small>Not computed</small></div><div class="wire-field wire-half muted">Urgent pointer<small>Not modeled</small></div>
+  <div class="wire-field wire-full muted">Options <small>Variable length &middot; not modeled</small></div>
+  <div class="wire-field wire-full wire-payload">Application data<strong id="intercept-payload"></strong></div>
+ </div>
+ <p class="intercept-field-note">Active flags: <strong id="intercept-flags"></strong>. Muted fields are outside this simulation.</p>
+ <p id="intercept-explanation"></p>
+ <div class="intercept-dialog-actions"><button id="intercept-deliver" class="primary">Deliver</button><button id="intercept-drop">Drop</button><span>Closing leaves this packet in transit.</span></div>
+</dialog>
+<script src="../assets/js/tcp-sequence-engine.js"></script><script src="../assets/js/tcp-sequence-scenarios.js"></script><script src="../assets/js/tcp-sequence.js"></script><script src="../assets/js/tcp-sequence-tabs.js"></script><script src="../assets/js/checksum-tooltips.js"></script></body></html>
