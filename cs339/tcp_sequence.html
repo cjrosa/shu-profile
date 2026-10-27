@@ -17,7 +17,7 @@
  <div class="scenario-row"><label for="preset">Guided scenario</label><select id="preset"></select><button id="load">Load scenario</button><span id="objective"></span></div>
  <p id="error" class="error" role="alert"></p>
 </section>
-<p id="explanation" class="explanation" role="status" aria-live="polite"></p>
+<p id="explanation" class="explanation" hidden></p>
 <section class="panel exchange-panel">
  <div class="exchange-tabs" role="tablist" aria-label="Transmission views"><button id="hosts-tab" role="tab" aria-selected="true" aria-controls="hosts-panel" tabindex="0">TCP Exchange</button><button id="log-tab" role="tab" aria-selected="false" aria-controls="log-panel" tabindex="-1">Transmission Log</button></div>
  <div id="hosts-panel" role="tabpanel" aria-labelledby="hosts-tab"><div class="network-endpoints"><strong>Host A · TCP</strong><span>Data and ACKs stay between transport layers</span><strong>Host B · TCP</strong></div><div id="packets" aria-label="TCP packet timeline"></div></div>

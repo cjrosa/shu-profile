@@ -162,3 +162,17 @@ body>header>.header-reset{align-self:flex-end;margin-left:auto}
 .wire-field strong{font:700 17px ui-monospace,monospace;margin-top:3px}.wire-field small{font-size:9px;margin-top:2px}.wire-field.muted{background:#f5f7fa;color:#8390a0}
 .live-field{background:#edf3fa}.wire-flag.flag-set{background:#a93d50;color:#fff;font-weight:750}.wire-payload{min-height:78px;background:#edf7f4}.wire-payload strong{font-size:13px}
 @media(max-width:480px){.intercept-dialog{padding:12px}.wire-field{font-size:10px}.wire-four{font-size:8px}.wire-flag{font-size:9px}.wire-field strong{font-size:14px}}
+
+.transit-card{flex:0 0 270px;width:270px;height:68px;box-sizing:border-box;gap:8px;padding:9px 10px}
+.transit-packet-icon{display:flex;align-items:center;flex-shrink:0;color:var(--source)}
+.transit-card-copy{flex:1;min-width:0}.transit-card-copy strong,.transit-card-copy span{white-space:nowrap;font-size:11px}
+.transit-card-actions{flex-shrink:0;gap:4px}.transit-card-actions button{display:grid;place-items:center;width:29px;height:29px;padding:4px;border-radius:6px}
+.transit-card-actions button:last-child{color:var(--red)}
+@media(max-width:340px){.transit-card{max-width:100%}.transit-card-copy span{white-space:normal}}
+
+.transit-card{flex-basis:240px;width:240px;height:54px;padding:6px 8px;gap:7px}
+.transit-card-actions{gap:2px}.transit-card-actions button{width:25px;height:25px;padding:2px;border:0;background:transparent;box-shadow:none}
+.transit-card-actions button:hover{background:var(--pale)}
+.transit-card-actions button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+.exchange-panel{margin-top:12px}
