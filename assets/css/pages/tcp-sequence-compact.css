@@ -1,0 +1,69 @@
+/* Compact controls with enough room to read the packet and event histories. */
+header{padding:10px 18px 8px}h1{font-size:24px}header p{font-size:12px}
+main{padding:10px 14px}.workspace{gap:10px;grid-template-columns:220px minmax(0,1fr)}
+.stack{gap:10px}.panel{padding:11px}.controls{padding:12px}
+#config{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
+#config .field:last-child{grid-column:1/-1}.field{margin-bottom:7px}
+.controls h2{margin-bottom:8px}.controls .hint{margin:6px 0}
+.controls .examples{margin-top:9px;padding-top:9px}.controls .reset{margin-top:9px}
+.controls .model{margin-top:9px}#objective{margin:6px 0;font-size:11px}
+.metrics{gap:6px;margin:8px 0}.metric{padding:5px 8px}.metric strong{font-size:18px}
+#stream{height:132px}#cells{top:36px}.byte{height:46px}.byte small{margin-top:4px}
+#window-boundary{top:29px;height:61px}#window-boundary span{top:-23px;font-size:11px}
+.marker{top:94px;font-size:10px}.next-marker{top:112px}
+.tcp-legend{margin-top:6px;gap:5px}.tcp-legend span{padding:3px 5px}
+#window-caption{margin:5px 0;line-height:1.4}#comparison:empty{display:none}
+#comparison{margin:4px 0}.window-control{gap:7px}.window-control input{width:120px}
+.playback{margin-top:6px;padding:6px 0;gap:6px}.actions{gap:5px}
+.explanation{min-height:0;margin:4px 0 0;padding:6px 8px;font-size:12px;line-height:1.4}
+.hosts{padding-bottom:6px}.hosts span{margin-top:2px}
+#packets{padding:3px 8px;margin:0 10px}.packet{padding:6px 3px;margin:3px 0 9px;font-size:10px}
+.queues{gap:8px;margin-top:7px}.queues label{font-size:10px;margin-bottom:3px}
+.queues select{margin-bottom:5px}.queues button{padding:6px 8px}
+#snapshot{margin:5px 0;line-height:1.4}th,td{padding:5px 6px}
+@media(min-width:1100px){
+ main{height:auto;min-height:0}
+ .workspace{height:auto;align-items:start}
+ .controls{min-height:0;overflow:visible}
+ .stack{min-height:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto}
+ .stack>.panel:first-child{grid-column:1/-1}
+ .stack>.panel:nth-child(2),.stack>.panel:nth-child(3){display:flex;flex-direction:column;min-height:0;min-width:0}
+ #packets{flex:1 0 180px;min-height:180px;max-height:260px;overscroll-behavior:contain}
+ .log-scroll{flex:1 0 240px;min-height:240px;max-height:320px;overscroll-behavior:contain}
+ .hosts,.queues,.section-heading,#snapshot{flex-shrink:0}
+ .metrics{grid-template-columns:repeat(6,minmax(0,1fr))}
+}
+@media(min-width:761px) and (max-width:1099px){
+ .metrics{grid-template-columns:repeat(6,minmax(0,1fr))}
+ .metric{padding:5px}.metric strong{font-size:16px}
+ .playback{flex-direction:row;align-items:center;flex-wrap:wrap}
+ #packets{min-height:150px;max-height:240px}.log-scroll{min-height:200px;max-height:300px}
+}
+.stack>.panel:nth-child(2),.stack>.panel:nth-child(3){padding:14px}
+.packet{font-size:11px;padding:9px 4px;margin:5px 0 13px}
+.hosts{padding-bottom:10px}.queues{margin-top:12px;gap:10px}
+.log-scroll table{table-layout:fixed;width:100%}
+.log-scroll th,.log-scroll td{padding:7px 4px;overflow-wrap:anywhere;vertical-align:top}
+.log-scroll th:last-child,.log-scroll td:last-child{width:35%;min-width:0}
+.log-scroll td button{padding:3px 5px}
+.exchange-panel{grid-column:1/-1;min-width:0}
+.exchange-tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:12px}
+.exchange-tabs [role=tab]{padding:9px 14px;font-size:12px;background:transparent}
+.exchange-tabs [aria-selected=true]{background:var(--pale);border-color:var(--blue);color:var(--navy)}
+.exchange-panel [role=tabpanel]{display:flex;flex-direction:column;min-width:0}
+.exchange-panel #packets{height:210px;min-height:180px;max-height:260px;flex:auto}
+.exchange-panel .log-scroll{height:300px;min-height:240px;max-height:320px;flex:auto;position:relative}
+.exchange-panel .log-scroll th:last-child,.exchange-panel .log-scroll td:last-child{width:55%}
+/* Geometric arrowheads align with the shaft; endpoint dots sit in its gutters. */
+.exchange-panel #packets{padding-left:28px;padding-right:28px}
+.packet{--arrow-color:var(--blue);border-bottom-color:var(--arrow-color)}
+.packet.active{--arrow-color:var(--red)}
+.packet:after{content:'';width:0;height:0;right:0;left:auto;bottom:-6px;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:9px solid var(--arrow-color);border-right:0}
+.packet.reverse:after{content:'';left:0;right:auto;border-left:0;border-right:9px solid var(--arrow-color)}
+.packet.moving:before{width:8px;height:8px;bottom:-5px;left:calc(100% + 12px);animation:packet-travel .65s ease-out both}
+.packet.reverse.moving:before{left:-20px;animation-direction:reverse}
+@keyframes packet-travel{from{left:-20px}to{left:calc(100% + 12px)}}
+@media(max-width:760px){
+ .workspace{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(3,1fr)}
+ main{padding:8px}.controls{max-height:none}.queues{grid-template-columns:1fr 1fr}
+}

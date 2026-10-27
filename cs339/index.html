@@ -215,7 +215,7 @@
           <div class="layer-title-area">
             <div class="layer-name">Transport Layer</div>
             <div class="layer-tagline">TCP &middot; Flow Control &middot; Congestion &middot; Seq/Ack &middot; SYN/FIN Handshakes &middot; Checksums</div>
-            <span class="layer-tool-count">2 Tools</span>
+            <span class="layer-tool-count">3 Tools</span>
           </div>
           <div class="layer-chevron">
             <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg>
@@ -228,6 +228,12 @@
           <a class="tool-card" href="../viewer.html?tool=cs339/checksum_explorer.html&course=CS339&label=Computer%20Networks&name=Internet%20Checksum%20Explorer&back=cs339/index.html">
             <div class="tool-card-header"><div class="tool-icon purple" aria-hidden="true">01</div><div><div class="tool-subtitle purple">Transport &middot; Error detection</div><div class="tool-title">Internet Checksum Explorer</div></div></div>
             <div class="tool-body"><p class="tool-desc">Build a demonstration checksum from UDP or TCP header fields, one binary column at a time.</p><div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot purple"></div>Editable transport headers &mdash; header-only arithmetic</div><div class="tool-feature"><div class="tool-feature-dot purple"></div>Aligned bit cells, carry propagation, and carry wrap</div><div class="tool-feature"><div class="tool-feature-dot purple"></div>Bit inversion, receiver verification, and selected bit errors</div></div></div>
+            <div class="tool-footer"><span class="tool-cta purple">Open tool &rarr;</span><span class="tool-tag purple">Interactive</span></div>
+          </a>
+
+          <a class="tool-card" href="../viewer.html?tool=cs339/tcp_sequence.html&course=CS339&label=Computer%20Networks&name=TCP%20Sequence%20%26%20ACK%20Visualizer&back=cs339/index.html">
+            <div class="tool-card-header"><div class="tool-icon purple" aria-hidden="true">SEQ</div><div><div class="tool-subtitle purple">Transport &middot; Sequence &amp; ACK</div><div class="tool-title">TCP SEQ/ACK Visualizer</div></div></div>
+            <div class="tool-body"><p class="tool-desc">Follow application data through TCP, track sequence numbers and acknowledgments, and distinguish acknowledgment from application reading.</p><div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot purple"></div>Layered hosts, SEQ/ACK, and MSS segmentation</div><div class="tool-feature"><div class="tool-feature-dot purple"></div>Receive buffers, full duplex, and piggybacked ACKs</div><div class="tool-feature"><div class="tool-feature-dot purple"></div>Manual steps and ten guided scenarios</div></div></div>
             <div class="tool-footer"><span class="tool-cta purple">Open tool &rarr;</span><span class="tool-tag purple">Interactive</span></div>
           </a>
 
@@ -667,6 +673,9 @@ const TOOLS = [
   { name:'Throughput Explorer', file:'throughput_explorer.html', layer:'General &mdash; Network Performance',
     desc:'Explore single connections and equal sharing, bottleneck capacity, live receiver throughput, finite buffers, and dropped data.',
     keywords:['throughput','bottleneck','shared link','bandwidth','capacity','queue','buffer','loss','fair sharing','instantaneous','average'] },
+  { name:'TCP SEQ/ACK Visualizer', file:'tcp_sequence.html', layer:'Transport &mdash; Layer 4',
+    desc:'Layered TCP hosts, application reads, receive buffers, fixed teaching windows, full duplex, piggybacked ACKs, and packet loss recovery.',
+    keywords:['tcp','sequence','ack','handshake','sliding window','mss','retransmission','sliding window'] },
   { name:'TCP Full Visualizer', file:'tcp_full_V3.html', layer:'Transport &mdash; Layer 4',
     desc:'SYN/FIN handshake, seq/ack, flow control, congestion control, slow start, AIMD, retransmit',
     keywords:['tcp','syn','fin','ack','seq','sequence','acknowledgment','handshake','flow control','congestion','slow start','aimd','retransmit','sliding window','rwnd','cwnd','buffer','transport'] },
