@@ -176,3 +176,19 @@ body>header>.header-reset{align-self:flex-end;margin-left:auto}
 .transit-card-actions button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 
 .exchange-panel{margin-top:12px}
+
+#handshake-next{align-self:center;padding:5px 8px;font-size:12px;white-space:nowrap}
+
+#handshake-syn-ack,#handshake-ack{border:2px solid #7954a5;color:#65418e;background:#f8f4fc}
+#handshake-syn-ack:hover,#handshake-ack:hover{background:#eee5f8}
+#handshake-syn-ack:focus-visible,#handshake-ack:focus-visible{outline:2px solid #7954a5;outline-offset:3px}
+
+.pending-window{height:110px;padding:18px 8px;box-sizing:border-box;border:1px solid var(--line);border-radius:7px;background:#fff;overflow:hidden}
+.pending-byte-slots{display:flex;gap:4px;opacity:.6}
+.pending-byte-slot{flex:0 0 34px;height:44px;border:1px solid #cdd5df;border-radius:6px;background:#edf0f4}
+
+.pending-byte-slots{width:100%}.pending-byte-slot{flex:1 1 0;min-width:0}
+
+.pending-byte-slot{flex:0 0 var(--byte-width,34px);width:var(--byte-width,34px);height:44px}
+
+.pending-window{height:auto;padding:18px 8px}
