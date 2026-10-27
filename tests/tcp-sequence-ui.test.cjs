@@ -1,10 +1,11 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-function fixture(){
+function fixture(legacy=true){
  const elements=new Map(),timers=new Map(),listeners={};let timer=0;
  function el(id){if(!elements.has(id)){let html='';const e={value:'',textContent:'',style:{setProperty(k,v){this[k]=v;}},attrs:{},disabled:false,hidden:false,checked:false,open:false,showModal(){this.open=true;},close(){this.open=false;},scrollLeft:0,clientWidth:700,scrollHeight:100,offsetTop:0,addEventListener(k,f){this['on'+k]=f;},setAttribute(k,v){this.attrs[k]=v;},focus(){this.focused=true;},scrollTo(){},closest(){return el('log-scroll');},querySelector(){return null;}};Object.defineProperty(e,'innerHTML',{get:()=>html,set:v=>{html=v;for(const m of v.matchAll(/<input id="([^"]+)"[^>]*value="([^"]+)"/g))el(m[1]).value=m[2];const option=v.match(/<option value="([^"]*)"/);if(option)e.value=option[1];}});elements.set(id,e);}return elements.get(id);}
  el('speed').value='1000';
  const context={window:{TCPSequence:require('../assets/js/tcp-sequence-engine.js')},document:{getElementById:el,querySelector:()=>el('log-scroll'),addEventListener(k,f){listeners[k]=f;}},matchMedia:()=>({matches:true}),setInterval:f=>{timers.set(++timer,f);return timer;},clearInterval:id=>timers.delete(id)};
  for(const name of ['scenarios','', 'tabs'])vm.runInNewContext(fs.readFileSync('assets/js/tcp-sequence'+(name?'-'+name:'')+'.js','utf8'),context);
+ if(legacy){el('cfg-mss').value='4';el('cfg-mssB').value='6';el('cfg-mss').onchange();}
  return {el,timers,listeners,click:id=>{assert.equal(el(id).disabled,false,'enabled: '+id);el(id).onclick();},tick:()=>[...timers.values()][0]?.()};
 }
 test('UI readings and controls wait for connection, then application submission precedes TCP send',()=>{const f=fixture();assert.equal(f.el('step').disabled,true);assert.equal(f.el('A-send-visual').hidden,true);f.click('connect');assert.equal(f.el('step').disabled,false);f.click('step');assert.equal(f.el('B-receive-visual').hidden,true);f.click('step');assert.equal(f.el('A-send-visual').hidden,false);assert.equal(f.el('A-send').disabled,true);f.click('A-submit');assert.equal(f.el('A-send').disabled,false);assert.match(f.el('A-submitted').textContent,/20 of 20/);});
@@ -27,4 +28,9 @@ test('intercept next opens existing data; close and Escape leave it pending; res
 });
 test('auto-intercept drains existing cards in order and reset removes stale dialog state',()=>{
  const f=fixture();f.click('skip');f.click('A-submit');f.click('A-send');f.click('A-send');f.el('auto-intercept').checked=true;f.el('auto-intercept').onchange();assert.equal(f.el('intercept-seq').textContent,'42');f.click('intercept-deliver');assert.equal(f.el('intercept-dialog').open,true);assert.equal(f.el('intercept-seq').textContent,'46');f.click('reset');assert.equal(f.el('intercept-dialog').open,false);f.click('skip');f.click('A-submit');f.click('A-send');assert.equal(f.el('intercept-dialog').open,true);assert.equal(f.el('intercept-seq').textContent,'42');
+});
+
+test('default MSS 2 fast retransmit flashes sender bytes and opens the intercept overlay',()=>{
+ const f=fixture(false);assert.equal(f.el('cfg-mss').value,2);assert.equal(f.el('cfg-mssB').value,2);f.click('skip');f.click('A-submit');f.click('A-send');f.click('drop');for(let i=1;i<=3;i++){f.click('A-send');f.click('deliver');f.click('B-send-ack');if(i===3)f.click('intercept-next');if(i===3)f.click('intercept-close');f.click('deliver-ack');assert.equal(f.el('A-dup-acks').textContent,'Duplicate ACKs: '+i+'/3');}
+ assert.match(f.el('A-rto').textContent,/Fast retransmit: resending 42, 2 bytes/);assert.match(f.el('A-send-cells').innerHTML,/duplicate-flash/);assert.match(f.el('data-cards').innerHTML,/SEQ 42.*2 bytes/);f.click('intercept-next');assert.equal(f.el('intercept-dialog').open,true);assert.equal(f.el('intercept-seq').textContent,'42');assert.match(f.el('intercept-payload').textContent,/2 bytes/);f.click('intercept-deliver');f.click('B-send-ack');f.click('deliver-ack');assert.equal(f.el('A-dup-acks').textContent,'Duplicate ACKs: 0/3');f.click('reset');f.click('skip');assert.equal(f.el('A-dup-acks').textContent,'Duplicate ACKs: 0/3');
 });

@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const E=require('../assets/js/tcp-sequence-engine.js');
-function connected(c){const s=E.create({ackMode:"immediate",...c});while(!E.established(s))E.handshake(s);return s;}
+function connected(c){const s=E.create({ackMode:"immediate",mss:4,mssB:6,...c});while(!E.established(s))E.handshake(s);return s;}
 const queued=(s,from)=>s.packets.filter(p=>p.kind==='ack'&&p.status==='queued'&&(!from||p.from===from));
 function data(s,id='A'){return E.send(s,id);}
 function transfer(s,id='A'){const p=data(s,id);E.deliver(s,p.id);return p;}
@@ -43,3 +43,18 @@ test('duplex timers expire independently and reset clears elapsed time',()=>{
 test('manual default queues no ACK until requested, then acknowledges multiple segments cumulatively',()=>{const s=connected({ackMode:E.defaults.ackMode});E.submit(s);transfer(s);transfer(s);assert.equal(queued(s).length,0);E.step(s);assert.equal(queued(s).length,0);E.repeatAck(s,'B');assert.equal(queued(s).length,1);assert.equal(queued(s)[0].ack,50);assert.equal(s.hosts.A.una,42);allAcks(s);assert.equal(s.hosts.A.una,50);});
 
 test('duplicate retransmission arriving after ACK is discarded at receiver',()=>{const s=connected();E.submit(s);const first=E.send(s);const retry=E.retransmit(s);E.deliver(s,first.id);allAcks(s);E.deliver(s,retry.id);assert.equal(retry.status,'discarded');assert.equal(s.hosts.B.buffer.length,4);assert.equal(s.events.at(-1).kind,'duplicate-discard');assert.equal(queued(s).at(-1).ack,46);});
+
+function fastSetup(){const s=E.create();while(!E.established(s))E.handshake(s);E.submit(s);const packets=Array.from({length:4},()=>E.send(s));E.drop(s,packets[0].id);return {s,packets};}
+test('MSS 2 defaults and third duplicate ACK trigger exactly one fast retransmission',()=>{
+ const {s,packets}=fastSetup();assert.equal(s.c.mss,2);assert.equal(s.c.mssB,2);assert.equal(s.c.windowSize,8);
+ for(let i=1;i<4;i++){E.deliver(s,packets[i].id);const ack=E.repeatAck(s,'B');assert.equal(s.hosts.A.dupAcks,i-1);E.deliver(s,ack.id);assert.equal(s.hosts.A.dupAcks,i);assert.equal(s.packets.filter(p=>p.retransmission).length,i===3?1:0);}
+ const retry=s.packets.at(-1);assert.deepEqual([retry.seq,retry.len,s.hosts.A.nxt,s.hosts.A.una],[42,2,50,42]);assert.equal(retry.retransmissionReason,'fast');assert.equal(s.hosts.A.rto,3);assert.equal(s.hosts.A.deadline,s.time+3);assert.equal(s.events.at(-2).kind,'ack');assert.equal(s.events.at(-1).kind,'fast-retransmit');
+ E.deliver(s,E.repeatAck(s,'B').id);assert.equal(s.packets.filter(p=>p.retransmission).length,1);E.deliver(s,retry.id);E.deliver(s,E.repeatAck(s,'B').id);assert.equal(s.hosts.A.una,50);assert.equal(s.hosts.A.dupAcks,0);assert.equal(s.hosts.A.fastSeq,null);assert.equal(s.hosts.A.deadline,null);
+});
+test('lost fast retransmission falls back to timeout and does not fast retransmit the same gap again',()=>{
+ const {s,packets}=fastSetup();for(const p of packets.slice(1)){E.deliver(s,p.id);E.deliver(s,E.repeatAck(s,'B').id);}E.drop(s,s.packets.at(-1).id);E.advanceTime(s,3);assert.equal(s.hosts.A.dupAcks,0);assert.equal(s.hosts.A.rto,6);for(let i=0;i<3;i++)E.deliver(s,E.repeatAck(s,'B').id);assert.equal(s.events.filter(e=>e.kind==='fast-retransmit').length,1);const retry=s.packets.filter(p=>p.retransmission).at(-1);E.deliver(s,retry.id);E.deliver(s,E.repeatAck(s,'B').id);assert.equal(s.hosts.A.una,50);
+});
+test('duplicate counters are independent and exclude data ACKs, stale ACKs and idle ACKs',()=>{
+ const s=connected({duplex:true,mss:2,mssB:2,ackMode:'manual'});E.submit(s,'A');E.submit(s,'B');E.send(s,'A');E.deliver(s,E.send(s,'B').id);assert.equal(s.hosts.A.dupAcks,0);E.deliver(s,E.repeatAck(s,'B').id);assert.equal(s.hosts.A.dupAcks,1);assert.equal(s.hosts.B.dupAcks,0);
+ const stale=E.repeatAck(s,'B');E.deliver(s,s.packets.find(p=>p.from==='A'&&p.len).id);E.deliver(s,E.repeatAck(s,'B').id);assert.equal(s.hosts.A.dupAcks,0);E.deliver(s,stale.id);E.deliver(s,E.repeatAck(s,'B').id);assert.equal(s.hosts.A.dupAcks,0);assert.equal(E.create(s.c).hosts.A.fastSeq,null);
+});
