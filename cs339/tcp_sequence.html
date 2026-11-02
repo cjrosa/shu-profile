@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TCP SEQ/ACK Visualizer</title><link rel="stylesheet" href="../assets/css/pages/checksum-explorer.css"><link rel="stylesheet" href="../assets/css/pages/tcp-sequence.css"><link rel="stylesheet" href="../assets/css/pages/tcp-sequence-layered.css"></head>
-<body><header><div><div class="eyebrow">CS-339 · Sacred Heart University · Transport layer</div><h1>TCP SEQ/ACK Visualizer</h1><p>Applications produce and read data. TCP segments, buffers, and acknowledges the bytes.</p></div><button id="reset" class="header-reset">Reset</button></header>
+<body><header><div><div class="eyebrow">CS-339 · Sacred Heart University · Transport layer</div><h1>TCP SEQ/ACK Visualizer</h1><p>Applications produce and read data. TCP segments, buffers, and acknowledges the bytes.</p></div><div class="header-actions"><button id="duplex" aria-pressed="false" aria-describedby="mode-note">Full Duplex: OFF</button><button id="reset" class="header-reset">Reset</button><span id="mode-note" class="hint">Enable both hosts to send data.</span></div></header>
 <main>
 
 <section id="layered-hosts" class="layered-hosts" aria-label="Application and TCP layers on both hosts"></section>
@@ -11,8 +11,8 @@
 <div class="transport-step"><h2>ACKs in transit</h2><div id="ack-cards" class="transit-cards"></div></div>
 </section>
 <section class="panel connection-panel" aria-label="Connection and simulation controls" hidden>
- <div class="connection-row"><div class="actions"><button id="step" disabled>Next Step</button><button id="auto" class="primary" disabled>Auto</button></div><button id="duplex" aria-pressed="false">Full Duplex: OFF</button><span id="status" class="badge">Disconnected</span></div>
- <div class="options-row"><label>Speed <select id="speed"><option value="1000">Normal</option><option value="1800">Slow</option><option value="450">Fast</option></select></label><label><input id="auto-read" type="checkbox"> Auto application reads</label><span id="mode-note" class="hint">Reset before changing modes during a connection.</span></div>
+ <div class="connection-row"><div class="actions"><button id="step" disabled>Next Step</button><button id="auto" class="primary" disabled>Auto</button></div><span id="status" class="badge">Disconnected</span></div>
+ <div class="options-row"><label>Speed <select id="speed"><option value="1000">Normal</option><option value="1800">Slow</option><option value="450">Fast</option></select></label><label><input id="auto-read" type="checkbox"> Auto application reads</label></div>
  <label class="ack-setting">ACK behavior <select id="ack-mode"><option value="manual">Manual ACK</option><option value="immediate">Immediate ACK</option><option value="delayed">Delayed ACK</option></select></label>
  <div class="scenario-row"><label for="preset">Guided scenario</label><select id="preset"></select><button id="load">Load scenario</button><span id="objective"></span></div>
  <p id="error" class="error" role="alert"></p>

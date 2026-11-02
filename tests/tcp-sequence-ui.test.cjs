@@ -36,3 +36,28 @@ test('default MSS 2 fast retransmit flashes sender bytes and opens the intercept
 });
 
 test('each host completes its own TCP handshake step while global controls are hidden',()=>{const f=fixture(false);assert.equal(f.el('handshake-syn-ack').hidden,true);assert.equal(f.el('handshake-ack').hidden,true);f.click('connect');assert.equal(f.el('handshake-syn-ack').hidden,false);assert.equal(f.el('handshake-ack').hidden,true);f.click('handshake-syn-ack');assert.equal(f.el('handshake-syn-ack').hidden,true);assert.equal(f.el('handshake-ack').hidden,false);f.click('handshake-ack');assert.equal(f.el('handshake-ack').hidden,true);assert.equal(f.el('A-submit').disabled,false);f.click('reset');assert.equal(f.el('handshake-syn-ack').hidden,true);assert.equal(f.el('handshake-ack').hidden,true);assert.equal(f.el('connection-menu-button').disabled,false);});
+
+test('default mode hides reverse stream controls and settings; reset retains duplex',()=>{
+ const f=fixture(false);
+ for(const id of ['B-sender','B-app-send','A-receiver','A-app-read','B-send-actions','B-app-settings-button','field-sizeB','field-mssB'])assert.equal(f.el(id).hidden,true,id);
+ assert.equal(f.el('B-receiver').hidden,false);assert.equal(f.el('A-sender').hidden,false);
+ f.click('duplex');
+ for(const id of ['B-sender','B-app-send','A-receiver','A-app-read','B-send-actions','B-app-settings-button','field-sizeB','field-mssB'])assert.equal(f.el(id).hidden,false,id);
+ f.click('skip');assert.match(f.el('mode-note').textContent,/Reset to change mode/);
+ f.click('reset');assert.equal(f.el('duplex').attrs['aria-pressed'],'true');assert.equal(f.el('duplex').disabled,false);
+});
+test('duplex transit routes and receiver waiting states stay independent',()=>{
+ const f=fixture(false);f.el('cfg-b').value='41';f.el('cfg-b').onchange();f.click('duplex');f.click('skip');f.click('A-submit');f.click('B-submit');f.click('A-send');f.click('B-send');
+ assert.match(f.el('data-cards').innerHTML,/direction-A/);assert.match(f.el('data-cards').innerHTML,/direction-B/);assert.match(f.el('data-cards').innerHTML,/In transit/);
+ assert.match(f.el('packets').innerHTML,/direction-B reverse/);
+ assert.match(f.el('A-receive-note').textContent,/0 bytes received/);assert.match(f.el('B-receive-note').textContent,/0 bytes received/);
+ f.click('deliver');assert.match(f.el('B-receive-cells').innerHTML,/Received: awaiting application read/);assert.match(f.el('A-receive-note').textContent,/0 bytes received/);
+ f.click('deliver');assert.match(f.el('A-receive-cells').innerHTML,/Received: awaiting application read/);
+ f.click('B-send-ack');f.click('deliver-ack');assert.match(f.el('B-receive-note').textContent,/2 bytes received/);
+ f.click('B-read');assert.match(f.el('B-receive-note').textContent,/0 bytes received/);assert.match(f.el('A-receive-note').textContent,/2 bytes received/);
+});
+test('out-of-order receipt waits for a gap and becomes readable only after repair',()=>{
+ const f=fixture(false);f.click('skip');f.click('A-submit');f.click('A-send');f.click('A-send');f.click('deliver-5');
+ assert.match(f.el('B-receive-cells').innerHTML,/Buffered: waiting for missing bytes/);assert.match(f.el('B-receive-note').textContent,/0 bytes received.*2 bytes buffered/);assert.equal(f.el('B-read').disabled,true);
+ f.click('deliver');assert.match(f.el('B-receive-note').textContent,/4 bytes received.*0 bytes buffered/);assert.equal(f.el('B-read').disabled,false);
+});

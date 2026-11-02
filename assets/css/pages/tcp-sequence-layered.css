@@ -192,3 +192,25 @@ body>header>.header-reset{align-self:flex-end;margin-left:auto}
 .pending-byte-slot{flex:0 0 var(--byte-width,34px);width:var(--byte-width,34px);height:44px}
 
 .pending-window{height:auto;padding:18px 8px}
+
+/* Hidden reverse-stream controls must win over layout display rules. */
+[hidden]{display:none!important}
+.header-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;flex-shrink:0;max-width:320px}
+.header-actions button{padding:6px 12px;font-size:12px}
+.header-actions .hint{flex-basis:100%;text-align:right;font-size:11px}
+#duplex[aria-pressed=true]{background:var(--pale);border-color:var(--blue)}
+.direction-A,#host-A{--stream-color:#174db5;--stream-tint:#edf3ff}
+.direction-B,#host-B{--stream-color:#a44800;--stream-tint:#fff1de}
+.transit-card{background:var(--stream-tint);border-left:5px solid var(--stream-color);height:auto;min-height:72px;flex-basis:260px;width:260px;border-top-style:dashed;border-bottom-style:dashed}
+.transit-state{display:block;color:var(--stream-color);font-size:10px;margin-top:3px;font-weight:700}
+.packet-route{color:var(--stream-color);font-weight:700}
+.byte.unread,.host-legend .unread{border:2px solid #226456}
+.byte.ooo,.host-legend .ooo{border:2px dashed #61428d;background:repeating-linear-gradient(135deg,#eee7f7,#eee7f7 5px,#e1d6ef 5px,#e1d6ef 7px)}
+.host-legend span{flex-basis:auto;width:auto;min-width:92px;padding-inline:8px}
+@media(max-width:600px){body>header{flex-wrap:wrap}.header-actions{max-width:none;width:100%;justify-content:flex-start}.header-actions .hint{text-align:left}}
+
+.transit-card .transit-packet-icon,.transit-card-copy strong{color:var(--stream-color)}
+.packet.direction-A,.packet.direction-B{--arrow-color:var(--stream-color)}
+
+.layered-host{background:var(--stream-tint);border-color:var(--stream-color)}
+.layered-host .host-heading .host-identity,.layered-host .host-icon{color:var(--stream-color)}
