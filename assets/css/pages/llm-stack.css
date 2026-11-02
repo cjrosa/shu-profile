@@ -1,4 +1,26 @@
 .canvas:has(#stackDemo:not([hidden])){padding-top:10px}
+#stackDemo .stack-semantic-panel{margin-top:20px;padding:16px;border:1px solid var(--line);border-radius:12px;background:#fff}
+#stackSemanticTitle{margin:0 0 8px;font-size:15px}
+#stackSemanticTitle .stack-semantic-icon{display:inline-block;width:22px;height:22px;margin-right:8px;vertical-align:-5px;color:var(--purple)}
+#stackSemanticTitle .stack-semantic-icon circle{fill:var(--purple-soft)}
+#stackSemanticMap svg{display:block;width:100%;max-width:800px;margin:auto;overflow:visible}
+#stackSemanticMap text{font-family:inherit;font-size:13px;fill:var(--ink)}
+#stackSemanticMap .semantic-grid{fill:none;stroke:var(--line);stroke-opacity:.5}
+#stackSemanticMap .semantic-axis{fill:none;stroke:var(--muted)}
+#stackSemanticMap .semantic-origin{fill:#fff;stroke:var(--green);stroke-width:2;stroke-dasharray:3 2}
+#stackSemanticMap .semantic-word circle{fill:var(--purple);stroke:#fff;stroke-width:2}
+#stackSemanticMap .semantic-word .semantic-origin{fill:#fff;stroke:var(--green)}
+#stackSemanticMap .semantic-future{opacity:.4}
+#stackSemanticMap .semantic-match circle{fill:var(--green);stroke:var(--green);stroke-width:5}
+#stackSemanticMap .semantic-match text{fill:var(--green-dark);font-weight:750}
+#stackSemanticMap .semantic-direction{fill:none;stroke:var(--green);stroke-width:2;stroke-dasharray:6 5}
+#stackSemanticMap .semantic-trail{fill:none;stroke:var(--green);stroke-width:2;stroke-linejoin:round}
+#stackSemanticMap .semantic-trail-stop{fill:var(--green)}
+#stackSemanticMap .semantic-point{transition:transform .6s ease}
+#stackSemanticMap .semantic-point circle{fill:var(--green);stroke:#fff;stroke-width:2}
+#stackSemanticMap .semantic-point text{fill:var(--green-dark);font-weight:750}
+#stackSemanticStatus{font-size:14px;line-height:1.5}
+@media(max-width:500px){#stackDemo .stack-semantic-panel{padding:10px}#stackSemanticMap text{font-size:16px}}
 #stackDemo > .tokens-feedback:first-child{margin-top:0;margin-bottom:10px}
 #stackDemo .attention-token{cursor:pointer;outline:none}
 #stackDemo .attention-token rect{fill:#fff;stroke:var(--word-color)}

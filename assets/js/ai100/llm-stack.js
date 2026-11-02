@@ -21,6 +21,50 @@
     return states;
   }
   let inspectedLayer=0,previewSource=-1,columns=8;
+  function semanticMap(){
+    const words=examples[exampleIndex].text.split(' '),weights=window.llmQKModel.calculate(words,target).weights;
+    const related=target?weights.slice(0,target).reduce((best,w,i)=>w>weights[best]?i:best,0):-1;
+    const step=playback.phase<0?0:vectorIndex(),finished=playback.phase===8&&playback.complete;
+    // Center the starting target; distribute all other positions around it.
+    // Layout is illustrative and independent of the eventual attention match.
+    const positions=words.map((_,i)=>{
+      if(i===target)return {x:480,y:245};
+      const rank=i<target?i:i-1,angle=2*Math.PI*rank/(words.length-1)-Math.PI/2;
+      const radius=rank%2?.82:1;
+      return {x:480+330*radius*Math.cos(angle),y:245+165*radius*Math.sin(angle)};
+    });
+    const start=positions[target],end=related<0?start:positions[related];
+    // Illustrative intermediate context influences, not measured layer attention.
+    // Visit two other permitted words before settling near the strongest match.
+    const alternatives=words.map((_,i)=>i).filter(i=>i<target&&i!==related)
+      .sort((a,b)=>weights[b]-weights[a]||a-b);
+    const stops=[alternatives[0]??related,alternatives[1]??alternatives[0]??related,related];
+    const route=[start,...stops.slice(0,step).map((word,i)=>{
+      const point=word<0?start:positions[word],fraction=[.72,.82,.9][i];
+      return {x:start.x+(point.x-start.x)*fraction,y:start.y+(point.y-start.y)*fraction};
+    })];
+    const {x,y}=route.at(-1);
+    const map=$('SemanticMap');
+    // Authored semantic illustration: keep the numerical stack model independent.
+    if(map.dataset.target!==String(target)||map.dataset.example!==String(exampleIndex)||!map.firstChild){
+      map.dataset.target=String(target);map.dataset.example=String(exampleIndex);
+      map.innerHTML='<svg role="img" aria-labelledby="stackSemanticTitle stackSemanticStatus"></svg>';
+    }
+    // Show every token position without revealing the destination in advance.
+    if(!map.querySelector('[data-semantic-word]')){
+      map.querySelector('svg').setAttribute('viewBox','0 0 940 500');
+      map.querySelector('svg').innerHTML=`<path class="semantic-grid" d="M60 100H900M60 200H900M60 300H900M60 400H900M200 40V450M400 40V450M600 40V450M800 40V450"/><path class="semantic-axis" d="M60 245H900M480 40V450"/><text x="480" y="486" text-anchor="middle">Semantic dimension 1 (illustrative)</text><text transform="translate(20 245) rotate(-90)" text-anchor="middle">Semantic dimension 2</text><g id="stackSemanticTrail"></g><g id="stackSemanticConnection"></g>${words.map((word,i)=>`<g class="semantic-word${i>target?' semantic-future':''}" data-semantic-word="${i}" transform="translate(${positions[i].x} ${positions[i].y})"><circle class="${i===target?'semantic-origin':''}" r="7"/><text y="${i===target?26:-15}" text-anchor="middle">${escape(word)} · ${i+1}</text><title>${escape(word)}, position ${i+1}${i>target?'; future position, unavailable to target':''}</title></g>`).join('')}<g id="stackSemanticPoint" class="semantic-point"><circle r="10"/><text y="-20" text-anchor="middle">${escape(words[target])}</text></g>`;
+    }
+    $('SemanticTrail').innerHTML=step?`<path class="semantic-trail" d="${route.map((p,i)=>(i?'L':'M')+p.x+' '+p.y).join(' ')}"/>`+route.slice(1).map((p,i)=>`<circle class="semantic-trail-stop" cx="${p.x}" cy="${p.y}" r="4"><title>After Layer ${i+1}</title></circle>`).join(''):'';
+    $('SemanticConnection').innerHTML=finished&&related>=0?`<path class="semantic-direction" d="M${x} ${y}L${end.x} ${end.y}"/>`:'';
+    map.querySelectorAll('[data-semantic-word]').forEach(n=>n.classList.toggle('semantic-match',finished&&Number(n.dataset.semanticWord)===related));
+    $('SemanticPoint').setAttribute('transform',`translate(${x} ${y})`);
+    $('SemanticPoint').style.transform=`translate(${x}px, ${y}px)`;
+    map.dataset.layer=String(step);
+    if(finished)map.dataset.related=String(related);else delete map.dataset.related;
+    $('SemanticStatus').textContent=finished ? (related<0 ? words[target]+' has no earlier context word to connect to.' : 'Connection: '+words[target]+' ? '+words[related]+' (position '+(related+1)+'). Highest earlier-word attention weight: '+(weights[related]*100).toFixed(1)+'%.') : '';
+    $('SemanticStatus').hidden=!finished;
+  }
   const tokenColumns=()=>Math.max(3,Math.min(8,Math.floor(($('Tokens').clientWidth||940)/115)));
   function highlightSource(i){
     previewSource=i<=target?i:-1;
@@ -94,8 +138,8 @@
       const i=Number(n.dataset.token);
       const choose=t=>{cancelPlayback();target=t;source=-1;draw();$('Tokens').querySelector(`[data-token="${target}"]`).focus();};
       n.onclick=e=>{if(e.shiftKey&&i<=target){cancelPlayback();source=i;highlightSource(i);}else choose(i);};
-      n.onpointerenter=()=>{if(i<=target){cancelPlayback();highlightSource(i);}};n.onpointerleave=()=>highlightSource(source);
-      n.onfocus=()=>{if(i<=target){cancelPlayback();highlightSource(i);}};n.onblur=()=>highlightSource(source);
+      n.onpointerenter=()=>{if(playback.phase<0&&i<=target)highlightSource(i);};n.onpointerleave=()=>{if(playback.phase<0)highlightSource(source);};
+      n.onfocus=()=>{if(playback.phase<0&&i<=target)highlightSource(i);};n.onblur=()=>{if(playback.phase<0)highlightSource(source);};
       n.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','Home','End','Enter',' '].includes(e.key))return;e.preventDefault();e.stopPropagation();choose(e.key==='Home'?0:e.key==='End'?words.length-1:e.key==='ArrowLeft'?Math.max(0,i-1):e.key==='ArrowRight'?Math.min(words.length-1,i+1):i);};
     });
     $('Tokens').querySelectorAll('[data-inspect]').forEach(n=>{
@@ -145,10 +189,11 @@
     $('Diagram').querySelectorAll('[data-stage]').forEach(n=>{
       const i=Number(n.dataset.stage),choose=()=>{cancelPlayback();selected=i;inspect(i);};
       n.onclick=choose;n.onkeydown=e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();e.stopPropagation();choose();}};
-      n.onfocus=()=>{cancelPlayback();inspect(i);};n.onblur=()=>{if(playback.phase<0)inspect(selected);};
-      n.onpointerenter=()=>{cancelPlayback();inspect(i);};n.onpointerleave=()=>{if(playback.phase<0)inspect(selected);};
+      n.onfocus=()=>{if(playback.phase<0)inspect(i);};n.onblur=()=>{if(playback.phase<0)inspect(selected);};
+      n.onpointerenter=()=>{if(playback.phase<0)inspect(i);};n.onpointerleave=()=>{if(playback.phase<0)inspect(selected);};
     });
     inspect(selected);
+    semanticMap();
   }
   function clearEffects(){
     $('Demo').querySelectorAll('.stack-transient').forEach(n=>n.remove());
@@ -170,6 +215,7 @@
     return layer+(phase===2||phase===1&&playback.complete?1:0);
   }
   function updateVectors(){
+    semanticMap();
     const states=representations(examples[exampleIndex].text.split(' ')),index=vectorIndex();
     if(!$('CurrentVector'))return;
     $('CurrentVector').innerHTML=cells(states[index][target],218,30,playback.phase<0?'Stack input':'Current representation');
@@ -290,10 +336,15 @@
   window.openStackScene=()=>{closePicker();draw();};
   window.closeStackScene=()=>{cancelPlayback();closePicker();};
   let lastWidth=-1;
-  function resize(){const width=$('Visual').getBoundingClientRect().width;if(width===lastWidth)return;lastWidth=width;if(playback.phase>=0)cancelPlayback();if(columns!==tokenColumns())draw();else connections();}
+  function refreshLayout(){
+    if(columns!==tokenColumns())draw();else connections();
+    // Repaint geometry without resetting the phase or its running timer.
+    if(playback.phase>=0)paintPhase();
+  }
+  function resize(){const width=$('Visual').getBoundingClientRect().width;if(width===lastWidth)return;lastWidth=width;refreshLayout();}
   window.addEventListener('resize',resize);
   if(window.ResizeObserver)new ResizeObserver(resize).observe($('Visual'));
-  $('Visual').addEventListener('scroll',()=>{if(playback.phase>=0)cancelPlayback();connections();},true);
+  $('Visual').addEventListener('scroll',refreshLayout,true);
   document.fonts?.ready.then(connections);
   motion?.addEventListener?.('change',()=>{pause();if(motion.matches&&playback.phase>=0)completePhase();});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});

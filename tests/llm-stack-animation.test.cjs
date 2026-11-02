@@ -14,6 +14,42 @@ function fixture(reduced=false){
  const tick=()=>{assert.equal(jobs.size,1);const [i,j]=jobs.entries().next().value;jobs.delete(i);time+=j.ms;j.fn();};
  return {w,dom,get,values,tick,jobs,errors,motion,changeMotion,elapse:ms=>{time+=ms;},close:()=>{assert.deepEqual(errors,[]);dom.window.close();}};
 }
+test('semantic space reveals a bent trail and connects only at the end',()=>{
+ const f=fixture(),{get,w}=f;
+ assert.equal(get('SemanticMap').querySelectorAll('[data-semantic-word]').length,8);
+ assert.equal(get('SemanticTrail').children.length,0);
+ assert.equal(get('SemanticMap').dataset.related,undefined);
+ assert.doesNotMatch(get('SemanticStatus').textContent,/pizzas/);
+ const points=[];
+ for(let phase=0;phase<9;phase++){
+  get('Step').click();
+  const layer=Math.floor((phase+2)/3);
+  assert.equal(+get('SemanticMap').dataset.layer,layer);
+  assert.equal(get('SemanticTrail').querySelectorAll('circle').length,layer);
+  assert.equal(get('SemanticConnection').children.length,phase===8?1:0);
+  assert.equal(get('SemanticMap').querySelectorAll('.semantic-match').length,phase===8?1:0);
+  if(phase%3===1)points.push(get('SemanticPoint').getAttribute('transform').match(/[\d.]+/g).map(Number));
+ }
+ const [a,b,c]=points;
+ assert.ok(Math.abs((b[0]-a[0])*(c[1]-b[1])-(b[1]-a[1])*(c[0]-b[0]))>1);
+ const wordPoints=[...get('SemanticMap').querySelectorAll('[data-semantic-word]')].map(n=>n.getAttribute('transform').match(/[\d.]+/g).map(Number));
+ const nearest=p=>wordPoints.map((q,i)=>({i,d:Math.hypot(p[0]-q[0],p[1]-q[1])})).sort((a,b)=>a.d-b.d)[0].i;
+ assert.notEqual(nearest(a),3);assert.notEqual(nearest(b),3);
+ assert.notEqual(nearest(a),nearest(b));
+ assert.equal(nearest(c),3);
+ assert.match(get('SemanticStatus').textContent,/Connection: they.*pizzas/);
+ get('Reset').click();assert.equal(get('SemanticTrail').children.length,0);assert.equal(get('SemanticConnection').children.length,0);
+ get('Tokens').querySelector('[data-token="0"]').dispatchEvent(new w.MouseEvent('click'));
+ for(let phase=0;phase<9;phase++)get('Step').click();
+ assert.match(get('SemanticStatus').textContent,/no earlier context/);
+ assert.equal(get('SemanticConnection').children.length,0);
+ get('PickerMenu').children[1].click();
+ assert.equal(get('SemanticMap').querySelectorAll('[data-semantic-word]').length,12);
+ assert.equal(get('SemanticTrail').children.length,0);
+ assert.doesNotMatch(get('SemanticStatus').textContent,/Marie/);
+ f.close();
+});
+
 test('nine exact steps preserve numerical handoffs and finish without looping',()=>{
  const f=fixture(),{get,values}=f;
  const initial=values('CurrentVector'),final=values('OutputVector');let last=initial;
@@ -48,7 +84,7 @@ test('selection, examples, reset, navigation and reduced motion clear transient 
  start();get('Tokens').querySelector('[data-token="3"]').dispatchEvent(new w.MouseEvent('click'));stopped();assert.match(get('TokenLabel').textContent,/pizzas/);
  start();get('Diagram').querySelector('[data-stage="2"]').dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));stopped();assert.equal(get('Connections').dataset.layer,'2');
  start();get('PickerMenu').children[2].click();stopped();assert.match(get('TokenLabel').textContent,/chased/);
- start();get('Tokens').querySelector('[data-token="0"]').onpointerenter();stopped();assert.match(get('Explanation').textContent,/available context/);
+ start();get('Tokens').querySelector('[data-token="0"]').onpointerenter();assert.equal(f.jobs.size,1);get('Reset').click();stopped();
  start();w.document.getElementById('nextBtn').click();stopped();w.document.getElementById('prevBtn').click();
  start();f.motion.matches=true;f.changeMotion();assert.equal(f.jobs.size,0);assert.equal(get('Demo').querySelectorAll('animateMotion').length,0);get('Reset').click();f.close();
  const r=fixture(true);r.get('Play').click();assert.equal(r.get('Demo').querySelectorAll('animateMotion').length,0);r.tick();assert.equal(r.get('Demo').dataset.phase,'1');assert.notDeepEqual(r.values('CurrentVector'),[.2,1.5,0]);r.get('Play').click();r.get('Step').click();assert.equal(r.get('Demo').dataset.phase,'2');r.get('Reset').click();r.close();
@@ -140,4 +176,32 @@ test('QKV refresher reuses the shared tooltip without changing playback or selec
  info.dispatchEvent(new w.FocusEvent('focusout',{bubbles:true}));assert.equal(tip(),null);
  while(f.jobs.size)f.tick();info.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));assert.ok(tip());
  get('Reset').click();f.close();
+});
+
+
+test('passive hover, focus, scrolling and responsive reflow preserve playback through completion',()=>{
+ const f=fixture(),{get,w}=f;
+ let width=940;
+ get('Visual').getBoundingClientRect=()=>({left:0,top:0,width,height:800});
+ Object.defineProperty(get('Tokens'),'clientWidth',{get:()=>width});
+ get('Play').click();
+ for(let phase=0;phase<9;phase++){
+  assert.equal(get('Demo').dataset.phase,String(phase));
+  const job=[...f.jobs.keys()][0];
+  const token=get('Tokens').querySelector('[data-token="0"]');
+  token.onpointerenter();token.onfocus();token.onpointerleave();token.onblur();
+  const layer=get('Diagram').querySelector('[data-stage="2"]');
+  layer.onpointerenter();layer.onfocus();layer.onpointerleave();layer.onblur();
+  get('Visual').dispatchEvent(new w.Event('scroll'));
+  width=phase%2?940:400;w.dispatchEvent(new w.Event('resize'));
+  assert.equal(get('Demo').dataset.phase,String(phase));
+  assert.equal(get('Play').getAttribute('aria-pressed'),'true');
+  assert.deepEqual([...f.jobs.keys()],[job]);
+  f.tick();
+ }
+ assert.equal(f.jobs.size,0);
+ assert.equal(get('Play').getAttribute('aria-label'),'Replay');
+ assert.equal(get('SemanticConnection').children.length,1);
+ assert.match(get('SemanticStatus').textContent,/Connection: they.*pizzas/);
+ f.close();
 });
