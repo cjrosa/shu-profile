@@ -255,16 +255,17 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
       <div id="exchange-body" aria-label="TCP message timeline"></div>
     </div>
   <div id="log-wrap" role="tabpanel" aria-labelledby="transmission-tab" hidden>
+    <div class="log-toolbar"><strong>Transmission log</strong><div class="log-actions"><button class="btn-copy" id="btn-copy-log">Copy log</button><button class="btn-copy" id="btn-clear-log">Clear</button></div></div>
+    <div class="log-table-scroll">
     <div id="log-hdr-row">
       <div id="log-hdr-cols" class="log-cols">
         <span>time</span><span class="c">dir</span><span>flags</span>
         <span class="r">src</span><span class="c"></span><span class="r">dst</span>
         <span class="r">seq #</span><span class="r">ack #</span><span class="r">len</span><span class="r">rwnd</span>
       </div>
-      <button class="btn-copy" id="btn-copy-log">Copy log</button>
-      <button class="btn-copy" id="btn-clear-log">Clear</button>
     </div>
     <div id="log-body"><div class="lr log-cols syn-r"><span class="muted">0.00s</span><span class="c dir-s">→</span><span class="fl-syn">SYN</span><span class="r">62682</span><span class="c muted">→</span><span class="r">80</span><span class="r">9366</span><span class="r">—</span><span class="r">1</span><span class="r">—</span></div><div class="lr log-cols syn-r"><span class="muted">0.61s</span><span class="c dir-r">←</span><span class="fl-syn">SYN-ACK</span><span class="r">80</span><span class="c muted">→</span><span class="r">62682</span><span class="r">3630</span><span class="r">9367</span><span class="r">1</span><span class="r">10000</span></div><div class="lr log-cols ack-r"><span class="muted">1.23s</span><span class="c dir-s">→</span><span class="fl-ack">ACK</span><span class="r">62682</span><span class="c muted">→</span><span class="r">80</span><span class="r">9367</span><span class="r">3631</span><span class="r">0</span><span class="r">10000</span></div><div class="lr log-cols psh-r"><span class="muted">8.49s</span><span class="c dir-s">→</span><span class="fl-psh">PSH</span><span class="r">62682</span><span class="c muted">→</span><span class="r">80</span><span class="r">9367</span><span class="r">—</span><span class="r">1000</span><span class="r">—</span></div><div class="lr log-cols ack-r"><span class="muted">9.08s</span><span class="c dir-r">←</span><span class="fl-ack">ACK</span><span class="r">80</span><span class="c muted">→</span><span class="r">62682</span><span class="r">—</span><span class="r">10367</span><span class="r">0</span><span class="r">9000</span></div></div>
+    </div>
   </div>
   </div>
   </section>

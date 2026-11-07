@@ -170,9 +170,23 @@ input[type=number]::-webkit-inner-spin-button { opacity: 1; }
 .view-tabs button[aria-selected=true] { background: #fff; border-color: var(--line); box-shadow: 0 1px 3px #2539540d; }
 .history-panel #chart-wrap, .history-panel #log-wrap { border: 0; border-radius: 0; box-shadow: none; }
 .history-panel #chart-wrap { padding: 0 14px; }
-.history-panel #log-body { height: 240px; }
-.history-panel #log-hdr-row, .history-panel #log-body { min-width: 900px; }
-#log-hdr-cols, .log-cols { grid-template-columns: 56px 30px 110px 60px 20px 60px 76px 76px 50px 65px; }
+.history-panel #log-wrap { overflow: visible; }
+.log-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 10px; }
+.log-toolbar strong { font-size: 13px; color: var(--navy); }
+.log-actions { display: flex; gap: 6px; }
+.log-table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 9px; }
+.history-panel #log-hdr-row, .history-panel #log-body { min-width: 860px; scrollbar-gutter: stable; }
+.history-panel #log-hdr-row { display: block; padding: 11px 14px; overflow-y: hidden; background: #f2f6fa; }
+#log-hdr-cols { font-size: 10px; letter-spacing: .06em; color: #53657e; }
+#log-hdr-cols, .log-cols { grid-template-columns: minmax(65px,.8fr) 40px minmax(145px,1.5fr) minmax(65px,1fr) 24px minmax(65px,1fr) repeat(2,minmax(80px,1.1fr)) minmax(60px,.8fr) minmax(70px,.9fr); column-gap: 8px; }
+.history-panel #log-body { height: auto; min-height: 140px; max-height: 300px; overflow-y: auto; }
+.history-panel .lr { min-height: 40px; padding: 10px 14px; font-size: 12px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+.history-panel .lr:last-child { border-bottom: 0; }
+.history-panel .lr > span:nth-child(3) { font-size: 11px; letter-spacing: .02em; }
+.history-panel .lr:hover { box-shadow: inset 3px 0 var(--blue); }
+.history-panel .lr.syn-r { background: #f8f7fd; }
+.history-panel .lr.ack-r { background: #f5faf8; }
+.history-panel .lr.psh-r { background: #f5f9fd; }
 .exchange-endpoints { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; font-size: 12px; }
 .exchange-endpoints span { color: var(--muted); font-size: 10px; text-align: center; }
 #exchange-body { height: 240px; overflow: auto; margin: 0 10px; padding: 6px 28px; border-inline: 2px solid #cad9e5; }
