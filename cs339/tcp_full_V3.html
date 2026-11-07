@@ -91,7 +91,10 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
 .btn-copy{font-size:9px;font-weight:600;padding:0 8px;height:20px;border-radius:4px;border:1px solid #c0beb6;background:#fff;color:#888780;cursor:pointer;white-space:nowrap;flex-shrink:0;}
 .btn-copy:hover{background:#f0efea;}
 .btn-copy.copied{background:#1D9E75;color:#fff;border-color:#1D9E75;}
-</style></head>
+</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../assets/css/pages/tcp-interactive.css">
+</head>
 
 
 <body><div id="root">
@@ -117,14 +120,12 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
     <div class="stack">
       <div class="app-hdr">
         <div class="ctrl-row">
-          <span class="app-name">Sender app</span>
+          <span class="app-name"><svg class="section-icon application-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01M7 13h6M7 16h10"/></svg>Sender</span>
           <span class="port-badge" id="s-port" style="display: inline-block;">:62682</span>
           <div class="vsep"></div>
-          <span class="seg-label">seg</span>
-          <button class="seg-btn" id="btn-minus">−</button>
-          <input type="number" id="seg-input" value="500" min="100" max="9000" step="100">
+          <label class="seg-label" for="seg-input">seg</label>
+          <input type="number" id="seg-input" aria-label="Segment size in bytes" value="500" min="100" max="9000" step="100">
           <span style="font-size:10px;color:#185FA5;font-weight:600;">B</span>
-          <button class="seg-btn" id="btn-plus">+</button>
           <div class="vsep"></div>
           <button class="btn-mode active" id="mode-manual">Manual</button>
           <button class="btn-mode" id="mode-sim">Simulate</button>
@@ -136,7 +137,7 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
         </div>
       </div>
       <div class="sec-hdr-row">
-        <span class="lh">TCP transport</span>
+        <span class="lh section-heading-label"><svg class="section-icon transport-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 7h17m-4-4 4 4-4 4M21 17H4m4-4-4 4 4 4"/></svg>TCP transport</span>
         <span id="s-warn" style="font-size:9px;font-weight:600;color:#854F0B;"></span>
       </div>
       <div class="kv-grid">
@@ -147,6 +148,18 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
         <div class="kv-key"><span class="rfc">in flight</span><span class="sub">SND.NXT − SND.UNA</span></div><div class="kv-val" id="t-inflight">0 B</div>
         <div class="kv-div"></div>
         <div class="kv-key"><span class="rfc">peer rwnd</span><span class="sub">recv window</span></div><div class="kv-val" id="t-prwnd">9000 B</div>
+      </div>
+      <div class="sec-hdr-row">
+        <span class="lh section-heading-label"><svg class="section-icon transport-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9v6M12 9v6M17 9v6"/></svg>Send buffer</span><span class="badge ok" id="s-buf-ct">0 seg in flight</span>
+      </div>
+      <div class="buf-track"><div class="buf-bar" id="s-buf-bar" style="width: 0%; background: rgb(24, 95, 165);"></div></div>
+      <div class="buf-body" id="s-buf-body"><span class="empty-msg">empty</span></div>
+      <div class="sec-hdr section-heading-label" style="border-top:1px solid #e8e7e2;"><svg class="section-icon transport-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h3"/></svg>Session</div>
+      <div class="stats-grid">
+        <div class="stat-cell"><div class="stat-label">src port</div><div class="stat-value" id="i-port">62682</div></div>
+        <div class="stat-cell"><div class="stat-label">retransmits</div><div class="stat-value" id="i-retx" style="color:#A32D2D;">0</div></div>
+        <div class="stat-cell"><div class="stat-label">bytes sent</div><div class="stat-value" id="i-sent">1000 B</div></div>
+        <div class="stat-cell"><div class="stat-label">loss events</div><div class="stat-value" id="i-loss" style="color:#A32D2D;">0</div></div>
       </div>
       <div class="sec-hdr" id="cc-sec-hdr" style="display: none;">Congestion control — <span id="cc-mode-label" style="color:#BA7517;">Tahoe</span></div>
       <div id="cc-variant-row" style="display: none; gap: 6px; padding: 5px 12px; background: rgb(255, 255, 255); border-bottom: 1px solid rgb(232, 231, 226); align-items: center;">
@@ -169,24 +182,12 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
         <div class="kv-div"></div>
         <div class="kv-key"><span class="rfc">RTT #</span><span class="sub">simulation round</span></div><div class="kv-val hi-p" id="t-rtt">—</div>
       </div>
-      <div class="sec-hdr-row">
-        <span class="lh">Send buffer</span><span class="badge ok" id="s-buf-ct">0 seg in flight</span>
-      </div>
-      <div class="buf-track"><div class="buf-bar" id="s-buf-bar" style="width: 0%; background: rgb(24, 95, 165);"></div></div>
-      <div class="buf-body" id="s-buf-body"><span class="empty-msg">empty</span></div>
-      <div class="sec-hdr" style="border-top:1px solid #e8e7e2;">Session</div>
-      <div class="stats-grid">
-        <div class="stat-cell"><div class="stat-label">src port</div><div class="stat-value" id="i-port">62682</div></div>
-        <div class="stat-cell"><div class="stat-label">retransmits</div><div class="stat-value" id="i-retx" style="color:#A32D2D;">0</div></div>
-        <div class="stat-cell"><div class="stat-label">bytes sent</div><div class="stat-value" id="i-sent">1000 B</div></div>
-        <div class="stat-cell"><div class="stat-label">loss events</div><div class="stat-value" id="i-loss" style="color:#A32D2D;">0</div></div>
-      </div>
     </div>
 
     <div class="stack recv-stack">
       <div class="app-hdr recv">
         <div class="ctrl-row">
-          <span class="app-name" style="color:#085041;">Receiver app</span>
+          <span class="app-name" style="color:#085041;"><svg class="section-icon application-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01M7 13h6M7 16h10"/></svg>Receiver</span>
           <span class="port-badge" id="r-port" style="display: inline-block; background: rgb(29, 158, 117);">:80</span>
           <div class="vsep g"></div>
           <span style="font-size:10px;color:#0F6E56;font-weight:500;white-space:nowrap;" id="recv-hint">drain one segment per click</span>
@@ -195,7 +196,7 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
           <button class="btn btn-recv" id="btn-recv" disabled="" style="display: inline-flex;">Recv</button>
         </div>
       </div>
-      <div class="sec-hdr">TCP transport</div>
+      <div class="sec-hdr section-heading-label"><svg class="section-icon transport-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 7h17m-4-4 4 4-4 4M21 17H4m4-4-4 4 4 4"/></svg>TCP transport</div>
       <div class="kv-grid">
         <div class="kv-key"><span class="rfc">ISN_R</span><span class="sub">initial seq#</span></div><div class="kv-val" id="t-isnr">3630</div>
         <div class="kv-div"></div>
@@ -206,11 +207,11 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
         <div class="kv-key"><span class="rfc">buffered</span><span class="sub">held by transport</span></div><div class="kv-val" id="t-held">0 / 10000 B</div>
       </div>
       <div class="sec-hdr-row">
-        <span class="lh">Recv buffer</span><span class="badge ok" id="r-buf-pct">0 segs buffered</span>
+        <span class="lh section-heading-label"><svg class="section-icon transport-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9v6M12 9v6M17 9v6"/></svg>Recv buffer</span><span class="badge ok" id="r-buf-pct">0 segs buffered</span>
       </div>
       <div class="buf-track"><div class="buf-bar" id="r-buf-bar" style="width: 0%; background: rgb(29, 158, 117);"></div></div>
       <div class="buf-body" id="r-buf-body"><span class="empty-msg">empty</span></div>
-      <div class="sec-hdr" style="border-top:1px solid #e8e7e2;">Session</div>
+      <div class="sec-hdr section-heading-label" style="border-top:1px solid #e8e7e2;"><svg class="section-icon transport-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h3"/></svg>Session</div>
       <div class="stats-grid">
         <div class="stat-cell"><div class="stat-label">dst port</div><div class="stat-value" id="ri-port">80</div></div>
         <div class="stat-cell"><div class="stat-label">ISN</div><div class="stat-value" id="ri-isn">3630</div></div>
@@ -223,7 +224,18 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
   <div id="state-bar" style="color: rgb(29, 158, 117);">● established</div>
   <div id="net-strip" title="Click to arm drop — next packet crossing the network will be lost"><canvas id="net-cv" width="1497" height="64"></canvas></div>
 
-  <div id="chart-wrap">
+  <section class="history-panel">
+    <div class="history-toolbar">
+    <div class="history-tabs" role="tablist" aria-label="Simulation history">
+      <button id="message-tab" role="tab" aria-selected="true" aria-controls="message-panel">Message Log</button>
+      <button id="congestion-tab" role="tab" aria-selected="false" aria-controls="chart-wrap" tabindex="-1">Congestion Window</button>
+    </div>
+    <div class="history-tabs view-tabs" role="tablist" aria-label="Message log views">
+      <button id="exchange-tab" role="tab" aria-selected="true" aria-controls="exchange-panel">TCP Exchange</button>
+      <button id="transmission-tab" role="tab" aria-selected="false" aria-controls="log-wrap" tabindex="-1">Transmission Log</button>
+    </div>
+    </div>
+  <div id="chart-wrap" role="tabpanel" aria-labelledby="congestion-tab" hidden>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
       <div id="chart-title">Congestion window (cwnd) over time — AIMD sawtooth</div>
       <button class="btn-copy" id="btn-clear-chart">Clear</button>
@@ -234,12 +246,15 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
       <div class="leg-item"><div class="leg-dot" style="background:#BA7517;"></div><span>ssthresh (dashed)</span></div>
       <div class="leg-item"><div class="leg-dot" style="background:#A32D2D;"></div><span>T = timeout</span></div>
       <div class="leg-item"><div class="leg-dot" style="background:#F09595;"></div><span>FR = fast retransmit (Reno)</span></div>
-      <div class="leg-item"><div class="leg-dot" style="background:#E6F1FB;border:1px solid #85B7EB;height:10px;width:10px;border-radius:2px;"></div><span>slow start</span></div>
-      <div class="leg-item"><div class="leg-dot" style="background:#E1F5EE;border:1px solid #9FE1CB;height:10px;width:10px;border-radius:2px;"></div><span>cong avoidance</span></div>
     </div>
   </div>
 
-  <div id="log-wrap">
+  <div id="message-panel" role="tabpanel" aria-labelledby="message-tab">
+    <div id="exchange-panel" role="tabpanel" aria-labelledby="exchange-tab">
+      <div class="exchange-endpoints"><strong>Sender · TCP</strong><span>Data and ACKs stay between transport layers</span><strong>Receiver · TCP</strong></div>
+      <div id="exchange-body" aria-label="TCP message timeline"></div>
+    </div>
+  <div id="log-wrap" role="tabpanel" aria-labelledby="transmission-tab" hidden>
     <div id="log-hdr-row">
       <div id="log-hdr-cols" class="log-cols">
         <span>time</span><span class="c">dir</span><span>flags</span>
@@ -251,8 +266,11 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
     </div>
     <div id="log-body"><div class="lr log-cols syn-r"><span class="muted">0.00s</span><span class="c dir-s">→</span><span class="fl-syn">SYN</span><span class="r">62682</span><span class="c muted">→</span><span class="r">80</span><span class="r">9366</span><span class="r">—</span><span class="r">1</span><span class="r">—</span></div><div class="lr log-cols syn-r"><span class="muted">0.61s</span><span class="c dir-r">←</span><span class="fl-syn">SYN-ACK</span><span class="r">80</span><span class="c muted">→</span><span class="r">62682</span><span class="r">3630</span><span class="r">9367</span><span class="r">1</span><span class="r">10000</span></div><div class="lr log-cols ack-r"><span class="muted">1.23s</span><span class="c dir-s">→</span><span class="fl-ack">ACK</span><span class="r">62682</span><span class="c muted">→</span><span class="r">80</span><span class="r">9367</span><span class="r">3631</span><span class="r">0</span><span class="r">10000</span></div><div class="lr log-cols psh-r"><span class="muted">8.49s</span><span class="c dir-s">→</span><span class="fl-psh">PSH</span><span class="r">62682</span><span class="c muted">→</span><span class="r">80</span><span class="r">9367</span><span class="r">—</span><span class="r">1000</span><span class="r">—</span></div><div class="lr log-cols ack-r"><span class="muted">9.08s</span><span class="c dir-r">←</span><span class="fl-ack">ACK</span><span class="r">80</span><span class="c muted">→</span><span class="r">62682</span><span class="r">—</span><span class="r">10367</span><span class="r">0</span><span class="r">9000</span></div></div>
   </div>
+  </div>
+  </section>
 </div>
 
+<script src="../assets/js/tcp-interactive-tabs.js"></script>
 <script>
 (function(){
 'use strict';
@@ -270,11 +288,26 @@ let ccVariant='tahoe';
 let mode='manual';
 let autoRecv=false;
 let autoRecvTimer=null;
+// Protocol time advances only while the simulation is running.
+let protocolTime=1,nextProtocolTimer=1;
+const protocolTimers=new Map();
+function protocolTimeout(callback,delay){
+  const id=nextProtocolTimer++;
+  protocolTimers.set(id,{at:protocolTime+delay,callback});
+  return id;
+}
+function advanceProtocolTimers(dt){
+  protocolTime+=dt;
+  const due=[...protocolTimers].filter(([,timer])=>timer.at<=protocolTime);
+  for(const [id,timer] of due){
+    if(protocolTimers.delete(id))timer.callback();
+  }
+}
 
 function scheduleAutoRecv(){
   if(!autoRecv||autoRecvTimer)return;
   if(!rcv.buf.length)return;
-  autoRecvTimer=setTimeout(function(){
+  autoRecvTimer=protocolTimeout(function(){
     autoRecvTimer=null;
     if(autoRecv&&rcv.buf.length&&st==='established'){
       var s=rcv.buf.shift();rcv.held=Math.max(0,rcv.held-s.len);
@@ -297,8 +330,8 @@ const chartPts=[],lossMarkers=[];
 let logE=[],t0=0,pkts=[];
 
 function rnd(a,b){return a+Math.floor(Math.random()*(b-a));}
-function tel(){return t0?((Date.now()-t0)/1000).toFixed(2):'0.00';}
-function telN(){return t0?(Date.now()-t0)/1000:0;}
+function tel(){return t0?((protocolTime-t0)/1000).toFixed(2):'0.00';}
+function telN(){return t0?(protocolTime-t0)/1000:0;}
 function addLog(dir,flags,seq,ack,len,rw){
   if(logE.length>300)logE.shift();
   logE.push({t:tel(),dir,flags,sp:dir==='→'?PS:PR,dp:dir==='→'?PR:PS,seq,ack,len,rw});
@@ -311,16 +344,17 @@ function canSend(){
   if(mode==='manual')return snd.rw>=(segSize)&&(snd.nxt-snd.una)<snd.rw;
   return effWinFree()>=segSize&&!rto.active&&cc.phase!=='fast_recovery';
 }
-function startRTOFor(seg){rto.active=true;rto.startMs=Date.now();rto.elapsed=0;rto.seq=seg.seq;}
+function startRTOFor(seg){rto.active=true;rto.startMs=protocolTime;rto.elapsed=0;rto.seq=seg.seq;}
 function cancelRTO(){rto.active=false;rto.elapsed=0;rto.seq=null;rto.pendingManual=false;}
 function restartRTOAfterAck(){rto.timeout=BASE_RTO;if(snd.unacked.length>0)startRTOFor(snd.unacked[0]);else cancelRTO();}
 
 const netCv=document.getElementById('net-cv'),netCtx=netCv.getContext('2d');
 const chartCv=document.getElementById('chart-cv'),chartCtx=chartCv.getContext('2d');
 function rszNet(){netCv.width=document.getElementById('net-strip').clientWidth||600;netCv.height=64;}
-function rszChart(){chartCv.width=document.getElementById('chart-wrap').clientWidth-24||600;}
+function rszChart(){const width=document.getElementById('chart-wrap').clientWidth;if(width>0)chartCv.width=Math.max(1,width-28);}
 rszNet();rszChart();
 window.addEventListener('resize',()=>{rszNet();rszChart();});
+document.getElementById('chart-wrap').addEventListener('history-panel-shown',rszChart);
 
 function getNC(){
   const wr=document.getElementById('root').getBoundingClientRect();
@@ -381,7 +415,7 @@ function simEmitRetxAck(){
     if(mode==='sim')drainRecv();
     sim.phase='idle';
     upd();
-    setTimeout(function(){if(mode==='sim'&&sim.running&&!sim.paused&&st==='established')simNextRTT();},400);
+    protocolTimeout(function(){if(mode==='sim'&&sim.running&&!sim.paused&&st==='established')simNextRTT();},400);
   }));
 }
 
@@ -407,7 +441,7 @@ function emitAck(){
       sim.acksReceived++;
       if(sim.acksReceived>=sim.acksExpected){
         sim.phase='idle';
-        setTimeout(function(){if(mode==='sim'&&sim.running&&!sim.paused&&st==='established')simNextRTT();},350);
+        protocolTimeout(function(){if(mode==='sim'&&sim.running&&!sim.paused&&st==='established')simNextRTT();},350);
       }
     }
     upd();
@@ -428,7 +462,7 @@ function doRetransmit(){
   rto.pendingManual=false;
   retxCount++;onTimeoutCC();
   const seg=snd.unacked[0];
-  rto.timeout=Math.min(rto.timeout*2,60000);rto.startMs=Date.now();rto.elapsed=0;rto.seq=seg.seq;
+  rto.timeout=Math.min(rto.timeout*2,60000);rto.startMs=protocolTime;rto.elapsed=0;rto.seq=seg.seq;
   snd.inflight=seg.len;
   addLog('→','PSH [retx]',seg.seq,null,seg.len,null);
   pkts.push(mkPkt('toR',{bg:'#FCEBEB',bd:'#A32D2D',tx:'#791F1F'},'PSH [retx] seq='+seg.seq,'len='+seg.len,function(){
@@ -477,8 +511,8 @@ function sendSegCore(dropped,delayMs){
 // ── Simulate: fire one RTT ────────────────────────────────────────────────────
 function simNextRTT(){
   if(!sim.running||sim.paused||st!=='established')return;
-  if(rto.active||cc.phase==='fast_recovery'){setTimeout(function(){if(sim.running&&!sim.paused&&st==='established')simNextRTT();},300);return;}
-  if(snd.unacked.length>0){setTimeout(function(){if(sim.running&&!sim.paused&&st==='established')simNextRTT();},200);return;}
+  if(rto.active||cc.phase==='fast_recovery'){protocolTimeout(function(){if(sim.running&&!sim.paused&&st==='established')simNextRTT();},300);return;}
+  if(snd.unacked.length>0){protocolTimeout(function(){if(sim.running&&!sim.paused&&st==='established')simNextRTT();},200);return;}
   sim.rtt++;sim.rttsClean++;
   const n=Math.max(1,Math.floor(effWinTotal()/segSize));
   sim.acksExpected=n;sim.acksReceived=0;
@@ -499,11 +533,11 @@ function recvSeg(){if(st!=='established'||!rcv.buf.length)return;var s=rcv.buf.s
 // ── Connect / Close ───────────────────────────────────────────────────────────
 function doConnect(){
   if(st!=='closed')return;
-  sim.connId++;pkts=[];
+  sim.connId++;pkts=[];protocolTimers.clear();autoRecvTimer=null;
   segSize=Math.round(BUF_CAP/10);
   document.getElementById('seg-input').value=segSize;
   ISN_S=rnd(1000,9999);do{ISN_R=rnd(1000,9999);}while(ISN_R===ISN_S);
-  PS=rnd(49152,65535);t0=Date.now();logE=[];retxCount=0;lossEvents=0;
+  PS=rnd(49152,65535);t0=protocolTime;logE=[];retxCount=0;lossEvents=0;
   snd.nxt=ISN_S+1;snd.una=ISN_S+1;snd.rw=BUF_CAP;snd.unacked=[];snd.inflight=0;
   rcv.exp=ISN_S+1;rcv.buf=[];rcv.held=0;
   pali=0;probe.s='idle';probe.el=0;probe.iv=3000;probe.fly=false;
@@ -563,8 +597,6 @@ function setCCVariant(v){
 }
 
 // ── Wire up all controls ONCE ─────────────────────────────────────────────────
-document.getElementById('btn-minus').addEventListener('click',function(){segSize=Math.max(100,segSize-100);document.getElementById('seg-input').value=segSize;});
-document.getElementById('btn-plus').addEventListener('click',function(){segSize=Math.min(9000,segSize+100);document.getElementById('seg-input').value=segSize;});
 document.getElementById('seg-input').addEventListener('change',function(){segSize=Math.max(100,Math.min(9000,Math.round((parseInt(this.value)||500)/100)*100));this.value=segSize;});
 document.getElementById('btn-connect').addEventListener('click',doConnect);
 document.getElementById('btn-send').addEventListener('click',sendSeg);
@@ -573,7 +605,7 @@ document.getElementById('btn-recv').addEventListener('click',recvSeg);
 document.getElementById('btn-auto-recv').addEventListener('click',function(){
   autoRecv=!autoRecv;
   if(autoRecv){scheduleAutoRecv();}
-  else{if(autoRecvTimer){clearTimeout(autoRecvTimer);autoRecvTimer=null;}}
+  else{if(autoRecvTimer){protocolTimers.delete(autoRecvTimer);autoRecvTimer=null;}}
   upd();
 });
 // Click the network wire to arm/cancel a drop
@@ -582,7 +614,7 @@ netCv.addEventListener('click',function(){
   dropArmed=!dropArmed;upd();
 });
 document.getElementById('btn-pause').addEventListener('click',function(){
-  if(mode==='sim'){sim.paused=!sim.paused;if(!sim.paused&&sim.phase==='idle'&&sim.running&&st==='established')simNextRTT();}
+  if(mode==='sim'){sim.paused=!sim.paused;prev=null;}
   upd();
 });
 document.getElementById('sim-loss-sel').addEventListener('change',function(){sim.lossEveryN=parseInt(this.value);});
@@ -761,6 +793,7 @@ function upd(){
 }
 
 function renderLog(){
+  renderExchange();
   var body=document.getElementById('log-body');body.innerHTML='';
   logE.slice(-40).forEach(function(e){
     var isSyn=e.flags.indexOf('SYN')>=0,isFin=e.flags.indexOf('FIN')>=0;
@@ -777,15 +810,41 @@ function renderLog(){
   body.scrollTop=body.scrollHeight;
 }
 
+function renderExchange(){
+  const body=document.getElementById('exchange-body');
+  body.replaceChildren();
+  if(!logE.length){
+    const empty=document.createElement('p');
+    empty.className='exchange-empty';
+    empty.textContent='Connect to see TCP messages exchanged between sender and receiver.';
+    body.appendChild(empty);
+    return;
+  }
+  logE.slice(-40).forEach(function(e,index,events){
+    const row=document.createElement('div');
+    const forward=e.dir==='→';
+    row.className='exchange-message'+(forward?'':' reverse')+(index===events.length-1?' latest':'');
+    const route=document.createElement('strong');
+    route.textContent=forward?'Sender → Receiver ':'Receiver → Sender ';
+    const details=document.createElement('span');
+    const n=value=>value==null?'—':String(value);
+    details.textContent=e.flags+' · SEQ='+n(e.seq)+' · ACK='+n(e.ack)+' · LEN='+n(e.len)+' · RWND='+n(e.rw);
+    const time=document.createElement('small');
+    time.textContent=' · '+e.t+'s';
+    row.append(route,details,time);
+    body.appendChild(row);
+  });
+  body.scrollTop=body.scrollHeight;
+}
+
 function drawChart(){
-  var W=chartCv.width,H=chartCv.height;chartCtx.clearRect(0,0,W,H);
+  var W=chartCv.width,H=chartCv.height;chartCtx.fillStyle='#fff';chartCtx.fillRect(0,0,W,H);
   if(chartPts.length<2){chartCtx.fillStyle='#aaa9a2';chartCtx.font='11px system-ui';chartCtx.textAlign='center';chartCtx.fillText('Connect → Simulate to see the sawtooth build',W/2,H/2);return;}
   var PAD={l:40,r:12,t:12,b:22},cw=W-PAD.l-PAD.r,ch=H-PAD.t-PAD.b;
   var maxC=2;chartPts.forEach(function(p){if(p.cwnd>maxC)maxC=p.cwnd;if(p.ssthresh>maxC)maxC=p.ssthresh;});maxC+=2;
   var tMin=chartPts[0].t,tMax=Math.max(chartPts[chartPts.length-1].t,tMin+1),tR=tMax-tMin;
   function tx(t){return PAD.l+((t-tMin)/tR)*cw;}
   function ty(c){return PAD.t+ch*(1-c/maxC);}
-  for(var i=1;i<chartPts.length;i++){var a=chartPts[i-1],b=chartPts[i];chartCtx.fillStyle=a.phase==='slow_start'?'rgba(230,241,251,.55)':'rgba(225,245,238,.55)';chartCtx.fillRect(tx(a.t),PAD.t,Math.max(1,tx(b.t)-tx(a.t)),ch);}
   chartCtx.strokeStyle='#e8e7e2';chartCtx.lineWidth=0.5;
   var step=maxC<=8?1:maxC<=16?2:maxC<=32?4:8;
   for(var c=0;c<=maxC;c+=step){var y=ty(c);chartCtx.beginPath();chartCtx.moveTo(PAD.l,y);chartCtx.lineTo(W-PAD.r,y);chartCtx.stroke();chartCtx.fillStyle='#888780';chartCtx.font='8px system-ui';chartCtx.textAlign='right';chartCtx.fillText(c,PAD.l-4,y+3);}
@@ -809,13 +868,15 @@ var prev=null;
 function loop(ts){
   requestAnimationFrame(loop);
   var dt=prev===null?16:Math.min(ts-prev,100);prev=ts;
+  if(sim.paused)return;
+  advanceProtocolTimers(dt);
   var completed=[];
   for(var i=0;i<pkts.length;i++){var p=pkts[i];if(p.done)continue;p.elapsed+=dt;if(p.elapsed>=p.dur){p.done=true;completed.push(i);}}
   completed.forEach(function(i){if(pkts[i].cb)pkts[i].cb();});
   pkts=pkts.filter(function(p){return !p.done;});
   if(probe.s==='persist'){probe.el+=dt;if(probe.el>=probe.iv){sendProbe();upd();}else upd();}
   if(rto.active&&!rto.pendingManual&&st==='established'){
-    rto.elapsed=Date.now()-rto.startMs;
+    rto.elapsed=protocolTime-rto.startMs;
     if(rto.elapsed>=rto.timeout){
       if(snd.unacked.length>0&&snd.unacked[0].seq===rto.seq)doRetransmit();
       else{cancelRTO();if(snd.unacked.length>0)startRTOFor(snd.unacked[0]);}
@@ -825,65 +886,29 @@ function loop(ts){
   var n=getNC();
   var armed=dropArmed;
   var connected=st==='established';
-  var pipeY=n.my,pipeH=22,pipeR=pipeH/2;
-  var x0=n.sx+10,x1=n.rx-10;
-  var baseCol=armed?'#c0392b':connected?'#4cba8a':'#b0b8c1';
-  var lightCol=armed?'#e74c3c':connected?'#a8e6cc':'#d0d8e0';
-  var darkCol=armed?'#922b21':connected?'#1a7a52':'#7a8694';
-  var midCol=armed?'#e8d5d5':connected?'#e8f8f2':'#e8edf2';
+  var pipeY=n.my,pipeR=3;
+  var x0=n.sx,x1=n.rx;
+  var linkColor=armed?'#bf2f49':connected?'#287d78':'#9aa9b8';
+  var trackColor=armed?'#f7e3e8':connected?'#e0eee9':'#e5ebf0';
 
-  // Pipe body
-  var grad=netCtx.createLinearGradient(0,pipeY-pipeR,0,pipeY+pipeR);
-  grad.addColorStop(0,lightCol);
-  grad.addColorStop(0.25,midCol);
-  grad.addColorStop(0.55,baseCol);
-  grad.addColorStop(1,darkCol);
-  // Draw right end first so pipe body covers its left edge cleanly
+  // Flat network track with endpoint nodes; packets travel along its center.
   netCtx.save();
-  netCtx.beginPath();netCtx.ellipse(x1,pipeY,10,pipeR,0,0,Math.PI*2);netCtx.clip();
-  var noseGrad=netCtx.createLinearGradient(x1-10,pipeY-pipeR,x1+4,pipeY+pipeR);
-  noseGrad.addColorStop(0,lightCol);
-  noseGrad.addColorStop(0.3,midCol);
-  noseGrad.addColorStop(0.7,baseCol);
-  noseGrad.addColorStop(1,darkCol);
-  netCtx.fillStyle=noseGrad;
-  netCtx.fillRect(x1-10,pipeY-pipeR,20,pipeH);
+  netCtx.lineCap='round';
+  netCtx.strokeStyle=trackColor;netCtx.lineWidth=10;
+  netCtx.beginPath();netCtx.moveTo(x0,pipeY);netCtx.lineTo(x1,pipeY);netCtx.stroke();
+  netCtx.strokeStyle=linkColor;netCtx.lineWidth=2;
+  if(!connected&&!armed)netCtx.setLineDash([4,6]);
+  netCtx.beginPath();netCtx.moveTo(x0,pipeY);netCtx.lineTo(x1,pipeY);netCtx.stroke();
+  netCtx.setLineDash([]);
+  [x0,x1].forEach(function(x){
+    netCtx.fillStyle='#fff';netCtx.strokeStyle=linkColor;netCtx.lineWidth=2;
+    netCtx.beginPath();netCtx.arc(x,pipeY,6,0,Math.PI*2);netCtx.fill();netCtx.stroke();
+    netCtx.fillStyle=linkColor;netCtx.beginPath();netCtx.arc(x,pipeY,2,0,Math.PI*2);netCtx.fill();
+  });
+  netCtx.fillStyle='#6d7d8f';netCtx.font='600 9px system-ui';netCtx.textAlign='center';
+  netCtx.fillText('SENDER',x0,pipeY-14);
+  netCtx.fillText('RECEIVER',x1,pipeY-14);
   netCtx.restore();
-  netCtx.strokeStyle=darkCol;netCtx.lineWidth=0.5;
-  netCtx.beginPath();netCtx.ellipse(x1,pipeY,10,pipeR,0,0,Math.PI*2);netCtx.stroke();
-
-  // Pipe body over right cap
-  netCtx.fillStyle=grad;
-  netCtx.beginPath();netCtx.rect(x0,pipeY-pipeR,x1-x0,pipeH);netCtx.fill();
-
-  // Highlight streak along top of body
-  var hlGrad=netCtx.createLinearGradient(x0,0,x1,0);
-  hlGrad.addColorStop(0,'rgba(255,255,255,0)');
-  hlGrad.addColorStop(0.15,'rgba(255,255,255,0.4)');
-  hlGrad.addColorStop(0.85,'rgba(255,255,255,0.4)');
-  hlGrad.addColorStop(1,'rgba(255,255,255,0)');
-  netCtx.fillStyle=hlGrad;
-  netCtx.fillRect(x0,pipeY-pipeR+1,x1-x0,3);
-
-  // Left end drawn last — same radius as right cap, with hollow tunnel interior
-  var flangeGrad=netCtx.createLinearGradient(0,pipeY-pipeR,0,pipeY+pipeR);
-  flangeGrad.addColorStop(0,lightCol);
-  flangeGrad.addColorStop(0.4,baseCol);
-  flangeGrad.addColorStop(1,darkCol);
-  netCtx.fillStyle=flangeGrad;
-  netCtx.beginPath();netCtx.ellipse(x0,pipeY,10,pipeR,0,0,Math.PI*2);netCtx.fill();
-  netCtx.strokeStyle=darkCol;netCtx.lineWidth=0.8;
-  netCtx.beginPath();netCtx.ellipse(x0,pipeY,10,pipeR,0,0,Math.PI*2);netCtx.stroke();
-  // Tunnel interior
-  var tunnelGrad=netCtx.createRadialGradient(x0+1,pipeY-1,0,x0,pipeY,pipeR);
-  tunnelGrad.addColorStop(0,darkCol);
-  tunnelGrad.addColorStop(0.6,darkCol);
-  tunnelGrad.addColorStop(1,baseCol);
-  netCtx.fillStyle=tunnelGrad;
-  netCtx.beginPath();netCtx.ellipse(x0,pipeY,5,pipeR-3,0,0,Math.PI*2);netCtx.fill();
-  // Top rim highlight
-  netCtx.strokeStyle='rgba(255,255,255,0.55)';netCtx.lineWidth=1.5;
-  netCtx.beginPath();netCtx.ellipse(x0,pipeY,10,pipeR,0,Math.PI*1.1,Math.PI*1.9);netCtx.stroke();
 
   // Armed: ✕ badge at midpoint
   if(armed){
@@ -913,6 +938,7 @@ function loop(ts){
   drawChart();
 }
 requestAnimationFrame(loop);
+renderLog();
 upd();
 })();
 </script>

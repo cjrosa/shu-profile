@@ -214,3 +214,30 @@ body>header>.header-reset{align-self:flex-end;margin-left:auto}
 
 .layered-host{background:var(--stream-tint);border-color:var(--stream-color)}
 .layered-host .host-heading .host-identity,.layered-host .host-icon{color:var(--stream-color)}
+
+body{background:#fff}
+
+/* The receive queue bridges TCP delivery and application reads. */
+.buffer-bridge-row{display:flex;justify-content:space-between;gap:12px;padding:0 18px}
+.recv-bridge{position:relative;display:flex;padding:8px 0;margin-bottom:-18px;z-index:1;pointer-events:none;margin-left:auto}
+.send-bridge{margin-left:0;margin-right:auto}
+.recv-bridge::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;background:#a7cbbf}
+.recv-buffer{position:relative;display:flex;align-items:center;gap:8px;padding:5px 9px;border:1px solid #bedbd2;border-radius:6px;background:#f7fcfa;color:#226456;font-size:10px;box-shadow:0 1px 3px #2539540a}
+.recv-buffer strong{font-weight:600}
+.recv-buffer-icon{display:inline-block;width:25px;height:16px;border:1px solid #a7cbbf;border-radius:3px;background:repeating-linear-gradient(90deg,#edf5f1 0 4px,#fff 4px 6px);font-size:0}
+.recv-buffer span:last-child{min-width:48px;font:700 11px ui-monospace,Consolas,monospace;text-align:right}
+.recv-bridge[data-filled=true] .recv-buffer-icon{background:repeating-linear-gradient(90deg,#62a88d 0 4px,#fff 4px 6px);border-color:#287d78}
+.buffer-bridge-row+.layer-transfer{height:18px}
+.send-bridge .recv-buffer{background:#f7faff;color:#446e96;border-color:#c5d9ea}
+.send-bridge::before{background:#b6cde1}
+.send-bridge[data-filled=true] .recv-buffer-icon{background:repeating-linear-gradient(90deg,#729bc1 0 4px,#fff 4px 6px);border-color:#446e96}
+.buffer-flow{position:absolute;inset:0;pointer-events:none;color:#287d78}
+.send-bridge .buffer-flow{color:#446e96}
+.buffer-byte-flight{position:absolute;left:50%;top:0;width:9px;height:9px;margin-left:-4px;border-radius:2px;background:currentColor;border:1px solid #fff;box-shadow:0 1px 3px #25395433;opacity:0;animation:buffer-byte-up 850ms ease-in-out var(--delay) both}
+.send-bridge .buffer-byte-flight{animation-name:buffer-byte-down}
+.buffer-flight-label{position:absolute;left:calc(50% + 12px);top:-7px;padding:2px 5px;background:#fff;border-radius:4px;font:700 10px ui-monospace,Consolas,monospace;white-space:nowrap;animation:buffer-flow-label 1500ms ease both}
+@keyframes buffer-byte-down{0%{transform:translateY(-8px);opacity:0}15%,85%{opacity:1}100%{transform:translateY(34px);opacity:0}}
+@keyframes buffer-byte-up{0%{transform:translateY(34px);opacity:0}15%,85%{opacity:1}100%{transform:translateY(-8px);opacity:0}}
+@keyframes buffer-flow-label{0%,85%{opacity:1}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.buffer-byte-flight,.buffer-flight-label{display:none}}
+@media(max-width:480px){.buffer-bridge-row{padding:0 6px;gap:6px}.recv-buffer{gap:5px;padding:5px 6px}.recv-buffer-icon{width:16px}.recv-buffer span:last-child{min-width:0}}

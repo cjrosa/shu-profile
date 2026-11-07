@@ -1,0 +1,41 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const {JSDOM}=require('../tools/llm-tokenizer/node_modules/jsdom');
+
+test('pause freezes in-flight packets and protocol timers and resumes remaining work',()=>{
+  const html=fs.readFileSync('cs339/tcp_full_V3.html','utf8');
+  const dom=new JSDOM(html,{runScripts:'outside-only'});
+  const w=dom.window;
+  const ctx=new Proxy({}, {get:(_,key)=>key==='createLinearGradient'?()=>({addColorStop(){}}):()=>{},set:()=>true});
+  w.HTMLCanvasElement.prototype.getContext=()=>ctx;
+  w.requestAnimationFrame=()=>{};
+  const script=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)][0][1];
+  w.eval(script.replace('requestAnimationFrame(loop);\nrenderLog();',`window.inspectPause={loop,doConnect,setMode,sim,rto,protocolTimeout,
+    snapshot:()=>JSON.stringify({pkts:pkts.map(p=>p.elapsed),log:logE.length,time:protocolTime,rto:rto.elapsed,acks:sim.acksReceived,rtt:sim.rtt})};
+    requestAnimationFrame(loop);\nrenderLog();`));
+  const api=w.inspectPause;
+  api.doConnect();
+  let ts=0;
+  const advance=n=>{for(let i=0;i<n;i++)api.loop(ts+=50);};
+  advance(50);
+  api.setMode('sim');
+  advance(3);
+  let fired=0;
+  api.protocolTimeout(()=>fired++,300);
+  w.document.getElementById('btn-pause').click();
+  const frozen=api.snapshot();
+  advance(100);
+  assert.equal(api.snapshot(),frozen);
+  assert.equal(fired,0);
+  w.document.getElementById('btn-pause').click();
+  advance(2);
+  assert.equal(fired,0);
+  advance(5);
+  assert.equal(fired,1);
+  assert.notEqual(api.snapshot(),frozen);
+  advance(50);
+  assert.ok(api.sim.rtt>1,'simulation continues to subsequent rounds');
+  assert.equal(w.document.querySelector('#panels .stack').lastElementChild.id,'cc-kv-grid');
+  dom.window.close();
+});
