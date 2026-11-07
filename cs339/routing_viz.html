@@ -177,9 +177,11 @@ select:focus{border-color:var(--green-m);box-shadow:0 0 0 2px rgba(93,202,165,0.
 
   <div id="main">
     <div id="canvas-col">
+      <div id="topology-card">
       <canvas id="net-cv" style="flex:1;min-height:0;display:block;width:100%;"></canvas>
       <div id="state-bar">Tables ready. Click 🔍 on a router to examine, or ▶ Start to animate.</div>
-      <div class="ss" style="flex-shrink:0;">
+      </div>
+      <div class="ss" id="event-log-card">
         <div class="st">
           <span>Event Log</span>
           <button class="btn btn-gray" id="btn-clear-log" style="font-size:10px;padding:0 6px;height:20px;">Clear</button>
