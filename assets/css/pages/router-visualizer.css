@@ -1,0 +1,181 @@
+/* Presentation shared with the CIDR and TCP SEQ/ACK teaching tools. */
+:root {
+  --ink: #29394b;
+  --muted: #61758a;
+  --line: #d7e1e8;
+  --blue: #4d88bd;
+  --blue-text: #284d73;
+  --pale: #eaf3fa;
+}
+
+body {
+  background: #fff;
+  color: var(--ink);
+  font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+#root { max-width: 1600px; margin: auto; padding: 18px 24px; gap: 16px; }
+#titlebar { align-items: flex-start; flex-direction: column; gap: 8px; padding: 0 2px 6px; }
+#titlebar-left { gap: 12px; }
+#titlebar-left > svg { width: 28px; height: 28px; stroke: var(--blue-text); }
+#titlebar-title { color: var(--ink); font-size: 28px; line-height: 1.2; letter-spacing: normal; }
+#titlebar-right { color: var(--muted); font-size: 12px; gap: 12px; flex-wrap: wrap; }
+#titlebar-right a { padding: 4px; }
+#main { grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+#canvas-col, #side-col { min-width: 0; gap: 16px; }
+.card { border: 1px solid var(--line); border-radius: 12px; background: #fff; box-shadow: 0 2px 6px #25395405; }
+.card-hdr { padding: 12px 14px; gap: 8px; background: #f4f8fb; border-left: 0; border-bottom: 1px solid var(--line); }
+/* Let all existing queue controls wrap instead of being clipped. */
+#root .card-hdr { flex-wrap: wrap; }
+.card-title { color: var(--ink); font-size: 14px; font-weight: 700; }
+.sec-hdr, .sec-hdr-row { background: #f4f8fb; border-color: var(--line); padding: 7px 14px; }
+.sec-hdr, .sec-hdr-row .lh { color: var(--muted); font-size: 10px; }
+.vsep { background: var(--line); height: 22px; }
+
+#root button, #root select {
+  font-family: inherit;
+  font-size: 11px !important;
+  font-weight: 650;
+  line-height: 1.3;
+  min-height: 32px;
+  height: auto;
+  padding: 6px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+#root select { background: #fff; color: var(--ink); border: 1px solid #b6c8d6; }
+#root select:hover { border-color: var(--blue); }
+/* Keep native select semantics and keyboard handling while styling the popup. */
+@supports (appearance: base-select) {
+  #root select, #root select::picker(select) { appearance: base-select; }
+  #root select { align-items: center; gap: 16px; }
+  #root select::picker-icon { color: var(--muted); font-size: 12px; }
+  #root select:open { border-color: var(--blue); background: #f4f8fb; }
+  #root select::picker(select) {
+    margin-top: 6px;
+    padding: 5px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--ink);
+    box-shadow: 0 8px 24px #2539541f;
+    font: 12px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  #root select option {
+    padding: 8px 12px;
+    gap: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  #root select option:checked { background: var(--pale); color: var(--blue-text); font-weight: 650; }
+  #root select option:hover, #root select option:focus { background: #f0f6fb; color: var(--blue-text); outline: none; }
+  #root select option::checkmark { color: var(--blue); }
+}
+#root #lpm-speed { width: auto !important; }
+.btn-outline { background: #fff; color: var(--blue-text); border: 1px solid #b6c8d6; }
+.btn-outline.active { background: var(--pale); color: var(--blue-text); border-color: var(--blue); }
+.btn-outline-amber { background: #fff; color: #805116; border: 1px solid #d7bd93; }
+.btn-outline-amber.active { background: #ffecd0; color: #805116; border-color: #b78a46; }
+.btn-blue { background: var(--blue-text); }
+.btn-teal { background: #287d78; }
+.btn-amber { background: #fff0d4; color: #78520c; border: 1px solid #d7b16d; }
+.btn-red { background: #fff3f6; color: #ae3150; border: 1px solid #e2bac4; }
+.btn-gray { background: #f7fafc; color: var(--ink); border: 1px solid var(--line); }
+#root button:hover:not(:disabled) { filter: brightness(.96); opacity: 1; }
+#root button:disabled { opacity: .45; cursor: not-allowed; }
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+.field-label { color: var(--muted); font-size: 10px; }
+
+#router-wrap { overflow-x: auto; }
+#router-cv { min-width: 620px; height: 400px; }
+#root #canvas-state-bar { background: var(--pale); color: var(--blue-text); border-top: 1px solid var(--line); padding: 9px 14px; font-size: 12px; }
+#canvas-col > .queue-panels { display: grid; grid-template-columns: minmax(0, .7fr) minmax(0, 1.3fr); gap: 16px; }
+#root .queue-panels > .card:last-child > .card-hdr {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+#root .queue-panels > .card:last-child > .card-hdr > * { flex-shrink: 0; }
+.queue-wrap { padding: 8px 14px 14px; gap: 8px; }
+.queue-row { gap: 8px; }
+.queue-label { color: var(--muted); font-size: 11px; }
+.queue-lane {
+  min-width: 0;
+  min-height: 48px;
+  height: auto;
+  padding: 12px 10px;
+  gap: 14px 10px;
+  background: #f4f8fb;
+  border-color: var(--line);
+  border-radius: 7px;
+}
+.queue-empty { color: var(--muted); font-size: 10px; }
+.legend-row { padding: 8px 14px; }
+.leg-item { color: var(--muted); font-size: 10px; }
+.in-pkt-name { font-size: 10px; }
+.in-pkt-sub { font-size: 9px; }
+
+.kv-grid { padding: 9px 14px 11px; }
+.kv-key { color: var(--muted); font-size: 11px; padding: 4px 0; }
+.kv-val { color: var(--ink); font-size: 12px; padding: 4px 0; }
+.kv-div { background: var(--line); }
+.rfc { color: var(--ink); font-size: 12px; }
+.sub { color: var(--muted); }
+#ftable { font-size: 11px; }
+#ftable th { color: var(--muted); background: #f4f8fb; border-color: var(--line); padding: 8px 7px; }
+#ftable td { padding: 7px; border-color: #eaf0f5; color: var(--ink); }
+#ftable tr.checked td { color: #718094; background: #f8fafc; }
+#ftable tr:hover:not(.checking):not(.match):not(.winner) td { background: #f4f8fb; }
+.prefix-len { color: var(--muted); font-size: 10px; }
+.stats-grid { padding: 12px 14px; gap: 10px; }
+.stat-cell { background: #f2f6fa; border-radius: 8px; padding: 10px; gap: 4px; }
+.stat-label { color: var(--muted); font-size: 10px; }
+.stat-value { color: var(--ink); font-size: 22px; }
+#log-body { height: 180px; overflow-y: scroll; scrollbar-width: thin; scrollbar-color: #b6c8d6 #f4f8fb; scrollbar-gutter: stable; }
+.log-columns, .log-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 50px 56px;
+  column-gap: 12px;
+  align-items: center;
+  padding: 8px 14px;
+}
+.log-columns {
+  background: #f8fafc;
+  border-bottom: 1px solid var(--line);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  overflow-y: scroll;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  scrollbar-gutter: stable;
+}
+.log-columns span:nth-child(n+3) { text-align: center; }
+.log-row { min-height: 36px; font-size: 11px; border-color: #eaf0f5; }
+.log-row:nth-child(even) { background: #fafcfe; }
+.log-row:hover { background: #f0f6fb; }
+.log-time { color: var(--muted); font-variant-numeric: tabular-nums; }
+.log-msg { color: var(--ink); overflow-wrap: anywhere; line-height: 1.5; }
+.log-event { font-size: 10px; text-align: center; border-radius: 5px; padding: 3px 5px; }
+.log-event.ev-fwd { background: #e8f5ef; color: #216c60; }
+.log-event.ev-lpm { background: #eaf3fa; color: #284d73; }
+.log-event.ev-drop { background: #fff0f3; color: #ae3150; }
+.tt[data-tip]:hover::after { background: #253954; font-size: 11px; border-radius: 7px; }
+.tt[data-tip]:hover::before { border-bottom-color: #253954; }
+
+@media (max-width: 1400px) {
+  #canvas-col > .queue-panels { grid-template-columns: 1fr; }
+}
+@media (max-width: 960px) {
+  #main { grid-template-columns: 1fr; }
+  #side-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+}
+@media (max-width: 600px) {
+  #root { padding: 14px 12px; gap: 12px; }
+  #titlebar-title { font-size: 23px; }
+  #titlebar-right { font-size: 11px; }
+  #side-col { grid-template-columns: 1fr; }
+  .card-hdr { padding: 10px; }
+}

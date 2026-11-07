@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Router Interactive Visualizer</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23185FA5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='1' y='6' width='22' height='12' rx='2'/><line x1='5' y1='10' x2='5' y2='14'/><line x1='9' y1='10' x2='9' y2='14'/><circle cx='17' cy='12' r='2'/><line x1='19' y1='12' x2='21' y2='12'/></svg>">
-</head>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:system-ui,-apple-system,sans-serif;font-size:12px;color:#1a1a1a;background:#f5f4f0;}
@@ -139,6 +139,9 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
 @keyframes flash{0%{opacity:1}50%{opacity:.4}100%{opacity:1}}
 .flash{animation:flash .4s ease;}
 </style>
+<link rel="stylesheet" href="../assets/css/pages/router-visualizer.css">
+</head>
+<body>
 
 <div id="root">
 
@@ -155,13 +158,7 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
       <div id="titlebar-title">Router Interactive Visualizer</div>
     </div>
     <div id="titlebar-right">
-      <span>Developed by Professor Chris Rosa &mdash; CS339 Networks, Sacred Heart University</span>
-      <a href="mailto:rosac@sacredheart.edu" title="rosac@sacredheart.edu" style="display:inline-flex;align-items:center;color:#185FA5;text-decoration:none;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
-      </a>
-      <a href="https://linkedin.com/in/chris-rosa-3192326" target="_blank" title="LinkedIn" style="display:inline-flex;align-items:center;color:#0A66C2;text-decoration:none;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.354V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-      </a>
+      <span>Explore how routers look up destinations, switch packets, and manage queues.</span>
     </div>
   </div>
 
@@ -217,7 +214,7 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
       </div>
 
       <!-- Input + Output queues side by side -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="queue-panels">
 
         <!-- Input queues -->
         <div class="card">
@@ -248,7 +245,7 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
 
         <!-- Output queues -->
         <div class="card">
-          <div class="card-hdr" style="flex-wrap:nowrap;">
+          <div class="card-hdr">
             <span class="card-title">Output Queues</span>
             <div class="vsep"></div>
             <span class="tt" data-tip="First Come First Served: transmits in arrival order. Simple but ignores priority."><button class="btn-outline-amber active" id="sched-fcfs" style="font-size:10px;">FCFS</button></span>
@@ -280,11 +277,8 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
           <div style="flex:1"></div>
           <button class="btn btn-gray" id="btn-clear-log" style="font-size:10px;padding:0 8px;height:22px;">Clear</button>
         </div>
-        <div style="display:grid;grid-template-columns:52px 1fr 60px 60px;padding:2px 10px;background:#f0efea;border-bottom:1px solid #e8e7e2;">
-          <span style="font-size:9px;font-weight:700;color:#888780;text-transform:uppercase;letter-spacing:.06em;">Time</span>
-          <span style="font-size:9px;font-weight:700;color:#888780;text-transform:uppercase;letter-spacing:.06em;">Event</span>
-          <span style="font-size:9px;font-weight:700;color:#888780;text-transform:uppercase;letter-spacing:.06em;text-align:center;">Port</span>
-          <span style="font-size:9px;font-weight:700;color:#888780;text-transform:uppercase;letter-spacing:.06em;text-align:right;">Type</span>
+        <div class="log-columns">
+          <span>Time</span><span>Event</span><span>Port</span><span>Type</span>
         </div>
         <div id="log-body"></div>
       </div>
@@ -441,7 +435,7 @@ var DEST_IPS = [
 var FABRIC_INFO = {
   mem:  {label:'Memory',    bw:'1× line rate', par:'No',  bot:'System bus',   note:'Pkt copied to/from shared memory — bus is bottleneck'},
   bus:  {label:'Bus',       bw:'1× line rate', par:'No',  bot:'Shared bus',   note:'All ports contend for single shared bus'},
-  xbar: {label:'Crossbar',  bw:'N× line rate', par:'Yes', bot:'None (ideal)', note:'Each input-output pair gets dedicated path'},
+  xbar: {label:'Crossbar',  bw:'N× line rate', par:'Yes ? distinct outputs', bot:'Shared output', note:'Independent pairs can transfer together. This simulation animates one packet at a time.'},
 };
 
 var SCHED_LABELS = {fcfs:'FCFS', pri:'Priority', rr:'Round Robin', wfq:'WFQ'};
@@ -493,26 +487,29 @@ var cv = document.getElementById('router-cv');
 var ctx = cv.getContext('2d');
 
 function resizeCv(){
-  cv.width = cv.offsetWidth;
+  var scale = Math.max(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(cv.offsetWidth * scale);
+  cv.height = Math.round(400 * scale);
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
   draw();
 }
 window.addEventListener('resize', resizeCv);
 
 // ─── Layout geometry — router box with ports along top ────────────────────────
 function geom(){
-  var W = cv.width, H = cv.height;
+  var W = cv.offsetWidth, H = 400;
 
   // Router box: centered, occupies middle band of canvas
-  var rtrX = W*0.08, rtrW = W*0.84;
-  var rtrY = 90,     rtrH = H - 110;
+  var rtrX = 28, rtrW = W - 56;
+  var rtrY = 92,     rtrH = H - 116;
 
   // Switching fabric: inside router, lower portion
-  var fabPad = 14;
+  var fabPad = 20;
   var fabX = rtrX + fabPad, fabW = rtrW - fabPad*2;
-  var fabY = rtrY + 56,     fabH = rtrH - 70;
+  var fabY = rtrY + 66,     fabH = rtrH - 94;
 
   // Ports: evenly spaced along router top edge
-  var portW = 68, portH = 32;
+  var portW = 114, portH = 48;
   var portSpacing = rtrW / NUM_PORTS;
   var ports = [];
   for(var i=0;i<NUM_PORTS;i++){
@@ -534,7 +531,7 @@ function geom(){
 function draw(){
   var g = geom();
   ctx.clearRect(0,0,g.W,g.H);
-  ctx.fillStyle='#f5f4f0';
+  ctx.fillStyle='#ffffff';
   ctx.fillRect(0,0,g.W,g.H);
   drawRouter(g);
   drawAnimPkts(g);
@@ -551,11 +548,11 @@ function rrect(x,y,w,h,r,fill,stroke,lw){
 }
 
 function arrow(x1,y1,x2,y2,col){
-  ctx.strokeStyle=col||'#b0b8c1';ctx.lineWidth=1.5;
+  ctx.strokeStyle=col||'#8a9eb1';ctx.lineWidth=1.5;
   ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
   // Arrowhead
   var ang=Math.atan2(y2-y1,x2-x1);
-  ctx.fillStyle=col||'#b0b8c1';
+  ctx.fillStyle=col||'#8a9eb1';
   ctx.beginPath();
   ctx.moveTo(x2,y2);
   ctx.lineTo(x2-8*Math.cos(ang-0.4),y2-8*Math.sin(ang-0.4));
@@ -565,17 +562,17 @@ function arrow(x1,y1,x2,y2,col){
 
 function drawRouter(g){
   // ── Router chassis ──
-  rrect(g.rtrX, g.rtrY, g.rtrW, g.rtrH, 12, '#fff', '#85B7EB', 2);
+  rrect(g.rtrX, g.rtrY, g.rtrW, g.rtrH, 16, '#fff', '#d7e1e8', 1);
 
   // Router label (bottom-left, clearly inside box)
-  ctx.fillStyle='#c0beb6';ctx.font='700 8px system-ui';ctx.textAlign='left';
+  ctx.fillStyle='#61758a';ctx.font='700 13px system-ui';ctx.textAlign='left';
   ctx.fillText('ROUTER', g.rtrX+10, g.rtrY+g.rtrH-6);
 
   // ── Switching fabric inside router ──
-  var fc = fabric==='xbar'?{bg:'#E1F5EE',bd:'#1D9E75',tx:'#0F6E56',dim:'rgba(29,158,117,'}:
-           fabric==='bus' ?{bg:'#FFF3CD',bd:'#BA7517',tx:'#854F0B',dim:'rgba(186,117,23,'}:
-                           {bg:'#E6F1FB',bd:'#185FA5',tx:'#0C447C',dim:'rgba(24,95,165,'};
-  rrect(g.fabX, g.fabY, g.fabW, g.fabH, 8, fc.bg, fc.bd, 1.5);
+  var fc = fabric==='xbar'?{bg:'#edf7f4',bd:'#287d78',tx:'#216c60',dim:'rgba(40,125,120,'}:
+           fabric==='bus' ?{bg:'#fff7e8',bd:'#9c6715',tx:'#805116',dim:'rgba(156,103,21,'}:
+                           {bg:'#f4f8fb',bd:'#4d88bd',tx:'#284d73',dim:'rgba(77,136,189,'};
+  rrect(g.fabX, g.fabY, g.fabW, g.fabH, 12, fc.bg, null, 0);
 
   var fabMidY = g.fabY + g.fabH/2;
   var fabMidX = g.fabX + g.fabW/2;
@@ -587,7 +584,7 @@ function drawRouter(g){
     // ── Memory fabric internals ──
     // Shared bus line connecting all stems to memory block
     var busY = g.fabY + g.fabH*0.35;
-    ctx.strokeStyle=fc.dim+'0.3)';ctx.lineWidth=6;ctx.lineCap='round';
+    ctx.strokeStyle=fc.dim+'0.3)';ctx.lineWidth=3;ctx.lineCap='round';
     ctx.beginPath();ctx.moveTo(g.fabX+20,busY);ctx.lineTo(g.fabX+g.fabW-20,busY);ctx.stroke();
     ctx.strokeStyle=fc.dim+'0.6)';ctx.lineWidth=2;
     ctx.beginPath();ctx.moveTo(g.fabX+20,busY);ctx.lineTo(g.fabX+g.fabW-20,busY);ctx.stroke();
@@ -600,55 +597,28 @@ function drawRouter(g){
     });
 
     // Memory block in center
-    var mw=80,mh=36,mx=fabMidX-mw/2,my=busY+20;
-    rrect(mx,my,mw,mh,5,fc.dim+'0.15)','rgba(24,95,165,0.4)',1.5);
-    ctx.fillStyle=fc.tx;ctx.font='700 9px system-ui';ctx.textAlign='center';
-    ctx.fillText('RAM', fabMidX, my+14);
-    ctx.font='500 8px system-ui';ctx.fillStyle=fc.dim+'0.7)';
-    ctx.fillText('shared memory', fabMidX, my+27);
+    var mw=142,mh=50,mx=fabMidX-mw/2,my=busY+22;
+    rrect(mx,my,mw,mh,7,'#eaf3fa','#b6c8d6',1);
+    ctx.fillStyle=fc.tx;ctx.font='700 13px system-ui';ctx.textAlign='center';
+    ctx.fillText('RAM', fabMidX, my+20);
+    ctx.font='500 11px system-ui';ctx.fillStyle='#52677c';
+    ctx.fillText('shared memory', fabMidX, my+37);
 
     // Arrow from bus down to memory
     ctx.strokeStyle=fc.dim+'0.5)';ctx.lineWidth=1.5;
     ctx.beginPath();ctx.moveTo(fabMidX,busY+3);ctx.lineTo(fabMidX,my-1);ctx.stroke();
 
     // Bus label
-    ctx.fillStyle=fc.dim+'0.6)';ctx.font='600 8px system-ui';ctx.textAlign='left';
+    ctx.fillStyle='#52677c';ctx.font='600 11px system-ui';ctx.textAlign='left';
     ctx.fillText('System Bus', g.fabX+24, busY-6);
 
     // Write/read annotation
-    ctx.fillStyle=fc.dim+'0.5)';ctx.font='500 7px system-ui';ctx.textAlign='center';
-    ctx.fillText('① write to RAM', fabMidX-36, my+mh+12);
-    ctx.fillText('② read from RAM', fabMidX+36, my+mh+12);
+    ctx.fillStyle='#52677c';ctx.font='500 11px system-ui';ctx.textAlign='center';
+    ctx.fillText('① write to RAM', fabMidX-58, my+mh+18);
+    ctx.fillText('② read from RAM', fabMidX+58, my+mh+18);
 
     // Active path highlight
-    if(activePath){
-      var ap=activePath, sx=stemXs[ap.inPort];
-      var phase = ap.progress < 0.5 ? 'write' : 'read';
-      // Write phase: input stem → bus → memory
-      if(phase==='write'){
-        var t=ap.progress/0.5;
-        ctx.strokeStyle='rgba(24,95,165,0.8)';ctx.lineWidth=3;
-        ctx.beginPath();ctx.moveTo(sx,g.fabY+4);ctx.lineTo(sx,busY);ctx.stroke();
-        ctx.beginPath();ctx.moveTo(sx,busY);ctx.lineTo(fabMidX,busY);ctx.stroke();
-        if(t>0.7){ctx.beginPath();ctx.moveTo(fabMidX,busY);ctx.lineTo(fabMidX,my);ctx.stroke();}
-        // Moving dot
-        var dotT=Math.min(t,1);
-        var dotX = sx + (fabMidX-sx)*dotT;
-        ctx.beginPath();ctx.arc(dotX,busY,5,0,Math.PI*2);
-        ctx.fillStyle='#185FA5';ctx.fill();
-      } else {
-        // Read phase: memory → bus → output stem (exits upward)
-        var t=(ap.progress-0.5)/0.5;
-        var osx=stemXs[ap.outPort];
-        ctx.strokeStyle='rgba(29,158,117,0.8)';ctx.lineWidth=3;
-        ctx.beginPath();ctx.moveTo(fabMidX,my);ctx.lineTo(fabMidX,busY);ctx.stroke();
-        ctx.beginPath();ctx.moveTo(fabMidX,busY);ctx.lineTo(osx,busY);ctx.stroke();
-        if(t>0.7){ctx.beginPath();ctx.moveTo(osx,busY);ctx.lineTo(osx,g.fabY+4);ctx.stroke();}
-        var dotX2=fabMidX+(osx-fabMidX)*Math.min(t,1);
-        ctx.beginPath();ctx.arc(dotX2,busY,5,0,Math.PI*2);
-        ctx.fillStyle='#1D9E75';ctx.fill();
-      }
-    }
+
 
   } else if(fabric==='bus'){
     // ── Shared Bus internals — both connect at top, colors match link wires ──
@@ -656,74 +626,47 @@ function drawRouter(g){
 
     // Bus bar
     rrect(g.fabX+16, busY2-8, g.fabW-32, 16, 4,
-          'rgba(186,117,23,0.12)', 'rgba(186,117,23,0.6)', 2);
-    ctx.fillStyle='rgba(186,117,23,0.7)';ctx.font='700 9px system-ui';ctx.textAlign='center';
+          'rgba(156,103,21,0.12)', 'rgba(156,103,21,0.6)', 2);
+    ctx.fillStyle='rgba(156,103,21,0.7)';ctx.font='700 13px system-ui';ctx.textAlign='center';
     ctx.fillText('SHARED BUS', fabMidX, busY2+4);
 
     // Each port: input tap (gray, left) and output tap (green, right)
     g.ports.forEach(function(p, i){
-      var inX  = p.cx - 10; // matches inWX
-      var outX = p.cx + 10; // matches outWX
+      var inX  = p.cx - 24; // matches inWX
+      var outX = p.cx + 24; // matches outWX
 
       // Input tap: top → bus (gray, solid)
-      ctx.strokeStyle='rgba(176,184,193,0.6)'; ctx.lineWidth=1.5;
-      ctx.beginPath(); ctx.moveTo(inX, g.fabY+22); ctx.lineTo(inX, busY2-8); ctx.stroke();
+      ctx.strokeStyle='rgba(138,158,177,0.6)'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(inX, g.fabY+48); ctx.lineTo(inX, busY2-8); ctx.stroke();
 
       // Output tap: top → bus (green, dashed)
-      ctx.strokeStyle='rgba(29,158,117,0.5)'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
-      ctx.beginPath(); ctx.moveTo(outX, g.fabY+22); ctx.lineTo(outX, busY2-8); ctx.stroke();
+      ctx.strokeStyle='rgba(40,125,120,0.5)'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.moveTo(outX, g.fabY+48); ctx.lineTo(outX, busY2-8); ctx.stroke();
       ctx.setLineDash([]);
 
       // Labels near fabric top — gray for in, green for out, spaced apart
-      ctx.fillStyle='#b0b8c1'; ctx.font='600 7px system-ui'; ctx.textAlign='center';
-      ctx.fillText('In '+i, inX, g.fabY+18);
-      ctx.fillStyle='rgba(29,158,117,0.7)'; ctx.font='600 7px system-ui';
-      ctx.fillText('Out '+i, outX, g.fabY+18);
+      ctx.fillStyle='#8a9eb1'; ctx.font='600 10px system-ui'; ctx.textAlign='center';
+      ctx.fillText('In '+i, inX, g.fabY+40);
+      ctx.fillStyle='rgba(40,125,120,0.7)'; ctx.font='600 10px system-ui';
+      ctx.fillText('Out '+i, outX, g.fabY+40);
     });
 
     // Annotation
-    ctx.fillStyle='rgba(186,117,23,0.45)'; ctx.font='500 7px system-ui'; ctx.textAlign='right';
+    ctx.fillStyle='#805116'; ctx.font='500 11px system-ui'; ctx.textAlign='right';
     ctx.fillText('only one transfer at a time', g.fabX+g.fabW-12, g.fabY+g.fabH-8);
 
     // Active path highlight
-    if(activePath){
-      var ap=activePath;
-      var isx=g.ports[ap.inPort].cx-10, osx=g.ports[ap.outPort].cx+10;
 
-      // Input tap — gray
-      ctx.strokeStyle='rgba(100,130,160,0.9)'; ctx.lineWidth=3;
-      ctx.beginPath(); ctx.moveTo(isx,g.fabY+22); ctx.lineTo(isx,busY2-8); ctx.stroke();
-      // Bus segment
-      var bx1=Math.min(isx,osx), bx2=Math.max(isx,osx);
-      ctx.strokeStyle='rgba(186,117,23,0.9)'; ctx.lineWidth=3;
-      ctx.beginPath(); ctx.moveTo(bx1,busY2); ctx.lineTo(bx2,busY2); ctx.stroke();
-      // Output tap — green
-      ctx.strokeStyle='rgba(29,158,117,0.9)'; ctx.lineWidth=3;
-      ctx.beginPath(); ctx.moveTo(osx,busY2-8); ctx.lineTo(osx,g.fabY+22); ctx.stroke();
-
-      // Moving dot
-      var path=[
-        {x:isx,y:g.fabY+22}, {x:isx,y:busY2},
-        {x:osx,y:busY2},      {x:osx,y:g.fabY+22}
-      ];
-      var seg=Math.min(Math.floor(ap.progress*3),2);
-      var frac=(ap.progress*3)-seg;
-      var ax=path[seg].x+(path[seg+1].x-path[seg].x)*frac;
-      var ay=path[seg].y+(path[seg+1].y-path[seg].y)*frac;
-      var dotCol = seg===0?'#7090A0':seg===1?'#BA7517':'#1D9E75';
-      ctx.beginPath(); ctx.arc(ax,ay,5,0,Math.PI*2);
-      ctx.fillStyle=dotCol; ctx.fill();
-    }
 
   } else {
     // ── Crossbar internals — top-entry, top-exit ──
     var pad = 20;
     var xbX = g.fabX+pad, xbW = g.fabW-pad*2;
-    var xbY = g.fabY+28, xbH = g.fabH-40; // leave room at top for labels
+    var xbY = g.fabY+52, xbH = g.fabH-64; // leave room at top for labels
 
     // Use same x-offsets as the link wires above
-    var inXs  = g.ports.map(function(p){ return p.cx - 10; }); // matches inWX
-    var outXs = g.ports.map(function(p){ return p.cx + 10; }); // matches outWX
+    var inXs  = g.ports.map(function(p){ return p.cx - 24; }); // matches inWX
+    var outXs = g.ports.map(function(p){ return p.cx + 24; }); // matches outWX
 
     // Row Y positions — one per input port
     var rowYs = [];
@@ -733,21 +676,21 @@ function drawRouter(g){
 
     // Input vertical stems (gray — matches incoming link color)
     inXs.forEach(function(ix){
-      ctx.strokeStyle='rgba(176,184,193,0.5)'; ctx.lineWidth=1.5;
-      ctx.beginPath(); ctx.moveTo(ix, g.fabY+22); ctx.lineTo(ix, xbY+xbH); ctx.stroke();
+      ctx.strokeStyle='rgba(138,158,177,0.5)'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(ix, g.fabY+48); ctx.lineTo(ix, xbY+xbH); ctx.stroke();
     });
 
     // Horizontal rows (faint gray)
     rowYs.forEach(function(ry){
-      ctx.strokeStyle='rgba(176,184,193,0.25)'; ctx.lineWidth=1.5;
+      ctx.strokeStyle='rgba(138,158,177,0.25)'; ctx.lineWidth=1.5;
       ctx.beginPath(); ctx.moveTo(xbX, ry); ctx.lineTo(xbX+xbW, ry); ctx.stroke();
     });
 
     // Output vertical stems (green — matches outgoing link color)
     outXs.forEach(function(ox){
-      ctx.strokeStyle='rgba(29,158,117,0.35)'; ctx.lineWidth=1.5;
+      ctx.strokeStyle='rgba(40,125,120,0.35)'; ctx.lineWidth=1.5;
       ctx.setLineDash([4,3]);
-      ctx.beginPath(); ctx.moveTo(ox, g.fabY+22); ctx.lineTo(ox, xbY+xbH); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ox, g.fabY+48); ctx.lineTo(ox, xbY+xbH); ctx.stroke();
       ctx.setLineDash([]);
     });
 
@@ -755,62 +698,73 @@ function drawRouter(g){
     rowYs.forEach(function(ry){
       outXs.forEach(function(ox){
         ctx.beginPath(); ctx.arc(ox, ry, 3, 0, Math.PI*2);
-        ctx.fillStyle='rgba(29,158,117,0.4)'; ctx.fill();
+        ctx.fillStyle='rgba(40,125,120,0.4)'; ctx.fill();
       });
     });
 
     // Labels at fabric top — "In N" gray, "Out N" green, spaced apart
     g.ports.forEach(function(p, i){
-      ctx.fillStyle='#b0b8c1'; ctx.font='600 7px system-ui'; ctx.textAlign='center';
-      ctx.fillText('In '+i, inXs[i], g.fabY+18);
-      ctx.fillStyle='rgba(29,158,117,0.7)'; ctx.font='600 7px system-ui';
-      ctx.fillText('Out '+i, outXs[i], g.fabY+18);
+      ctx.fillStyle='#8a9eb1'; ctx.font='600 10px system-ui'; ctx.textAlign='center';
+      ctx.fillText('In '+i, inXs[i], g.fabY+40);
+      ctx.fillStyle='rgba(40,125,120,0.7)'; ctx.font='600 10px system-ui';
+      ctx.fillText('Out '+i, outXs[i], g.fabY+40);
     });
 
+    // Dashed examples show simultaneous capability, not extra live packets.
+    if(!activePath){
+      var exampleOutputs = [2, 0, 1];
+      var exampleColors = ['#4d88bd', '#9c6715', '#7e62ab'];
+      exampleOutputs.forEach(function(output, input){
+        ctx.save();
+        ctx.strokeStyle = exampleColors[input];
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.moveTo(inXs[input], g.fabY+48);
+        ctx.lineTo(inXs[input], rowYs[input]);
+        ctx.lineTo(outXs[output], rowYs[input]);
+        ctx.lineTo(outXs[output], g.fabY+48);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = exampleColors[input];
+        ctx.beginPath();
+        ctx.arc(outXs[output], rowYs[input], 5, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+
     // Annotation bottom-right
-    ctx.fillStyle='rgba(29,158,117,0.45)'; ctx.font='500 7px system-ui'; ctx.textAlign='right';
+    ctx.fillStyle='#216c60'; ctx.font='500 11px system-ui'; ctx.textAlign='right';
     ctx.fillText('parallel paths — no contention', g.fabX+g.fabW-12, g.fabY+g.fabH-8);
 
     // Active path
-    if(activePath){
-      var ap = activePath;
-      var ix  = inXs[ap.inPort];
-      var ry  = rowYs[ap.inPort];
-      var ox  = outXs[ap.outPort];
 
-      // Input path — gray
-      ctx.strokeStyle='rgba(100,130,160,0.9)'; ctx.lineWidth=3;
-      ctx.beginPath(); ctx.moveTo(ix, g.fabY+22); ctx.lineTo(ix, ry); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(ix, ry); ctx.lineTo(ox, ry); ctx.stroke();
+  }
 
-      // Output path — green
-      ctx.strokeStyle='rgba(29,158,117,0.9)'; ctx.lineWidth=3;
-      ctx.beginPath(); ctx.moveTo(ox, ry); ctx.lineTo(ox, g.fabY+22); ctx.stroke();
-
-      // Crosspoint lit
-      ctx.beginPath(); ctx.arc(ox, ry, 6, 0, Math.PI*2);
-      ctx.fillStyle='#1D9E75'; ctx.fill();
-      ctx.strokeStyle='#0F6E56'; ctx.lineWidth=1.5;
-      ctx.beginPath(); ctx.arc(ox, ry, 6, 0, Math.PI*2); ctx.stroke();
-
-      // Moving dot
-      var path4 = [
-        {x:ix, y:g.fabY+22}, {x:ix, y:ry},
-        {x:ox, y:ry},         {x:ox, y:g.fabY+22}
-      ];
-      var seg4  = Math.min(Math.floor(ap.progress*3), 2);
-      var frac4 = (ap.progress*3) - seg4;
-      var adx   = path4[seg4].x + (path4[seg4+1].x - path4[seg4].x)*frac4;
-      var ady   = path4[seg4].y + (path4[seg4+1].y - path4[seg4].y)*frac4;
-      var dotCol= seg4 < 2 ? '#7090A0' : '#1D9E75';
-      ctx.beginPath(); ctx.arc(adx, ady, 5, 0, Math.PI*2);
-      ctx.fillStyle=dotCol; ctx.fill();
+  if(activePath){
+    if(Date.now() >= activePath.end){
+      activePath = null;
+    } else {
+      var route = fabricRoute(g, fabric, activePath.inPort, activePath.outPort);
+      ctx.save();
+      ctx.strokeStyle = activePath.col;
+      ctx.globalAlpha = 0.55;
+      ctx.lineWidth = 3;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      route.forEach(function(point, index){
+        if(index===0) ctx.moveTo(point.x, point.y);
+        else ctx.lineTo(point.x, point.y);
+      });
+      ctx.stroke();
+      ctx.restore();
     }
   }
 
   // Fabric label — top left inside box
-  ctx.fillStyle=fc.tx;ctx.font='700 10px system-ui';ctx.textAlign='left';
-  ctx.fillText('Switching Fabric', g.fabX+10, g.fabY+14);
+  ctx.fillStyle=fc.tx;ctx.font='700 13px system-ui';ctx.textAlign='left';
+  ctx.fillText('Switching Fabric', g.fabX+16, g.fabY+22);
 
   // ── Ports and wires ──
   for(var i=0;i<NUM_PORTS;i++){
@@ -819,58 +773,102 @@ function drawRouter(g){
     var qPct = q.length/MAX_QUEUE;
 
     // Incoming wire: top of canvas → top of port (solid, labeled "link")
-    var inWX = p.wireX - 10; // offset left slightly so in/out don't overlap
-    var outWX = p.wireX + 10;
+    var inWX = p.wireX - 24; // offset left slightly so in/out don't overlap
+    var outWX = p.wireX + 24;
 
-    ctx.strokeStyle='#b0b8c1';ctx.lineWidth=1.5;
+    ctx.strokeStyle='#8a9eb1';ctx.lineWidth=1.5;
     ctx.setLineDash([5,4]);
     ctx.beginPath();ctx.moveTo(inWX,0);ctx.lineTo(inWX,p.topY);ctx.stroke();
     ctx.setLineDash([]);
 
     // Outgoing wire: bottom of port → exits upward (dashed, offset right)
-    var outFill = qPct>=1?'#FCEBEB':qPct>0.6?'#FFF3CD':'#E1F5EE';
-    var outBdr  = qPct>=1?'#A32D2D':qPct>0.6?'#BA7517':'#1D9E75';
+    var outFill = qPct>=1?'#fff3f6':qPct>0.6?'#fff7e8':'#edf7f4';
+    var outBdr  = qPct>=1?'#ae3150':qPct>0.6?'#9c6715':'#287d78';
     ctx.strokeStyle=outBdr;ctx.lineWidth=1.5;
     ctx.setLineDash([5,4]);
     ctx.beginPath();ctx.moveTo(outWX,0);ctx.lineTo(outWX,p.topY);ctx.stroke();
     ctx.setLineDash([]);
 
     // Downward arrow tip on incoming wire
-    arrow(inWX, p.topY-14, inWX, p.topY+1, '#b0b8c1');
+    arrow(inWX, p.topY-14, inWX, p.topY+1, '#8a9eb1');
 
     // Upward arrow on outgoing wire (at top of canvas)
     arrow(outWX, 18, outWX, 3, outBdr);
 
     // Tiny "in"/"out" labels above canvas top
-    ctx.fillStyle='#888780';ctx.font='500 8px system-ui';ctx.textAlign='center';
-    ctx.fillText('in', inWX, 10);
-    ctx.fillStyle=qPct>=1?'#A32D2D':qPct>0.6?'#BA7517':'#1D9E75';
-    ctx.fillText('out', outWX, 10);
+    ctx.fillStyle='#61758a';ctx.font='500 11px system-ui';ctx.textAlign='center';
+    ctx.fillText('in', inWX-12, 20);
+    ctx.fillStyle=qPct>=1?'#ae3150':qPct>0.6?'#9c6715':'#287d78';
+    ctx.fillText('out', outWX+16, 20);
 
     // Vertical stem from port bottom into fabric
-    ctx.strokeStyle='#c0beb6';ctx.lineWidth=1;
+    ctx.strokeStyle='#b6c8d6';ctx.lineWidth=1;
     ctx.beginPath();ctx.moveTo(p.cx,p.botY);ctx.lineTo(p.cx,g.fabY);ctx.stroke();
 
     // Port box — straddles router top edge
-    var portFill = '#E6F1FB';
-    var portBdr  = '#185FA5';
+    var portFill = '#f4f8fb';
+    var portBdr  = '#4d88bd';
     // Tint port if it's the active lookup input
     if(lkp.active && i===lkp.inPort){
-      portFill='#DBEAFE'; portBdr='#185FA5';
+      portFill='#eaf3fa'; portBdr='#4d88bd';
     }
-    rrect(p.x, p.y, p.w, p.h, 6, portFill, portBdr, 1.5);
+    rrect(p.x, p.y, p.w, p.h, 10, portFill, portBdr, 1);
 
     // Port label
-    ctx.fillStyle='#0C447C';ctx.font='700 9px system-ui';ctx.textAlign='center';
+    ctx.fillStyle='#284d73';ctx.font='700 13px system-ui';ctx.textAlign='center';
     ctx.fillText('Port '+i, p.cx, p.midY-4);
 
     // Queue depth badge — combines input + output
     var inDepth  = inQueues[i] ? inQueues[i].length  : 0;
     var outDepth = queues[i]   ? queues[i].length    : 0;
-    var badgeCol = outDepth>=MAX_QUEUE?'#A32D2D':outDepth>3?'#BA7517':'#1D9E75';
-    ctx.fillStyle=badgeCol;ctx.font='600 7px system-ui';
+    var badgeCol = outDepth>=MAX_QUEUE?'#ae3150':outDepth>3?'#9c6715':'#287d78';
+    ctx.fillStyle=badgeCol;ctx.font='600 10px system-ui';
     ctx.fillText('in:'+inDepth+'  out:'+outDepth, p.cx, p.midY+8);
   }
+}
+
+// Orthogonal routes share the same geometry as the drawn switching fabrics.
+function fabricRoute(g, architecture, inPort, outPort){
+  var input = g.ports[inPort], output = g.ports[outPort];
+  if(architecture==='mem'){
+    var busY = g.fabY + g.fabH*0.35;
+    var memoryX = g.fabX + g.fabW/2;
+    var memoryY = busY + 22 + 25;
+    return [
+      {x:input.cx, y:input.midY}, {x:input.cx, y:busY},
+      {x:memoryX, y:busY}, {x:memoryX, y:memoryY},
+      {x:memoryX, y:busY}, {x:output.cx, y:busY},
+      {x:output.cx, y:output.midY}
+    ];
+  }
+  var inputX = input.cx-24, outputX = output.cx+24;
+  var transferY = architecture==='bus'
+    ? g.fabY + g.fabH*0.65
+    : g.fabY + 52 + (inPort+0.5)*((g.fabH-64)/NUM_PORTS);
+  return [
+    {x:inputX, y:input.midY}, {x:inputX, y:transferY},
+    {x:outputX, y:transferY}, {x:outputX, y:output.midY}
+  ];
+}
+
+function pointOnRoute(route, progress){
+  var lengths = [], total = 0;
+  for(var i=1;i<route.length;i++){
+    var length = Math.hypot(route[i].x-route[i-1].x, route[i].y-route[i-1].y);
+    lengths.push(length);
+    total += length;
+  }
+  var distance = Math.max(0, Math.min(1, progress))*total;
+  for(var i=0;i<lengths.length;i++){
+    if(lengths[i]===0) continue;
+    if(distance<=lengths[i]){
+      var fraction = distance/lengths[i];
+      return {x:route[i].x+(route[i+1].x-route[i].x)*fraction,
+              y:route[i].y+(route[i+1].y-route[i].y)*fraction};
+    }
+    distance -= lengths[i];
+  }
+  return route[route.length-1];
 }
 
 function drawAnimPkts(g){
@@ -882,6 +880,11 @@ function drawAnimPkts(g){
     var e = t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
     var x = p.x0 + (p.x1-p.x0)*e;
     var y = p.y0 + (p.y1-p.y0)*e;
+    if(p.fabricTransfer){
+      var position = pointOnRoute(fabricRoute(g, fabric, p.inPort, p.outPort), t);
+      x = position.x;
+      y = position.y;
+    }
     var alpha = p.exit ? (1-t) : 1;
     var c = PKT_COLORS[p.pri];
     ctx.save();
@@ -1223,35 +1226,14 @@ function forwardPacket(destLabel, pri, inPort, outPort, noAnim){
   var pktCol = PKT_COLORS[pri].bd;
 
   if(!noAnim){
-    // Set active path for fabric animation
-    activePath = {inPort:inPort, outPort:outPort, progress:0, col:pktCol};
     var startTime = Date.now();
-    var pathTimer = setInterval(function(){
-      var elapsed = Date.now() - startTime;
-      var t = Math.min(elapsed / dur, 1);
-      activePath.progress = t;
-      if(t >= 1){ clearInterval(pathTimer); activePath = null; }
-    }, 16);
-
-    // Phase 2: port pill → fabric center on canvas
+    activePath = {inPort:inPort, outPort:outPort, col:pktCol, end:startTime+dur};
     animPkts.push({
-      x0:p0.cx, y0:p0.midY,
-      x1:g.fabX+g.fabW/2, y1:g.fabY+g.fabH/2,
-      start:Date.now(), end:Date.now()+dur/2,
+      fabricTransfer:true, inPort:inPort, outPort:outPort,
+      start:startTime, end:startTime+dur,
       pri:pri, label:alias
     });
     requestAnimationFrame(draw);
-    // Phase 3: fabric center → dest port
-    setTimeout(function(){
-      var g2=geom(), p2=g2.ports[outPort];
-      animPkts.push({
-        x0:g2.fabX+g2.fabW/2, y0:g2.fabY+g2.fabH/2,
-        x1:p2.cx, y1:p2.midY,
-        start:Date.now(), end:Date.now()+dur/2,
-        pri:pri, label:'→P'+outPort
-      });
-      requestAnimationFrame(draw);
-    }, dur/2);
   }
 
   setTimeout(function(){
@@ -1273,7 +1255,6 @@ function renderInQueues(){
     var row=document.createElement('div');row.className='queue-row';
     var lbl=document.createElement('div');lbl.className='queue-label';lbl.textContent=i;
     var lane=document.createElement('div');lane.className='queue-lane';
-    lane.style.height='30px';
     if(q.length===0){
       var em=document.createElement('span');em.className='queue-empty';em.textContent='empty';
       lane.appendChild(em);
@@ -1446,7 +1427,6 @@ function renderQueues(){
     var row=document.createElement('div');row.className='queue-row';
     var lbl=document.createElement('div');lbl.className='queue-label';lbl.textContent=i;
     var lane=document.createElement('div');lane.className='queue-lane';
-    lane.style.minHeight='28px';
     if(q.length===0){
       var em=document.createElement('span');em.className='queue-empty';em.textContent='empty';
       lane.appendChild(em);
@@ -1544,7 +1524,7 @@ function injectPacket(destIdx, pri, inPort, noAnim){
   if(!noAnim){
     var g=geom(), p0=g.ports[inPort];
     animPkts.push({
-      x0:p0.wireX-10, y0:-20,
+      x0:p0.wireX-24, y0:-20,
       x1:p0.cx, y1:p0.midY,
       start:Date.now(), end:Date.now()+350,
       pri:pri, label:dest.alias
@@ -1618,8 +1598,8 @@ function drainTick(){
     (function(port, p){
       var g=geom(), po=g.ports[port];
       animPkts.push({
-        x0:po.wireX+10, y0:po.midY,
-        x1:po.wireX+10, y1:-30,
+        x0:po.wireX+24, y0:po.midY,
+        x1:po.wireX+24, y1:-30,
         start:Date.now(), end:Date.now()+450,
         pri:p.pri, label:p.dest.split('.').slice(-2).join('.'),
         exit:true
@@ -1833,4 +1813,5 @@ window.addEventListener('load', function(){
 });
 setTimeout(resizeCv, 50);
 </script>
+</body>
 </html>
