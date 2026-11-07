@@ -21,6 +21,11 @@ header{padding:12px 20px}h1{font-size:25px}main{padding:12px 18px;max-width:1600
 .transport-step{min-width:0}.transport-step+.transport-step{border-left:1px solid var(--line);padding-left:14px}
 .transport-step h2{display:flex;align-items:center;gap:7px;margin:0 0 8px;font-size:13px}
 .transport-step h2 span{display:grid;place-items:center;width:23px;height:23px;border-radius:50%;background:var(--pale);color:var(--navy)}
+.transit-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.transit-heading h2{margin:0}
+.transit-bulk-actions{display:flex;gap:6px}
+.transit-bulk-actions button{font-size:11px;padding:5px 9px;white-space:nowrap}
+.transit-bulk-actions button[id^="reject"]{color:#ad3547}
 .transport-step label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px}
 .transport-step select{margin-bottom:8px}.transport-step .hint{margin:0 0 8px;font-size:11px}
 #B-send-actions{margin-top:7px}
@@ -216,6 +221,9 @@ body>header>.header-reset{align-self:flex-end;margin-left:auto}
 .layered-host .host-heading .host-identity,.layered-host .host-icon{color:var(--stream-color)}
 
 body{background:#fff}
+#duplex .duplex-on,#duplex .duplex-off{color:var(--muted);font-weight:400;padding:2px 4px;border-radius:4px}
+#duplex[aria-pressed=true] .duplex-on,#duplex[aria-pressed=false] .duplex-off{color:var(--navy);background:#dce9f5;font-weight:750}
+#duplex .duplex-divider{color:var(--muted);font-weight:400}
 
 /* The receive queue bridges TCP delivery and application reads. */
 .buffer-bridge-row{display:flex;justify-content:space-between;gap:12px;padding:0 18px}

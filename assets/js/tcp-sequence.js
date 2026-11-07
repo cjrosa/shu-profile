@@ -73,7 +73,7 @@
   for(const id of ['A','B']){
    const h=s.hosts[id],sender=E.enabled(s,id),receiver=id==='B'||s.c.duplex;
    $(id+'-state').textContent=h.state;$(id+'-app-send').hidden=$(id+'-sender').hidden=!sender;$(id+'-app-read').hidden=$(id+'-receiver').hidden=!receiver;
-   $(id+'-submitted').textContent=live?`${h.submitted} of ${h.size} bytes submitted`: '';
+   $(id+'-submitted').textContent=live?`${h.submitted} bytes submitted`: '';
    $(id+'-readings').textContent=live?`${h.consumed} bytes read`:'';
    $(id+'-send-bridge').hidden=!sender;
    const sendBytes=live?Math.max(0,h.submitted-(h.una-h.start)):0;
@@ -90,7 +90,7 @@
    $(id+'-rto').setAttribute('class',(resending||fast)?'rto-resending':'');
    $(id+'-tick').disabled=!live||!['A','B'].some(key=>s.hosts[key].deadline!==null);
    windowView(id,'send',ev);windowView(id,'receive',ev);
-   $(id+'-submit').disabled=!live||!sender||h.submitted===h.size;$(id+'-send').disabled=!E.canSend(s,id);$(id+'-read').disabled=!live||!E.readable(h);$(id+'-retransmit').disabled=!live||!E.outstanding(s,id).length;$(id+'-flush').disabled=!live||!h.delayed;$(id+'-send-ack').disabled=!live;$(id+'-flush').hidden=s.c.ackMode!=='delayed';
+   $(id+'-submit').disabled=!live||!sender;$(id+'-send').disabled=!E.canSend(s,id);$(id+'-read').disabled=!live||!E.readable(h);$(id+'-retransmit').disabled=!live||!E.outstanding(s,id).length;$(id+'-flush').disabled=!live||!h.delayed;$(id+'-send-ack').disabled=!live;$(id+'-flush').hidden=s.c.ackMode!=='delayed';
    $(id+'-transfer').textContent='';
    for(const kind of ['send','recv']){
     const flow=$(id+'-'+kind+'-flow');
@@ -101,12 +101,13 @@
     }
    }
   }
-  $('duplex').textContent='Full Duplex: '+(s.c.duplex?'ON':'OFF');$('duplex').setAttribute('aria-pressed',String(s.c.duplex));$('duplex').disabled=s.phase!==0;
+  $('duplex').innerHTML='Show full duplex: <span class="duplex-on">ON</span><span class="duplex-divider" aria-hidden="true"> | </span><span class="duplex-off">OFF</span>';
+  $('duplex').setAttribute('aria-label','Show full duplex: '+(s.c.duplex?'ON':'OFF'));$('duplex').setAttribute('aria-pressed',String(s.c.duplex));$('duplex').disabled=s.phase!==0;
   $('B-send-actions').hidden=!s.c.duplex;
   $('B-app-settings-button').hidden=!s.c.duplex;
   for(const key of ['sizeB','mssB'])$('field-'+key).hidden=!s.c.duplex;
   if(!s.c.duplex)$('B-app-settings').hidePopover?.();
-  $('mode-note').textContent=s.phase!==0?'Reset to change mode.':s.c.duplex?'Both hosts can send and receive data.':'Enable both hosts to send data.';
+  $('mode-note').textContent='TCP is always full duplex. '+(s.phase!==0?'Reset to change the view.':s.c.duplex?'Showing data in both directions.':'Showing data in one direction.');
   for(const [k] of fields)$('cfg-'+k).disabled=s.phase!==0||(!s.c.duplex&&['sizeB','mssB'].includes(k));$('ack-mode').disabled=s.phase!==0;
   const complete=live&&['A',...(s.c.duplex?['B']:[])].every(id=>s.hosts[id].una===s.hosts[id].start+s.hosts[id].size);
   $('status').textContent=!live?(s.phase?'Handshake in progress':'Disconnected'):complete?'All data acknowledged':!['A','B'].some(id=>E.canSend(s,id))&&['A','B'].some(id=>E.readable(s.hosts[id]))?'Buffered data awaits application reads':'Connection established';
@@ -125,13 +126,20 @@
    list.forEach((p,i)=>{const suffix=i?'-'+p.id:'';$(deliverId+suffix).onclick=()=>act(()=>E.deliver(s,p.id));$(dropId+suffix).onclick=()=>act(()=>E.drop(s,p.id));});
   }
   cards('data-cards',data,false);cards('ack-cards',acks,true);
+  for(const [kind,list] of [['data',data],['acks',acks]]){
+   for(const [action,operation] of [['deliver',E.deliver],['reject',E.drop]]){
+    const button=$(action+'-all-'+kind);
+    button.disabled=!list.length;
+    button.onclick=()=>{const ids=list.map(p=>p.id);act(()=>ids.forEach(id=>operation(s,id)));};
+   }
+  }
   if(!selected){$('packets').scrollTop=$('packets').scrollHeight;const log=$('log').closest('.log-scroll');log.scrollTop=log.scrollHeight;}
   lastAnimated=s.events.length;
   updateIntercept();
  }
  document.addEventListener('click',e=>{const b=e.target.closest('[data-event], [data-packet]');if(!b)return;const ev=b.dataset.event?s.events.find(x=>x.id===Number(b.dataset.event)):[...s.events].reverse().find(x=>x.packetId===Number(b.dataset.packet));if(ev){stop();selected=ev.id;render();}});
  for(const id of ['A','B']){
-  $(id+'-submit').onclick=()=>act(()=>E.submit(s,id));$(id+'-send').onclick=()=>act(()=>E.send(s,id));$(id+'-read').onclick=()=>{try{E.read(s,id,Number($(id+'-read-size').value));$('error').textContent='';selected=null;render();}catch(e){$('error').textContent=e.message;}};
+  $(id+'-submit').onclick=()=>act(()=>E.submit(s,id,s.c[id==='A'?'size':'sizeB']));$(id+'-send').onclick=()=>act(()=>E.send(s,id));$(id+'-read').onclick=()=>{try{E.read(s,id,Number($(id+'-read-size').value));$('error').textContent='';selected=null;render();}catch(e){$('error').textContent=e.message;}};
   $(id+'-send-ack').onclick=()=>act(()=>E.repeatAck(s,id));
   $(id+'-tick').onclick=()=>act(()=>E.advanceTime(s));
   $(id+'-retransmit').onclick=()=>act(()=>E.retransmit(s,id));$(id+'-flush').onclick=()=>act(()=>E.flush(s,id));

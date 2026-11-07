@@ -2,6 +2,25 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const E=require('../assets/js/tcp-sequence-engine.js');
 function connected(c){const s=E.create({ackMode:"immediate",mss:4,mssB:6,...c});while(!E.established(s))E.handshake(s);return s;}
 const queued=(s,from)=>s.packets.filter(p=>p.kind==='ack'&&p.status==='queued'&&(!from||p.from===from));
+test('repeated messages continue sequence numbers on both established streams',()=>{
+ const s=connected({duplex:true,size:4,sizeB:3});
+ for(let round=1;round<=3;round++)for(const id of ['A','B']){
+  const h=s.hosts[id],peer=s.hosts[E.other(id)],previous=h.nxt;
+  E.submit(s,id);
+  const p=E.send(s,id);assert.equal(p.seq,previous);
+  E.deliver(s,p.id);allAcks(s);
+  assert.equal(h.una,h.start+round*(id==='A'?4:3));
+  assert.equal(peer.rcv,h.una);
+  E.read(s,E.other(id),256);
+ }
+ assert.equal(s.phase,3);
+});
+test('additional submissions queue behind the existing window without resetting outstanding bytes',()=>{
+ const s=connected({size:8,windowSize:4});E.submit(s);const p=E.send(s);
+ E.submit(s);assert.equal(s.hosts.A.submitted,16);assert.equal(s.hosts.A.size,16);
+ assert.equal(E.canSend(s),false);assert.equal(s.hosts.A.una,42);
+ E.deliver(s,p.id);allAcks(s);assert.equal(E.send(s).seq,46);
+});
 function data(s,id='A'){return E.send(s,id);}
 function transfer(s,id='A'){const p=data(s,id);E.deliver(s,p.id);return p;}
 function allAcks(s){for(const p of queued(s))E.deliver(s,p.id);}

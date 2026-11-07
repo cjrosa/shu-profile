@@ -36,8 +36,10 @@
  }
  function setMode(s,value){if(s.phase!==0||s.events.length)throw Error('Reset the simulation before changing Full Duplex mode.');s.c.duplex=Boolean(value);}
  function submit(s,id='A',count){
-  const h=s.hosts[id];if(!established(s)||!enabled(s,id))return;const n=count??h.size-h.submitted;integer(n,1,256,'Submit size');const len=Math.min(n,h.size-h.submitted);if(!len)return;
-  const first=h.start+h.submitted;h.submitted+=len;
+  const h=s.hosts[id];if(!established(s)||!enabled(s,id))return;
+  const len=count??(h.size-h.submitted||s.c[id==='A'?'size':'sizeB']);
+  integer(len,1,256,'Submit size');
+  const first=h.start+h.submitted;h.submitted+=len;h.size=Math.max(h.size,h.submitted);
   event(s,'submit',id,`Host ${id}'s application submits ${len} bytes to its TCP send buffer, assigned stream positions ${first}–${first+len-1}. These bytes have not crossed the network. SND.NXT remains ${h.nxt}; TCP will advance it only when it transmits new data.`,null,[first,first+len],id);
  }
  function acknowledgment(h){return {ack:h.rcv,version:++h.version};}
