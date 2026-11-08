@@ -165,6 +165,18 @@ body {
 .tt[data-tip]:hover::after { background: #253954; font-size: 11px; border-radius: 7px; }
 .tt[data-tip]:hover::before { border-bottom-color: #253954; }
 
+/* Compact sidebar cards, consistent with the routing algorithm visualizer. */
+#side-col { gap: 12px; }
+#side-col .card-hdr { padding: 7px 12px; }
+#side-col .card-title { font-size: 12px; }
+#side-col .sec-hdr, #side-col .sec-hdr-row { padding: 5px 12px; }
+#side-col .kv-grid { padding: 5px 12px 7px; }
+#side-col .kv-key, #side-col .kv-val { padding: 2px 0; }
+#side-col #ftable th, #side-col #ftable td { padding: 5px 7px; }
+#side-col .stats-grid { padding: 8px 12px; gap: 8px; }
+#side-col .stat-cell { padding: 7px 8px; gap: 2px; }
+#side-col .stat-value { font-size: 20px; }
+
 @media (max-width: 1400px) {
   #canvas-col > .queue-panels { grid-template-columns: 1fr; }
 }

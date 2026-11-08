@@ -247,6 +247,7 @@ label { font-size:11px; color:var(--text2); display:block; margin-bottom:2px; }
   .nex-arrow-label { font-size:11px; color:var(--text2); text-align:center; max-width:320px; line-height:1.5; padding:6px 10px; background:var(--bg3); border-radius:6px; border:0.5px solid var(--border); }
   .nex-insight { background:var(--amber-l); border:0.5px solid var(--amber-m); border-radius:8px; padding:10px 14px; font-size:12px; color:var(--amber); line-height:1.6; }
 </style>
+<link rel="stylesheet" href="../assets/css/pages/subnet-topology-builder.css">
 </head>
 <body>
 
@@ -263,15 +264,7 @@ label { font-size:11px; color:var(--text2); display:block; margin-bottom:2px; }
     </div>
     <span class="ht">Subnet Topology Builder</span>
   </div>
-  <div class="hr">
-    Developed by Professor Chris Rosa &mdash; CS339 Networks, Sacred Heart University
-    <a href="/cdn-cgi/l/email-protection#2f5d405c4e4c181a1f19196f5c4e4c5d4a4b474a4e5d5b014a4b5a" class="hla brd" title="Email">
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="14" height="10" rx="2"/><path d="M1 5l7 5 7-5"/></svg>
-    </a>
-    <a href="https://linkedin.com/in/chris-rosa-3192326" target="_blank" class="hla fil">
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="white"><path d="M2.5 1A1.5 1.5 0 1 0 2.5 4 1.5 1.5 0 0 0 2.5 1zM1 5.5h3V15H1zM6 5.5h2.9v1.3h.04C9.36 5.9 10.5 5.3 12 5.3c3.1 0 3.7 2 3.7 4.7V15h-3v-4.4c0-1.1 0-2.4-1.5-2.4s-1.7 1.2-1.7 2.4V15H6z"/></svg>
-    </a>
-  </div>
+  <div class="hr">Build subnet topologies, assign IP addresses, and explore routing, NAT, and DHCP.</div>
 </header>
 
 <div class="ab">
@@ -357,7 +350,7 @@ label { font-size:11px; color:var(--text2); display:block; margin-bottom:2px; }
     <div class="tsep"></div>
     <span style="font-size:11px;color:var(--text3)">Drag nodes &nbsp;·&nbsp; Click to inspect</span>
   </div>
-  <canvas id="cv"></canvas>
+  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
 </div>
 
 <div class="rp">
@@ -2323,6 +2316,7 @@ function ctx(){return cv().getContext('2d');}
 
 function resizeCV(){
   const c=cv(),w=c.parentElement;
+  const sizeChanged=c.width!==w.clientWidth||c.height!==w.clientHeight;
   c.width=w.clientWidth; c.height=w.clientHeight;
   if(!S.positioned){
     S.positioned=true;
@@ -2334,6 +2328,12 @@ function resizeCV(){
     S.extHost.x=c.width*0.75; S.extHost.y=BAND*0.45;
     // Use autoLayout logic after canvas is sized
     setTimeout(autoLayout, 0);
+  } else if(sizeChanged){
+    S.natRouter.x=c.width/2;
+    S.natRouter.y=Math.round(c.height*0.13);
+    S.extHost.x=c.width*0.75;
+    S.extHost.y=S.natRouter.y*0.45;
+    centerPrivateTopology();
   }
   draw();
 }
@@ -2706,6 +2706,19 @@ function wrap(text,maxPx){
 }
 
 // ── Layout ────────────────────────────────────────────────────────────────────
+function centerPrivateTopology(){
+  const nodes=[...S.routers,...S.subnets,...S.hosts,...S.transits];
+  if(S.dhcpServer) nodes.push(S.dhcpServer);
+  if(!nodes.length) return;
+  // Leave room for node outlines, inspect badges, and address labels.
+  const margin=60, width=cv().width;
+  const left=Math.min(...nodes.map(n=>n.x));
+  const right=Math.max(...nodes.map(n=>n.x));
+  const center=(left+right)/2;
+  const scale=Math.min(1,Math.max(0,width-2*margin)/Math.max(1,right-left));
+  nodes.forEach(n=>{n.x=width/2+(n.x-center)*scale;});
+}
+
 function autoLayout(){
   const c=cv(),W=c.width,H=c.height;
   const n=S.routers.length; if(!n){draw();return;}
@@ -2769,6 +2782,7 @@ function autoLayout(){
     if(r){ S.dhcpServer.x=r.x-70; S.dhcpServer.y=r.y-60; }
   }
 
+  centerPrivateTopology();
   draw();
 }
 
@@ -2957,6 +2971,8 @@ cv().addEventListener('mouseleave',()=>{S.drag=null;document.getElementById('tip
 // ── Init ──────────────────────────────────────────────────────────────────────
 resizeCV();
 window.addEventListener('resize',resizeCV);
+// Keep drawing and pointer coordinates aligned when the card changes width.
+new ResizeObserver(resizeCV).observe(document.querySelector('.canvas-wrap'));
 log('Subnet Topology Builder ready','ok');
 
 // Seed example

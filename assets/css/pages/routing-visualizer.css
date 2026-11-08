@@ -48,19 +48,20 @@ select:focus-visible { outline: 3px solid var(--blue); box-shadow: none; }
 #event-log-card #btn-clear-log { min-height: 24px; padding: 3px 8px !important; font-size: 10px !important; border-radius: 5px; }
 #net-cv { flex: none !important; height: 540px; min-width: 620px; }
 #state-bar { padding: 9px 14px; font-size: 12px; color: var(--blue-t); background: var(--blue-l); border-color: var(--border); }
-#side-col { min-width: 0; gap: 16px; overflow: visible; }
+#side-col { min-width: 0; gap: 12px; overflow: visible; }
 #side-col > .ss { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 6px #25395405; }
+#side-col .st { padding: 7px 12px; font-size: 12px; }
 .st { padding: 12px 14px; font-size: 14px; font-weight: 700; letter-spacing: normal; text-transform: none; color: var(--text); border-color: var(--border); }
 .ss-body { padding: 12px 14px; }
 #algo-table th, .ft-mini th { padding: 8px 7px; font-size: 10px; }
 #algo-table td, .ft-mini td { padding: 7px; border-color: #eaf0f5; }
 .ft-mini { font-size: 11px; }
-#algo-note { padding: 9px 14px !important; font-size: 11px !important; }
-#ft-wrap { padding: 12px 14px !important; }
+#algo-note { padding: 6px 12px !important; font-size: 11px !important; }
+#ft-wrap { padding: 6px 12px !important; }
 .ft-node { margin-bottom: 12px; }
-.kv-grid { padding: 9px 14px 11px; }
-.kv-key { font-size: 11px; padding: 4px 0; }
-.kv-val { font-size: 12px; padding: 4px 0; }
+.kv-grid { padding: 5px 12px 7px; }
+.kv-key { font-size: 11px; padding: 2px 0; }
+.kv-val { font-size: 12px; padding: 2px 0; }
 .rfc { font-size: 12px; }
 #log-body { height: 180px; font-size: 11px; scrollbar-width: thin; scrollbar-color: #b6c8d6 #f4f8fb; scrollbar-gutter: stable; }
 .log-row { padding: 8px 14px; min-height: 36px; border-color: #eaf0f5; overflow-wrap: anywhere; }
