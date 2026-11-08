@@ -108,8 +108,7 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
     </div>
     <p id="titlebar-subtitle">Explore TCP connections, reliable delivery, flow control, and congestion control as data moves between hosts.</p>
   </header>
-  <div id="panels">
-    <div class="stack">
+  <div id="host-controls" role="region" aria-label="Sender and receiver controls">
       <div class="app-hdr">
         <div class="ctrl-row">
           <span class="app-name"><svg class="section-icon application-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01M7 13h6M7 16h10"/></svg>Sender</span>
@@ -128,6 +127,21 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
           <button class="btn btn-pause" id="btn-pause" style="display: none;">Pause</button>
         </div>
       </div>
+      <div class="app-hdr recv">
+        <div class="ctrl-row">
+          <span class="app-name" style="color:#085041;"><svg class="section-icon application-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01M7 13h6M7 16h10"/></svg>Receiver</span>
+          <span class="port-badge" id="r-port" style="display: inline-block; background: rgb(29, 158, 117);">:80</span>
+          <div class="vsep g"></div>
+          <span style="font-size:10px;color:#0F6E56;font-weight:500;white-space:nowrap;" id="recv-hint">drain one segment per click</span>
+          <div class="vsep g"></div>
+          <button class="btn-mode" id="btn-auto-recv" style="border-color: rgb(29, 158, 117); color: rgb(29, 158, 117); background: rgb(255, 255, 255);">Auto</button>
+          <button class="btn btn-recv" id="btn-recv" disabled="" style="display: inline-flex;">Recv</button>
+        </div>
+      </div>
+  </div>
+  <div id="panels">
+    <div class="stack">
+
       <div class="sec-hdr-row">
         <span class="lh section-heading-label"><svg class="section-icon transport-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 7h17m-4-4 4 4-4 4M21 17H4m4-4-4 4 4 4"/></svg>TCP transport</span>
         <span id="s-warn" style="font-size:9px;font-weight:600;color:#854F0B;"></span>
@@ -146,13 +160,7 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
       </div>
       <div class="buf-track"><div class="buf-bar" id="s-buf-bar" style="width: 0%; background: rgb(24, 95, 165);"></div></div>
       <div class="buf-body" id="s-buf-body"><span class="empty-msg">empty</span></div>
-      <div class="sec-hdr section-heading-label" style="border-top:1px solid #e8e7e2;"><svg class="section-icon transport-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h3"/></svg>Session</div>
-      <div class="stats-grid">
-        <div class="stat-cell"><div class="stat-label">src port</div><div class="stat-value" id="i-port">62682</div></div>
-        <div class="stat-cell"><div class="stat-label">retransmits</div><div class="stat-value" id="i-retx" style="color:#A32D2D;">0</div></div>
-        <div class="stat-cell"><div class="stat-label">bytes sent</div><div class="stat-value" id="i-sent">1000 B</div></div>
-        <div class="stat-cell"><div class="stat-label">loss events</div><div class="stat-value" id="i-loss" style="color:#A32D2D;">0</div></div>
-      </div>
+
       <div class="sec-hdr" id="cc-sec-hdr" style="display: none;">Congestion control — <span id="cc-mode-label" style="color:#BA7517;">Tahoe</span></div>
       <div id="cc-variant-row" style="display: none; gap: 6px; padding: 5px 12px; background: rgb(255, 255, 255); border-bottom: 1px solid rgb(232, 231, 226); align-items: center;">
         <button class="cc-mode-btn active" id="cc-tahoe">Tahoe</button>
@@ -177,17 +185,7 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
     </div>
 
     <div class="stack recv-stack">
-      <div class="app-hdr recv">
-        <div class="ctrl-row">
-          <span class="app-name" style="color:#085041;"><svg class="section-icon application-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01M7 13h6M7 16h10"/></svg>Receiver</span>
-          <span class="port-badge" id="r-port" style="display: inline-block; background: rgb(29, 158, 117);">:80</span>
-          <div class="vsep g"></div>
-          <span style="font-size:10px;color:#0F6E56;font-weight:500;white-space:nowrap;" id="recv-hint">drain one segment per click</span>
-          <div class="vsep g"></div>
-          <button class="btn-mode" id="btn-auto-recv" style="border-color: rgb(29, 158, 117); color: rgb(29, 158, 117); background: rgb(255, 255, 255);">Auto</button>
-          <button class="btn btn-recv" id="btn-recv" disabled="" style="display: inline-flex;">Recv</button>
-        </div>
-      </div>
+
       <div class="sec-hdr section-heading-label"><svg class="section-icon transport-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 7h17m-4-4 4 4-4 4M21 17H4m4-4-4 4 4 4"/></svg>TCP transport</div>
       <div class="kv-grid">
         <div class="kv-key"><span class="rfc">ISN_R</span><span class="sub">initial seq#</span></div><div class="kv-val" id="t-isnr">3630</div>
@@ -203,13 +201,7 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
       </div>
       <div class="buf-track"><div class="buf-bar" id="r-buf-bar" style="width: 0%; background: rgb(29, 158, 117);"></div></div>
       <div class="buf-body" id="r-buf-body"><span class="empty-msg">empty</span></div>
-      <div class="sec-hdr section-heading-label" style="border-top:1px solid #e8e7e2;"><svg class="section-icon transport-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h3"/></svg>Session</div>
-      <div class="stats-grid">
-        <div class="stat-cell"><div class="stat-label">dst port</div><div class="stat-value" id="ri-port">80</div></div>
-        <div class="stat-cell"><div class="stat-label">ISN</div><div class="stat-value" id="ri-isn">3630</div></div>
-        <div class="stat-cell"><div class="stat-label">bytes recvd</div><div class="stat-value" id="ri-recvd">1000 B</div></div>
-        <div class="stat-cell"><div class="stat-label">rwnd</div><div class="stat-value" id="ri-rwnd">10 KB</div></div>
-      </div>
+
     </div>
   </div>
 
@@ -230,9 +222,22 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
   <div id="chart-wrap" role="tabpanel" aria-labelledby="congestion-tab" hidden>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
       <div id="chart-title">Congestion window (cwnd) over time — AIMD sawtooth</div>
-      <button class="btn-copy" id="btn-clear-chart">Clear</button>
+      <div class="cc-chart-actions"><label class="examine-toggle"><input type="checkbox" id="cc-examine-mode" role="switch"><span class="examine-switch" aria-hidden="true"></span><span>Examine mode</span></label><button class="btn-copy" id="btn-clear-chart">Clear</button></div>
     </div>
-    <canvas id="chart-cv" height="130" width="1471"></canvas>
+    <dialog id="cc-examine-dialog" aria-labelledby="cc-examine-heading cc-examine-title" aria-describedby="cc-examine-explanation">
+      <div class="cc-examine-heading">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6M6 12l3-4 3 2 2-3"/></svg>
+        <div><h2 id="cc-examine-heading">Congestion Event Inspector</h2><p class="cc-examine-status">Playback paused for examination</p></div>
+      </div>
+      <h2 id="cc-examine-title"></h2>
+      <p id="cc-examine-values"></p>
+      <p id="cc-examine-explanation"></p>
+      <label class="examine-toggle cc-dialog-toggle"><input type="checkbox" id="cc-examine-dialog-mode" role="switch"><span class="examine-switch" aria-hidden="true"></span><span>Examine mode</span></label>
+      <div class="cc-chart-actions"><button class="btn-copy" id="cc-examine-prev">Previous event</button><button class="btn-copy" id="cc-examine-next">Next event</button><button class="btn-copy" id="cc-examine-pause">Pause simulation</button><button class="btn-copy" id="cc-examine-continue">Continue simulation</button></div>
+    </dialog>
+    <div class="cc-events-scroll"><table id="cc-events"><caption>Congestion events ? select a row or a numbered graph marker</caption><thead><tr><th>Event</th><th>Time</th><th>What happened</th><th>cwnd (MSS)</th><th>ssthresh (MSS)</th></tr></thead><tbody id="cc-events-body"><tr><td colspan="5">Connect to record congestion events.</td></tr></tbody></table></div>
+    <p id="cc-event-detail" role="status">Select an event to inspect its values.</p>
+    <canvas id="chart-cv" height="320" width="1471" tabindex="0" aria-label="Congestion window graph. Use left and right arrow keys to select events."></canvas>
     <div id="chart-legend">
       <div class="leg-item"><div class="leg-dot" style="background:#534AB7;"></div><span>cwnd</span></div>
       <div class="leg-item"><div class="leg-dot" style="background:#BA7517;"></div><span>ssthresh (dashed)</span></div>
@@ -256,7 +261,7 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
         <span class="r">seq #</span><span class="r">ack #</span><span class="r">len</span><span class="r">rwnd</span>
       </div>
     </div>
-    <div id="log-body"><div class="lr log-cols syn-r"><span class="muted">0.00s</span><span class="c dir-s">→</span><span class="fl-syn">SYN</span><span class="r">62682</span><span class="c muted">→</span><span class="r">80</span><span class="r">9366</span><span class="r">—</span><span class="r">1</span><span class="r">—</span></div><div class="lr log-cols syn-r"><span class="muted">0.61s</span><span class="c dir-r">←</span><span class="fl-syn">SYN-ACK</span><span class="r">80</span><span class="c muted">→</span><span class="r">62682</span><span class="r">3630</span><span class="r">9367</span><span class="r">1</span><span class="r">10000</span></div><div class="lr log-cols ack-r"><span class="muted">1.23s</span><span class="c dir-s">→</span><span class="fl-ack">ACK</span><span class="r">62682</span><span class="c muted">→</span><span class="r">80</span><span class="r">9367</span><span class="r">3631</span><span class="r">0</span><span class="r">10000</span></div><div class="lr log-cols psh-r"><span class="muted">8.49s</span><span class="c dir-s">→</span><span class="fl-psh">PSH</span><span class="r">62682</span><span class="c muted">→</span><span class="r">80</span><span class="r">9367</span><span class="r">—</span><span class="r">1000</span><span class="r">—</span></div><div class="lr log-cols ack-r"><span class="muted">9.08s</span><span class="c dir-r">←</span><span class="fl-ack">ACK</span><span class="r">80</span><span class="c muted">→</span><span class="r">62682</span><span class="r">—</span><span class="r">10367</span><span class="r">0</span><span class="r">9000</span></div></div>
+    <div id="log-body"></div>
     </div>
   </div>
   </div>
@@ -319,7 +324,10 @@ const rto={active:false,startMs:0,timeout:BASE_RTO,seq:null,elapsed:0,pendingMan
 let dropArmed=false;
 const probe={s:'idle',el:0,iv:3000,fly:false};
 const cc={cwnd:1,ssthresh:8,phase:'slow_start',fracAcc:0,dupAcks:0,lastAck:null};
-const chartPts=[],lossMarkers=[];
+const chartPts=[],lossMarkers=[],ccEvents=[];
+let selectedCCEvent=null,nextCCEvent=1,ccEventHits=[];
+let examineMode=false;
+const examineDialog=document.getElementById("cc-examine-dialog");
 let logE=[],t0=0,pkts=[];
 
 function rnd(a,b){return a+Math.floor(Math.random()*(b-a));}
@@ -363,7 +371,85 @@ function mkPkt(dir,col,l1,l2,cb,delayMs){
     elapsed:-Math.abs(delayMs),dur:PKT_DUR,done:false,
     cb:function(){if(sim.connId===cid&&cb)cb();}};
 }
-function recordChart(){chartPts.push({t:telN(),cwnd:cc.cwnd,ssthresh:cc.ssthresh,phase:cc.phase});if(chartPts.length>1000)chartPts.splice(0,300);}
+function renderCCEvents(){
+  const body=document.getElementById('cc-events-body');body.replaceChildren();
+  if(!ccEvents.length){const row=body.insertRow();const cell=row.insertCell();cell.colSpan=5;cell.textContent='Connect to record congestion events.';}
+  ccEvents.forEach(e=>{
+    const row=body.insertRow();row.dataset.eventId=e.id;row.classList.toggle('selected',e.id===selectedCCEvent);
+    const button=document.createElement('button');button.type='button';button.textContent='#'+e.id;button.setAttribute('aria-label','Select '+e.label+' at '+e.t.toFixed(2)+' seconds');button.setAttribute('aria-pressed',String(e.id===selectedCCEvent));button.onclick=(event)=>{event.stopPropagation();selectCCEvent(e.id);};
+    row.insertCell().appendChild(button);
+    [e.t.toFixed(2)+'s',e.label,e.cwnd.toFixed(2),e.ssthresh.toFixed(2)].forEach(v=>{row.insertCell().textContent=v;});
+    row.onclick=()=>selectCCEvent(e.id);
+  });
+  const e=ccEvents.find(e=>e.id===selectedCCEvent);
+  document.getElementById('cc-event-detail').textContent=e?'#'+e.id+' ? '+e.label+' at '+e.t.toFixed(2)+'s: cwnd '+e.cwnd.toFixed(2)+' MSS, ssthresh '+e.ssthresh.toFixed(2)+' MSS.':'Select an event to inspect its values.';
+}
+function selectCCEvent(id,explain=true){
+  selectedCCEvent=id;renderCCEvents();drawChart();
+  const row=document.querySelector('#cc-events-body tr[data-event-id="'+id+'"]');
+  if(row)row.scrollIntoView({block:'nearest'});
+  if(explain)examineCCEvent(id);
+}
+function examineCCEvent(id){
+  const e=ccEvents.find(e=>e.id===id);if(!e)return;
+  document.getElementById('cc-examine-title').textContent='#'+e.id+' - '+e.label;
+  const before=e.before;
+  document.getElementById('cc-examine-values').textContent=e.t.toFixed(2)+'s | '+e.variant.toUpperCase()+' | cwnd: '+(before?before.cwnd.toFixed(2)+' -> ':'')+e.cwnd.toFixed(2)+' MSS | ssthresh: '+(before?before.ssthresh.toFixed(2)+' -> ':'')+e.ssthresh.toFixed(2)+' MSS';
+  const explanations={
+    'Window initialized':'The sender starts with a small congestion window. During slow start, acknowledgments increase the window rapidly until it reaches the slow-start threshold or detects loss.',
+    'Enter congestion avoidance':before&&before.phase==='fast_recovery'?'An acknowledgment has ended fast recovery. The window returns to the slow-start threshold, and growth becomes gradual again.':'The congestion window has reached the slow-start threshold. Growth now slows to approximately one MSS per round-trip time.',
+    'Enter slow start':'The sender has returned to slow start, growing the window rapidly as new data is acknowledged.',
+    'Fast retransmit':'Three duplicate acknowledgments indicate a likely missing segment. Reno retransmits without waiting for the timer, halves the previous window to set ssthresh (at least 2 MSS), and enters fast recovery with cwnd set to ssthresh plus 3 MSS.',
+    'Retransmission timeout':'The retransmission timer expired before the oldest outstanding data was acknowledged. The sender treats this as congestion: ssthresh becomes half the previous window (at least 2 MSS), cwnd falls to 1 MSS, and slow start begins again.',
+    'Enter fast recovery':'The sender is recovering from suspected packet loss while acknowledgments show that some data is still reaching the receiver.'
+  };
+  document.getElementById('cc-examine-explanation').textContent=explanations[e.label]||'The congestion-control state changed. These values are a snapshot from when the event occurred.';
+  const i=ccEvents.indexOf(e);
+  document.getElementById('cc-examine-prev').disabled=i===0;
+  document.getElementById('cc-examine-next').disabled=i===ccEvents.length-1;
+  document.getElementById('cc-examine-continue').textContent=sim.paused?'Close (keep paused)':'Continue simulation';
+  if(!examineDialog.open)examineDialog.showModal();
+}
+for(const id of ['cc-examine-mode','cc-examine-dialog-mode']){
+  document.getElementById(id).addEventListener('change',function(){
+    examineMode=this.checked;
+    document.getElementById('cc-examine-mode').checked=examineMode;
+    document.getElementById('cc-examine-dialog-mode').checked=examineMode;
+  });
+}
+for(const [id,step] of [['cc-examine-prev',-1],['cc-examine-next',1]]){
+  document.getElementById(id).addEventListener('click',()=>{
+    const i=ccEvents.findIndex(e=>e.id===selectedCCEvent),e=ccEvents[i+step];if(e)selectCCEvent(e.id);
+  });
+}
+document.getElementById('cc-examine-pause').addEventListener('click',()=>{
+  sim.paused=true;prev=null;examineDialog.close();upd();
+});
+document.getElementById('cc-examine-continue').addEventListener('click',()=>examineDialog.close());
+examineDialog.addEventListener('close',()=>{prev=null;});
+function recordChart(label){
+  const previous=chartPts[chartPts.length-1];
+  const point={t:telN(),cwnd:cc.cwnd,ssthresh:cc.ssthresh,phase:cc.phase};
+  chartPts.push(point);
+  if(!label&&!previous)label='Window initialized';
+  if(!label&&previous.phase!==cc.phase)label=cc.phase==='cong_avoid'?'Enter congestion avoidance':cc.phase==='slow_start'?'Enter slow start':'Enter fast recovery';
+  if(label)ccEvents.push({...point,id:nextCCEvent++,label,variant:ccVariant,before:previous?{...previous}:null});
+  if(chartPts.length>1000){chartPts.splice(0,300);while(ccEvents.length&&ccEvents[0].t<chartPts[0].t)ccEvents.shift();}
+  if(selectedCCEvent!==null&&!ccEvents.some(e=>e.id===selectedCCEvent))selectedCCEvent=null;
+  if(label||chartPts.length===701)renderCCEvents();
+  if(label&&examineMode)selectCCEvent(ccEvents[ccEvents.length-1].id);
+}
+chartCv.addEventListener('click',function(e){
+  const r=chartCv.getBoundingClientRect(),x=(e.clientX-r.left)*chartCv.width/r.width,y=(e.clientY-r.top)*chartCv.height/r.height;
+  const hit=ccEventHits.slice().reverse().find(h=>Math.hypot(h.x-x,h.y-y)<=18);
+  if(hit)selectCCEvent(hit.id);
+});
+chartCv.addEventListener('keydown',function(e){
+  if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key)||!ccEvents.length)return;
+  e.preventDefault();let i=ccEvents.findIndex(v=>v.id===selectedCCEvent);
+  i=e.key==='Home'?0:e.key==='End'?ccEvents.length-1:Math.max(0,Math.min(ccEvents.length-1,i+(e.key==='ArrowRight'?1:-1)));
+  selectCCEvent(ccEvents[i].id);
+});
 
 // ── CC ────────────────────────────────────────────────────────────────────────
 function onAckCC(ackNum){
@@ -378,25 +464,25 @@ function triggerFastRetx(){
   cancelRTO();  // stop RTO immediately — FR takes over loss recovery
   lossEvents++;lossMarkers.push({t:telN(),type:'fast_retx'});
   cc.ssthresh=Math.max(Math.floor(cc.cwnd/2),2);cc.cwnd=cc.ssthresh;cc.phase='fast_recovery';cc.fracAcc=0;cc.dupAcks=0;
-  retxCount++;recordChart();
+  retxCount++;recordChart('Fast retransmit');
   if(!snd.unacked.length)return;
   const seg=snd.unacked[0];snd.inflight=seg.len;
-  addLog('→','PSH [fast-retx]',seg.seq,null,seg.len,null);
-  pkts.push(mkPkt('toR',{bg:'#FAECE7',bd:'#993C1D',tx:'#712B13'},'PSH [fast-retx] seq='+seg.seq,'len='+seg.len,function(){
+  addLog('→','PSH+ACK [fast-retx]',seg.seq,dataAck(),seg.len,null);
+  pkts.push(mkPkt('toR',{bg:'#FAECE7',bd:'#993C1D',tx:'#712B13'},'PSH+ACK [fast-retx] seq='+seg.seq,'ack='+dataAck()+' len='+seg.len,function(){
     if(seg.seq===rcv.exp){rcv.buf.push({seq:seg.seq,len:seg.len,id:seg.id,pi:seg.pi});rcv.held+=seg.len;rcv.exp+=seg.len;scheduleAutoRecv();}
     if(mode==='sim')simEmitRetxAck();else emitAck();
   }));upd();
 }
 function onTimeoutCC(){
   lossEvents++;lossMarkers.push({t:telN(),type:'timeout'});
-  cc.ssthresh=Math.max(Math.floor(cc.cwnd/2),2);cc.cwnd=1;cc.phase='slow_start';cc.fracAcc=0;cc.dupAcks=0;recordChart();
+  cc.ssthresh=Math.max(Math.floor(cc.cwnd/2),2);cc.cwnd=1;cc.phase='slow_start';cc.fracAcc=0;cc.dupAcks=0;recordChart('Retransmission timeout');
 }
 
 // ── Sim retransmit ACK — resyncs snd.nxt to receiver's position ──────────────
 function simEmitRetxAck(){
   const an=rcv.exp,rw=Math.max(0,BUF_CAP-rcv.held);
-  addLog('←','ACK [retx]',null,an,0,rw);
-  pkts.push(mkPkt('toL',{bg:'#FCEBEB',bd:'#A32D2D',tx:'#791F1F'},'ACK [retx] ack='+an,'rwnd='+rw,function(){
+  addLog('←','ACK [retx]',ISN_R+1,an,0,rw);
+  pkts.push(mkPkt('toL',{bg:'#FCEBEB',bd:'#A32D2D',tx:'#791F1F'},'ACK [retx] seq='+(ISN_R+1),'ack='+an+' rwnd='+rw,function(){
     snd.rw=rw;
     snd.unacked=[];    // flush dropped + post-drop segments; pre-drop already drained by emitAck
     snd.una=an;
@@ -415,8 +501,8 @@ function simEmitRetxAck(){
 // ── Normal ACK ────────────────────────────────────────────────────────────────
 function emitAck(){
   const an=rcv.exp,rw=Math.max(0,BUF_CAP-rcv.held);
-  addLog('←','ACK',null,an,0,rw);
-  pkts.push(mkPkt('toL',{bg:'#E1F5EE',bd:'#1D9E75',tx:'#085041'},'ACK  ack='+an,'rwnd='+rw,function(){
+  addLog('←','ACK',ISN_R+1,an,0,rw);
+  pkts.push(mkPkt('toL',{bg:'#E1F5EE',bd:'#1D9E75',tx:'#085041'},'ACK seq='+(ISN_R+1),'ack='+an+' rwnd='+rw,function(){
     // Dup ACK: an === snd.una (hole in sequence, receiver stuck). Still call onAckCC for dup counting.
     if(an<=snd.una){
       snd.rw=rw;  // always update rwnd — receiver may be advertising zero window
@@ -457,8 +543,8 @@ function doRetransmit(){
   const seg=snd.unacked[0];
   rto.timeout=Math.min(rto.timeout*2,60000);rto.startMs=protocolTime;rto.elapsed=0;rto.seq=seg.seq;
   snd.inflight=seg.len;
-  addLog('→','PSH [retx]',seg.seq,null,seg.len,null);
-  pkts.push(mkPkt('toR',{bg:'#FCEBEB',bd:'#A32D2D',tx:'#791F1F'},'PSH [retx] seq='+seg.seq,'len='+seg.len,function(){
+  addLog('→','PSH+ACK [retx]',seg.seq,dataAck(),seg.len,null);
+  pkts.push(mkPkt('toR',{bg:'#FCEBEB',bd:'#A32D2D',tx:'#791F1F'},'PSH+ACK [retx] seq='+seg.seq,'ack='+dataAck()+' len='+seg.len,function(){
     if(seg.seq===rcv.exp){rcv.buf.push({seq:seg.seq,len:seg.len,id:seg.id,pi:seg.pi});rcv.held+=seg.len;rcv.exp+=seg.len;scheduleAutoRecv();}
     if(mode==='sim')simEmitRetxAck();else emitAck();
     upd();
@@ -467,10 +553,10 @@ function doRetransmit(){
 
 function sendProbe(){
   if(probe.fly)return;probe.fly=true;probe.s='probing';
-  const seq=snd.una;addLog('→','PSH(probe)',seq,null,1,null);
-  pkts.push(mkPkt('toR',{bg:'#FAEEDA',bd:'#BA7517',tx:'#633806'},'PSH [probe]','seq='+seq+' len=1',function(){
-    const an=rcv.exp,rw=Math.max(0,BUF_CAP-rcv.held);addLog('←','ACK',null,an,0,rw);
-    pkts.push(mkPkt('toL',{bg:'#E1F5EE',bd:'#1D9E75',tx:'#085041'},'ACK  ack='+an,'rwnd='+rw,function(){
+  const seq=snd.una;addLog('→','PSH+ACK(probe)',seq,dataAck(),1,null);
+  pkts.push(mkPkt('toR',{bg:'#FAEEDA',bd:'#BA7517',tx:'#633806'},'PSH+ACK [probe]','seq='+seq+' ack='+dataAck()+' len=1',function(){
+    const an=rcv.exp,rw=Math.max(0,BUF_CAP-rcv.held);addLog('←','ACK',ISN_R+1,an,0,rw);
+    pkts.push(mkPkt('toL',{bg:'#E1F5EE',bd:'#1D9E75',tx:'#085041'},'ACK seq='+(ISN_R+1),'ack='+an+' rwnd='+rw,function(){
       probe.fly=false;snd.rw=rw;
       if(rw===0){probe.s='persist';probe.el=0;probe.iv=Math.min(probe.iv*2,10000);}
       else{probe.s='idle';probe.el=0;}upd();
@@ -479,15 +565,19 @@ function sendProbe(){
 }
 
 // ── Core segment send ─────────────────────────────────────────────────────────
+// This model sends application data only toward the receiver. The reverse
+// stream has consumed its SYN, so every data ACK expects ISN_R + 1.
+function dataAck(){return ISN_R+1;}
+
 function sendSegCore(dropped,delayMs){
   delayMs=delayMs||0;
   const seq=snd.nxt,len=segSize,id=nuid++,pi=pali%PILLS.length;
   pali++;snd.nxt+=len;snd.inflight+=len;
   const segObj={seq:seq,len:len,id:id,pi:pi};
   snd.unacked.push(segObj);
-  addLog('→','PSH',seq,null,len,null);
+  addLog('→','PSH+ACK',seq,dataAck(),len,null);
   if(snd.unacked.length===1)startRTOFor(segObj);
-  pkts.push(mkPkt('toR',{bg:'#E6F1FB',bd:'#185FA5',tx:'#042C53'},'PSH  seq='+seq,'len='+len,function(){
+  pkts.push(mkPkt('toR',{bg:'#E6F1FB',bd:'#185FA5',tx:'#042C53'},'PSH+ACK  seq='+seq,'ack='+dataAck()+' len='+len,function(){
     // Check if this packet is intercepted — either pre-armed by sim or by wire click
     var willDrop=dropped||dropArmed;
     if(willDrop){
@@ -536,7 +626,7 @@ function doConnect(){
   pali=0;probe.s='idle';probe.el=0;probe.iv=3000;probe.fly=false;
   cancelRTO();rto.timeout=BASE_RTO;dropArmed=false;
   cc.cwnd=1;cc.ssthresh=8;cc.phase='slow_start';cc.fracAcc=0;cc.dupAcks=0;cc.lastAck=null;
-  chartPts.length=0;lossMarkers.length=0;
+  chartPts.length=0;lossMarkers.length=0;ccEvents.length=0;selectedCCEvent=null;nextCCEvent=1;ccEventHits=[];renderCCEvents();
   sim.running=false;sim.paused=false;sim.rtt=0;sim.phase='idle';sim.acksExpected=0;sim.acksReceived=0;sim.rttsClean=0;
   recordChart();st='syn_sent';upd();
   addLog('→','SYN',ISN_S,null,1,null);
@@ -544,7 +634,7 @@ function doConnect(){
     addLog('←','SYN-ACK',ISN_R,ISN_S+1,1,BUF_CAP);
     pkts.push(mkPkt('toL',{bg:'#EEEDFE',bd:'#534AB7',tx:'#3C3489'},'SYN-ACK  seq='+ISN_R,'ack='+(ISN_S+1),function(){
       addLog('→','ACK',ISN_S+1,ISN_R+1,0,BUF_CAP);
-      pkts.push(mkPkt('toR',{bg:'#E1F5EE',bd:'#1D9E75',tx:'#085041'},'ACK','ack='+(ISN_R+1),function(){
+      pkts.push(mkPkt('toR',{bg:'#E1F5EE',bd:'#1D9E75',tx:'#085041'},'ACK seq='+(ISN_S+1),'ack='+(ISN_R+1),function(){
         st='established';
         if(mode==='sim'){sim.running=true;simNextRTT();}
         upd();
@@ -563,7 +653,7 @@ function doClose(){
     const fas=ISN_R+1;addLog('←','FIN+ACK',fas,fseq+1,1,0);
     pkts.push(mkPkt('toL',{bg:'#FCEBEB',bd:'#A32D2D',tx:'#791F1F'},'FIN+ACK  seq='+fas,'ack='+(fseq+1),function(){
       st='closing';upd();addLog('→','ACK',snd.nxt,fas+1,0,null);
-      pkts.push(mkPkt('toR',{bg:'#E1F5EE',bd:'#1D9E75',tx:'#085041'},'ACK','ack='+(fas+1),function(){
+      pkts.push(mkPkt('toR',{bg:'#E1F5EE',bd:'#1D9E75',tx:'#085041'},'ACK seq='+snd.nxt,'ack='+(fas+1),function(){
         st='closed';snd.nxt=0;snd.una=0;snd.rw=BUF_CAP;snd.unacked=[];snd.inflight=0;
         rcv.exp=0;rcv.buf=[];rcv.held=0;probe.s='idle';cancelRTO();rto.timeout=BASE_RTO;dropArmed=false;upd();
       }));
@@ -607,7 +697,7 @@ netCv.addEventListener('click',function(){
   dropArmed=!dropArmed;upd();
 });
 document.getElementById('btn-pause').addEventListener('click',function(){
-  if(mode==='sim'){sim.paused=!sim.paused;prev=null;}
+  if(mode==='sim'||sim.paused){sim.paused=!sim.paused;prev=null;}
   upd();
 });
 document.getElementById('sim-loss-sel').addEventListener('change',function(){sim.lossEveryN=parseInt(this.value);});
@@ -644,7 +734,7 @@ document.getElementById('btn-clear-log').addEventListener('click',function(){
 });
 
 document.getElementById('btn-clear-chart').addEventListener('click',function(){
-  chartPts.length=0;lossMarkers.length=0;
+  chartPts.length=0;lossMarkers.length=0;ccEvents.length=0;selectedCCEvent=null;nextCCEvent=1;ccEventHits=[];renderCCEvents();
 });
 
 function mk(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;}
@@ -664,7 +754,7 @@ function upd(){
   document.getElementById('btn-send').style.display=(est&&mode==='manual')?'inline-flex':'none';
   document.getElementById('btn-send').disabled=!canSend();
   document.getElementById('btn-close').style.display=est?'inline-flex':'none';
-  document.getElementById('btn-pause').style.display=(isSim&&est)?'inline-flex':'none';
+  document.getElementById('btn-pause').style.display=((isSim&&est)||sim.paused)?'inline-flex':'none';
   document.getElementById('btn-pause').textContent=sim.paused?'Resume':'Pause';
   document.getElementById('sim-loss-wrap').style.display=isSim?'flex':'none';
   var autoBtn=document.getElementById('btn-auto-recv');
@@ -759,10 +849,6 @@ function upd(){
     if(snd.unacked.length>20)sbb.appendChild(mk('span','empty-msg','… +'+(snd.unacked.length-20)+' more'));
   }
 
-  document.getElementById('i-port').textContent=closed?'—':PS;
-  document.getElementById('i-retx').textContent=retxCount;
-  document.getElementById('i-sent').textContent=(closed?0:Math.max(0,snd.nxt-ISN_S-1))+' B';
-  document.getElementById('i-loss').textContent=lossEvents;
 
   var rw=Math.max(0,BUF_CAP-rcv.held);
   document.getElementById('t-isnr').textContent=closed?'—':ISN_R;
@@ -779,10 +865,6 @@ function upd(){
   if(!rcv.buf.length)rbb.appendChild(mk('span','empty-msg','empty'));
   else rcv.buf.slice(0,4).forEach(function(seg){var p=PILLS[seg.pi%PILLS.length];var d=mk('div','seg-pill','seq='+seg.seq+'  len='+seg.len);d.style.cssText='background:'+p.bg+';border-left-color:'+p.bl+';color:'+p.tx;rbb.appendChild(d);});
   if(rcv.buf.length>4)rbb.appendChild(mk('span','empty-msg','… +'+(rcv.buf.length-4)+' more'));
-  document.getElementById('ri-port').textContent=closed?'—':PR;
-  document.getElementById('ri-isn').textContent=closed?'—':ISN_R;
-  document.getElementById('ri-recvd').textContent=(closed?0:Math.max(0,rcv.exp-(ISN_S+1)))+' B';
-  document.getElementById('ri-rwnd').textContent=Math.round(rw/1000)+' KB';
 }
 
 function renderLog(){
@@ -790,7 +872,7 @@ function renderLog(){
   var body=document.getElementById('log-body');body.innerHTML='';
   logE.slice(-40).forEach(function(e){
     var isSyn=e.flags.indexOf('SYN')>=0,isFin=e.flags.indexOf('FIN')>=0;
-    var isAck=e.flags.indexOf('ACK')>=0&&!isSyn&&!isFin;
+    var isAck=e.flags.indexOf('ACK')>=0&&e.flags.indexOf('PSH')<0&&!isSyn&&!isFin;
     var isRet=e.flags.indexOf('retx')>=0&&e.flags.indexOf('fast')<0;
     var isFrt=e.flags.indexOf('fast-retx')>=0;
     var rc='lr log-cols '+(isSyn?'syn-r':isFin?'fin-r':isFrt?'frt-r':isRet?'ret-r':isAck?'ack-r':'psh-r');
@@ -832,23 +914,32 @@ function renderExchange(){
 
 function drawChart(){
   var W=chartCv.width,H=chartCv.height;chartCtx.fillStyle='#fff';chartCtx.fillRect(0,0,W,H);
-  if(chartPts.length<2){chartCtx.fillStyle='#aaa9a2';chartCtx.font='11px system-ui';chartCtx.textAlign='center';chartCtx.fillText('Connect → Simulate to see the sawtooth build',W/2,H/2);return;}
-  var PAD={l:40,r:12,t:12,b:22},cw=W-PAD.l-PAD.r,ch=H-PAD.t-PAD.b;
+  ccEventHits=[];
+  if(!chartPts.length){chartCtx.fillStyle='#aaa9a2';chartCtx.font='11px system-ui';chartCtx.textAlign='center';chartCtx.fillText('Connect → Simulate to see the sawtooth build',W/2,H/2);return;}
+  var PAD={l:62,r:24,t:38,b:38},cw=W-PAD.l-PAD.r,ch=H-PAD.t-PAD.b;
   var maxC=2;chartPts.forEach(function(p){if(p.cwnd>maxC)maxC=p.cwnd;if(p.ssthresh>maxC)maxC=p.ssthresh;});maxC+=2;
   var tMin=chartPts[0].t,tMax=Math.max(chartPts[chartPts.length-1].t,tMin+1),tR=tMax-tMin;
   function tx(t){return PAD.l+((t-tMin)/tR)*cw;}
   function ty(c){return PAD.t+ch*(1-c/maxC);}
   chartCtx.strokeStyle='#e8e7e2';chartCtx.lineWidth=0.5;
   var step=maxC<=8?1:maxC<=16?2:maxC<=32?4:8;
-  for(var c=0;c<=maxC;c+=step){var y=ty(c);chartCtx.beginPath();chartCtx.moveTo(PAD.l,y);chartCtx.lineTo(W-PAD.r,y);chartCtx.stroke();chartCtx.fillStyle='#888780';chartCtx.font='8px system-ui';chartCtx.textAlign='right';chartCtx.fillText(c,PAD.l-4,y+3);}
-  chartCtx.save();chartCtx.translate(12,PAD.t+ch/2);chartCtx.rotate(-Math.PI/2);chartCtx.fillStyle='#888780';chartCtx.font='8px system-ui';chartCtx.textAlign='center';chartCtx.fillText('MSS',0,0);chartCtx.restore();
-  chartCtx.fillStyle='#888780';chartCtx.font='8px system-ui';chartCtx.textAlign='center';chartCtx.fillText('time →',PAD.l+cw/2,H-4);
+  for(var c=0;c<=maxC;c+=step){var y=ty(c);chartCtx.beginPath();chartCtx.moveTo(PAD.l,y);chartCtx.lineTo(W-PAD.r,y);chartCtx.stroke();chartCtx.fillStyle='#425670';chartCtx.font='600 13px system-ui';chartCtx.textAlign='right';chartCtx.fillText(c,PAD.l-10,y+4);}
+  chartCtx.save();chartCtx.translate(18,PAD.t+ch/2);chartCtx.rotate(-Math.PI/2);chartCtx.fillStyle='#425670';chartCtx.font='600 13px system-ui';chartCtx.textAlign='center';chartCtx.fillText('MSS',0,0);chartCtx.restore();
+  chartCtx.fillStyle='#425670';chartCtx.font='600 13px system-ui';chartCtx.textAlign='center';chartCtx.fillText('time →',PAD.l+cw/2,H-10);
   chartCtx.strokeStyle='#BA7517';chartCtx.lineWidth=1.5;chartCtx.setLineDash([4,3]);
   chartCtx.beginPath();chartPts.forEach(function(p,i){if(i===0)chartCtx.moveTo(tx(p.t),ty(p.ssthresh));else chartCtx.lineTo(tx(p.t),ty(p.ssthresh));});chartCtx.stroke();chartCtx.setLineDash([]);
-  lossMarkers.forEach(function(m){var x=tx(m.t),isT=m.type==='timeout';chartCtx.strokeStyle=isT?'rgba(163,45,45,.6)':'rgba(240,149,149,.8)';chartCtx.lineWidth=isT?1.5:1;chartCtx.beginPath();chartCtx.moveTo(x,PAD.t);chartCtx.lineTo(x,PAD.t+ch);chartCtx.stroke();chartCtx.fillStyle=isT?'#A32D2D':'#F09595';chartCtx.beginPath();chartCtx.arc(x,PAD.t+7,3,0,Math.PI*2);chartCtx.fill();chartCtx.fillStyle=isT?'#A32D2D':'#993C1D';chartCtx.font='7px system-ui';chartCtx.textAlign='center';chartCtx.fillText(isT?'T':'FR',x,PAD.t+18);});
+  lossMarkers.forEach(function(m){var x=tx(m.t),isT=m.type==='timeout';chartCtx.strokeStyle=isT?'rgba(163,45,45,.6)':'rgba(240,149,149,.8)';chartCtx.lineWidth=isT?1.5:1;chartCtx.beginPath();chartCtx.moveTo(x,PAD.t);chartCtx.lineTo(x,PAD.t+ch);chartCtx.stroke();chartCtx.fillStyle=isT?'#A32D2D':'#F09595';chartCtx.beginPath();chartCtx.arc(x,PAD.t+7,5,0,Math.PI*2);chartCtx.fill();chartCtx.fillStyle=isT?'#A32D2D':'#993C1D';chartCtx.font='bold 14px system-ui';chartCtx.textAlign='center';const label=isT?'T':'FR',labelWidth=isT?24:34;chartCtx.fillStyle='#fff';chartCtx.fillRect(x-labelWidth/2,PAD.t-26,labelWidth,22);chartCtx.fillStyle=isT?'#A32D2D':'#993C1D';chartCtx.fillText(label,x,PAD.t-10);});
   chartCtx.strokeStyle='#534AB7';chartCtx.lineWidth=2;
   chartCtx.beginPath();chartPts.forEach(function(p,i){if(i===0)chartCtx.moveTo(tx(p.t),ty(p.cwnd));else chartCtx.lineTo(tx(p.t),ty(p.cwnd));});chartCtx.stroke();
   if(chartPts.length<300){chartCtx.fillStyle='#534AB7';chartPts.forEach(function(p){chartCtx.beginPath();chartCtx.arc(tx(p.t),ty(p.cwnd),1.5,0,Math.PI*2);chartCtx.fill();});}
+  ccEvents.forEach(function(e){
+    const x=tx(e.t),y=ty(e.cwnd),selected=e.id===selectedCCEvent;
+    if(selected){chartCtx.strokeStyle='#284d73';chartCtx.lineWidth=1;chartCtx.beginPath();chartCtx.moveTo(x,PAD.t);chartCtx.lineTo(x,PAD.t+ch);chartCtx.stroke();}
+    chartCtx.fillStyle=selected?'#284d73':'#fff';chartCtx.strokeStyle='#534AB7';chartCtx.lineWidth=2;
+    chartCtx.beginPath();chartCtx.arc(x,y,15,0,Math.PI*2);chartCtx.fill();chartCtx.stroke();
+    chartCtx.fillStyle=selected?'#fff':'#284d73';chartCtx.font='bold 14px system-ui';chartCtx.textAlign='center';chartCtx.fillText(e.id,x,y+5);
+    ccEventHits.push({id:e.id,x,y});
+  });
 }
 
 function rrect(x,y,w,h,r,fill,stroke,lw){
@@ -861,7 +952,7 @@ var prev=null;
 function loop(ts){
   requestAnimationFrame(loop);
   var dt=prev===null?16:Math.min(ts-prev,100);prev=ts;
-  if(sim.paused)return;
+  if(sim.paused||examineDialog.open)return;
   advanceProtocolTimers(dt);
   var completed=[];
   for(var i=0;i<pkts.length;i++){var p=pkts[i];if(p.done)continue;p.elapsed+=dt;if(p.elapsed>=p.dur){p.done=true;completed.push(i);}}
