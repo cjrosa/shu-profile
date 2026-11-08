@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Link Layer Visualizer</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230F6E56'/%3E%3Crect x='12' y='3' width='8' height='5' rx='1.5' fill='white' opacity='.95'/%3E%3Crect x='3' y='24' width='8' height='5' rx='1.5' fill='white' opacity='.95'/%3E%3Crect x='21' y='24' width='8' height='5' rx='1.5' fill='white' opacity='.95'/%3E%3Crect x='9' y='13' width='14' height='8' rx='2' fill='white'/%3E%3Cline x1='7' y1='26.5' x2='10' y2='19' stroke='white' stroke-width='1.5' opacity='.7'/%3E%3Cline x1='25' y1='26.5' x2='22' y2='19' stroke='white' stroke-width='1.5' opacity='.7'/%3E%3Cline x1='16' y1='8' x2='16' y2='13' stroke='white' stroke-width='1.5' opacity='.7'/%3E%3C/svg%3E">
-</head>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -219,6 +219,9 @@ select{font-family:inherit;font-size:11px;height:26px;border:0.5px solid var(--b
 .lm{flex:1;line-height:1.4;}
 .ll{color:var(--green);}.lb{color:var(--blue);}.la{color:var(--amber);}.lp{color:var(--purple);}.ld{color:var(--red);}.lg{color:var(--text3);}
 </style>
+<link rel="stylesheet" href="../assets/css/pages/link-layer-visualizer.css">
+</head>
+<body>
 
 <header class="hdr">
   <div class="hl">
@@ -235,15 +238,7 @@ select{font-family:inherit;font-size:11px;height:26px;border:0.5px solid var(--b
     </div>
     <span class="ht">Link Layer Visualizer</span>
   </div>
-  <div class="hr">
-    Developed by Professor Chris Rosa &mdash; CS339 Networks, Sacred Heart University
-    <a href="mailto:rosac@sacredheart.edu" class="hla brd" title="Email">
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="14" height="10" rx="2"/><path d="M1 5l7 5 7-5"/></svg>
-    </a>
-    <a href="https://linkedin.com/in/chris-rosa-3192326" target="_blank" class="hla fil">
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="white"><path d="M2.5 1A1.5 1.5 0 1 0 2.5 4 1.5 1.5 0 0 0 2.5 1zM1 5.5h3V15H1zM6 5.5h2.9v1.3h.04C9.36 5.9 10.5 5.3 12 5.3c3.1 0 3.7 2 3.7 4.7V15h-3v-4.4c0-1.1 0-2.4-1.5-2.4s-1.7 1.2-1.7 2.4V15H6z"/></svg>
-    </a>
-  </div>
+  <div class="hr">Explore Ethernet frames, ARP, MAC learning, and VLANs as packets travel through a network.</div>
 </header>
 
 <div class="tb">
