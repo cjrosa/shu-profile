@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>MCP Booking Explorer | AI-100</title><link rel="stylesheet" href="../assets/css/pages/mcp-explorer.css"></head>
+<body><main class="shell">
+<header class="page-header"><div class="header-copy"><div class="eyebrow">AI-100 · AI beyond the chat box</div><h1>MCP Booking Explorer</h1><p class="intro">A request travels down. The result travels back up. Watch how ChatGPT uses a booking system through MCP.</p></div><div class="action-bar"><span id="run-status" class="sr-only" role="status"></span><button id="open-actions" aria-expanded="false" aria-controls="actions-panel">Actions <span id="action-count">0</span></button></div></header>
+<div id="review-banner" hidden><span id="review-context"></span><button id="latest">Back to latest</button></div>
+
+<section class="chat panel" aria-labelledby="chat-title">
+<div class="section-head chat-header"><h2 id="chat-title">ChatGPT</h2><span class="badge">Campus booking demo</span></div>
+<div id="chat-thread" class="chat-thread" aria-label="Conversation">
+<div id="chat-welcome" class="assistant-message"><p>Hi Alex. I can help you find a room, make a booking, or cancel a reservation. What would you like to do?</p></div>
+<div id="user-message" class="bubble user-bubble" hidden></div>
+<div id="chat-activity" class="chat-activity" role="status" hidden></div>
+<div id="approval-message" class="assistant-message" hidden><span class="message-author">ChatGPT</span><p id="approval-copy"></p><p>Would you like me to go ahead?</p><div id="approval" class="chat-choices" hidden><button id="approve" class="primary">Approve</button><button id="decline">Decline</button></div></div>
+<div id="decision-message" class="bubble user-bubble" hidden></div>
+<div id="final-reply" class="assistant-message" hidden><span class="message-author">ChatGPT</span><p id="answer"></p></div>
+</div>
+<div id="examples" class="examples" aria-label="Example prompts"></div>
+<form id="prompt-form"><label for="prompt" class="sr-only">Your message to ChatGPT</label><div class="composer"><textarea id="prompt" rows="1" maxlength="400" placeholder="Message ChatGPT…"></textarea><button id="load" class="primary" type="submit" aria-label="Send message">↑</button></div></form>
+<p class="hint">Try the example wording with Cedar, Maple, or Birch and a time from 10:00–15:00. One-hour bookings · Nov 9, 2026 · Signed in as Alex.</p><p id="input-status" class="sr-only" role="status"></p>
+</section>
+<div id="prompt-flow" class="connector"><span class="travel-dot"></span><span class="flow-arrow">↓</span><span class="flow-label">Your message goes to ChatGPT</span></div>
+<section class="panel model-panel" data-node="model" aria-labelledby="model-title">
+<div class="section-head"><div class="identity"><span class="avatar">AI</span><div><div class="eyebrow">Understand &amp; decide</div><h2 id="model-title">ChatGPT</h2></div></div><span id="model-status" class="badge">Ready</span></div>
+<div class="thinking"><div class="thinking-heading"><span class="thinking-dots" aria-hidden="true"><i></i><i></i><i></i></span><h3>Processing the request</h3><span>Illustrative summary</span></div><ol id="reasoning" class="reasoning"><li>Send a prompt to begin.</li></ol></div>
+<div id="model-tools" class="model-tools" hidden><div class="tools-heading"><h3>MCP tools available to ChatGPT</h3><span id="tools-status" role="status"></span></div><div id="loaded-tools" class="tool-options"></div><p id="tool-choice" class="hint"></p></div>
+<div id="model-result" class="return-result" hidden></div>
+</section>
+<div id="mcp-flow" class="connector"><span class="travel-dot"></span><span class="flow-arrow">↓</span><span class="flow-label">MCP carries the selected action</span></div>
+<section class="panel server-panel" data-node="server" aria-labelledby="server-title">
+<div class="section-head"><div class="identity"><span class="avatar server-avatar">↔</span><div><div class="eyebrow">Connect the AI to its tools</div><h2 id="server-title">Booking MCP server</h2></div></div><span id="server-status" class="badge">Waiting</span></div>
+<p class="hint">The server tells ChatGPT which tools are available, then handles the selected action.</p><div id="catalog" class="tool-options"></div><div id="server-action" class="action-summary">Waiting for ChatGPT to choose a tool.</div><div id="server-result" class="return-result" hidden></div>
+</section>
+<div id="database-flow" class="connector"><span class="travel-dot"></span><span class="flow-arrow">↓</span><span class="flow-label">The server asks the booking system to act</span></div>
+<section class="panel database-panel" data-node="database" aria-labelledby="database-title">
+<div class="section-head"><div class="identity"><span class="avatar database-avatar">▦</span><div><div class="eyebrow">Read or change the source of data</div><h2 id="database-title">Booking system</h2></div></div><button id="reset">Reset rooms</button></div>
+<ol id="operations" class="operations"><li>Waiting for an action.</li></ol><div class="database-grid"><div><div id="schedule" class="table-scroll"></div><p class="legend"><span class="available-key"></span>Free <span class="booked-key"></span>Booked <span class="changed-key"></span>Changed now</p></div><div class="records"><h3>Reservations</h3><div id="bookings"></div></div></div><div id="database-result" class="return-result" hidden></div><p id="db-status" class="hint" role="status"></p>
+</section>
+
+
+<aside id="actions-panel" class="actions-panel" aria-labelledby="actions-title" hidden><div class="actions-heading"><div><div class="eyebrow">Current request</div><h2 id="actions-title">Actions</h2></div><button id="close-actions" aria-label="Close actions panel">×</button></div><p class="hint">Actions appear as they happen. Select one to inspect its context in the flow.</p><p id="actions-status" role="status">No actions yet.</p><ol id="action-list"></ol></aside>
+</main><script src="../assets/js/ai100/mcp-engine.js"></script><script src="../assets/js/ai100/mcp-explorer.js"></script></body></html>
+
+
+
+
+

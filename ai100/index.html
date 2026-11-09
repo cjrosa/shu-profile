@@ -455,7 +455,7 @@
           </span>
           <span class="cat-title-area">
             <span class="cat-name">Natural Language Processing (NLP)</span>
-            <span class="cat-tagline">Tokens, embeddings, semantic space, recurrent memory, and sentiment</span>
+            <span class="cat-tagline">Tokens, language models, embeddings, and recurrent memory</span>
           </span>
           <span class="ai-tool-header-meta">
             <span class="cat-tool-count">2 Tools</span>
@@ -482,6 +482,7 @@
             </div>
             <div class="tool-footer"><span class="tool-cta" style="color:var(--teal);">Open tool <svg class="tool-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="2" y1="8" x2="14" y2="8"/><polyline points="8,2 14,8 8,14"/></svg></span><span class="tool-tag" style="background:var(--teal-l);color:var(--teal);">Interactive</span></div>
           </a>
+
           <a class="tool-card" data-course-order="2" href="../viewer.html?tool=ai100%2Fllm_explorer.html&amp;course=AI100&amp;label=Foundations%20of%20Artificial%20Intelligence&amp;name=LLM%20Explorer&amp;back=ai100/index.html" style="border:0.5px solid var(--teal-m);">
             <div class="tool-card-header">
               <div class="tool-icon" style="background:var(--teal-l);">
@@ -502,6 +503,28 @@
         </div>
       </div>
     </section>
+
+    <section class="cat-accordion ai-tool-accordion ai-tools-apps" id="acc-ai-apps">
+      <button class="cat-header" type="button" onclick="toggleToolGroup('acc-ai-apps')" aria-expanded="false" aria-controls="body-ai-apps">
+        <span class="cat-header-inner">
+          <span class="cat-icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4V5Z"/><path d="M8 9h8M8 12h5"/></svg>
+          </span>
+          <span class="cat-title-area">
+            <span class="cat-name">AI Applications &amp; Tool Use</span>
+            <span class="cat-tagline">MCP servers, connected tools, and AI-powered workflows</span>
+          </span>
+          <span class="ai-tool-header-meta">
+            <span class="cat-tool-count">1 Tool</span>
+            <span class="cat-chevron" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg></span>
+          </span>
+        </span>
+      </button>
+      <div class="cat-body" id="body-ai-apps"><div class="tools-grid"><a class="tool-card" data-course-order="1" href="../viewer.html?tool=ai100%2Fmcp_explorer.html&amp;course=AI100&amp;label=Foundations%20of%20Artificial%20Intelligence&amp;name=MCP%20Booking%20Explorer&amp;back=ai100/index.html" style="border:0.5px solid var(--teal-m);">
+            <div class="tool-card-header"><div class="tool-icon" style="background:var(--teal-l);color:var(--teal);" aria-hidden="true">{ }</div><div><div class="tool-subtitle" style="color:var(--teal);">AI Applications &amp; Tool Use</div><div class="tool-title">MCP Booking Explorer</div></div></div>
+            <div class="tool-body"><p class="tool-desc">Follow a booking request from prompt to tool selection, MCP messages, server operations, and a grounded answer.</p><div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Step through discovery and tool calls</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Watch reservation records change</div><div class="tool-feature"><div class="tool-feature-dot" style="background:var(--teal);"></div>Explore approvals, conflicts, and chained tools</div></div></div>
+            <div class="tool-footer"><span class="tool-cta" style="color:var(--teal);">Open tool →</span><span class="tool-tag" style="background:var(--teal-l);color:var(--teal);">Interactive</span></div>
+          </a></div></div></section>
 
   </div>
 </main>
@@ -544,6 +567,7 @@
 const PROXY_URL = 'https://red-union-6b9e.crosa.workers.dev';
 
 const TOOLS = [
+  { name:'MCP Booking Explorer', file:'mcp_explorer.html', cat:'AI Applications & Tool Use', desc:'Trace a booking prompt through tool discovery, MCP calls, database operations, approvals, and results.', keywords:['mcp','model context protocol','server','client','tools','booking','agent','tool calling','json-rpc'] },
   { name:'LLM Explorer', file:'llm_explorer.html', cat:'Natural Language Processing', desc:'Explore n-grams, word patterns, next-word probabilities, and text generation.', keywords:['llm','language model','n-gram','ngram','bigram','trigram','probability','prediction','generation'] },
   { name:'Data Detective', file:'data_detective.html?v=20260828-1', cat:'Machine Learning Labs', desc:'Type Python to inspect data, build visualizations, and make careful evidence-based claims.', keywords:['data','pandas','seaborn','visualization','histogram','scatterplot','correlation','feature','label'] },
   { name:'Fish Predictor', file:'fish_predictor.html?v=20260828-1', cat:'Machine Learning Labs', desc:'Train and evaluate regression models on unseen fish using reproducible Python workflows.', keywords:['machine learning','regression','train test','linear regression','random forest','mae','rmse','overfitting'] },

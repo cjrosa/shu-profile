@@ -219,3 +219,4 @@
     border-radius: 10px;
   }
 }
+.ai-tools-apps { order: 6; --ai-icon-color: #1f7a46; --ai-icon-bg: #e8f5ed; }
