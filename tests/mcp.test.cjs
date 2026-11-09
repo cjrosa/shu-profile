@@ -133,3 +133,18 @@ test('every example completes automatically and text input remains inert',()=>{
  assert.match(d.getElementById('user-message').textContent,/<img/);assert.equal(d.querySelectorAll('pre,code').length,0);
  dom.window.close();
 });
+test('temporary operations clear after completion and return for the selected historical step',()=>{
+ const dom=app(),d=dom.window.document;
+ send(d,'Find available rooms at 10:00.');
+ reach(dom,()=>!d.getElementById('server-result').hidden);
+ assert.equal(d.getElementById('server-action').hidden,false);
+ dom.advance();assert.equal(d.getElementById('server-result').hidden,true);
+ reach(dom,()=>!d.getElementById('final-reply').hidden);
+ for(const id of ['server-action','operations','database-result','server-result','model-result'])assert.equal(d.getElementById(id).hidden,true,id);
+ click(d,'open-actions');
+ [...d.querySelectorAll('#action-list button')].find(b=>b.textContent.includes('booking result travels')).click();
+ assert.equal(d.getElementById('server-result').hidden,false);
+ assert.match(d.getElementById('server-result').textContent,/Cedar, Maple, Birch/);
+ click(d,'latest');assert.equal(d.getElementById('server-result').hidden,true);
+ dom.window.close();
+});

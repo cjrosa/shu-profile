@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
   'use strict';
   const M = window.MCPDemo, $ = id => document.getElementById(id);
   const names = {search_availability:'Find rooms',create_booking:'Book a room',cancel_booking:'Cancel a booking'};
@@ -128,11 +128,13 @@
     $('model-status').textContent=frame.answer?'Replied':blocked()?'Awaiting approval':frame.node==='model'?'Processing':'Waiting for tools';
     const activeCall=seen.findLastIndex(f=>f.kind==='call');const cycle=seen.slice(Math.max(0,activeCall));
     const latestAction=seen.findLast(f=>f.action);$('server-action').textContent=latestAction?.action||'Available actions: find rooms, book a room, or cancel a booking.';
+    $('server-action').hidden=!['call','validate','operation','db-result','server-result'].includes(frame.kind);
     $('server-status').textContent=frame.node==='server'?(frame.up?'Returning result':'Handling request'):activeCall>=0?'Connected':seen.some(f=>f.kind==='discover')?'Tools shared':'Waiting';
     const operation=cycle.findLast(f=>f.node==='database');$('operations').replaceChildren(...(operation?.operations||['Waiting for an action.']).map((text,i)=>el('li',text,i===operation?.op?'active':'')));
-    showResult('database-result',cycle.findLast(f=>f.kind==='db-result')?.result);
-    showResult('server-result',cycle.findLast(f=>f.kind==='server-result')?.result);
-    showResult('model-result',cycle.findLast(f=>f.kind==='model-result')?.result);
+    $('operations').hidden=frame.node!=='database';
+    showResult('database-result',frame.kind==='db-result'?frame.result:null);
+    showResult('server-result',frame.kind==='server-result'?frame.result:null);
+    showResult('model-result',frame.kind==='model-result'?frame.result:null);
     $('final-reply').hidden=!frame.answer;$('answer').textContent=frame.answer||'';
     const gate=seen.findLast(f=>f.approval),gateIndex=gate?frames.indexOf(gate):-1;
     const decision=frame.decision||(gateIndex>=0&&position>gateIndex&&approvals.has(gateIndex)?'Approved. Go ahead.':'');
@@ -151,11 +153,13 @@
   function follow(){const frame=frames[position];const target=frame.answer?$('final-reply'):blocked()?$('approval-message'):frame.flow?$(frame.flow):document.querySelector(`[data-node="${frame.node}"]`);if(!target?.scrollIntoView)return;const box=target.getBoundingClientRect();if(box.top<160||box.bottom>window.innerHeight-40)target.scrollIntoView({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'center'});}
   function renderActions(){
     const active=frames[livePosition];
+    $('actions-prompt').hidden=!frames.length;
+    $('actions-prompt-text').textContent=frames.length?preparedPrompt:'';
     $('run-status').textContent=!active?'Send a message to begin':blocked()?'Waiting for your approval in chat':livePosition===frames.length-1?'Request complete':active.title;
     $('action-count').textContent=frames.length?livePosition+1:0;
     $('actions-status').textContent=!active?'No actions yet.':blocked()?'Awaiting approval':livePosition===frames.length-1?'All actions recorded':'Recording actions live…';
     const focused=document.activeElement?.dataset?.step;
-    $('action-list').replaceChildren(...frames.slice(0,livePosition+1).map((frame,index)=>{const row=el('li'),button=el('button');button.dataset.step=index;button.setAttribute('aria-pressed',String(index===position));button.append(el('span',String(index+1),'action-number'),el('span',frame.title,'action-title'));button.addEventListener('click',()=>{review=index;position=index;if(window.innerWidth<=740){document.getElementById("actions-panel").hidden=true;document.body.classList.remove('actions-open');document.getElementById("open-actions").setAttribute('aria-expanded','false');}render();follow();});row.append(button);return row;}));
+    $('action-list').replaceChildren(...frames.slice(0,livePosition+1).map((frame,index)=>{const row=el('li'),button=el('button');button.dataset.step=index;button.setAttribute('aria-pressed',String(index===position));const icon=el('span',undefined,'action-icon');icon.append(packetIcon(frame));button.append(el('span',String(index+1),'action-number'),icon,el('span',frame.title,'action-title'));button.addEventListener('click',()=>{review=index;position=index;if(window.innerWidth<=740){document.getElementById("actions-panel").hidden=true;document.body.classList.remove('actions-open');document.getElementById("open-actions").setAttribute('aria-expanded','false');}render();follow();});row.append(button);return row;}));
     if(focused!==undefined)$('action-list').querySelector(`[data-step="${focused}"]`)?.focus({preventScroll:true});
     $('review-banner').hidden=review===null;
     $('review-context').textContent=review===null?'':`Viewing action ${position+1}: ${frames[position].title}. Historical context; the live request continues independently.`;
@@ -175,12 +179,7 @@
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('actions-panel').hidden)closeActions();});
   $('approve').addEventListener('click',()=>{if(review!==null||!blocked())return;approvals.add(livePosition);next();start();});
   $('decline').addEventListener('click',()=>{if(review!==null||!blocked())return;stop();const current=frames[livePosition];frames=frames.slice(0,livePosition+1).concat({...current,kind:'answer',approval:false,node:'model',title:'Action declined',explanation:'No booking action was sent. Your reservations are unchanged.',summary:'Respect the user’s decision; leave the reservations unchanged.',decision:'Decline. Don’t make this change.',answer:'Okay, I did not change any reservation.',flow:'prompt-flow',up:true});livePosition++;position=livePosition;render();follow();});
-  $('reset').addEventListener('click',()=>{stop();db=M.initialDB();frames=[];position=0;livePosition=0;review=null;approvals.clear();$('chat-welcome').hidden=false;['user-message','approval-message','approval','decision-message','final-reply','chat-activity','model-tools','model-result','server-result','database-result'].forEach(id=>$(id).hidden=true);document.querySelectorAll('.active,.selected,.returning,.up').forEach(node=>node.classList.remove('active','selected','returning','up'));$('reasoning').replaceChildren(el('li','Send a prompt to begin.'));$('model-status').textContent='Ready';$('server-status').textContent='Waiting';$('server-action').textContent='Waiting for ChatGPT to choose a tool.';$('operations').replaceChildren(el('li','Waiting for an action.'));renderDatabase({});renderActions();$('input-status').textContent='Room data reset. Cedar is booked at 11:00.';});
+  $('reset').addEventListener('click',()=>{stop();db=M.initialDB();frames=[];position=0;livePosition=0;review=null;approvals.clear();$('chat-welcome').hidden=false;['user-message','approval-message','approval','decision-message','final-reply','chat-activity','model-tools','model-result','server-result','database-result','server-action','operations'].forEach(id=>$(id).hidden=true);document.querySelectorAll('.active,.selected,.returning,.up').forEach(node=>node.classList.remove('active','selected','returning','up'));$('reasoning').replaceChildren(el('li','Send a prompt to begin.'));$('model-status').textContent='Ready';$('server-status').textContent='Waiting';$('server-action').textContent='Waiting for ChatGPT to choose a tool.';$('operations').replaceChildren(el('li','Waiting for an action.'));renderDatabase({});renderActions();$('input-status').textContent='Room data reset. Cedar is booked at 11:00.';});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else if(timer===null)start();});
   renderDatabase({});renderActions();
 })();
-
-
-
-
-
