@@ -13,10 +13,12 @@
    s.hosts[id]={id,isn,start:isn+1,state:a?'CLOSED':'LISTEN',size:a?c.size:c.sizeB,mss:a?c.mss:c.mssB,windowSize:c.windowSize,dupAcks:0,fastSeq:null,rto:3,deadline:null,submitted:0,consumed:0,una:isn,nxt:isn,rcv:peer,read:peer+1,right:isn,buffer:[],tx:[],delayed:0,version:0,lastWire:{ack:peer+1,version:0}};
   }return s;
  }
- const established=s=>s.phase===3,enabled=(s,id)=>id==='A'||s.c.duplex;
- const readable=h=>Math.max(0,h.rcv-h.read);
+ const established=s=>s.phase===3,enabled=(s,id)=>id==='A'||s.c.duplex||s.phase>=4;
+ const active=s=>s.phase===3||s.phase===4;
+ const sendOpen=(s,id)=>established(s)||(s.phase===4&&s.closeStep===2&&s.hosts[id].state==='CLOSE-WAIT');
+ const readable=h=>Math.max(0,Math.min(h.rcv,h.peerFinSeq??Infinity)-h.read);
  const available=(s,id='A')=>Math.max(0,s.hosts[id].right-s.hosts[id].nxt);
- const canSend=(s,id='A')=>established(s)&&enabled(s,id)&&s.hosts[id].nxt<s.hosts[id].start+s.hosts[id].submitted&&available(s,id)>0;
+ const canSend=(s,id='A')=>sendOpen(s,id)&&enabled(s,id)&&s.hosts[id].nxt<s.hosts[id].start+s.hosts[id].submitted&&available(s,id)>0;
  const outstanding=(s,id)=>s.hosts[id].tx.filter(p=>p.seq+p.len>s.hosts[id].una);
  function snapshot(s){return Object.fromEntries(['A','B'].map(id=>{const h=s.hosts[id];return [id,{state:h.state,una:h.una,nxt:h.nxt,rcv:h.rcv,right:h.right,read:h.read,buffer:h.buffer.length,consumed:h.consumed,submitted:h.submitted,dupAcks:h.dupAcks}];}));}
  function event(s,kind,host,explanation,p=null,range=null,stream=host){s.events.push({id:s.events.length+1,kind,host,explanation,packetId:p?.id??null,from:p?.from??host,to:p?.to??host,flags:p?.flags??'—',seq:p?.seq??null,ack:p?.ack??null,len:p?.len??0,range,stream,state:snapshot(s)});}
@@ -34,9 +36,44 @@
    event(s,'handshake','A',`Host A sends ACK (SEQ=${a.nxt}, ACK=${b.start}, LEN=0). It acknowledges Host B's SYN without consuming another sequence number. Both hosts are ESTABLISHED. Application data can now be submitted to TCP; first data SEQ is ${a.start} at A and ${b.start} at B.`,p);
   }return p;
  }
+ const canClose=(s,id='A')=>(established(s)||(s.phase===4&&id===other(s.closer)&&[1,2].includes(s.closeStep)))&&['A','B'].every(id=>{const h=s.hosts[id];return (s.phase===4&&id===s.closer)||h.una===h.nxt&&h.nxt===h.start+h.submitted;})&&!s.packets.some(p=>['queued','pending'].includes(p.status));
+ function close(s,id='A'){
+  if(!['A','B'].includes(id)||!canClose(s,id))return;
+  if(s.phase===4){s.peerCloseRequested=true;s.combinedFin=s.closeStep===1;s.closeStep=2;return teardown(s);}
+  s.closer=id;s.closeStep=0;s.phase=4;return teardown(s);
+ }
+ // Like handshake(), each teaching step records a packet received by its peer.
+ function teardown(s){
+  if(s.phase!==4)return;
+  const id=s.closer,peer=other(id),a=s.hosts[id],b=s.hosts[peer];let p;
+  if(s.closeStep===0){
+   const seq=a.nxt++;a.state='FIN-WAIT-1';b.state='CLOSE-WAIT';b.peerFinSeq=seq;b.rcv=seq+1;
+   p=packet(s,id,{kind:'teardown',flags:'FIN, ACK',seq,ack:a.rcv,status:'received'});
+   event(s,'teardown',id,`Host ${id} initiates close with FIN, ACK (SEQ=${seq}, ACK=${a.rcv}, LEN=0). FIN consumes one sequence number: SND.NXT becomes ${a.nxt}. Host ${peer} advances RCV.NXT to ${b.rcv} and enters CLOSE-WAIT. Unread payload remains buffered.`,p);
+  }else if(s.closeStep===1){
+   a.una=a.nxt;a.state='FIN-WAIT-2';
+   p=packet(s,peer,{kind:'teardown',seq:b.nxt,ack:b.rcv,status:'received'});
+   event(s,'teardown',peer,`Host ${peer} acknowledges FIN with ACK=${b.rcv}. A pure ACK consumes no sequence number. Host ${id} enters FIN-WAIT-2, waiting for the peer's FIN.`,p);
+  }else if(s.closeStep===2){
+   if(!s.peerCloseRequested)return;
+   a.una=a.nxt;
+   const seq=b.nxt++;b.state='LAST-ACK';a.peerFinSeq=seq;a.rcv=seq+1;a.state='TIME-WAIT';
+   p=packet(s,peer,{kind:'teardown',flags:'FIN, ACK',seq,ack:b.rcv,status:'received'});
+   event(s,'teardown',peer,`${s.combinedFin?'The peer combines its acknowledgment of the first FIN with its own FIN. ':''}Host ${peer} also closes and sends FIN, ACK (SEQ=${seq}, ACK=${b.rcv}). FIN consumes one sequence number. Host ${id} receives it and prepares the final ACK; TIME-WAIT protects against delayed duplicate segments.`,p);
+  }else if(s.closeStep===3){
+   b.una=b.nxt;b.state='CLOSED';
+   p=packet(s,id,{kind:'teardown',seq:a.nxt,ack:a.rcv,status:'received'});
+   event(s,'teardown',id,`Host ${id} sends the final ACK (SEQ=${a.nxt}, ACK=${a.rcv}, LEN=0). No sequence number is consumed. Host ${peer} enters CLOSED; Host ${id} remains in TIME-WAIT.`,p);
+  }else{
+   a.state='CLOSED';s.phase=5;
+   event(s,'closed',id,'TIME-WAIT is abbreviated to this teaching step (normally 2 MSL). Both hosts are CLOSED. Reset to establish a new connection.');
+  }
+  s.closeStep++;return p;
+ }
+
  function setMode(s,value){if(s.phase!==0||s.events.length)throw Error('Reset the simulation before changing Full Duplex mode.');s.c.duplex=Boolean(value);}
  function submit(s,id='A',count){
-  const h=s.hosts[id];if(!established(s)||!enabled(s,id))return;
+  const h=s.hosts[id];if(!sendOpen(s,id)||!enabled(s,id))return;
   const len=count??(h.size-h.submitted||s.c[id==='A'?'size':'sizeB']);
   integer(len,1,256,'Submit size');
   const first=h.start+h.submitted;h.submitted+=len;h.size=Math.max(h.size,h.submitted);
@@ -76,20 +113,20 @@
   event(s,discarded?'duplicate-discard':'receive',p.to,`Host ${p.to}'s TCP receives the same data packet (SEQ=${p.seq}, LEN=${p.len}). ${discarded?'All payload bytes were already received, so TCP discards the duplicate payload without adding it to the receive buffer. ':''}It accepts ${accepted} new bytes${duplicates?`, recognizes ${duplicates} duplicate bytes`:''}${rejected?`, and rejects ${rejected} bytes outside the submitted byte stream`:''}. ${progress} ${immediate?`It queues cumulative ACK=${h.rcv}.`:s.c.ackMode==='manual'?'It waits for you to click Send ACK; no acknowledgment has entered transit.':'It waits for another segment or the delayed-ACK timer.'} ${h.buffer.length} bytes remain in TCP's receive buffer; the application has consumed ${h.consumed}. ${ackText}`,p,[p.seq,p.seq+p.len],p.from);
  }
  function read(s,id='B',count=4){
-  integer(count,1,256,'Read size');if(!established(s))return;const h=s.hosts[id],n=Math.min(count,readable(h));if(!n)return;const first=h.read;h.read+=n;h.consumed+=n;h.buffer=h.buffer.filter(x=>x>=h.read);
+  integer(count,1,256,'Read size');if(s.phase<3)return;const h=s.hosts[id],n=Math.min(count,readable(h));if(!n)return;const first=h.read;h.read+=n;h.consumed+=n;h.buffer=h.buffer.filter(x=>x>=h.read);
   event(s,'read',id,`Host ${id}'s application reads bytes ${first}–${h.read-1} from TCP. These ${n} bytes leave the receive buffer; ${h.buffer.length} unread bytes remain buffered. RCV.NXT stays ${h.rcv}, because TCP already received these bytes. Reading does not generate an ACK or move the sender window.`,null,[first,h.read],other(id));
  }
  function flush(s,id='B'){const h=s.hosts[id];if(!h.delayed)return;const p=queueAck(s,id,'delayed ACK');event(s,'ack-queued',id,`Host ${id}'s delayed-ACK timer expires. TCP queues ACK=${p.ack}, confirming receipt through byte ${p.ack-1}. The application has consumed ${h.consumed} bytes; acknowledgment and application reading are separate operations.`,p);}
- function repeatAck(s,id='B'){if(!established(s))return;const p=queueAck(s,id,'manual ACK');event(s,'ack-queued',id,`Host ${id}'s TCP sends its current cumulative acknowledgment (ACK=${p.ack}) into transit. It confirms receipt of all bytes before ${p.ack}; one ACK can cover multiple segments received in order. The sender will update SND.UNA only when this ACK arrives. It consumes no sequence numbers and does not read application data.`,p);return p;}
+ function repeatAck(s,id='B'){if(s.phase===4&&((s.closeStep===1&&id!==s.closer)||(s.closeStep===3&&id===s.closer)))return teardown(s);if(!active(s))return;const p=queueAck(s,id,'manual ACK');event(s,'ack-queued',id,`Host ${id}'s TCP sends its current cumulative acknowledgment (ACK=${p.ack}) into transit. It confirms receipt of all bytes before ${p.ack}; one ACK can cover multiple segments received in order. The sender will update SND.UNA only when this ACK arrives. It consumes no sequence numbers and does not read application data.`,p);return p;}
  function drop(s,id){const p=s.packets.find(p=>p.id===id&&['queued','pending'].includes(p.status));if(!p)return;p.status='lost';event(s,'drop',p.from,p.len?`The segment carrying bytes ${p.seq}–${p.seq+p.len-1} is lost before reaching Host ${p.to}. SND.NXT at Host ${p.from} stays ${s.hosts[p.from].nxt}; these sequence numbers were already assigned. Retransmission must reuse the original numbers.`:`The ACK=${p.ack} packet is lost. Host ${p.to} cannot use this acknowledgment. Received data remains buffered; the peer TCP can repeat the ACK without involving its application.`,p,p.len?[p.seq,p.seq+p.len]:null,p.from);}
  function retransmit(s,id='A',reason='manual'){ 
-  if(!established(s))return;const h=s.hosts[id],original=outstanding(s,id)[0];if(!original)return;
+  if(!active(s))return;const h=s.hosts[id],original=outstanding(s,id)[0];if(!original)return;
   const seq=Math.max(original.seq,h.una),len=original.seq+original.len-seq,p=packet(s,id,{kind:'data',status:'pending',seq,len,retransmission:true,retransmissionReason:reason,...header(s,id)});
   h.deadline=s.time+h.rto;
   event(s,reason==='fast'?'fast-retransmit':'retransmit',id,`${reason==='fast'?'Three duplicate ACKs arrived. TCP fast retransmits without waiting for timeout. ':''}Host ${id}'s TCP retransmits bytes ${seq}–${seq+len-1} (SEQ=${seq}, LEN=${len}). These are outstanding bytes, so they reuse their original sequence numbers; SND.NXT stays ${h.nxt}. If the earlier data arrived but its ACK was lost, the peer recognizes duplicate bytes and acknowledges them again.`,p,[seq,seq+len],id);return p;
  }
  function advanceTime(s,seconds=1){
-  integer(seconds,1,120,'Elapsed seconds');if(!established(s))return;
+  integer(seconds,1,120,'Elapsed seconds');if(!active(s))return;
   for(let n=0;n<seconds;n++){
    s.time++;
    for(const id of ['A','B']){const h=s.hosts[id];if(h.deadline===null||s.time<h.deadline)continue;
@@ -100,6 +137,13 @@
   }
  }
  function step(s){
+  if(s.phase>=4){
+   if(s.phase!==4||s.closeStep!==2)return teardown(s);
+   const peer=other(s.closer);if(canSend(s,peer))return send(s,peer);
+   const pending=s.packets.find(p=>['pending','queued'].includes(p.status));if(pending)return deliver(s,pending.id);
+   if(s.hosts[peer].deadline!==null)return advanceTime(s);
+   return;
+  }
   if(!established(s))return handshake(s);const ids=s.c.duplex?[s.turn,other(s.turn)]:['A'];
   for(const id of ids){const h=s.hosts[id];if(h.submitted<h.size)return submit(s,id);}
   for(const id of ids)if(canSend(s,id))return send(s,id);
@@ -108,6 +152,6 @@
   if(ids.some(id=>s.hosts[id].deadline!==null))return advanceTime(s);
   if(s.c.autoRead)for(const id of ['A','B'])if(readable(s.hosts[id]))return read(s,id,256);
  }
- const api={defaults,create,other,established,enabled,readable,available,canSend,outstanding,handshake,setMode,submit,send,deliver,ack:deliver,read,flush,repeatAck,drop,retransmit,advanceTime,step};
+ const api={active,sendOpen,canClose,close,teardown,defaults,create,other,established,enabled,readable,available,canSend,outstanding,handshake,setMode,submit,send,deliver,ack:deliver,read,flush,repeatAck,drop,retransmit,advanceTime,step};
  if(typeof module!=='undefined')module.exports=api;else root.TCPSequence=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

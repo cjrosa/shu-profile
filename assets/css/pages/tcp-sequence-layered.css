@@ -249,3 +249,38 @@ body{background:#fff}
 @keyframes buffer-flow-label{0%,85%{opacity:1}100%{opacity:0}}
 @media(prefers-reduced-motion:reduce){.buffer-byte-flight,.buffer-flight-label{display:none}}
 @media(max-width:480px){.buffer-bridge-row{padding:0 6px;gap:6px}.recv-buffer{gap:5px;padding:5px 6px}.recv-buffer-icon{width:16px}.recv-buffer span:last-child{min-width:0}}
+
+.host-connection-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.host-heading { flex-wrap: wrap; gap: 10px; }
+#A-close-menu-button { anchor-name: --close-a; }
+#B-close-menu-button { anchor-name: --close-b; }
+#A-close-menu { position-anchor: --close-a; }
+#B-close-menu { position-anchor: --close-b; }
+
+.fin-choice-help { position: relative; display: inline-flex; align-items: center; }
+.fin-choice-help[hidden] { display: none; }
+.fin-info-button { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; padding: 3px; border: 1px solid #111; border-radius: 50%; background: #111; color: #fff; cursor: help; }
+.fin-choice-tooltip { display: none; position: absolute; right: 0; top: 100%; z-index: 50; width: min(340px, 80vw); padding: 14px 16px; border-radius: 9px; background: #111; color: #fff; font: 13px/1.5 system-ui, sans-serif; text-align: left; box-shadow: 0 6px 18px #0003; }
+.fin-choice-tooltip > strong, .fin-choice-tooltip > span { display: block; }
+.fin-choice-tooltip > span { margin-top: 9px; }
+.fin-choice-help:hover .fin-choice-tooltip, .fin-choice-help:focus-within .fin-choice-tooltip { display: block; }
+.fin-info-button:focus-visible { outline: 3px solid #5684ba; outline-offset: 3px; }
+.host-heading { overflow: visible; }
+
+.host-heading .fin-choice-help,
+.host-heading .fin-choice-tooltip,
+.host-heading .fin-choice-tooltip span,
+.host-heading .fin-choice-tooltip strong,
+.host-heading .fin-choice-tooltip b {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.host-heading .fin-choice-tooltip, .host-heading .fin-choice-tooltip span { font-weight: 400; }
+.host-heading .fin-choice-tooltip strong, .host-heading .fin-choice-tooltip b { font-weight: 700; }
+
+.layered-host .fin-info-button {
+  background: transparent;
+  color: var(--stream-color);
+  border-color: var(--stream-color);
+}
+.close-status { margin: 8px 14px; padding: 8px 10px; border-left: 3px solid var(--stream-color); background: var(--pale); color: var(--ink); font: 12px/1.5 system-ui, sans-serif; }
+.close-status[hidden] { display: none; }

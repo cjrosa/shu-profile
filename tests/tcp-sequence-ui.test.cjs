@@ -17,7 +17,7 @@ test('bulk rejection simulates loss without discarding buffered or unacknowledge
 });
 function fixture(legacy=true){
  const elements=new Map(),timers=new Map(),listeners={};let timer=0;
- function el(id){if(!elements.has(id)){let html='';const e={value:'',textContent:'',style:{setProperty(k,v){this[k]=v;}},attrs:{},disabled:false,hidden:false,checked:false,open:false,showModal(){this.open=true;},close(){this.open=false;},scrollLeft:0,clientWidth:700,scrollHeight:100,offsetTop:0,addEventListener(k,f){this['on'+k]=f;},setAttribute(k,v){this.attrs[k]=v;},focus(){this.focused=true;},scrollTo(){},closest(){return el('log-scroll');},querySelector(){return null;}};Object.defineProperty(e,'innerHTML',{get:()=>html,set:v=>{html=v;for(const m of v.matchAll(/<input id="([^"]+)"[^>]*value="([^"]+)"/g))el(m[1]).value=m[2];const option=v.match(/<option value="([^"]*)"/);if(option)e.value=option[1];}});elements.set(id,e);}return elements.get(id);}
+ function el(id){if(!elements.has(id)){let html='';const e={value:'',textContent:'',style:{setProperty(k,v){this[k]=v;}},attrs:{},disabled:false,hidden:false,checked:false,open:false,showModal(){this.open=true;},close(){this.open=false;},scrollLeft:0,clientWidth:700,scrollHeight:100,offsetTop:0,addEventListener(k,f){this['on'+k]=f;},setAttribute(k,v){this.attrs[k]=v;},removeAttribute(k){delete this.attrs[k];},focus(){this.focused=true;},scrollTo(){},closest(){return el('log-scroll');},querySelector(){return null;}};Object.defineProperty(e,'innerHTML',{get:()=>html,set:v=>{html=v;for(const m of v.matchAll(/<input id="([^"]+)"[^>]*value="([^"]+)"/g))el(m[1]).value=m[2];const option=v.match(/<option value="([^"]*)"/);if(option)e.value=option[1];}});elements.set(id,e);}return elements.get(id);}
  el('speed').value='1000';
  const context={window:{TCPSequence:require('../assets/js/tcp-sequence-engine.js')},document:{getElementById:el,querySelector:()=>el('log-scroll'),addEventListener(k,f){listeners[k]=f;}},matchMedia:()=>({matches:true}),setInterval:f=>{timers.set(++timer,f);return timer;},clearInterval:id=>timers.delete(id)};
  for(const name of ['scenarios','', 'tabs'])vm.runInNewContext(fs.readFileSync('assets/js/tcp-sequence'+(name?'-'+name:'')+'.js','utf8'),context);
@@ -83,3 +83,25 @@ test('receive buffer visibility follows duplex and resets pending bytes',()=>{co
 test('send buffer retains bytes until ACK and follows duplex visibility',()=>{const f=fixture(false);assert.equal(f.el('A-send-bridge').hidden,false);assert.equal(f.el('B-send-bridge').hidden,true);f.click('duplex');assert.equal(f.el('B-send-bridge').hidden,false);f.click('skip');f.click('A-submit');assert.equal(f.el('A-send-bytes').textContent,'20 bytes');f.click('A-send');assert.equal(f.el('A-send-bytes').textContent,'20 bytes');f.click('deliver');assert.equal(f.el('A-send-bytes').textContent,'20 bytes');f.click('B-send-ack');f.click('deliver-ack');assert.equal(f.el('A-send-bytes').textContent,'18 bytes');assert.equal(f.el('B-send-bytes').textContent,'0 bytes');f.click('reset');assert.equal(f.el('A-send-bytes').textContent,'0 bytes');});
 
 test('Send Data stays enabled for repeated submissions in full duplex',()=>{const f=fixture(false);f.click('duplex');f.click('skip');for(const id of ['A','B']){f.click(id+'-submit');f.click(id+'-submit');assert.equal(f.el(id+'-submit').disabled,false);assert.equal(f.el(id+'-send-bytes').textContent,id==='A'?'40 bytes':'24 bytes');}assert.match(f.el('A-send-cells').innerHTML,/81/);f.click('reset');assert.equal(f.el('A-send-bytes').textContent,'0 bytes');});
+
+test('host header FIN controls wait for student actions and offer combined close',()=>{
+ const f=fixture();f.click('skip');f.click('A-close');assert.equal(f.timers.size,0);assert.equal(f.el('B-fin-step').hidden,false);assert.ok(f.el('B-close').innerHTML.startsWith('Send FIN + ACK<small>'));f.click('B-fin-step');assert.equal(f.el('B-state').textContent,'CLOSE-WAIT');assert.ok(f.el('B-close').innerHTML.startsWith('Send FIN + ACK<small>'));f.click('B-close');assert.equal(f.el('A-fin-step').hidden,false);f.click('A-fin-step');assert.equal(f.el('A-fin-step').textContent,'Finish TIME-WAIT');f.click('A-fin-step');assert.equal(f.el('A-state').textContent,'CLOSED');assert.equal(f.el('B-state').textContent,'CLOSED');
+ f.click('reset');f.click('skip');f.click('B-close');f.click('A-close');f.click('B-fin-step');f.click('B-fin-step');assert.equal(f.el('status').textContent,'Connection closed');
+});
+
+test('close menu skips teardown and reconnect supports both handshake and connected start',()=>{
+ const f=fixture();f.click('skip');f.click('A-close-now');assert.equal(f.el('status').textContent,'Connection closed');assert.equal(f.el('connection-menu-button').disabled,false);assert.equal(f.timers.size,0);
+ f.click('connect');assert.equal(f.el('A-state').textContent,'SYN-SENT');f.click('handshake-syn-ack');f.click('handshake-ack');assert.equal(f.el('A-state').textContent,'ESTABLISHED');f.click('B-close-now');assert.equal(f.el('B-state').textContent,'CLOSED');f.click('skip');assert.equal(f.el('A-state').textContent,'ESTABLISHED');assert.equal(f.el('B-state').textContent,'ESTABLISHED');
+});
+test('SYN and FIN action buttons are generated in host headers',()=>{
+ const source=fs.readFileSync('assets/js/tcp-sequence.js','utf8'),header=source.slice(source.indexOf('<div class="host-heading">'),source.indexOf('<section class="app-layer">'));
+ for(const id of ['connection-menu-button','handshake-syn-ack','handshake-ack','${id}-fin-step','${id}-close-menu-button'])assert.ok(header.includes('id="'+id+'"'),id);
+});
+
+test('FIN response is a direct header button without a popover',()=>{const f=fixture();f.click('skip');f.click('A-close');assert.equal(f.el('B-close-menu-button').attrs.popovertarget,undefined);f.click('B-close-menu-button');assert.equal(f.el('B-state').textContent,'LAST-ACK');assert.equal(f.el('error').textContent,'');});
+
+test('half-close keeps send-buffer counts visible and explains why FIN is waiting',()=>{
+ const f=fixture(false);f.click('skip');f.click('A-close');f.click('B-fin-step');f.click('B-submit');assert.equal(f.el('B-send-bytes').textContent,'12 bytes');assert.equal(f.el('B-close-menu-button').disabled,true);assert.match(f.el('B-close-status').textContent,/12 bytes still need transmission/);
+ for(let i=0;i<6;i++){f.click('B-send');f.click('deliver');f.click('A-send-ack');f.click('deliver-ack');}
+ assert.equal(f.el('B-send-bytes').textContent,'0 bytes');assert.equal(f.el('B-close-menu-button').disabled,false);assert.equal(f.el('B-close-status').hidden,true);f.click('B-close-menu-button');assert.equal(f.el('B-state').textContent,'LAST-ACK');
+});

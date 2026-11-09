@@ -237,8 +237,8 @@
             <div class="tool-footer"><span class="tool-cta purple">Open tool &rarr;</span><span class="tool-tag purple">Interactive</span></div>
           </a>
 
-          <!-- TCP Full Visualizer -->
-          <a class="tool-card preview-enabled" href="../viewer.html?tool=cs339/tcp_full_V3.html&course=CS339&label=Computer%20Networks&name=TCP%20Full%20Visualizer&back=cs339/index.html">
+          <!-- TCP Flow &amp; Congestion Control -->
+          <a class="tool-card preview-enabled" href="../viewer.html?tool=cs339/tcp_full_V3.html&course=CS339&label=Computer%20Networks&name=TCP%20Flow%20%26%20Congestion%20Control&back=cs339/index.html">
             <span class="tool-preview-trigger" aria-hidden="true">
               <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="4.5"></circle><line x1="10.5" y1="10.5" x2="14" y2="14"></line></svg>
             </span>
@@ -246,7 +246,7 @@
               <span class="tool-preview-shot network img-cs339-tcp-full">
                 <span class="tool-preview-chip">Preview</span>
               </span>
-              <span class="tool-preview-caption">TCP Full Visualizer</span>
+              <span class="tool-preview-caption">TCP Flow &amp; Congestion Control</span>
             </span>
             <div class="tool-card-header">
               <div class="tool-icon purple">
@@ -256,21 +256,19 @@
               </div>
               <div>
                 <div class="tool-subtitle purple">TCP Transport</div>
-                <div class="tool-title">TCP Full Visualizer</div>
+                <div class="tool-title">TCP Flow &amp; Congestion Control</div>
               </div>
             </div>
             <div class="tool-body">
               <p class="tool-desc">
-                End-to-end TCP simulation with sender/receiver buffers, sliding
-                window, congestion control phases, and live packet exchange.
-                Covers the complete connection lifecycle.
+                Explore how receiver capacity and network congestion limit TCP sending. Follow animated segments, compare rwnd and cwnd, and inspect loss recovery.
               </p>
               <div class="tool-features">
-                <div class="tool-feature"><div class="tool-feature-dot purple"></div>Three-way SYN handshake &amp; FIN teardown</div>
-                <div class="tool-feature"><div class="tool-feature-dot purple"></div>Seq / Ack number tracking in real time</div>
-                <div class="tool-feature"><div class="tool-feature-dot purple"></div>Flow control &mdash; rwnd, sender buffer drain</div>
-                <div class="tool-feature"><div class="tool-feature-dot purple"></div>Congestion control &mdash; slow start, AIMD, ssthresh</div>
-                <div class="tool-feature"><div class="tool-feature-dot purple"></div>Packet loss injection &amp; retransmit simulation</div>
+                <div class="tool-feature"><div class="tool-feature-dot purple"></div>Effective window: min(rwnd, cwnd) and bytes in flight</div>
+                <div class="tool-feature"><div class="tool-feature-dot purple"></div>Live send and receive buffers with animated packets</div>
+                <div class="tool-feature"><div class="tool-feature-dot purple"></div>Tahoe and Reno: slow start, congestion avoidance, and recovery</div>
+                <div class="tool-feature"><div class="tool-feature-dot purple"></div>Window history charts and congestion event inspection</div>
+                <div class="tool-feature"><div class="tool-feature-dot purple"></div>Manual exploration and automatic simulation</div>
               </div>
             </div>
             <div class="tool-footer">
@@ -676,8 +674,8 @@ const TOOLS = [
   { name:'TCP SEQ/ACK Visualizer', file:'tcp_sequence.html', layer:'Transport &mdash; Layer 4',
     desc:'Layered TCP hosts, application reads, receive buffers, fixed teaching windows, full duplex, piggybacked ACKs, and packet loss recovery.',
     keywords:['tcp','sequence','ack','handshake','sliding window','mss','retransmission','sliding window'] },
-  { name:'TCP Full Visualizer', file:'tcp_full_V3.html', layer:'Transport &mdash; Layer 4',
-    desc:'SYN/FIN handshake, seq/ack, flow control, congestion control, slow start, AIMD, retransmit',
+  { name:'TCP Flow & Congestion Control', file:'tcp_full_V3.html', layer:'Transport &mdash; Layer 4',
+    desc:'Receiver and congestion windows, effective sending limit, bytes in flight, Tahoe and Reno, slow start, AIMD charts, packet loss and recovery',
     keywords:['tcp','syn','fin','ack','seq','sequence','acknowledgment','handshake','flow control','congestion','slow start','aimd','retransmit','sliding window','rwnd','cwnd','buffer','transport'] },
   { name:'CIDR Teaching Tool', file:'cidr_viz.html', layer:'Network &mdash; Layer 3',
     desc:'IP addressing, subnet masks, CIDR notation, block sizes, route aggregation, same-subnet check',
@@ -795,7 +793,7 @@ Rules:
 - If the question is outside networking/CS339 scope, politely redirect.
 - You may use markdown when helpful: headings, bold, italics, links, inline code, fenced code blocks, and simple lists.
 - End your answer with a single line starting with "TOOL:" naming the single most relevant tool from this list if applicable, or "TOOL:none" if no tool applies:
-  Email Explorer, DNS Explorer, Network Performance Explorer, Internet Checksum Explorer, TCP Full Visualizer, CIDR Teaching Tool, Subnet Topology Builder, Router Visualizer, Routing Algorithm Visualizer, Graph Algorithm Visualizer, Link Layer Visualizer`;
+  Email Explorer, DNS Explorer, Network Performance Explorer, Internet Checksum Explorer, TCP Flow & Congestion Control, CIDR Teaching Tool, Subnet Topology Builder, Router Visualizer, Routing Algorithm Visualizer, Graph Algorithm Visualizer, Link Layer Visualizer`;
 
   const response = await fetch(PROXY_URL, {
     method: 'POST',

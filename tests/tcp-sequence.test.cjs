@@ -77,3 +77,31 @@ test('duplicate counters are independent and exclude data ACKs, stale ACKs and i
  const s=connected({duplex:true,mss:2,mssB:2,ackMode:'manual'});E.submit(s,'A');E.submit(s,'B');E.send(s,'A');E.deliver(s,E.send(s,'B').id);assert.equal(s.hosts.A.dupAcks,0);E.deliver(s,E.repeatAck(s,'B').id);assert.equal(s.hosts.A.dupAcks,1);assert.equal(s.hosts.B.dupAcks,0);
  const stale=E.repeatAck(s,'B');E.deliver(s,s.packets.find(p=>p.from==='A'&&p.len).id);E.deliver(s,E.repeatAck(s,'B').id);assert.equal(s.hosts.A.dupAcks,0);E.deliver(s,stale.id);E.deliver(s,E.repeatAck(s,'B').id);assert.equal(s.hosts.A.dupAcks,0);assert.equal(E.create(s.c).hosts.A.fastSeq,null);
 });
+
+test('either host initiates a four-packet FIN teardown with independent sequence spaces',()=>{
+ for(const id of ['A','B']){
+  const s=connected(),peer=E.other(id),a=s.hosts[id],b=s.hosts[peer],as=a.nxt,bs=b.nxt;
+  assert.equal(E.canClose(s),true);E.close(s,id);
+  assert.equal(a.state,'FIN-WAIT-1');assert.equal(b.state,'CLOSE-WAIT');assert.equal(a.nxt,as+1);assert.equal(b.rcv,as+1);
+  E.step(s);assert.equal(a.state,'FIN-WAIT-2');assert.equal(a.una,as+1);
+  E.close(s,peer);assert.equal(b.state,'LAST-ACK');assert.equal(b.nxt,bs+1);assert.equal(a.rcv,bs+1);
+  E.step(s);assert.equal(a.state,'TIME-WAIT');assert.equal(b.state,'CLOSED');assert.equal(b.una,bs+1);
+  assert.deepEqual(s.packets.slice(-4).map(p=>[p.from,p.flags,p.seq,p.ack,p.len]),[[id,'FIN, ACK',as,bs,0],[peer,'ACK',bs,as+1,0],[peer,'FIN, ACK',bs,as+1,0],[id,'ACK',as+1,bs+1,0]]);
+  E.step(s);assert.equal(a.state,'CLOSED');assert.equal(s.phase,5);assert.equal(E.canSend(s,id),false);assert.equal(E.readable(a),0);assert.equal(E.readable(b),0);
+ }
+});
+test('close waits for outstanding data and preserves unread payload without counting FIN as data',()=>{
+ const s=connected({size:4});E.submit(s,'A');assert.equal(E.canClose(s),false);const p=E.send(s,'A');E.deliver(s,p.id);assert.equal(E.canClose(s),false);E.deliver(s,queued(s,'B')[0].id);assert.equal(E.canClose(s),true);
+ E.close(s,'B');E.step(s);E.close(s,'A');E.step(s);E.step(s);assert.equal(E.readable(s.hosts.B),4);E.read(s,'B',256);assert.equal(s.hosts.B.consumed,4);assert.equal(E.readable(s.hosts.B),0);
+});
+
+test('combined FIN ACK and independent half-close work from either host',()=>{
+ for(const id of ['A','B']){
+  const peer=E.other(id),combined=connected();E.close(combined,id);E.close(combined,peer);E.step(combined);E.step(combined);
+  assert.equal(combined.phase,5);assert.deepEqual(combined.packets.filter(p=>p.kind==='teardown').map(p=>p.flags),['FIN, ACK','FIN, ACK','ACK']);
+  const s=connected({ackMode:'manual'});E.close(s,id);E.repeatAck(s,peer);const n=s.events.length;E.step(s);assert.equal(s.events.length,n,'waits for the peer application to close');
+  E.submit(s,id,2);assert.equal(s.hosts[id].submitted,0,'closed sending direction rejects new data');
+  E.submit(s,peer,2);const p=E.send(s,peer);assert.ok(p);E.deliver(s,p.id);assert.equal(E.readable(s.hosts[id]),2);assert.equal(E.canClose(s,peer),false);
+  E.deliver(s,E.repeatAck(s,id).id);assert.equal(E.canClose(s,peer),true);E.close(s,peer);E.repeatAck(s,id);E.step(s);assert.equal(s.phase,5);E.read(s,id,2);assert.equal(s.hosts[id].consumed,2);
+ }
+});
