@@ -233,6 +233,8 @@ input[type=number]::-webkit-inner-spin-button { opacity: 1; }
 #cc-examine-dialog p { line-height:1.6; }
 .cc-examine-status { margin:0; font-size:12px; color:var(--muted); }
 #cc-examine-values { padding:10px; border-radius:8px; background:var(--pale); font-size:13px; }
+#cc-examine-phase { margin:12px 0; font-size:14px; font-weight:600; color:var(--navy); }
+#cc-examine-ssthresh { margin:14px 0; padding:12px; border-left:3px solid #BA7517; background:#fff9ed; white-space:pre-line; overflow-wrap:anywhere; }
 #cc-examine-dialog button:disabled { opacity:.45; cursor:default; }
 
 /* Keep playback controls available throughout the history and graph. */
@@ -329,7 +331,8 @@ input[type=number]::-webkit-inner-spin-button { opacity: 1; }
 .window-summary-heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; margin-bottom: 8px; }
 .window-summary-heading h2 { margin: 0; font-size: 16px; }
 .window-summary-heading #window-limit { margin: 0; font-size: 12px; font-weight: 500; color: #52657d; }
-#window-values { font: 600 14px/1.6 ui-monospace, Consolas, monospace; color: #253954; }
+#window-values, #cc-examine-ssthresh, .ssthresh-formula { font: 600 14px/1.6 ui-monospace, Consolas, monospace; color: #253954; }
+.ssthresh-formula { padding:8px; border-left:3px solid #BA7517; background:#fff9ed; overflow-wrap:anywhere; }
 .window-term { display: inline-block; padding: 1px 5px; border: 1px solid transparent; border-radius: 5px; }
 .window-term.is-limiting { color: #173e80; background: #dce7fc; border-color: #8aa6d7; box-shadow: inset 0 -2px #4568ae; }
 #window-visual { margin: 10px 0 6px; }
@@ -441,10 +444,11 @@ input[type=number]::-webkit-inner-spin-button { opacity: 1; }
 .phase-help { position: absolute; right: 12px; top: 12px; }
 .phase-help-button { display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 3px; background: transparent; border: 0; border-radius: 50%; color: #61758a; cursor: help; }
 .phase-help-button:hover, .phase-help-button:focus-visible { background: #edf3ff; color: #174db5; outline: 2px solid #a8b9e4; }
-#phase-tooltip { display: none; position: absolute; top: 100%; left: 0; width: min(340px, 70vw); padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--navy); box-shadow: 0 6px 24px #243b5326; z-index: 25; font: 12px/1.5 system-ui, sans-serif; }
-.phase-help:hover #phase-tooltip, .phase-help:focus-within #phase-tooltip { display: block; }
-.cc-status-line .cc-kpi #phase-tooltip strong { font-size: 13px; }
-#phase-tooltip p { margin: 8px 0 0; }
+.phase-help [role="tooltip"] { display: none; position: absolute; top: 100%; left: 0; width: min(340px, 70vw); padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--navy); box-shadow: 0 6px 24px #243b5326; z-index: 25; font: 12px/1.5 system-ui, sans-serif; }
+.phase-help:hover [role="tooltip"], .phase-help:focus-within [role="tooltip"] { display: block; }
+.cc-status-line .cc-kpi [role="tooltip"] strong { font-size: 13px; }
+.phase-help [role="tooltip"] p { margin: 8px 0 0; }
+.phase-help #ssthresh-tooltip, .phase-help #cwnd-tooltip { left: auto; right: 0; }
 
 #panels .stack.recv-stack { background: #fff; }
 

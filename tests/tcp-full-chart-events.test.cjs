@@ -11,7 +11,7 @@ test('congestion events synchronize table, graph selection, and clearing',()=>{
   w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'));};
   w.HTMLCanvasElement.prototype.getContext=()=>new Proxy({}, {get:(_,k)=>k==='createLinearGradient'?()=>({addColorStop(){}}):()=>{},set:()=>true});
   w.requestAnimationFrame=()=>{};
-  const script=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)][0][1];
+  const script=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)][0][1].replace(/\r\n/g,'\n');
   w.eval(script.replace('requestAnimationFrame(loop);\nrenderLog();',`window.chartAPI={doConnect,onTimeoutCC,triggerFastRetx,drawChart,loop,sim,
     clock:()=>protocolTime,
     phase:()=>{cc.phase='cong_avoid';recordChart();},
@@ -67,5 +67,49 @@ test('congestion events synchronize table, graph selection, and clearing',()=>{
   a.sim.paused=true;w.document.querySelector('#cc-events-body button').click();
   w.document.getElementById('cc-examine-continue').click();
   const paused=a.clock();a.loop(600);assert.equal(a.clock(),paused,'existing pause is preserved');
+  dom.window.close();
+});
+
+test('nearby recovery events keep separate selectable markers without changing event data',()=>{
+  const html=fs.readFileSync('cs339/tcp_full_V3.html','utf8');
+  const dom=new JSDOM(html,{runScripts:'outside-only'}),w=dom.window;
+  w.HTMLElement.prototype.scrollIntoView=()=>{};
+  w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
+  w.requestAnimationFrame=()=>{};
+  const script=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)][0][1];
+  w.eval(script.replace(/\}\)\(\);\s*$/, `
+    window.chartAPI={drawChart,selectCCEvent,
+      state:()=>({events:ccEvents.slice(),hits:ccEventHits.slice(),selected:selectedCCEvent})};
+    for(let i=0;i<24;i++){
+      const point={t:Math.floor(i/2)*16+(i%2)*0.1,cwnd:4,ssthresh:4,
+        phase:i%2?'cong_avoid':'fast_recovery',mss:1000};
+      chartPts.push(point);
+      ccEvents.push({...point,id:i+1,label:i%2?'Enter congestion avoidance':'Fast retransmit',variant:'reno'});
+    }
+    drawChart();
+  })();`));
+  const a=w.chartAPI,chart=w.document.getElementById('chart-cv');
+  chart.getBoundingClientRect=()=>({left:0,top:0,width:Number(chart.getAttribute('viewBox').split(' ')[2]),height:320});
+  const original=JSON.stringify(a.state().events);
+  function checkMarkers(){
+    const hits=a.state().hits;
+    assert.equal(hits.length,24);
+    assert.equal(chart.querySelectorAll('.chart-event-marker').length,24);
+    hits.forEach((hit,i)=>{
+      assert.ok(hit.x>=72&&hit.x<=Number(chart.getAttribute('viewBox').split(' ')[2])-24);
+      assert.ok(hit.y>=50&&hit.y<=282);
+      hits.slice(i+1).forEach(other=>assert.ok(Math.hypot(hit.x-other.x,hit.y-other.y)>=26,'event markers must not overlap'));
+    });
+    for(const id of [13,17,21]){
+      const hit=hits.find(h=>h.id===id);
+      chart.dispatchEvent(new w.MouseEvent('click',{clientX:hit.x,clientY:hit.y}));
+      assert.equal(a.state().selected,id,'displaced marker remains selectable');
+      assert.match(w.document.getElementById('cc-examine-title').textContent,new RegExp('^#'+id+' - Fast retransmit'));
+    }
+    assert.equal(JSON.stringify(a.state().events),original,'layout must preserve real event times and values');
+  }
+  checkMarkers();
+  w.document.getElementById('units-bytes').click();checkMarkers();
+  a.drawChart();checkMarkers();
   dom.window.close();
 });
