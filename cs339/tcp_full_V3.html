@@ -2,7 +2,7 @@
 <!-- saved from url=(0051)file:///C:/Users/Chris/Downloads/tcp_full_V2_2.html -->
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-<title>TCP Interactive Visualizer</title>
+<title>TCP Flow &amp; Congestion Control</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 24 24&#39; fill=&#39;none&#39; stroke=&#39;%23185FA5&#39; stroke-width=&#39;2&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39;&gt;&lt;rect x=&#39;2&#39; y=&#39;2&#39; width=&#39;6&#39; height=&#39;6&#39; rx=&#39;1&#39;/&gt;&lt;rect x=&#39;16&#39; y=&#39;2&#39; width=&#39;6&#39; height=&#39;6&#39; rx=&#39;1&#39;/&gt;&lt;rect x=&#39;9&#39; y=&#39;16&#39; width=&#39;6&#39; height=&#39;6&#39; rx=&#39;1&#39;/&gt;&lt;line x1=&#39;5&#39; y1=&#39;8&#39; x2=&#39;5&#39; y2=&#39;12&#39;/&gt;&lt;line x1=&#39;19&#39; y1=&#39;8&#39; x2=&#39;19&#39; y2=&#39;12&#39;/&gt;&lt;line x1=&#39;5&#39; y1=&#39;12&#39; x2=&#39;19&#39; y2=&#39;12&#39;/&gt;&lt;line x1=&#39;12&#39; y1=&#39;12&#39; x2=&#39;12&#39; y2=&#39;16&#39;/&gt;&lt;/svg&gt;">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -71,9 +71,10 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
 #chart-legend{display:flex;gap:12px;font-size:9px;color:#888780;flex-wrap:wrap;}
 .leg-item{display:flex;align-items:center;gap:4px;}
 .leg-dot{width:16px;height:3px;border-radius:2px;}
-#net-strip{height:64px;cursor:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23A32D2D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>') 4 4, crosshair;}
+#net-strip{height:124px;}
+#net-strip[data-drop-enabled="true"]{cursor:crosshair;}
 #net-cv{display:block;width:100%;height:100%;}
-#state-bar{text-align:center;font-size:11px;font-weight:600;padding:2px;letter-spacing:.04em;}
+#state-bar{display:inline-flex;align-items:center;font:600 11px/1.4 system-ui,sans-serif;padding:4px 8px;border:1px solid currentColor;border-radius:6px;background:#fff;white-space:nowrap;}
 #log-wrap{border:1px solid #c0beb6;border-radius:8px;overflow:hidden;background:#fff;}
 #log-hdr-row{padding:4px 10px;background:#f0efea;border-bottom:1px solid #e8e7e2;display:flex;align-items:center;gap:8px;}
 #log-hdr-cols{display:grid;grid-template-columns:44px 18px 80px 52px 14px 52px 66px 66px 36px 56px;flex:1;font-size:9px;font-weight:700;color:#888780;letter-spacing:.05em;text-transform:uppercase;}
@@ -104,26 +105,21 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
         <rect x="2" y="2" width="6" height="6" rx="1"></rect><rect x="16" y="2" width="6" height="6" rx="1"></rect><rect x="9" y="16" width="6" height="6" rx="1"></rect>
         <line x1="5" y1="8" x2="5" y2="12"></line><line x1="19" y1="8" x2="19" y2="12"></line><line x1="5" y1="12" x2="19" y2="12"></line><line x1="12" y1="12" x2="12" y2="16"></line>
       </svg>
-      <h1>TCP Interactive Visualizer</h1>
+      <h1>TCP Flow &amp; Congestion Control</h1>
     </div>
-    <p id="titlebar-subtitle">Explore TCP connections, reliable delivery, flow control, and congestion control as data moves between hosts.</p>
+    <p id="titlebar-subtitle">Explore how receiver capacity and network congestion control how much TCP can send.</p>
   </header>
   <div id="host-controls" role="region" aria-label="Sender and receiver controls">
       <div class="app-hdr">
         <div class="ctrl-row">
           <span class="app-name"><svg class="section-icon application-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01M7 13h6M7 16h10"/></svg>Sender</span>
-          <span class="port-badge" id="s-port" style="display: inline-block;">:62682</span>
+          <span class="port-badge" id="s-port" style="display: inline-block;">:62682</span><span id="sender-settings-summary" class="host-settings-summary"></span>
           <div class="vsep"></div>
-          <label class="seg-label" for="seg-input">seg</label>
-          <input type="number" id="seg-input" aria-label="Segment size in bytes" value="500" min="100" max="9000" step="100">
-          <span style="font-size:10px;color:#185FA5;font-weight:600;">B</span>
-          <div class="vsep"></div>
-          <button class="btn-mode active" id="mode-manual">Manual</button>
-          <button class="btn-mode" id="mode-sim">Simulate</button>
-          <div class="vsep"></div>
+          <span id="state-bar" role="status" aria-label="Connection status">&#9679; closed</span>
           <button class="btn btn-connect" id="btn-connect" style="display: none;">Connect</button>
           <button class="btn btn-send" id="btn-send" style="display: inline-flex;">Send</button>
           <button class="btn btn-close" id="btn-close" style="display: inline-flex;">Close</button>
+          <button class="btn-copy" id="simulation-settings-open" aria-label="Simulation settings" aria-haspopup="dialog" title="Simulation settings">&#8943;</button>
           <button class="btn btn-pause" id="btn-pause" style="display: none;">Pause</button>
         </div>
       </div>
@@ -132,96 +128,85 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
           <span class="app-name" style="color:#085041;"><svg class="section-icon application-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01M7 13h6M7 16h10"/></svg>Receiver</span>
           <span class="port-badge" id="r-port" style="display: inline-block; background: rgb(29, 158, 117);">:80</span>
           <div class="vsep g"></div>
-          <span style="font-size:10px;color:#0F6E56;font-weight:500;white-space:nowrap;" id="recv-hint">drain one segment per click</span>
+          <span id="recv-hint" class="host-settings-summary"></span>
           <div class="vsep g"></div>
-          <button class="btn-mode" id="btn-auto-recv" style="border-color: rgb(29, 158, 117); color: rgb(29, 158, 117); background: rgb(255, 255, 255);">Auto</button>
+
           <button class="btn btn-recv" id="btn-recv" disabled="" style="display: inline-flex;">Recv</button>
         </div>
       </div>
   </div>
-  <div id="panels">
-    <div class="stack">
-
-      <div class="sec-hdr-row">
-        <span class="lh section-heading-label"><svg class="section-icon transport-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 7h17m-4-4 4 4-4 4M21 17H4m4-4-4 4 4 4"/></svg>TCP transport</span>
-        <span id="s-warn" style="font-size:9px;font-weight:600;color:#854F0B;"></span>
-      </div>
-      <div class="kv-grid">
-        <div class="kv-key"><span class="rfc">ISN_S</span><span class="sub">initial seq#</span></div><div class="kv-val" id="t-isns">9366</div>
-        <div class="kv-div"></div>
-        <div class="kv-key"><span class="rfc">SND.NXT</span><span style="color:#aaa9a2;font-size:9px;">/</span><span class="rfc">SND.UACK</span><span class="sub">nxt send / unacked</span></div><div class="kv-val" id="t-nxt-una" style="font-size:11px;font-weight:700;font-family:monospace;color:#1a1a1a;text-align:right;padding:2px 0;"><span style="color:#185FA5">10367</span><span style="color:#aaa9a2;font-size:10px;"> / </span><span style="color:#534AB7">10367</span></div>
-        <div class="kv-div"></div>
-        <div class="kv-key"><span class="rfc">in flight</span><span class="sub">SND.NXT − SND.UNA</span></div><div class="kv-val" id="t-inflight">0 B</div>
-        <div class="kv-div"></div>
-        <div class="kv-key"><span class="rfc">peer rwnd</span><span class="sub">recv window</span></div><div class="kv-val" id="t-prwnd">9000 B</div>
-      </div>
-      <div class="sec-hdr-row">
-        <span class="lh section-heading-label"><svg class="section-icon transport-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9v6M12 9v6M17 9v6"/></svg>Send buffer</span><span class="badge ok" id="s-buf-ct">0 seg in flight</span>
-      </div>
-      <div class="buf-track"><div class="buf-bar" id="s-buf-bar" style="width: 0%; background: rgb(24, 95, 165);"></div></div>
-      <div class="buf-body" id="s-buf-body"><span class="empty-msg">empty</span></div>
-
-      <div class="sec-hdr" id="cc-sec-hdr" style="display: none;">Congestion control — <span id="cc-mode-label" style="color:#BA7517;">Tahoe</span></div>
-      <div id="cc-variant-row" style="display: none; gap: 6px; padding: 5px 12px; background: rgb(255, 255, 255); border-bottom: 1px solid rgb(232, 231, 226); align-items: center;">
-        <button class="cc-mode-btn active" id="cc-tahoe">Tahoe</button>
-        <button class="cc-mode-btn" id="cc-reno">Reno</button>
+  <dialog id="simulation-settings" aria-labelledby="simulation-settings-title">
+    <header><h2 id="simulation-settings-title"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 3-.6 2.2-1.6.9-2.2-.6-3 5.1 1.6 1.6v1.8l-1.6 1.6 3 5.1 2.2-.6 1.6.9L9 23h6l.6-2.2 1.6-.9 2.2.6 3-5.1-1.6-1.6V12l1.6-1.6-3-5.1-2.2.6-1.6-.9L15 3Z" transform="translate(0 -1) scale(.95)"/><circle cx="11.4" cy="11.4" r="3.2"/></svg>Simulation settings</h2><button class="btn-copy" id="simulation-settings-close" aria-label="Close simulation settings">Done</button></header>
+    <p class="settings-note">Playback is held while settings are open.</p>
+    <section><h3>Sending mode</h3><div class="settings-controls">          <button class="btn-mode active" id="mode-manual">Manual</button>
+          <button class="btn-mode" id="mode-sim">Simulate</button></div></section>
+    <section><h3>Segment size</h3><div class="settings-controls">          <label class="seg-label" for="seg-input">seg</label>
+          <input type="number" id="seg-input" aria-label="Segment size in bytes" value="500" min="100" max="9000" step="100">
+          <span style="font-size:10px;color:#185FA5;font-weight:600;">B</span></div></section>
+    <section><h3>Congestion control and packet loss</h3>      <div id="cc-variant-row" style="display: none; gap: 6px; padding: 5px 12px; background: rgb(255, 255, 255); border-bottom: 1px solid rgb(232, 231, 226); align-items: center;">
+        <button class="cc-mode-btn active" id="cc-tahoe" title="Tahoe: reset cwnd to 1 MSS after loss">Tahoe</button>
+        <button class="cc-mode-btn" id="cc-reno" title="Reno: fast recovery after three duplicate ACKs; reset cwnd to 1 MSS on timeout">Reno</button>
         <span style="font-size:9px;color:#888780;align-self:center;padding-left:4px;" id="cc-desc">cwnd→1 on any loss</span>
         <div style="flex:1"></div>
         <label id="sim-loss-wrap" style="display: none; align-items: center; gap: 4px; font-size: 10px; color: rgb(24, 95, 165); font-weight: 600;">
           loss every <select id="sim-loss-sel"><option value="0">never</option><option value="4">4</option><option value="6" selected="">6</option><option value="10">10</option></select> rounds
         </label>
+      </div></section>
+    <section><h3>Receiver application</h3><div class="settings-controls">          <button class="btn-mode" id="btn-auto-recv" style="border-color: rgb(29, 158, 117); color: rgb(29, 158, 117); background: rgb(255, 255, 255);">Auto</button></div>      <div class="flow-drain-controls"><label for="drain-rate">Application drain interval</label><select id="drain-rate"><option value="420">Fast (0.42s)</option><option value="1000">Medium (1s)</option><option value="2500">Slow (2.5s)</option></select><p class="drain-interval-note">Interval applies when sending mode is Manual and Auto drain is on.</p><dl class="drain-help"><div><dt>Manual &middot; Auto on</dt><dd>The application reads one buffered segment per interval.</dd></div><div><dt>Manual &middot; Auto off</dt><dd>Click <strong>Recv</strong> to read one buffered segment.</dd></div><div><dt>Simulate</dt><dd>The buffer drains automatically on each ACK. The interval is not used.</dd></div></dl></div></section>
+    <section><h3>Chart units</h3><div class="chart-units" role="group" aria-label="Units for both charts"><span>Both charts</span><button class="btn-copy" id="units-mss" aria-pressed="true">MSS</button><button class="btn-copy" id="units-bytes" aria-pressed="false">Bytes</button></div></section>
+    <section><h3>Examine events</h3><div class="settings-controls"><label class="examine-toggle"><input type="checkbox" id="settings-window-examine" role="switch"><span class="examine-switch" aria-hidden="true"></span><span>Sending-limit changes</span></label><label class="examine-toggle"><input type="checkbox" id="settings-cc-examine" role="switch"><span class="examine-switch" aria-hidden="true"></span><span>Congestion events</span></label></div></section>
+  </dialog>
+  <div id="panels">
+    <div class="stack">
+
+      <div class="sec-hdr-row">
+        <span class="lh section-heading-label"><svg class="section-icon transport-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9v6M12 9v6M17 9v6"/></svg>Send buffer</span><span id="s-warn" class="buffer-warning"></span><span class="badge ok" id="s-buf-ct">0 seg in flight</span>
       </div>
-      <div class="kv-grid" id="cc-kv-grid" style="display: none;">
-        <div class="kv-key"><span class="rfc">cwnd</span><span class="sub">congestion window</span></div><div class="kv-val hi-p" id="t-cwnd">2 MSS (2000 B)</div>
-        <div class="kv-div"></div>
-        <div class="kv-key"><span class="rfc">ssthresh</span><span class="sub">slow start threshold</span></div><div class="kv-val" id="t-ssthresh">8 MSS</div>
-        <div class="kv-div"></div>
-        <div class="kv-key"><span class="rfc">eff window</span><span class="sub">min(rwnd, cwnd)</span></div><div class="kv-val" id="t-effwin">2000 B total / 2000 B free</div>
-        <div class="kv-div"></div>
-        <div class="kv-key"><span class="rfc">CC phase</span><span class="sub">current state</span></div><div class="kv-val c-ss" id="t-ccphase">slow start</div>
-        <div class="kv-div"></div>
-        <div class="kv-key"><span class="rfc">RTT #</span><span class="sub">simulation round</span></div><div class="kv-val hi-p" id="t-rtt">—</div>
-      </div>
-    </div>
+      <div class="buf-track"><div class="buf-bar" id="s-buf-bar" style="width: 0%; background: rgb(24, 95, 165);"></div></div>
+      <div class="buf-body" id="s-buf-body"><span class="empty-msg">empty</span></div>
+
+
+</div>
 
     <div class="stack recv-stack">
 
-      <div class="sec-hdr section-heading-label"><svg class="section-icon transport-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 7h17m-4-4 4 4-4 4M21 17H4m4-4-4 4 4 4"/></svg>TCP transport</div>
-      <div class="kv-grid">
-        <div class="kv-key"><span class="rfc">ISN_R</span><span class="sub">initial seq#</span></div><div class="kv-val" id="t-isnr">3630</div>
-        <div class="kv-div"></div>
-        <div class="kv-key"><span class="rfc">RCV.NXT</span><span class="sub">next expected seq</span></div><div class="kv-val hi-g" id="t-rcvnxt">10367</div>
-        <div class="kv-div"></div>
-        <div class="kv-key"><span class="rfc">rwnd</span><span class="sub">free buffer space</span></div><div class="kv-val" id="t-rwnd">10 KB (10 segs)</div>
-        <div class="kv-div"></div>
-        <div class="kv-key"><span class="rfc">buffered</span><span class="sub">held by transport</span></div><div class="kv-val" id="t-held">0 / 10000 B</div>
-      </div>
       <div class="sec-hdr-row">
-        <span class="lh section-heading-label"><svg class="section-icon transport-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9v6M12 9v6M17 9v6"/></svg>Recv buffer</span><span class="badge ok" id="r-buf-pct">0 segs buffered</span>
+        <span class="lh section-heading-label"><svg class="section-icon transport-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9v6M12 9v6M17 9v6"/></svg>Receiver buffer</span><span class="receiver-status-line" title="Current receiver space; the sender learns about freed space when its window update arrives."><span>Free space <strong id="t-rwnd">?</strong></span><span>Buffered <strong id="t-held">?</strong></span></span><span class="badge ok" id="r-buf-pct">0 segs buffered</span>
       </div>
       <div class="buf-track"><div class="buf-bar" id="r-buf-bar" style="width: 0%; background: rgb(29, 158, 117);"></div></div>
       <div class="buf-body" id="r-buf-body"><span class="empty-msg">empty</span></div>
 
+
     </div>
   </div>
 
-  <div id="state-bar" style="color: rgb(29, 158, 117);">● established</div>
-  <div id="net-strip" title="Click to arm drop — next packet crossing the network will be lost"><canvas id="net-cv" width="1497" height="64"></canvas></div>
 
+  <div id="network-home">
+  <div id="net-strip" title="Click to arm drop — next packet crossing the network will be lost"><svg id="net-cv" viewBox="0 0 960 124" role="img" aria-label="Packets traveling between sender and receiver"></svg></div>
+  </div>
+  <section class="window-summary" aria-label="What limits sending"><div class="window-summary-heading"><h2><svg class="window-heading-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M7 10v4M11 10v4M16 3v18"/></svg>What limits sending?</h2><div class="cc-chart-actions"><label class="examine-toggle"><input type="checkbox" id="window-examine-mode" role="switch"><span class="examine-switch" aria-hidden="true"></span><span>Examine mode</span></label></div></div><div id="window-values"></div>
+    <dialog id="window-examine-dialog" aria-labelledby="window-examine-title" aria-describedby="window-examine-explanation">
+      <div class="cc-examine-heading"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18M6 16l4-6 4 3 6-8"/></svg><div><h2>Sending Limit Inspector</h2><p>Simulation paused for examination</p></div></div>
+      <h2 id="window-examine-title"></h2><p id="window-examine-values"></p><p id="window-examine-explanation"></p>
+      <div class="cc-chart-actions"><label class="examine-toggle"><input type="checkbox" id="window-dialog-mode" role="switch"><span class="examine-switch" aria-hidden="true"></span><span>Examine mode</span></label><button class="btn-copy" id="window-examine-pause">Pause simulation</button><button class="btn-copy" id="window-examine-continue">Continue simulation</button></div>
+    </dialog>
+    <div id="window-visual" hidden>
+      <div class="window-scale"><span>0 B</span><span id="window-scale-max"></span></div>
+      <div id="window-capacity" role="img" aria-label="Sending capacity">
+        <div class="window-fill-clip"><div id="window-used" class="window-fill"></div><div id="window-free" class="window-fill"></div><div id="window-excess" class="window-fill"></div></div>
+        <div id="window-rwnd-limit" title="Advertised receiver window"></div>
+        <div id="window-threshold" title="Effective send limit"></div>
+      </div>
+      <div class="window-marker-row"><span id="window-rwnd-marker" class="window-marker"></span></div>
+      <div class="window-marker-row" id="window-cwnd-row"><span id="window-cwnd-marker" class="window-marker"></span></div>
+      <div class="window-legend"><span><i class="used-key"></i><span id="window-used-label"></span></span><span><i class="free-key"></i><span id="window-free-label"></span></span><span><i class="limit-key"></i><span id="window-threshold-label"></span></span><span id="window-excess-label"></span></div>
+    </div>
+    <details class="window-history" id="window-history-details"><summary><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18M6 16l4-6 4 3 6-8"/></svg>Receiver and congestion windows over time</summary><svg id="window-history-graph" viewBox="0 0 960 320" role="img" aria-label="Receiver and congestion windows over time in bytes"></svg><p class="chart-unit-note" id="window-unit-note"></p><div class="window-history-legend"><div class="leg-item"><div class="leg-dot" style="background:#534AB7;"></div><span>cwnd</span></div><div class="leg-item"><div class="leg-dot" style="background:#168070;"></div><span>advertised rwnd (dashed)</span></div></div></details>
+  </section>
   <section class="history-panel">
-    <div class="history-toolbar">
-    <div class="history-tabs" role="tablist" aria-label="Simulation history">
-      <button id="message-tab" role="tab" aria-selected="true" aria-controls="message-panel">Message Log</button>
-      <button id="congestion-tab" role="tab" aria-selected="false" aria-controls="chart-wrap" tabindex="-1">Congestion Window</button>
-    </div>
-    <div class="history-tabs view-tabs" role="tablist" aria-label="Message log views">
-      <button id="exchange-tab" role="tab" aria-selected="true" aria-controls="exchange-panel">TCP Exchange</button>
-      <button id="transmission-tab" role="tab" aria-selected="false" aria-controls="log-wrap" tabindex="-1">Transmission Log</button>
-    </div>
-    </div>
-  <div id="chart-wrap" role="tabpanel" aria-labelledby="congestion-tab" hidden>
+  <div id="chart-wrap" role="region" aria-labelledby="chart-title">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-      <div id="chart-title">Congestion window (cwnd) over time — AIMD sawtooth</div>
+      <div id="chart-title"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18M6 16l4-6 4 3 6-8"/></svg>Congestion window (cwnd) over time — AIMD sawtooth</div>
       <div class="cc-chart-actions"><label class="examine-toggle"><input type="checkbox" id="cc-examine-mode" role="switch"><span class="examine-switch" aria-hidden="true"></span><span>Examine mode</span></label><button class="btn-copy" id="btn-clear-chart">Clear</button></div>
     </div>
     <dialog id="cc-examine-dialog" aria-labelledby="cc-examine-heading cc-examine-title" aria-describedby="cc-examine-explanation">
@@ -235,10 +220,18 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
       <label class="examine-toggle cc-dialog-toggle"><input type="checkbox" id="cc-examine-dialog-mode" role="switch"><span class="examine-switch" aria-hidden="true"></span><span>Examine mode</span></label>
       <div class="cc-chart-actions"><button class="btn-copy" id="cc-examine-prev">Previous event</button><button class="btn-copy" id="cc-examine-next">Next event</button><button class="btn-copy" id="cc-examine-pause">Pause simulation</button><button class="btn-copy" id="cc-examine-continue">Continue simulation</button></div>
     </dialog>
-    <div class="cc-events-scroll"><table id="cc-events"><caption>Congestion events ? select a row or a numbered graph marker</caption><thead><tr><th>Event</th><th>Time</th><th>What happened</th><th>cwnd (MSS)</th><th>ssthresh (MSS)</th></tr></thead><tbody id="cc-events-body"><tr><td colspan="5">Connect to record congestion events.</td></tr></tbody></table></div>
+    <div class="cc-status-line" aria-label="Current congestion state">
+      <div class="cc-kpi phase-kpi"><span>Phase</span><strong id="t-ccphase">&mdash;</strong>
+        <div class="phase-help"><button type="button" class="phase-help-button" aria-label="About congestion control phases" aria-describedby="phase-tooltip"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg></button>
+          <div id="phase-tooltip" role="tooltip"><strong>Congestion control phases</strong><p><b>Slow start:</b> cwnd grows by one MSS for each new data ACK in this simulator, until it reaches ssthresh.</p><p><b>Congestion avoidance:</b> growth slows to roughly one MSS per window of acknowledged data.</p><p><b>Fast recovery (Reno):</b> after three duplicate ACKs, retransmit the missing segment and reduce the window; return to congestion avoidance when recovery completes.</p><p>A timeout returns to slow start. Tahoe also returns to slow start after three duplicate ACKs.</p></div>
+        </div></div>
+      <div class="cc-kpi"><span>ssthresh</span><strong id="t-ssthresh">&mdash;</strong></div>
+      <div class="cc-kpi"><span>Round</span><strong id="t-rtt">&mdash;</strong></div>
+    </div>
+    <div class="cc-events-scroll"><table id="cc-events"><caption>Congestion events: select a row or a numbered graph marker</caption><thead><tr><th>Event</th><th>Time</th><th>What happened</th><th>cwnd (MSS)</th><th>ssthresh (MSS)</th></tr></thead><tbody id="cc-events-body"><tr><td colspan="5">Connect to record congestion events.</td></tr></tbody></table></div>
     <p id="cc-event-detail" role="status">Select an event to inspect its values.</p>
-    <canvas id="chart-cv" height="320" width="1471" tabindex="0" aria-label="Congestion window graph. Use left and right arrow keys to select events."></canvas>
-    <div id="chart-legend">
+    <svg id="chart-cv" viewBox="0 0 960 320" role="img" tabindex="0" aria-label="Congestion window graph in MSS. Use left and right arrow keys to select events."></svg>
+    <p class="chart-unit-note" id="cc-unit-note"></p><div id="chart-legend">
       <div class="leg-item"><div class="leg-dot" style="background:#534AB7;"></div><span>cwnd</span></div>
       <div class="leg-item"><div class="leg-dot" style="background:#BA7517;"></div><span>ssthresh (dashed)</span></div>
       <div class="leg-item"><div class="leg-dot" style="background:#A32D2D;"></div><span>T = timeout</span></div>
@@ -246,7 +239,16 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
     </div>
   </div>
 
-  <div id="message-panel" role="tabpanel" aria-labelledby="message-tab">
+  <details id="protocol-details"><summary>Protocol details <span>Sequence numbers, connection exchange, and packet log</span></summary>
+    <p>For a closer look at sequence numbers and acknowledgments, use the <a href="tcp_sequence.html">SEQ/ACK visualizer</a>.</p>
+    <div class="protocol-sequences"><section><h3>Sender sequence state</h3><div class="kv-grid">        <div class="kv-key"><span class="rfc">ISN_S</span><span class="sub">initial seq#</span></div><div class="kv-val" id="t-isns">9366</div>
+        <div class="kv-key"><span class="rfc">SND.NXT</span><span style="color:#aaa9a2;font-size:9px;">/</span><span class="rfc">SND.UACK</span><span class="sub">nxt send / unacked</span></div><div class="kv-val" id="t-nxt-una" style="font-size:11px;font-weight:700;font-family:monospace;color:#1a1a1a;text-align:right;padding:2px 0;"><span style="color:#185FA5">10367</span><span style="color:#aaa9a2;font-size:10px;"> / </span><span style="color:#534AB7">10367</span></div></div></section><section><h3>Receiver sequence state</h3><div class="kv-grid">        <div class="kv-key"><span class="rfc">ISN_R</span><span class="sub">initial seq#</span></div><div class="kv-val" id="t-isnr">3630</div>
+        <div class="kv-key"><span class="rfc">RCV.NXT</span><span class="sub">next expected seq</span></div><div class="kv-val hi-g" id="t-rcvnxt">10367</div></div></section></div>
+    <div class="history-tabs view-tabs" role="tablist" aria-label="Message log views">
+      <button id="exchange-tab" role="tab" aria-selected="true" aria-controls="exchange-panel">TCP Exchange</button>
+      <button id="transmission-tab" role="tab" aria-selected="false" aria-controls="log-wrap" tabindex="-1">Transmission Log</button>
+    </div>
+  <div id="message-panel">
     <div id="exchange-panel" role="tabpanel" aria-labelledby="exchange-tab">
       <div class="exchange-endpoints"><strong>Sender · TCP</strong><span>Data and ACKs stay between transport layers</span><strong>Receiver · TCP</strong></div>
       <div id="exchange-body" aria-label="TCP message timeline"></div>
@@ -265,6 +267,7 @@ select{font-family:system-ui;font-size:10px;height:24px;border:1px solid #85B7EB
     </div>
   </div>
   </div>
+  </details>
   </section>
 </div>
 
@@ -309,10 +312,10 @@ function scheduleAutoRecv(){
     autoRecvTimer=null;
     if(autoRecv&&rcv.buf.length&&st==='established'){
       var s=rcv.buf.shift();rcv.held=Math.max(0,rcv.held-s.len);
-      upd();
+      advertiseReceiveWindow();upd();
       scheduleAutoRecv();
     }
-  },420);
+  },Number(document.getElementById("drain-rate").value));
 }
 
 const sim={running:false,paused:false,rtt:0,phase:'idle',acksExpected:0,acksReceived:0,lossEveryN:6,rttsClean:0,connId:0};
@@ -322,12 +325,96 @@ let rcv={exp:0,buf:[],held:0};
 let segSize=500,nuid=1,pali=0,retxCount=0,lossEvents=0;
 const rto={active:false,startMs:0,timeout:BASE_RTO,seq:null,elapsed:0,pendingManual:false};
 let dropArmed=false;
+const packetLossEffects=[];
 const probe={s:'idle',el:0,iv:3000,fly:false};
 const cc={cwnd:1,ssthresh:8,phase:'slow_start',fracAcc:0,dupAcks:0,lastAck:null};
 const chartPts=[],lossMarkers=[],ccEvents=[];
 let selectedCCEvent=null,nextCCEvent=1,ccEventHits=[];
 let examineMode=false;
 const examineDialog=document.getElementById("cc-examine-dialog");
+const windowDialog=document.getElementById('window-examine-dialog');
+const settingsDialog=document.getElementById('simulation-settings');
+document.getElementById('simulation-settings-open').addEventListener('click',()=>{
+  document.getElementById('settings-window-examine').checked=document.getElementById('window-examine-mode').checked;
+  document.getElementById('settings-cc-examine').checked=document.getElementById('cc-examine-mode').checked;
+  settingsDialog.showModal();
+});
+document.getElementById('simulation-settings-close').addEventListener('click',()=>settingsDialog.close());
+settingsDialog.addEventListener('close',()=>{prev=null;});
+for(const [proxy,target] of [['settings-window-examine','window-examine-mode'],['settings-cc-examine','cc-examine-mode']])document.getElementById(proxy).addEventListener('change',function(){
+  const input=document.getElementById(target);input.checked=this.checked;input.dispatchEvent(new Event('change'));
+});
+let windowExamine=false,lastWindowLimiter=null,pendingWindowEvents=[];
+const windowHistory=[];
+let windowCapacityScale=BUF_CAP;
+let chartUnits='mss';
+function updateChartUnits(){
+  const note='1 MSS = '+segSize.toLocaleString('en-US')+' bytes';
+  for(const id of ['window-unit-note','cc-unit-note'])document.getElementById(id).textContent=note;
+  for(const unit of ['mss','bytes'])document.getElementById('units-'+unit).setAttribute('aria-pressed',String(chartUnits===unit));
+}
+for(const unit of ['mss','bytes'])document.getElementById('units-'+unit).addEventListener('click',()=>{chartUnits=unit;updateChartUnits();drawWindowHistory();drawChart();});
+function unitLabel(){return 'Window size ('+(chartUnits==='mss'?'MSS':'bytes')+')';}
+function tickLabel(n){return Number(n.toFixed(3)).toLocaleString('en-US',{maximumFractionDigits:3});}
+for(const id of ['window-examine-mode','window-dialog-mode'])document.getElementById(id).addEventListener('change',function(){
+  windowExamine=this.checked;document.getElementById('window-examine-mode').checked=windowExamine;document.getElementById('window-dialog-mode').checked=windowExamine;
+  if(!windowExamine)pendingWindowEvents=[];
+});
+function showWindowEvent(){
+  if(examineDialog.open||windowDialog.open||!pendingWindowEvents.length)return;
+  const e=pendingWindowEvents.shift();
+  document.getElementById('window-examine-title').textContent=e.from+' to '+e.to+': sending limit changed';
+  const values=document.getElementById('window-examine-values');values.replaceChildren();
+  const time=document.createElement('small');time.textContent=e.time.toFixed(2)+'s';values.append(time);
+  const formula=document.createElement('span');formula.className='window-dialog-formula';formula.append('min(');
+  for(const [i,name] of ['rwnd','cwnd'].entries()){
+    if(i)formula.append(', ');
+    const term=document.createElement('span');term.className='window-term'+(e[name]===Math.min(e.rwnd,e.cwnd)?' is-limiting':'');term.textContent=name+' '+e[name]+' B';formula.append(term);
+  }
+  formula.append(') = '+Math.min(e.rwnd,e.cwnd)+' B');values.append(formula);
+  document.getElementById('window-examine-explanation').textContent=e.to==='cwnd'?'The congestion window is now smaller than the advertised receiver window. Network congestion control limits sending, even though the receiver has more space. This can happen when cwnd drops after loss or rwnd grows as the application drains its buffer.':'The advertised receiver window is now smaller than the congestion window. Receiver capacity limits sending. This can happen as the receive buffer fills or cwnd grows. Sending more requires receiver space and an updated window advertisement.';
+  document.getElementById('window-examine-continue').textContent=sim.paused?'Close (keep paused)':'Continue simulation';
+  windowDialog.showModal();
+}
+function drawWindowHistory(){
+  updateChartUnits();
+  const svg=document.getElementById('window-history-graph');
+  const width=Math.max(320,svg.clientWidth||960);svg.setAttribute('viewBox','0 0 '+width+' 320');
+  if(st==='closed'){windowHistory.length=0;svg.innerHTML='<text x="'+width/2+'" y="160" text-anchor="middle" fill="#61758a" font-size="14">Start simulation to compare the windows over time.</text>';return;}
+  const point={t:telN(),rwnd:snd.rw,cwnd:cc.cwnd*segSize},last=windowHistory[windowHistory.length-1];
+  if(!last||last.rwnd!==point.rwnd||last.cwnd!==point.cwnd)windowHistory.push(point);
+  if(windowHistory.length>600)windowHistory.splice(0,100);
+  const points=windowHistory.concat([point]);
+  const max=Math.max(1000,...points.map(p=>Math.max(p.rwnd,p.cwnd)));
+  const ceiling=Math.ceil(max/1000)*1000,start=points[0].t,end=Math.max(start+1,point.t);
+  const x=t=>72+(t-start)/(end-start)*(width-96),y=v=>282-v/ceiling*244;
+  let content='';
+  for(let i=0;i<=4;i++){
+    const value=ceiling*i/4,py=y(value);
+    content+='<line x1="72" y1="'+py+'" x2="'+(width-24)+'" y2="'+py+'" stroke="#e8e7e2" stroke-width="0.5"/><text x="62" y="'+(py+4)+'" text-anchor="end" fill="#425670" font-size="13" font-weight="600">'+tickLabel(chartUnits==='mss'?value/segSize:value)+'</text>';
+    const t=start+(end-start)*i/4;
+    content+='<text x="'+x(t)+'" y="305" text-anchor="middle" fill="#425670" font-size="13" font-weight="600">'+t.toFixed(1)+'s</text>';
+  }
+  content+='<text x="18" y="160" transform="rotate(-90 18 160)" text-anchor="middle" fill="#425670" font-size="14">'+unitLabel()+'</text>';
+  for(const [key,color,dash] of [['cwnd','#534AB7',''],['rwnd','#168070','4 3']]){
+    let path='M '+x(points[0].t)+' '+y(points[0][key]);
+    points.slice(1).forEach(p=>{path+=' H '+x(p.t)+' V '+y(p[key]);});
+    content+='<path d="'+path+'" fill="none" stroke="'+color+'" stroke-width="2" stroke-dasharray="'+dash+'"/>';
+  }
+  svg.innerHTML=content;
+  svg.setAttribute('aria-label',unitLabel()+'. Current advertised rwnd '+point.rwnd+' bytes, cwnd '+point.cwnd+' bytes. Time '+point.t.toFixed(2)+' seconds.');
+}
+function inspectWindowLimit(){
+  if(st!=='established'){lastWindowLimiter=null;pendingWindowEvents=[];return;}
+  const next=snd.rw<cc.cwnd*segSize?'rwnd':snd.rw>cc.cwnd*segSize?'cwnd':null;
+  if(!next)return;
+  if(windowExamine&&lastWindowLimiter&&next!==lastWindowLimiter)pendingWindowEvents.push({from:lastWindowLimiter,to:next,rwnd:snd.rw,cwnd:cc.cwnd*segSize,time:telN()});
+  lastWindowLimiter=next;showWindowEvent();
+}
+windowDialog.addEventListener('close',()=>{prev=null;if(!sim.paused)showWindowEvent();});
+examineDialog.addEventListener('close',()=>{if(!sim.paused)showWindowEvent();});
+document.getElementById('window-examine-continue').addEventListener('click',()=>windowDialog.close());
+document.getElementById('window-examine-pause').addEventListener('click',()=>{sim.paused=true;pendingWindowEvents=[];windowDialog.close();prev=null;upd();});
 let logE=[],t0=0,pkts=[];
 
 function rnd(a,b){return a+Math.floor(Math.random()*(b-a));}
@@ -342,26 +429,42 @@ function effWinFree(){return Math.max(0,Math.min(snd.rw,cc.cwnd*segSize)-snd.inf
 function effWinTotal(){return Math.min(snd.rw,cc.cwnd*segSize);}
 function canSend(){
   if(st!=='established'||probe.s!=='idle')return false;
-  if(mode==='manual')return snd.rw>=(segSize)&&(snd.nxt-snd.una)<snd.rw;
+  if(mode==='manual')return effWinFree()>=segSize&&!rto.pendingManual&&cc.phase!=='fast_recovery';
   return effWinFree()>=segSize&&!rto.active&&cc.phase!=='fast_recovery';
 }
 function startRTOFor(seg){rto.active=true;rto.startMs=protocolTime;rto.elapsed=0;rto.seq=seg.seq;}
 function cancelRTO(){rto.active=false;rto.elapsed=0;rto.seq=null;rto.pendingManual=false;}
 function restartRTOAfterAck(){rto.timeout=BASE_RTO;if(snd.unacked.length>0)startRTOFor(snd.unacked[0]);else cancelRTO();}
 
-const netCv=document.getElementById('net-cv'),netCtx=netCv.getContext('2d');
-const chartCv=document.getElementById('chart-cv'),chartCtx=chartCv.getContext('2d');
-function rszNet(){netCv.width=document.getElementById('net-strip').clientWidth||600;netCv.height=64;}
-function rszChart(){const width=document.getElementById('chart-wrap').clientWidth;if(width>0)chartCv.width=Math.max(1,width-28);}
+const netCv=document.getElementById('net-cv');
+const chartCv=document.getElementById('chart-cv');
+function rszNet(){netCv.setAttribute('viewBox','0 0 '+(document.getElementById('net-strip').clientWidth||960)+' 124');}
+function rszChart(){chartCv.setAttribute('viewBox','0 0 '+Math.max(320,chartCv.clientWidth||960)+' 320');}
 rszNet();rszChart();
-window.addEventListener('resize',()=>{rszNet();rszChart();});
+document.getElementById('window-history-details').addEventListener('toggle',function(){if(this.open)drawWindowHistory();});
+window.addEventListener('resize',()=>{rszNet();rszChart();drawChart();drawWindowHistory();});
 document.getElementById('chart-wrap').addEventListener('history-panel-shown',rszChart);
+function syncNetworkPin(){
+  const home=document.getElementById('network-home'),hosts=document.getElementById('host-controls'),strip=document.getElementById('net-strip');
+  const headers=hosts.querySelectorAll('.app-hdr');
+  const headerBottom=Math.max(...Array.from(headers,h=>h.getBoundingClientRect().bottom));
+  const pin=home.getBoundingClientRect().top<headerBottom;
+  if(pin===hosts.contains(strip))return;
+  home.style.height=pin?strip.getBoundingClientRect().height+'px':'';
+  (pin?hosts:home).appendChild(strip);
+  rszNet();drawNetwork();
+}
+window.addEventListener('scroll',syncNetworkPin,{passive:true});
+window.addEventListener('resize',syncNetworkPin);
+
 
 function getNC(){
-  const wr=document.getElementById('root').getBoundingClientRect();
-  const lp=document.querySelector('#panels .stack:first-child').getBoundingClientRect();
-  const rp=document.querySelector('#panels .stack:last-child').getBoundingClientRect();
-  return{sx:(lp.left+lp.right)/2-wr.left,rx:(rp.left+rp.right)/2-wr.left,my:netCv.height/2};
+  const wr=netCv.getBoundingClientRect();
+  const pinned=document.getElementById('host-controls').contains(netCv);
+  const lp=document.querySelector(pinned?'#host-controls .app-hdr':'#panels .stack:first-child').getBoundingClientRect();
+  const rp=document.querySelector(pinned?'#host-controls .app-hdr.recv':'#panels .stack:last-child').getBoundingClientRect();
+  const stacked=Math.abs(lp.top-rp.top)>10;
+  return{sx:stacked?wr.width*0.25:(lp.left+lp.right)/2-wr.left,rx:stacked?wr.width*0.75:(rp.left+rp.right)/2-wr.left,sy:stacked?0:lp.bottom-wr.top,ry:stacked?0:rp.bottom-wr.top,my:62};
 }
 function mkPkt(dir,col,l1,l2,cb,delayMs){
   delayMs=delayMs||0;
@@ -429,7 +532,7 @@ document.getElementById('cc-examine-continue').addEventListener('click',()=>exam
 examineDialog.addEventListener('close',()=>{prev=null;});
 function recordChart(label){
   const previous=chartPts[chartPts.length-1];
-  const point={t:telN(),cwnd:cc.cwnd,ssthresh:cc.ssthresh,phase:cc.phase};
+  const point={t:telN(),cwnd:cc.cwnd,ssthresh:cc.ssthresh,phase:cc.phase,mss:segSize};
   chartPts.push(point);
   if(!label&&!previous)label='Window initialized';
   if(!label&&previous.phase!==cc.phase)label=cc.phase==='cong_avoid'?'Enter congestion avoidance':cc.phase==='slow_start'?'Enter slow start':'Enter fast recovery';
@@ -440,7 +543,7 @@ function recordChart(label){
   if(label&&examineMode)selectCCEvent(ccEvents[ccEvents.length-1].id);
 }
 chartCv.addEventListener('click',function(e){
-  const r=chartCv.getBoundingClientRect(),x=(e.clientX-r.left)*chartCv.width/r.width,y=(e.clientY-r.top)*chartCv.height/r.height;
+  const r=chartCv.getBoundingClientRect(),w=Number(chartCv.getAttribute('viewBox').split(' ')[2]),x=(e.clientX-r.left)*w/r.width,y=(e.clientY-r.top)*320/r.height;
   const hit=ccEventHits.slice().reverse().find(h=>Math.hypot(h.x-x,h.y-y)<=18);
   if(hit)selectCCEvent(hit.id);
 });
@@ -466,7 +569,7 @@ function triggerFastRetx(){
   cc.ssthresh=Math.max(Math.floor(cc.cwnd/2),2);cc.cwnd=cc.ssthresh;cc.phase='fast_recovery';cc.fracAcc=0;cc.dupAcks=0;
   retxCount++;recordChart('Fast retransmit');
   if(!snd.unacked.length)return;
-  const seg=snd.unacked[0];snd.inflight=seg.len;
+  const seg=snd.unacked[0];
   addLog('→','PSH+ACK [fast-retx]',seg.seq,dataAck(),seg.len,null);
   pkts.push(mkPkt('toR',{bg:'#FAECE7',bd:'#993C1D',tx:'#712B13'},'PSH+ACK [fast-retx] seq='+seg.seq,'ack='+dataAck()+' len='+seg.len,function(){
     if(seg.seq===rcv.exp){rcv.buf.push({seq:seg.seq,len:seg.len,id:seg.id,pi:seg.pi});rcv.held+=seg.len;rcv.exp+=seg.len;scheduleAutoRecv();}
@@ -484,14 +587,18 @@ function simEmitRetxAck(){
   addLog('←','ACK [retx]',ISN_R+1,an,0,rw);
   pkts.push(mkPkt('toL',{bg:'#FCEBEB',bd:'#A32D2D',tx:'#791F1F'},'ACK [retx] seq='+(ISN_R+1),'ack='+an+' rwnd='+rw,function(){
     snd.rw=rw;
-    snd.unacked=[];    // flush dropped + post-drop segments; pre-drop already drained by emitAck
+    if(an<=snd.una){restartRTOAfterAck();upd();return;}
+    snd.unacked=snd.unacked.filter(seg=>seg.seq+seg.len>an);
     snd.una=an;
-    snd.nxt=an;        // resync sender's next pointer to receiver's position
-    snd.inflight=0;
+    snd.inflight=snd.unacked.reduce((total,seg)=>total+seg.len,0);
     cancelRTO();rto.timeout=BASE_RTO;
-    // For Reno: retx ACK exits fast_recovery → cong_avoid with cwnd=ssthresh
-    if(ccVariant==='reno'&&cc.phase==='fast_recovery')onAckCC(an);
+    onAckCC(an);
     if(mode==='sim')drainRecv();
+    if(snd.unacked.length){
+      sim.phase='waiting_retx';
+      retransmitQueuedSegment();
+      upd();return;
+    }
     sim.phase='idle';
     upd();
     protocolTimeout(function(){if(mode==='sim'&&sim.running&&!sim.paused&&st==='established')simNextRTT();},400);
@@ -527,7 +634,35 @@ function emitAck(){
   }));
 }
 
-function drainRecv(){while(rcv.buf.length>0){var s=rcv.buf.shift();rcv.held=Math.max(0,rcv.held-s.len);}}
+// The receiver discards out-of-order data, so recover each remaining segment.
+// Keep the original sequence numbers and sender queue until ACKed.
+function retransmitQueuedSegment(){
+  const seg=snd.unacked[0];if(!seg)return;
+  retxCount++;startRTOFor(seg);
+  addLog('→','PSH+ACK [recovery]',seg.seq,dataAck(),seg.len,null);
+  pkts.push(mkPkt('toR',{bg:'#FCEBEB',bd:'#A32D2D',tx:'#791F1F'},'PSH+ACK [recovery] seq='+seg.seq,'ack='+dataAck()+' len='+seg.len,function(){
+    if(seg.seq===rcv.exp){rcv.buf.push({...seg});rcv.held+=seg.len;rcv.exp+=seg.len;scheduleAutoRecv();}
+    simEmitRetxAck();upd();
+  }));
+}
+
+// Window-only ACKs update flow control without counting as loss or new data ACKs.
+function advertiseReceiveWindow(){
+  if(st!=='established')return;
+  const rw=Math.max(0,BUF_CAP-rcv.held),ack=rcv.exp;
+  addLog('←','ACK [window update]',ISN_R+1,ack,0,rw);
+  pkts.push(mkPkt('toL',{bg:'#E1F5EE',bd:'#1D9E75',tx:'#085041'},'ACK [window update]','seq='+(ISN_R+1)+' ack='+ack+' rwnd='+rw,function(){
+    if(st!=='established')return;
+    snd.rw=rw;
+    if(rw>0){probe.s='idle';probe.el=0;probe.fly=false;}
+    upd();
+  }));
+}
+function drainRecv(){
+  const held=rcv.held;
+  while(rcv.buf.length>0){var s=rcv.buf.shift();rcv.held=Math.max(0,rcv.held-s.len);}
+  if(rcv.held<held)advertiseReceiveWindow();
+}
 
 // ── RTO retransmit ────────────────────────────────────────────────────────────
 function doRetransmit(){
@@ -542,7 +677,6 @@ function doRetransmit(){
   retxCount++;onTimeoutCC();
   const seg=snd.unacked[0];
   rto.timeout=Math.min(rto.timeout*2,60000);rto.startMs=protocolTime;rto.elapsed=0;rto.seq=seg.seq;
-  snd.inflight=seg.len;
   addLog('→','PSH+ACK [retx]',seg.seq,dataAck(),seg.len,null);
   pkts.push(mkPkt('toR',{bg:'#FCEBEB',bd:'#A32D2D',tx:'#791F1F'},'PSH+ACK [retx] seq='+seg.seq,'ack='+dataAck()+' len='+seg.len,function(){
     if(seg.seq===rcv.exp){rcv.buf.push({seq:seg.seq,len:seg.len,id:seg.id,pi:seg.pi});rcv.held+=seg.len;rcv.exp+=seg.len;scheduleAutoRecv();}
@@ -579,7 +713,7 @@ function sendSegCore(dropped,delayMs){
   if(snd.unacked.length===1)startRTOFor(segObj);
   pkts.push(mkPkt('toR',{bg:'#E6F1FB',bd:'#185FA5',tx:'#042C53'},'PSH+ACK  seq='+seq,'ack='+dataAck()+' len='+len,function(){
     // Check if this packet is intercepted — either pre-armed by sim or by wire click
-    var willDrop=dropped||dropArmed;
+    var willDrop=dropped||(mode==='manual'&&dropArmed);
     if(willDrop){
       dropArmed=false;
       addLog('→','[dropped]',seq,null,len,null);
@@ -589,6 +723,9 @@ function sendSegCore(dropped,delayMs){
     if(seq===rcv.exp){rcv.buf.push({seq:seq,len:len,id:id,pi:pi});rcv.held+=len;rcv.exp+=len;scheduleAutoRecv();}
     emitAck();upd();
   },delayMs));
+  const packet=pkts[pkts.length-1];
+  packet.dataSegment=true;packet.scheduledLoss=dropped;
+  packet.lose=function(){dropped=true;dropArmed=false;packetLossEffects.push({seq:seq,time:protocolTime});};
 }
 
 // ── Simulate: fire one RTT ────────────────────────────────────────────────────
@@ -600,8 +737,7 @@ function simNextRTT(){
   const n=Math.max(1,Math.floor(effWinTotal()/segSize));
   sim.acksExpected=n;sim.acksReceived=0;
   var dropIdx=-1,hasLoss=false;
-  if(dropArmed){dropIdx=Math.floor(Math.random()*n);hasLoss=true;}
-  else if(sim.lossEveryN>0&&sim.rttsClean>=sim.lossEveryN){dropIdx=Math.floor(Math.random()*n);hasLoss=true;sim.rttsClean=0;}
+  if(sim.lossEveryN>0&&sim.rttsClean>=sim.lossEveryN){dropIdx=Math.floor(Math.random()*n);hasLoss=true;sim.rttsClean=0;}
   sim.phase=hasLoss?'waiting_retx':'waiting_acks';
   for(var i=0;i<n;i++)sendSegCore(i===dropIdx,i*SEG_STAGGER);
   upd();
@@ -611,11 +747,12 @@ function sendSeg(){
   if(!canSend())return;
   sendSegCore(false,0);upd();
 }
-function recvSeg(){if(st!=='established'||!rcv.buf.length)return;var s=rcv.buf.shift();rcv.held=Math.max(0,rcv.held-s.len);upd();}
+function recvSeg(){if(st!=='established'||!rcv.buf.length)return;var s=rcv.buf.shift();rcv.held=Math.max(0,rcv.held-s.len);advertiseReceiveWindow();upd();}
 
 // ── Connect / Close ───────────────────────────────────────────────────────────
 function doConnect(){
   if(st!=='closed')return;
+  windowHistory.length=0;windowCapacityScale=BUF_CAP;packetLossEffects.length=0;
   sim.connId++;pkts=[];protocolTimers.clear();autoRecvTimer=null;
   segSize=Math.round(BUF_CAP/10);
   document.getElementById('seg-input').value=segSize;
@@ -662,7 +799,7 @@ function doClose(){
 }
 
 function setMode(m){
-  mode=m;sim.running=false;sim.paused=false;sim.phase='idle';
+  mode=m;dropArmed=false;sim.running=false;sim.paused=false;sim.phase='idle';
   ['mode-manual','mode-sim'].forEach(function(id){
     document.getElementById(id).className='btn-mode'+(id==='mode-'+m?' active':'');
   });
@@ -674,13 +811,12 @@ function setCCVariant(v){
   if(cc.phase==='fast_recovery'){cc.phase='cong_avoid';cc.cwnd=cc.ssthresh;}
   document.getElementById('cc-tahoe').className='cc-mode-btn'+(v==='tahoe'?' active':'');
   document.getElementById('cc-reno').className='cc-mode-btn'+(v==='reno'?' active':'');
-  document.getElementById('cc-mode-label').textContent=v==='tahoe'?'Tahoe':'Reno';
   document.getElementById('cc-desc').textContent=v==='tahoe'?'cwnd→1 on any loss':'cwnd→ssthresh on 3 dup ACKs; cwnd→1 on timeout';
   upd();
 }
 
 // ── Wire up all controls ONCE ─────────────────────────────────────────────────
-document.getElementById('seg-input').addEventListener('change',function(){segSize=Math.max(100,Math.min(9000,Math.round((parseInt(this.value)||500)/100)*100));this.value=segSize;});
+document.getElementById('seg-input').addEventListener('change',function(){segSize=Math.max(100,Math.min(9000,Math.round((parseInt(this.value)||500)/100)*100));this.value=segSize;upd();});
 document.getElementById('btn-connect').addEventListener('click',doConnect);
 document.getElementById('btn-send').addEventListener('click',sendSeg);
 document.getElementById('btn-close').addEventListener('click',doClose);
@@ -693,14 +829,15 @@ document.getElementById('btn-auto-recv').addEventListener('click',function(){
 });
 // Click the network wire to arm/cancel a drop
 netCv.addEventListener('click',function(){
-  if(st!=='established')return;
+  if(st!=='established'||mode==='sim')return;
   dropArmed=!dropArmed;upd();
 });
 document.getElementById('btn-pause').addEventListener('click',function(){
   if(mode==='sim'||sim.paused){sim.paused=!sim.paused;prev=null;}
   upd();
 });
-document.getElementById('sim-loss-sel').addEventListener('change',function(){sim.lossEveryN=parseInt(this.value);});
+document.getElementById('sim-loss-sel').addEventListener('change',function(){sim.lossEveryN=parseInt(this.value);upd();});
+document.getElementById('drain-rate').addEventListener('change',upd);
 document.getElementById('mode-manual').addEventListener('click',function(){setMode('manual');});
 document.getElementById('mode-sim').addEventListener('click',function(){setMode('sim');});
 document.getElementById('cc-tahoe').addEventListener('click',function(){setCCVariant('tahoe');});
@@ -756,14 +893,16 @@ function upd(){
   document.getElementById('btn-close').style.display=est?'inline-flex':'none';
   document.getElementById('btn-pause').style.display=((isSim&&est)||sim.paused)?'inline-flex':'none';
   document.getElementById('btn-pause').textContent=sim.paused?'Resume':'Pause';
-  document.getElementById('sim-loss-wrap').style.display=isSim?'flex':'none';
+  document.getElementById('sim-loss-wrap').style.display='flex';
+  document.getElementById('sim-loss-wrap').title='Automatic packet loss frequency in Simulate mode';
   var autoBtn=document.getElementById('btn-auto-recv');
   autoBtn.style.background=autoRecv?'#1D9E75':'#fff';
   autoBtn.style.color=autoRecv?'#fff':'#1D9E75';
   autoBtn.style.borderColor='#1D9E75';
   document.getElementById('btn-recv').style.display=(est&&!autoRecv&&mode==='manual')?'inline-flex':'none';
   document.getElementById('btn-recv').disabled=!est||!rcv.buf.length;
-  document.getElementById('recv-hint').textContent=autoRecv?'auto draining app buffer':isSim?'auto drain':'drain one segment per click';
+  document.getElementById('sender-settings-summary').textContent=(isSim?'Simulate':'Manual')+' | '+segSize+' B | '+(ccVariant==='reno'?'Reno':'Tahoe')+(isSim?(sim.lossEveryN?' | loss every '+sim.lossEveryN+' rounds':' | no scheduled loss'):'');
+  document.getElementById('recv-hint').textContent=isSim?'Auto drain on ACK':autoRecv?'Auto drain | '+(Number(document.getElementById('drain-rate').value)/1000)+'s per segment':'Manual drain | one segment per click';
 
   var sw=document.getElementById('s-warn');
   if(est&&rto.pendingManual)sw.textContent='⏱ RTO expired — click ▶ in segment to retransmit';
@@ -774,24 +913,59 @@ function upd(){
   else sw.textContent='';
 
   // CC section — only relevant in simulate mode
-  var ccDisplay=isSim?'':'none';
-  document.getElementById('cc-sec-hdr').style.display=ccDisplay;
-  document.getElementById('cc-variant-row').style.display=isSim?'flex':'none';
-  document.getElementById('cc-kv-grid').style.display=isSim?'grid':'none';
+  document.getElementById('drain-rate').disabled=isSim;
+  document.getElementById('cc-variant-row').style.display='flex';
 
   document.getElementById('t-isns').textContent=closed?'—':ISN_S;
   document.getElementById('t-nxt-una').innerHTML=closed?'—':'<span style="color:#185FA5">'+snd.nxt+'</span><span style="color:#aaa9a2;font-size:10px;"> / </span><span style="color:#534AB7">'+snd.una+'</span>';
-  document.getElementById('t-inflight').textContent=closed?'—':snd.inflight+' B';
-  document.getElementById('t-prwnd').textContent=closed?'—':snd.rw+' B';
-  document.getElementById('t-cwnd').textContent=closed?'—':cc.cwnd+' MSS ('+cc.cwnd*segSize+' B)';
   document.getElementById('t-ssthresh').textContent=closed?'—':cc.ssthresh+' MSS';
-  document.getElementById('t-effwin').textContent=closed?'—':effWinTotal()+' B total / '+effWinFree()+' B free';
   var ph=document.getElementById('t-ccphase');
   var plmap={slow_start:'slow start',cong_avoid:'cong avoidance',fast_recovery:'fast recovery (Reno)'};
   ph.textContent=closed?'—':(plmap[cc.phase]||cc.phase);
   ph.className='kv-val '+(cc.phase==='slow_start'?'c-ss':cc.phase==='fast_recovery'?'c-fr':'c-ca');
   document.getElementById('t-rtt').textContent=(!closed&&isSim&&sim.running)?sim.rtt:'—';
 
+  drawNetwork();
+  drawWindowHistory();
+  inspectWindowLimit();
+  const windowBytes=effWinTotal();
+  const freeBytes=Math.max(0,windowBytes-snd.inflight);
+  const formula=document.getElementById('window-values');formula.replaceChildren();formula.classList.toggle('window-instruction',closed);
+  if(closed){formula.textContent='Start simulation to compare rwnd and cwnd as traffic flows.';}
+  else{
+    formula.append('min(');
+    function windowTerm(name,value,limiting){
+      const term=document.createElement('span');term.className='window-term'+(limiting?' is-limiting':'');term.textContent=name+' '+value+' B';
+      if(limiting){term.title='Limiting window';term.setAttribute('aria-label',name+' '+value+' bytes, limiting window');}
+      formula.append(term);
+    }
+    windowTerm('rwnd',snd.rw,snd.rw<=cc.cwnd*segSize);
+    formula.append(', ');windowTerm('cwnd',cc.cwnd*segSize,cc.cwnd*segSize<=snd.rw);formula.append(')');
+    formula.append(' = '+windowBytes+' B');
+  }
+  document.getElementById('window-visual').hidden=closed;
+  // Retain a stable byte scale as ACKs and receiver drains change occupancy.
+  windowCapacityScale=closed?BUF_CAP:Math.max(windowCapacityScale,BUF_CAP,snd.rw,cc.cwnd*segSize,snd.inflight);
+  const scale=windowCapacityScale;
+  const used=Math.min(snd.inflight,windowBytes),excess=Math.max(0,snd.inflight-windowBytes);
+  const percent=n=>100*n/scale;
+  for(const [id,left,width] of [['window-used',0,used],['window-free',used,freeBytes],['window-excess',windowBytes,excess]]){
+    const el=document.getElementById(id);el.style.left=percent(left)+'%';el.style.width=percent(width)+'%';
+  }
+  document.getElementById('window-threshold').style.left=percent(windowBytes)+'%';
+  const rwndLine=document.getElementById('window-rwnd-limit');
+  rwndLine.style.left=percent(snd.rw)+'%';
+  rwndLine.title='Advertised receiver window: '+snd.rw+' B';
+  for(const [id,value,name] of [['window-rwnd-marker',snd.rw,'rwnd'],['window-cwnd-marker',cc.cwnd*segSize,'cwnd']]){
+    const el=document.getElementById(id),pct=percent(value);el.style.left=pct+'%';el.style.transform='translateX(-'+pct+'%)';el.textContent=name+' '+value+' B';
+  }
+  document.getElementById('window-cwnd-row').hidden=false;
+  document.getElementById('window-scale-max').textContent=scale+' B (100% of scale)';
+  document.getElementById('window-used-label').textContent=snd.inflight+' B in flight';
+  document.getElementById('window-free-label').textContent=freeBytes+' B remaining';
+  document.getElementById('window-threshold-label').textContent='Send limit: '+windowBytes+' B'+' = min(rwnd, cwnd)';
+  document.getElementById('window-excess-label').textContent=excess?excess+' B already in flight above the reduced limit':'';
+  document.getElementById('window-capacity').setAttribute('aria-label',snd.inflight+' bytes in flight, '+freeBytes+' bytes remaining, send limit '+windowBytes+' bytes, full scale '+scale+' bytes'+(excess?', '+excess+' bytes above the reduced limit':''));
   var inFlight=snd.unacked.length;
   var sbc=document.getElementById('s-buf-ct');sbc.textContent=inFlight+' seg in flight';sbc.className='badge '+(inFlight?'warn':'ok');
   var sfrac=Math.min(snd.inflight/Math.max(1,cc.cwnd*segSize),1);
@@ -863,8 +1037,14 @@ function upd(){
   var rbbar=document.getElementById('r-buf-bar');rbbar.style.width=(ff*100)+'%';rbbar.style.background=ff>=1?'#A32D2D':ff>=0.75?'#BA7517':'#1D9E75';
   var rbb=document.getElementById('r-buf-body');rbb.innerHTML='';
   if(!rcv.buf.length)rbb.appendChild(mk('span','empty-msg','empty'));
-  else rcv.buf.slice(0,4).forEach(function(seg){var p=PILLS[seg.pi%PILLS.length];var d=mk('div','seg-pill','seq='+seg.seq+'  len='+seg.len);d.style.cssText='background:'+p.bg+';border-left-color:'+p.bl+';color:'+p.tx;rbb.appendChild(d);});
-  if(rcv.buf.length>4)rbb.appendChild(mk('span','empty-msg','… +'+(rcv.buf.length-4)+' more'));
+  else rcv.buf.forEach(function(seg){
+    var p=PILLS[seg.pi%PILLS.length],d=mk('div','seg-pill','');
+    d.style.cssText='background:'+p.bg+';border-left-color:'+p.bl+';color:'+p.tx;
+    var info=mk('div','seg-pill-info','');
+    info.appendChild(mk('span','seg-pill-seq','seq='+seg.seq));
+    info.appendChild(mk('span','','len='+seg.len));
+    d.appendChild(info);rbb.appendChild(d);
+  });
 }
 
 function renderLog(){
@@ -913,49 +1093,79 @@ function renderExchange(){
 }
 
 function drawChart(){
-  var W=chartCv.width,H=chartCv.height;chartCtx.fillStyle='#fff';chartCtx.fillRect(0,0,W,H);
+  updateChartUnits();
+  rszChart();
+  const W=Number(chartCv.getAttribute('viewBox').split(' ')[2]),H=320;
+  chartCv.setAttribute('aria-label',unitLabel()+'. Use left and right arrow keys to select events.');
   ccEventHits=[];
-  if(!chartPts.length){chartCtx.fillStyle='#aaa9a2';chartCtx.font='11px system-ui';chartCtx.textAlign='center';chartCtx.fillText('Connect → Simulate to see the sawtooth build',W/2,H/2);return;}
-  var PAD={l:62,r:24,t:38,b:38},cw=W-PAD.l-PAD.r,ch=H-PAD.t-PAD.b;
-  var maxC=2;chartPts.forEach(function(p){if(p.cwnd>maxC)maxC=p.cwnd;if(p.ssthresh>maxC)maxC=p.ssthresh;});maxC+=2;
-  var tMin=chartPts[0].t,tMax=Math.max(chartPts[chartPts.length-1].t,tMin+1),tR=tMax-tMin;
-  function tx(t){return PAD.l+((t-tMin)/tR)*cw;}
-  function ty(c){return PAD.t+ch*(1-c/maxC);}
-  chartCtx.strokeStyle='#e8e7e2';chartCtx.lineWidth=0.5;
-  var step=maxC<=8?1:maxC<=16?2:maxC<=32?4:8;
-  for(var c=0;c<=maxC;c+=step){var y=ty(c);chartCtx.beginPath();chartCtx.moveTo(PAD.l,y);chartCtx.lineTo(W-PAD.r,y);chartCtx.stroke();chartCtx.fillStyle='#425670';chartCtx.font='600 13px system-ui';chartCtx.textAlign='right';chartCtx.fillText(c,PAD.l-10,y+4);}
-  chartCtx.save();chartCtx.translate(18,PAD.t+ch/2);chartCtx.rotate(-Math.PI/2);chartCtx.fillStyle='#425670';chartCtx.font='600 13px system-ui';chartCtx.textAlign='center';chartCtx.fillText('MSS',0,0);chartCtx.restore();
-  chartCtx.fillStyle='#425670';chartCtx.font='600 13px system-ui';chartCtx.textAlign='center';chartCtx.fillText('time →',PAD.l+cw/2,H-10);
-  chartCtx.strokeStyle='#BA7517';chartCtx.lineWidth=1.5;chartCtx.setLineDash([4,3]);
-  chartCtx.beginPath();chartPts.forEach(function(p,i){if(i===0)chartCtx.moveTo(tx(p.t),ty(p.ssthresh));else chartCtx.lineTo(tx(p.t),ty(p.ssthresh));});chartCtx.stroke();chartCtx.setLineDash([]);
-  lossMarkers.forEach(function(m){var x=tx(m.t),isT=m.type==='timeout';chartCtx.strokeStyle=isT?'rgba(163,45,45,.6)':'rgba(240,149,149,.8)';chartCtx.lineWidth=isT?1.5:1;chartCtx.beginPath();chartCtx.moveTo(x,PAD.t);chartCtx.lineTo(x,PAD.t+ch);chartCtx.stroke();chartCtx.fillStyle=isT?'#A32D2D':'#F09595';chartCtx.beginPath();chartCtx.arc(x,PAD.t+7,5,0,Math.PI*2);chartCtx.fill();chartCtx.fillStyle=isT?'#A32D2D':'#993C1D';chartCtx.font='bold 14px system-ui';chartCtx.textAlign='center';const label=isT?'T':'FR',labelWidth=isT?24:34;chartCtx.fillStyle='#fff';chartCtx.fillRect(x-labelWidth/2,PAD.t-26,labelWidth,22);chartCtx.fillStyle=isT?'#A32D2D':'#993C1D';chartCtx.fillText(label,x,PAD.t-10);});
-  chartCtx.strokeStyle='#534AB7';chartCtx.lineWidth=2;
-  chartCtx.beginPath();chartPts.forEach(function(p,i){if(i===0)chartCtx.moveTo(tx(p.t),ty(p.cwnd));else chartCtx.lineTo(tx(p.t),ty(p.cwnd));});chartCtx.stroke();
-  if(chartPts.length<300){chartCtx.fillStyle='#534AB7';chartPts.forEach(function(p){chartCtx.beginPath();chartCtx.arc(tx(p.t),ty(p.cwnd),1.5,0,Math.PI*2);chartCtx.fill();});}
-  ccEvents.forEach(function(e){
-    const x=tx(e.t),y=ty(e.cwnd),selected=e.id===selectedCCEvent;
-    if(selected){chartCtx.strokeStyle='#284d73';chartCtx.lineWidth=1;chartCtx.beginPath();chartCtx.moveTo(x,PAD.t);chartCtx.lineTo(x,PAD.t+ch);chartCtx.stroke();}
-    chartCtx.fillStyle=selected?'#284d73':'#fff';chartCtx.strokeStyle='#534AB7';chartCtx.lineWidth=2;
-    chartCtx.beginPath();chartCtx.arc(x,y,15,0,Math.PI*2);chartCtx.fill();chartCtx.stroke();
-    chartCtx.fillStyle=selected?'#fff':'#284d73';chartCtx.font='bold 14px system-ui';chartCtx.textAlign='center';chartCtx.fillText(e.id,x,y+5);
+  if(!chartPts.length){chartCv._renderedContent=null;chartCv.innerHTML='<text x="'+W/2+'" y="160" text-anchor="middle" fill="#61758a" font-size="14">Start simulation to see congestion control over time.</text>';return;}
+  const PAD={l:72,r:24,t:38,b:38},cw=W-PAD.l-PAD.r,ch=H-PAD.t-PAD.b;
+  const value=(p,key)=>p[key]*(p.mss||segSize)/(chartUnits==='mss'?segSize:1);
+  const points=chartPts.map(p=>({...p,cwnd:value(p,'cwnd'),ssthresh:value(p,'ssthresh')}));
+  let maxC=chartUnits==='mss'?2:2*segSize;points.forEach(p=>{maxC=Math.max(maxC,p.cwnd,p.ssthresh);});maxC+=chartUnits==='mss'?2:2*segSize;
+  const tMin=chartPts[0].t,tMax=Math.max(chartPts[chartPts.length-1].t,tMin+1),tR=tMax-tMin;
+  const tx=t=>PAD.l+(t-tMin)/tR*cw,ty=c=>PAD.t+ch*(1-c/maxC);
+  let content='';
+  const step=maxC<=8?1:maxC<=16?2:maxC<=32?4:Math.ceil(maxC/8);
+  for(let c=0;c<=maxC;c+=step){const y=ty(c);content+='<line x1="72" y1="'+y+'" x2="'+(W-24)+'" y2="'+y+'" stroke="#e8e7e2" stroke-width="0.5"/><text x="62" y="'+(y+4)+'" text-anchor="end" fill="#425670" font-size="13" font-weight="600">'+tickLabel(c)+'</text>';}
+  content+='<text x="18" y="160" transform="rotate(-90 18 160)" text-anchor="middle" fill="#425670" font-size="14">'+unitLabel()+'</text>';
+  for(let i=0;i<=4;i++){const t=tMin+tR*i/4;content+='<text x="'+tx(t)+'" y="305" text-anchor="middle" fill="#425670" font-size="13" font-weight="600">'+t.toFixed(1)+'s</text>';}
+  for(const [key,color,dash] of [['ssthresh','#BA7517','4 3'],['cwnd','#534AB7','']]){
+    let path='M '+tx(chartPts[0].t)+' '+ty(points[0][key]);
+    points.slice(1).forEach(p=>{path+=' H '+tx(p.t)+' V '+ty(p[key]);});
+    content+='<path d="'+path+'" fill="none" stroke="'+color+'" stroke-width="2" stroke-dasharray="'+dash+'"/>';
+  }
+  lossMarkers.filter(m=>m.t>=tMin&&m.t<=tMax).forEach(m=>{
+    const x=tx(m.t),isT=m.type==='timeout',color=isT?'#A32D2D':'#993C1D';
+    content+='<line x1="'+x+'" y1="38" x2="'+x+'" y2="282" stroke="'+color+'" opacity="0.6"/><circle cx="'+x+'" cy="45" r="5" fill="'+color+'"/><rect x="'+(x-17)+'" y="12" width="34" height="22" fill="white"/><text x="'+x+'" y="28" text-anchor="middle" fill="'+color+'" font-size="14" font-weight="700">'+(isT?'T':'FR')+'</text>';
+  });
+  ccEvents.forEach(e=>{
+    const x=tx(e.t),y=ty(value(e,'cwnd')),selected=e.id===selectedCCEvent;
+    const loss=/timeout|retransmit/i.test(e.label),markerColor=loss?'#a33d35':'#534AB7',markerTint=loss?'#fff0eb':'#efedfc';
+    if(selected)content+='<line x1="'+x+'" y1="38" x2="'+x+'" y2="282" stroke="#284d73"/>';
+    content+='<g class="chart-event-marker" data-event-id="'+e.id+'"><title>Event '+e.id+': '+e.label+' at '+e.t.toFixed(2)+' seconds</title><circle cx="'+x+'" cy="'+y+'" r="11" fill="'+(selected?markerColor:markerTint)+'" stroke="'+markerColor+'" stroke-width="1.5"/><text x="'+x+'" y="'+(y+4)+'" text-anchor="middle" fill="'+(selected?'#fff':markerColor)+'" font-size="12" font-weight="700">'+e.id+'</text></g>';
     ccEventHits.push({id:e.id,x,y});
   });
+  if(chartCv._renderedContent!==content){chartCv.innerHTML=content;chartCv._renderedContent=content;}
 }
 
-function rrect(x,y,w,h,r,fill,stroke,lw){
-  netCtx.beginPath();netCtx.moveTo(x+r,y);netCtx.lineTo(x+w-r,y);netCtx.quadraticCurveTo(x+w,y,x+w,y+r);netCtx.lineTo(x+w,y+h-r);netCtx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);netCtx.lineTo(x+r,y+h);netCtx.quadraticCurveTo(x,y+h,x,y+h-r);netCtx.lineTo(x,y+r);netCtx.quadraticCurveTo(x,y,x+r,y);netCtx.closePath();
-  if(fill){netCtx.fillStyle=fill;netCtx.fill();}
-  if(stroke){netCtx.strokeStyle=stroke;netCtx.lineWidth=lw||1;netCtx.stroke();}
+function drawNetwork(){
+  const n=getNC(),armed=mode==='manual'&&dropArmed,connected=st==='established';
+  const enabled=mode==='manual'&&connected,strip=document.getElementById('net-strip');
+  strip.dataset.dropEnabled=String(enabled);
+  strip.title=enabled?'Click to arm or cancel dropping the next data packet':mode==='sim'?'Packet loss is controlled by the simulation loss setting':'Connect to send packets';
+  const color=armed?'#bf2f49':connected?'#287d78':'#9aa9b8';
+  const esc=value=>String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  let parts=['<g font-family="system-ui, sans-serif" text-anchor="middle"><path d="M '+n.sx+' 62 H '+n.rx+'" stroke="#e0eee9" stroke-width="12" stroke-linecap="round"/><path d="M '+n.sx+' 62 H '+n.rx+'" stroke="'+color+'" stroke-width="2"'+(!connected?' stroke-dasharray="4 6"':'')+'/>'];
+  for(const [x,y] of [[n.sx,n.sy],[n.rx,n.ry]])parts.push('<path d="M '+x+' '+y+' V 62" fill="none" stroke="'+color+'" stroke-width="2"/><circle cx="'+x+'" cy="'+y+'" r="4" fill="white" stroke="'+color+'" stroke-width="2"/>');
+  const hint=armed?'Drop armed - click to cancel':enabled?'Click the link to drop the next data packet':mode==='sim'?'Packet loss follows the simulation setting':'';
+  parts.push('<text x="'+((n.sx+n.rx)/2)+'" y="113" font-size="12" fill="'+color+'">'+hint+'</text>');
+  if(armed)parts.push('<circle cx="'+((n.sx+n.rx)/2)+'" cy="62" r="12" fill="#a32d2d"/><text x="'+((n.sx+n.rx)/2)+'" y="67" font-size="18" fill="white">&#215;</text>');
+  pkts.forEach(p=>{
+    if(p.done||p.lost||p.elapsed<0)return;
+    const f=Math.min(p.elapsed/p.dur,1),e=f<0.5?2*f*f:1-Math.pow(-2*f+2,2)/2;
+    const x=(p.dir==='toR'?n.sx:n.rx)+(p.dir==='toR'?n.rx-n.sx:n.sx-n.rx)*e;
+    const mid=p.dir==='toR'&&armed&&Math.abs(x-(n.sx+n.rx)/2)<50;
+    const width=Math.max(150,Math.max(p.l1.length,p.l2.length)*7.3+24);
+    parts.push('<g class="network-packet"><title>'+esc(p.l1+' '+p.l2)+'</title><rect x="'+(x-width/2)+'" y="41" width="'+width+'" height="42" rx="7" fill="'+(mid?'#FCEBEB':p.col.bg)+'" stroke="'+(mid?'#A32D2D':p.col.bd)+'" stroke-width="2"/><text x="'+x+'" y="58" font-size="12" font-weight="600" fill="'+esc(p.col.tx)+'">'+esc(p.l1)+'</text><text x="'+x+'" y="75" font-size="11" fill="'+esc(p.col.tx)+'">'+esc(p.l2)+'</text></g>');
+  });
+  for(let i=packetLossEffects.length-1;i>=0;i--){
+    const effect=packetLossEffects[i],age=(protocolTime-effect.time)/1100;
+    if(age>=1){packetLossEffects.splice(i,1);continue;}
+    const x=(n.sx+n.rx)/2,y=62+age*20,opacity=Math.min(1,(1-age)*2);
+    parts.push('<g class="packet-loss-effect" opacity="'+opacity+'"><title>Lost segment seq='+effect.seq+'</title><circle cx="'+x+'" cy="62" r="'+(12+age*26)+'" fill="none" stroke="#bf2f49" stroke-width="2"/><rect x="'+(x-72)+'" y="'+(y-18)+'" width="144" height="36" rx="7" fill="#fcebec" stroke="#bf2f49" stroke-width="2"/><text x="'+x+'" y="'+(y+4)+'" font-size="12" font-weight="700" fill="#a32d2d">Lost: seq='+effect.seq+'</text></g>');
+  }
+  parts.push('</g>');netCv.innerHTML=parts.join('');
 }
 
 var prev=null;
 function loop(ts){
   requestAnimationFrame(loop);
   var dt=prev===null?16:Math.min(ts-prev,100);prev=ts;
-  if(sim.paused||examineDialog.open)return;
+  if(sim.paused||examineDialog.open||windowDialog.open||settingsDialog.open)return;
   advanceProtocolTimers(dt);
   var completed=[];
-  for(var i=0;i<pkts.length;i++){var p=pkts[i];if(p.done)continue;p.elapsed+=dt;if(p.elapsed>=p.dur){p.done=true;completed.push(i);}}
+  for(var i=0;i<pkts.length;i++){var p=pkts[i];if(p.done)continue;p.elapsed+=dt;if(p.dataSegment&&!p.lost&&p.elapsed>=p.dur/2&&(p.scheduledLoss||(mode==='manual'&&dropArmed))){p.lost=true;p.lose();}if(p.elapsed>=p.dur){p.done=true;completed.push(i);}}
   completed.forEach(function(i){if(pkts[i].cb)pkts[i].cb();});
   pkts=pkts.filter(function(p){return !p.done;});
   if(probe.s==='persist'){probe.el+=dt;if(probe.el>=probe.iv){sendProbe();upd();}else upd();}
@@ -966,59 +1176,7 @@ function loop(ts){
       else{cancelRTO();if(snd.unacked.length>0)startRTOFor(snd.unacked[0]);}
     } else upd();
   }
-  netCtx.clearRect(0,0,netCv.width,netCv.height);
-  var n=getNC();
-  var armed=dropArmed;
-  var connected=st==='established';
-  var pipeY=n.my,pipeR=3;
-  var x0=n.sx,x1=n.rx;
-  var linkColor=armed?'#bf2f49':connected?'#287d78':'#9aa9b8';
-  var trackColor=armed?'#f7e3e8':connected?'#e0eee9':'#e5ebf0';
-
-  // Flat network track with endpoint nodes; packets travel along its center.
-  netCtx.save();
-  netCtx.lineCap='round';
-  netCtx.strokeStyle=trackColor;netCtx.lineWidth=10;
-  netCtx.beginPath();netCtx.moveTo(x0,pipeY);netCtx.lineTo(x1,pipeY);netCtx.stroke();
-  netCtx.strokeStyle=linkColor;netCtx.lineWidth=2;
-  if(!connected&&!armed)netCtx.setLineDash([4,6]);
-  netCtx.beginPath();netCtx.moveTo(x0,pipeY);netCtx.lineTo(x1,pipeY);netCtx.stroke();
-  netCtx.setLineDash([]);
-  [x0,x1].forEach(function(x){
-    netCtx.fillStyle='#fff';netCtx.strokeStyle=linkColor;netCtx.lineWidth=2;
-    netCtx.beginPath();netCtx.arc(x,pipeY,6,0,Math.PI*2);netCtx.fill();netCtx.stroke();
-    netCtx.fillStyle=linkColor;netCtx.beginPath();netCtx.arc(x,pipeY,2,0,Math.PI*2);netCtx.fill();
-  });
-  netCtx.fillStyle='#6d7d8f';netCtx.font='600 9px system-ui';netCtx.textAlign='center';
-  netCtx.fillText('SENDER',x0,pipeY-14);
-  netCtx.fillText('RECEIVER',x1,pipeY-14);
-  netCtx.restore();
-
-  // Armed: ✕ badge at midpoint
-  if(armed){
-    var mx=(x0+x1)/2,my=pipeY,br=9;
-    netCtx.fillStyle='#7b1c1c';
-    netCtx.beginPath();netCtx.arc(mx,my,br,0,Math.PI*2);netCtx.fill();
-    netCtx.strokeStyle='#fff';netCtx.lineWidth=2;netCtx.lineCap='round';
-    netCtx.beginPath();netCtx.moveTo(mx-4,my-4);netCtx.lineTo(mx+4,my+4);netCtx.stroke();
-    netCtx.beginPath();netCtx.moveTo(mx+4,my-4);netCtx.lineTo(mx-4,my+4);netCtx.stroke();
-    netCtx.fillStyle='#c0392b';netCtx.font='600 9px system-ui';netCtx.textAlign='center';
-    netCtx.fillText('click to cancel',mx,pipeY+pipeR+11);
-  } else if(st==='established'){
-    netCtx.fillStyle='rgba(14,110,82,0.7)';netCtx.font='600 10px system-ui';netCtx.textAlign='center';
-    netCtx.fillText('✕  click pipe to drop a packet  ✕',(x0+x1)/2,pipeY+pipeR+13);
-  }
-  pkts.forEach(function(p){
-    if(p.done||p.elapsed<0)return;
-    var f=Math.min(p.elapsed/p.dur,1),e=f<0.5?2*f*f:1-Math.pow(-2*f+2,2)/2;
-    var x=p.sx+(p.ex-p.sx)*e;
-    // If wire is armed and this is a toR packet near midpoint, tint it red
-    var isMidzone=p.dir==='toR'&&dropArmed&&Math.abs(x-(n.sx+n.rx)/2)<50;
-    var pw=p.l1.length>16?152:p.l1.length>12?130:108,ph=16;
-    rrect(x-pw/2,n.my-ph/2,pw,ph,3,isMidzone?'#FCEBEB':p.col.bg,isMidzone?'#A32D2D':p.col.bd,isMidzone?2:1.5);
-    netCtx.fillStyle=isMidzone?'#A32D2D':p.col.tx;netCtx.font='600 8px system-ui';netCtx.textAlign='center';
-    netCtx.fillText(p.l1,x,n.my-2);netCtx.font='7px system-ui';netCtx.fillText(p.l2,x,n.my+7);
-  });
+  drawNetwork();
   drawChart();
 }
 requestAnimationFrame(loop);

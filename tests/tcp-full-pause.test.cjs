@@ -36,6 +36,7 @@ test('pause freezes in-flight packets and protocol timers and resumes remaining 
   assert.notEqual(api.snapshot(),frozen);
   advance(50);
   assert.ok(api.sim.rtt>1,'simulation continues to subsequent rounds');
-  assert.equal(w.document.querySelector('#panels .stack').lastElementChild.id,'cc-kv-grid');
+  assert.equal(w.document.querySelector('#panels .stack').lastElementChild.id,'s-buf-body');
+  assert.ok(w.document.querySelector('#chart-wrap .cc-status-line #t-ccphase'));
   dom.window.close();
 });
