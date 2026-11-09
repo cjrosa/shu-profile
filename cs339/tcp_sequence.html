@@ -23,7 +23,7 @@
  <div id="hosts-panel" role="tabpanel" aria-labelledby="hosts-tab"><div class="network-endpoints"><strong>Host A · TCP</strong><span>Data and ACKs stay between transport layers</span><strong>Host B · TCP</strong></div><div id="packets" aria-label="TCP packet timeline"></div></div>
  <div id="log-panel" role="tabpanel" aria-labelledby="log-tab" hidden><div class="section-heading"><h2>Transmission log</h2><button id="latest">Follow latest event</button></div><p id="snapshot" class="hint"></p><div class="log-scroll"><table><thead><tr><th>Step</th><th>Event</th><th>Host / path</th><th>Flags</th><th>SEQ</th><th>ACK</th><th>LEN</th><th>Explanation</th></tr></thead><tbody id="log"></tbody></table></div></div>
 </section>
-<p class="model-note">Educational model: fixed sender teaching windows and enough receive storage for each message. Receiver flow control is omitted. TCP acknowledgments confirm receipt independently of application reads. Sequence wraparound, congestion control, and teardown are outside this lesson.</p>
+<p class="model-note">Educational model: fixed sender teaching windows and enough receive storage for each message. Receiver flow control is omitted. TCP acknowledgments confirm receipt independently of application reads. Sequence wraparound and congestion control are outside this lesson.</p>
 </main>
 <dialog id="intercept-dialog" class="intercept-dialog" aria-labelledby="intercept-dialog-title" aria-describedby="intercept-route">
  <div class="intercept-dialog-heading"><div><p class="intercept-eyebrow">Packet intercepted</p><h2 id="intercept-dialog-title">TCP segment header</h2></div><button id="intercept-close" aria-label="Close and leave packet in transit" autofocus>&times;</button></div>
