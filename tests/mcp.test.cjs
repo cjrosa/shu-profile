@@ -1,4 +1,4 @@
-﻿const test = require('node:test');
+const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -93,7 +93,7 @@ test('automatic requests record only reached actions and pause at chat approval'
 test('historical inspection leaves live data unchanged for the next request',()=>{
  const dom=app(),d=dom.window.document;
  send(d,'Book Cedar at 10:00 for Alex.');reach(dom,()=>!d.getElementById('approval').hidden);click(d,'approve');reach(dom,()=>!d.getElementById('final-reply').hidden);
- click(d,'open-actions');d.querySelector('#action-list button').click();
+ d.querySelector('#action-list button').click();
  assert.equal(d.getElementById('review-banner').hidden,false);
  assert.equal(d.querySelectorAll('.reservation').length,1,'show historical snapshot');
  send(d,'Book Cedar at 10:00 for Alex.');reach(dom,()=>!d.getElementById('approval').hidden);click(d,'approve');reach(dom,()=>!d.getElementById('final-reply').hidden);
@@ -101,23 +101,23 @@ test('historical inspection leaves live data unchanged for the next request',()=
  assert.equal(d.querySelectorAll('.reservation').length,2);
  dom.window.close();
 });
-test('open panel updates while inspecting a past action; dismiss returns to latest',()=>{
+test('persistent panel updates while inspecting a past action',()=>{
  const dom=app(),d=dom.window.document;
- send(d,'Find available rooms at 11:00.');click(d,'open-actions');d.querySelector('#action-list button').click();
+ send(d,'Find available rooms at 11:00.');d.querySelector('#action-list button').click();
  const before=d.querySelectorAll('#action-list button').length;
  reach(dom,()=>d.getElementById('run-status').textContent==='Request complete');
  assert.ok(d.querySelectorAll('#action-list button').length>before);
  assert.equal(d.getElementById('final-reply').hidden,true,'inspection remains on the selected action');
  click(d,'latest');assert.match(d.getElementById('answer').textContent,/Maple, Birch/);
- click(d,'close-actions');assert.equal(d.getElementById('actions-panel').hidden,true);
- click(d,'open-actions');assert.ok(d.querySelectorAll('#action-list button').length>1);
- d.dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'Escape'}));assert.equal(d.getElementById('actions-panel').hidden,true);
+ assert.equal(d.getElementById('actions-panel').hidden,false);
+ assert.ok(d.querySelectorAll('#action-list button').length>1);
+ d.dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'Escape'}));assert.equal(d.getElementById('actions-panel').hidden,false);
  dom.window.close();
 });
 test('tool loading and selection are inspectable; historical approval cannot execute',()=>{
  const dom=app(),d=dom.window.document;
  send(d,'Book Cedar at 10:00 for Alex.');reach(dom,()=>!d.getElementById('approval').hidden);click(d,'decline');
- click(d,'open-actions');
+
  const select=text=>[...d.querySelectorAll('#action-list button')].find(n=>n.textContent.includes(text)).click();
  select('loading MCP tools');assert.equal(d.getElementById('tools-status').textContent,'Loading MCP tools…');
  select('tools loaded');assert.equal(d.querySelectorAll('[data-model-tool].selected').length,0);
@@ -137,14 +137,61 @@ test('temporary operations clear after completion and return for the selected hi
  const dom=app(),d=dom.window.document;
  send(d,'Find available rooms at 10:00.');
  reach(dom,()=>!d.getElementById('server-result').hidden);
+ assert.equal(d.querySelectorAll('.current-operation:not([hidden])').length,1);
+ assert.equal(d.querySelector('.server-panel .current-operation').hidden,false);
  assert.equal(d.getElementById('server-action').hidden,false);
  dom.advance();assert.equal(d.getElementById('server-result').hidden,true);
  reach(dom,()=>!d.getElementById('final-reply').hidden);
  for(const id of ['server-action','operations','database-result','server-result','model-result'])assert.equal(d.getElementById(id).hidden,true,id);
- click(d,'open-actions');
+ assert.equal(d.querySelectorAll('.current-operation:not([hidden])').length,0);
+
  [...d.querySelectorAll('#action-list button')].find(b=>b.textContent.includes('booking result travels')).click();
  assert.equal(d.getElementById('server-result').hidden,false);
  assert.match(d.getElementById('server-result').textContent,/Cedar, Maple, Birch/);
  click(d,'latest');assert.equal(d.getElementById('server-result').hidden,true);
+ dom.window.close();
+});
+test('stop cancels pending steps and approval; reset clears history and restores data',()=>{
+ const dom=app(),d=dom.window.document;
+ assert.equal(d.getElementById('actions-panel').hidden,false);
+ assert.equal(d.querySelector('#open-actions'),null);
+ assert.ok(d.getElementById('actions-panel').contains(d.getElementById('stop-scenario')));
+ assert.ok(d.getElementById('actions-panel').contains(d.getElementById('reset-scenario')));
+ send(d,'Book Cedar at 10:00 for Alex.');
+ reach(dom,()=>!d.getElementById('approval').hidden);
+ click(d,'stop-scenario');
+ const count=d.querySelectorAll('#action-list button').length;
+ click(d,'approve');dom.advance();
+ assert.equal(d.querySelectorAll('#action-list button').length,count);
+ assert.equal(d.querySelectorAll('.reservation').length,1);
+ assert.equal(d.getElementById('approval').hidden,true);
+ assert.match(d.getElementById('actions-status').textContent,/Stopped/);
+ d.dispatchEvent(new dom.window.Event('visibilitychange'));dom.advance();
+ assert.equal(d.querySelectorAll('#action-list button').length,count);
+ send(d,'Book Cedar at 10:00 for Alex.');
+ reach(dom,()=>!d.getElementById('approval').hidden);click(d,'approve');
+ reach(dom,()=>d.querySelectorAll('.reservation').length===2);
+ click(d,'stop-scenario');dom.advance();
+ assert.equal(d.querySelectorAll('.reservation').length,2);
+ click(d,'reset-scenario');dom.advance();
+ assert.equal(d.querySelectorAll('.reservation').length,1);
+ assert.equal(d.querySelectorAll('#action-list button').length,0);
+ assert.equal(d.getElementById('actions-prompt').hidden,true);
+ assert.equal(d.getElementById('stop-scenario').disabled,true);
+ assert.equal(d.getElementById('actions-panel').hidden,false);
+ dom.window.close();
+});
+test('section activity highlights server stages and only requested booking slots',()=>{
+ const dom=app(),d=dom.window.document;
+ send(d,'Find available rooms at 11:00.');
+ reach(dom,()=>!d.querySelector('.server-workflow').hidden);
+ assert.match(d.querySelector('.server-phase.current').textContent,/Receive action/);
+ dom.advance();assert.match(d.querySelector('.server-phase.current').textContent,/Check request/);
+ reach(dom,()=>d.querySelectorAll('td.scanning').length>0);
+ assert.equal(d.querySelectorAll('td.scanning').length,3);
+ for(const cell of d.querySelectorAll('td.scanning'))assert.match(cell.title,/11:00/);
+ reach(dom,()=>!d.getElementById('final-reply').hidden);
+ assert.equal(d.querySelectorAll('td.scanning').length,0);
+ assert.equal(d.querySelector('.server-workflow').hidden,true);
  dom.window.close();
 });

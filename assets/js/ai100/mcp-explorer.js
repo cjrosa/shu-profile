@@ -6,6 +6,7 @@
   const clone = x => JSON.parse(JSON.stringify(x));
   let motion = [];
   let livePosition = 0, review = null;
+  let stopped = false;
   const el = (tag, text, className) => { const node = document.createElement(tag); if(text !== undefined) node.textContent = text; if(className) node.className = className; return node; };
   function packetIcon(frame) {
     const paths={
@@ -80,6 +81,31 @@
   M.examples.forEach(([label,prompt]) => {const button=el('button',label);button.title=prompt;button.addEventListener('click',()=>{$('prompt').value=prompt;prepare(true);});$('examples').append(button);});
   M.tools.forEach(tool=>{const card=el('div',undefined,'tool');card.dataset.tool=tool.name;card.append(el('strong',names[tool.name]),el('small',tool.name==='search_availability'?'Read availability':tool.name==='create_booking'?'Reserve a free slot':'Release a reservation'));$('catalog').append(card);});
   M.tools.forEach(tool=>{const card=el('div',undefined,'tool');card.dataset.modelTool=tool.name;card.append(el('strong',names[tool.name]),el('small',tool.name==='search_availability'?'Checks which rooms are free.':tool.name==='create_booking'?'Creates a reservation.':'Removes an existing reservation.'));$('loaded-tools').append(card);});
+  document.querySelectorAll('[data-node]').forEach(section=>{
+    const card=el('div',undefined,'current-operation');card.hidden=true;
+    const copy=el('div',undefined,'operation-copy');copy.append(el('span','','operation-label'),el('h3','','operation-title'),el('p','','operation-description'));
+    card.append(el('span',undefined,'operation-icon'),copy);
+    section.querySelector('.section-head').after(card);
+  });
+  function renderOperation(frame){
+    document.querySelectorAll('[data-node]').forEach(section=>{
+      const card=section.querySelector('.current-operation');
+      const active=section.dataset.node===frame?.node&&!frame?.answer&&(!stopped||review!==null);
+      card.hidden=!active;
+      if(!active)return;
+      card.querySelector('.operation-icon').replaceChildren(packetIcon(frame));
+      card.querySelector('.operation-label').textContent=review!==null?'Selected action':frame.approval?'Waiting for you':frame.kind==='db-result'?'Operation result':'Now doing';
+      card.querySelector('.operation-title').textContent=frame.title;
+      card.querySelector('.operation-description').textContent=frame.result||frame.explanation;
+    });
+    const serverActive=frame?.node==='server'&&(!stopped||review!==null);
+    serverWorkflow.hidden=!serverActive;
+    const phase=frame?.kind==='call'?0:frame?.kind==='validate'?1:2;
+    serverWorkflow.querySelectorAll('.server-phase').forEach((node,index)=>{node.classList.toggle('current',serverActive&&index===phase);node.classList.toggle('done',serverActive&&index<phase);});
+  }
+  const serverWorkflow=el('div',undefined,'server-workflow');serverWorkflow.hidden=true;
+  ['Receive action','Check request','Return result'].forEach((label,index)=>{const phase=el('span',undefined,'server-phase');phase.append(el('span',String(index+1),'phase-number'),el('span',label));serverWorkflow.append(phase);});
+  document.querySelector('.server-panel .current-operation').after(serverWorkflow);
   document.querySelectorAll('.connector').forEach(node=>{const packet=el('div',undefined,'flow-packet');packet.setAttribute('aria-hidden','true');packet.append(el('span','','packet-icon'),el('div',undefined,'packet-copy'));packet.lastChild.append(el('strong','','packet-title'),el('span','','packet-detail'));node.append(packet,el('span','↑','return-arrow'));node.querySelector('.return-arrow').setAttribute('aria-hidden','true');});
   function animateStep(frame){
     motion.forEach(animation=>animation.cancel());motion=[];
@@ -91,23 +117,35 @@
     animate(receiver,[{boxShadow:`0 0 0 0 ${frame.up?'#2774c860':'#1f7a4660'}`,transform:'scale(.94)'},{boxShadow:`0 0 0 15px ${frame.up?'#2774c800':'#1f7a4600'}`,transform:'scale(1.08)',offset:.65},{boxShadow:'0 0 0 0 transparent',transform:'scale(1)'}]);
     if(frame.kind==='discover')document.querySelectorAll('[data-model-tool]').forEach((node,i)=>animate(node,[{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'translateY(0)'}],{delay:i*110,duration:400}));
     if(frame.kind==='choose')animate(document.querySelector('[data-model-tool].selected'),[{transform:'scale(1)'},{transform:'scale(1.045)',offset:.5},{transform:'scale(1)'}]);
+    if(frame.node==='model'&&frame.summary)animate(document.querySelector('#reasoning li.current'),[{opacity:.2,transform:'translateX(-10px)'},{opacity:1,transform:'translateX(0)'}],{duration:550});
+    if(frame.node==='server'){
+      animate(serverWorkflow.querySelector('.current'),[{background:'#ece3f6',boxShadow:'inset 0 -3px #8053b4',transform:'translateY(3px)'},{background:'#f4f0fa',boxShadow:'inset 0 -3px #8053b4',transform:'translateY(0)'}],{duration:800});
+      animate(document.querySelector('#catalog .selected'),[{boxShadow:'0 0 0 0 #8053b440'},{boxShadow:'0 0 0 7px #8053b400'}],{duration:900});
+    }
+    if(frame.node==='database'){
+      document.querySelectorAll('td.scanning').forEach((cell,index)=>animate(cell,[{background:'#fff2dd',boxShadow:'inset 0 0 0 2px #c18724'},{background:'#f2ce80',boxShadow:'inset 0 0 0 2px #c18724',offset:.45},{background:cell.classList.contains('booked')?'#eee9f6':'#e8f5ed',boxShadow:'inset 0 0 0 2px transparent'}],{duration:650,delay:index*180}));
+      animate(document.querySelector('#operations li.active'),[{opacity:.35,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:450});
+    }
+    if(frame.changed)animate(document.querySelector('.reservation.just-written'),[{opacity:0,transform:'translateX(18px)',background:'#fff2dd'},{opacity:1,transform:'translateX(0)',background:'transparent'}],{duration:850});
     if(frame.changed)animate(document.querySelector('td.changed'),[{background:'#fff2dd',transform:'scale(1)'},{background:'#f2c55d',transform:'scale(1.12)',offset:.45},{background:'#fff2dd',transform:'scale(1)'}]);
   }
   function stop(){clearTimeout(timer);timer=null;document.body.classList.remove('playing');motion.forEach(animation=>animation.pause());}
-  function blocked(){return Boolean(frames[livePosition]?.approval&&!approvals.has(livePosition));}
-  function start(){if(!frames.length||blocked()||livePosition===frames.length-1)return;document.body.classList.add('playing');tick();}
+  function blocked(){return !stopped&&Boolean(frames[livePosition]?.approval&&!approvals.has(livePosition));}
+  function start(){if(stopped||!frames.length||blocked()||livePosition===frames.length-1)return;document.body.classList.add('playing');tick();}
   function prepare(autoplay=false){
     stop();const prompt=$('prompt').value.trim();
     if(!prompt){$('input-status').textContent='Enter a message or select an example.';$('prompt').focus();return;}
-    preparedPrompt=prompt;initial=clone(db);frames=conversation(prompt,initial);position=0;livePosition=0;review=null;approvals.clear();
+    stopped=false;preparedPrompt=prompt;initial=clone(db);frames=conversation(prompt,initial);position=0;livePosition=0;review=null;approvals.clear();
     $('prompt').value='';$('input-status').textContent='Message sent. Follow the request downward and the result upward.';render();if(autoplay)start();
   }
   function renderDatabase(frame){
     const db=frame.db||M.initialDB();
+    const intent=M.parse(preparedPrompt);
+    const target=frame.changed||(frame.payload?.room&&frame.payload?.time?frame.payload:null)||db.find(b=>b.id===intent.booking_id)||initial.find(b=>b.id===intent.booking_id)||intent;
     const table=el('table'),head=el('thead'),row=el('tr');row.append(el('th','Room'));
     M.TIMES.forEach(time=>{const cell=el('th',time);cell.scope='col';row.append(cell);});head.append(row);table.append(head);const body=el('tbody');
-    M.ROOMS.forEach(room=>{const row=el('tr'),label=el('th',room);label.scope='row';row.append(label);M.TIMES.forEach(time=>{const booking=db.find(b=>b.room===room&&b.time===time&&b.date===M.DATE);const changed=frame.changed?.room===room&&frame.changed?.time===time;const cell=el('td',booking?booking.id:'Free',`${booking?'booked':''} ${changed?'changed':''}`);cell.title=`${room}, ${time}: ${booking?'booked by '+booking.user:'available'}`;row.append(cell);});body.append(row);});table.append(body);$('schedule').replaceChildren(table);
-    $('bookings').replaceChildren();db.forEach(b=>{const row=el('div',undefined,'reservation');row.append(el('strong',b.id),el('span',`${b.room} · ${b.time}`),el('small',b.user));$('bookings').append(row);});if(!db.length)$('bookings').append(el('p','No reservations. All rooms are free.','hint'));
+    M.ROOMS.forEach(room=>{const row=el('tr'),label=el('th',room);label.scope='row';row.append(label);M.TIMES.forEach(time=>{const booking=db.find(b=>b.room===room&&b.time===time&&b.date===M.DATE);const changed=frame.changed?.room===room&&frame.changed?.time===time;const cell=el('td',booking?booking.id:'Free',`${booking?'booked':''} ${changed?'changed':''}`);cell.classList.toggle('scanning',frame.node==='database'&&time===target.time&&(frame.selected==='search_availability'||!target.room||room===target.room));cell.title=`${room}, ${time}: ${booking?'booked by '+booking.user:'available'}`;row.append(cell);});body.append(row);});table.append(body);$('schedule').replaceChildren(table);
+    $('bookings').replaceChildren();db.forEach(b=>{const row=el('div',undefined,'reservation');row.classList.toggle('just-written',b.id===frame.changed?.id);row.append(el('strong',b.id),el('span',`${b.room} · ${b.time}`),el('small',b.user));$('bookings').append(row);});if(!db.length)$('bookings').append(el('p','No reservations. All rooms are free.','hint'));
     $('db-status').textContent=frame.changed?`${frame.title}: ${frame.changed.room} at ${frame.changed.time}.`:`${db.length} reservation(s) · One-hour slots · Nov 9, 2026`;
   }
   function showResult(id,text){$(id).hidden=!text;$(id).textContent=text||'';}
@@ -124,7 +162,7 @@
     document.querySelectorAll('[data-model-tool]').forEach(node=>{const selected=node.dataset.modelTool===frame.selected;node.classList.toggle('selected',selected);node.classList.toggle('not-selected',Boolean(frame.selected)&&!selected);});
     $('chat-welcome').hidden=true;
     $('user-message').hidden=false;$('user-message').textContent=preparedPrompt;
-    const summaries=seen.filter(f=>f.summary).map(f=>f.summary);$('reasoning').replaceChildren(...summaries.map(text=>el('li',text)));
+    const summaries=seen.filter(f=>f.summary).map(f=>f.summary);$('reasoning').replaceChildren(...summaries.map((text,index)=>el('li',text,index===summaries.length-1&&frame.node==='model'&&!frame.answer?'current':'done')));
     $('model-status').textContent=frame.answer?'Replied':blocked()?'Awaiting approval':frame.node==='model'?'Processing':'Waiting for tools';
     const activeCall=seen.findLastIndex(f=>f.kind==='call');const cycle=seen.slice(Math.max(0,activeCall));
     const latestAction=seen.findLast(f=>f.action);$('server-action').textContent=latestAction?.action||'Available actions: find rooms, book a room, or cancel a booking.';
@@ -143,11 +181,13 @@
     $('decision-message').hidden=!decision;$('decision-message').textContent=decision;
     $('chat-activity').hidden=Boolean(frame.answer)||blocked();
     $('chat-activity').textContent=loading?'Loading MCP tools…':frame.kind==='discover'?'Loaded 3 MCP tools.':frame.kind==='choose'?`Selected tool: ${names[frame.selected]}`:frame.kind==='model-result'?'Checking the booking result…':activeCall>=0?'Working with the booking system…':'Processing your request…';
+    if(stopped&&review===null){$('chat-activity').hidden=false;$('chat-activity').textContent='Scenario stopped. Completed booking changes are kept. Send a new prompt or reset to begin again.';$('model-status').textContent='Stopped';}
     const defaultFlows={'prompt-flow':'Your message goes to ChatGPT','mcp-flow':'MCP carries the selected action','database-flow':'The server asks the booking system to act'};
     for(const [id,label] of Object.entries(defaultFlows)){const node=$(id),active=id===frame.flow;node.classList.toggle('active',active);node.classList.toggle('up',active&&Boolean(frame.up));node.querySelector('.flow-arrow').textContent='↓';node.querySelector('.flow-label').textContent=active?(frame.up?(id==='prompt-flow'?(blocked()?'ChatGPT asks for approval in the conversation':'The answer returns to your conversation'):frame.kind==='discover'?'Available tools are shared with ChatGPT':id==='mcp-flow'?'The result returns to ChatGPT':'The booking result returns to the server'):id==='prompt-flow'?'Your message flows into ChatGPT':frame.action||label):label;}
     if(frame.flow){const node=$(frame.flow);node.querySelector('.packet-icon').replaceChildren(packetIcon(frame));node.querySelector('.packet-title').textContent=blocked()?'Approval requested':frame.kind==='discover'?'3 MCP tools loaded':frame.kind==='loading-tools'?'Discover available tools':frame.answer?'Reply to you':frame.up?'Booking result':frame.kind==='prompt'?'Your message':'Tool request';node.querySelector('.packet-detail').textContent=frame.result||frame.action||(frame.kind==='prompt'?preparedPrompt:frame.answer?frame.answer:frame.kind==='discover'?'Find rooms · Book a room · Cancel a booking':'ChatGPT ↔ Booking MCP server');}
     renderDatabase(frame);
-    animateStep(frame);
+    renderOperation(frame);
+    if(!stopped||review!==null)animateStep(frame);
     renderActions();
   }
   function follow(){const frame=frames[position];const target=frame.answer?$('final-reply'):blocked()?$('approval-message'):frame.flow?$(frame.flow):document.querySelector(`[data-node="${frame.node}"]`);if(!target?.scrollIntoView)return;const box=target.getBoundingClientRect();if(box.top<160||box.bottom>window.innerHeight-40)target.scrollIntoView({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'center'});}
@@ -155,11 +195,11 @@
     const active=frames[livePosition];
     $('actions-prompt').hidden=!frames.length;
     $('actions-prompt-text').textContent=frames.length?preparedPrompt:'';
-    $('run-status').textContent=!active?'Send a message to begin':blocked()?'Waiting for your approval in chat':livePosition===frames.length-1?'Request complete':active.title;
-    $('action-count').textContent=frames.length?livePosition+1:0;
-    $('actions-status').textContent=!active?'No actions yet.':blocked()?'Awaiting approval':livePosition===frames.length-1?'All actions recorded':'Recording actions live…';
+    $('run-status').textContent=!active?'Send a message to begin':stopped?'Scenario stopped':blocked()?'Waiting for your approval in chat':livePosition===frames.length-1?'Request complete':active.title;
+    $('stop-scenario').disabled=!active||stopped||livePosition===frames.length-1;
+    $('actions-status').textContent=!active?'No actions yet.':stopped?'Stopped · completed actions retained':blocked()?'Awaiting approval':livePosition===frames.length-1?'All actions recorded':'Recording actions live…';
     const focused=document.activeElement?.dataset?.step;
-    $('action-list').replaceChildren(...frames.slice(0,livePosition+1).map((frame,index)=>{const row=el('li'),button=el('button');button.dataset.step=index;button.setAttribute('aria-pressed',String(index===position));const icon=el('span',undefined,'action-icon');icon.append(packetIcon(frame));button.append(el('span',String(index+1),'action-number'),icon,el('span',frame.title,'action-title'));button.addEventListener('click',()=>{review=index;position=index;if(window.innerWidth<=740){document.getElementById("actions-panel").hidden=true;document.body.classList.remove('actions-open');document.getElementById("open-actions").setAttribute('aria-expanded','false');}render();follow();});row.append(button);return row;}));
+    $('action-list').replaceChildren(...frames.slice(0,livePosition+1).map((frame,index)=>{const row=el('li'),button=el('button');button.dataset.step=index;button.setAttribute('aria-pressed',String(index===position));const icon=el('span',undefined,'action-icon');icon.append(packetIcon(frame));button.append(el('span',String(index+1),'action-number'),icon,el('span',frame.title,'action-title'));button.addEventListener('click',()=>{review=index;position=index;render();follow();});row.append(button);return row;}));
     if(focused!==undefined)$('action-list').querySelector(`[data-step="${focused}"]`)?.focus({preventScroll:true});
     $('review-banner').hidden=review===null;
     $('review-context').textContent=review===null?'':`Viewing action ${position+1}: ${frames[position].title}. Historical context; the live request continues independently.`;
@@ -167,19 +207,17 @@
     document.body.classList.toggle('reviewing',review!==null);
   }
   function latest(){review=null;position=livePosition;if(frames.length){render();follow();}}
-  function next(){if(!frames.length||blocked()||livePosition===frames.length-1){stop();return;}livePosition++;db=clone(frames[livePosition].db);if(blocked()||livePosition===frames.length-1)stop();if(review===null){position=livePosition;render();follow();}else renderActions();}
+  function next(){if(stopped||!frames.length||blocked()||livePosition===frames.length-1){stop();return;}livePosition++;db=clone(frames[livePosition].db);if(blocked()||livePosition===frames.length-1)stop();if(review===null){position=livePosition;render();follow();}else renderActions();}
   function tick(){timer=setTimeout(()=>{next();if(timer!==null)tick();},1800);}
   $('prompt-form').addEventListener('submit',event=>{event.preventDefault();prepare(true);});
   $('prompt').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();prepare(true);}});
   $('prompt').addEventListener('input',()=>{$('input-status').textContent='Press Enter or Send to submit your message.';});
-  $('open-actions').addEventListener('click',()=>{$('actions-panel').hidden=false;document.body.classList.add('actions-open');$('open-actions').setAttribute('aria-expanded','true');renderActions();$('close-actions').focus({preventScroll:true});});
-  function closeActions(){$('actions-panel').hidden=true;document.body.classList.remove('actions-open');$('open-actions').setAttribute('aria-expanded','false');latest();$('open-actions').focus({preventScroll:true});}
-  $('close-actions').addEventListener('click',closeActions);
+  $('stop-scenario').addEventListener('click',()=>{if(!frames.length||livePosition===frames.length-1)return;stop();stopped=true;latest();});
+  $('reset-scenario').addEventListener('click',()=>{$('reset').click();$('prompt').value='';$('prompt').focus();});
   $('latest').addEventListener('click',latest);
-  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('actions-panel').hidden)closeActions();});
   $('approve').addEventListener('click',()=>{if(review!==null||!blocked())return;approvals.add(livePosition);next();start();});
   $('decline').addEventListener('click',()=>{if(review!==null||!blocked())return;stop();const current=frames[livePosition];frames=frames.slice(0,livePosition+1).concat({...current,kind:'answer',approval:false,node:'model',title:'Action declined',explanation:'No booking action was sent. Your reservations are unchanged.',summary:'Respect the user’s decision; leave the reservations unchanged.',decision:'Decline. Don’t make this change.',answer:'Okay, I did not change any reservation.',flow:'prompt-flow',up:true});livePosition++;position=livePosition;render();follow();});
-  $('reset').addEventListener('click',()=>{stop();db=M.initialDB();frames=[];position=0;livePosition=0;review=null;approvals.clear();$('chat-welcome').hidden=false;['user-message','approval-message','approval','decision-message','final-reply','chat-activity','model-tools','model-result','server-result','database-result','server-action','operations'].forEach(id=>$(id).hidden=true);document.querySelectorAll('.active,.selected,.returning,.up').forEach(node=>node.classList.remove('active','selected','returning','up'));$('reasoning').replaceChildren(el('li','Send a prompt to begin.'));$('model-status').textContent='Ready';$('server-status').textContent='Waiting';$('server-action').textContent='Waiting for ChatGPT to choose a tool.';$('operations').replaceChildren(el('li','Waiting for an action.'));renderDatabase({});renderActions();$('input-status').textContent='Room data reset. Cedar is booked at 11:00.';});
+  $('reset').addEventListener('click',()=>{stop();stopped=false;db=M.initialDB();frames=[];position=0;livePosition=0;review=null;approvals.clear();$('chat-welcome').hidden=false;['user-message','approval-message','approval','decision-message','final-reply','chat-activity','model-tools','model-result','server-result','database-result','server-action','operations'].forEach(id=>$(id).hidden=true);document.querySelectorAll('.active,.selected,.returning,.up').forEach(node=>node.classList.remove('active','selected','returning','up'));$('reasoning').replaceChildren(el('li','Send a prompt to begin.'));$('model-status').textContent='Ready';$('server-status').textContent='Waiting';$('server-action').textContent='Waiting for ChatGPT to choose a tool.';$('operations').replaceChildren(el('li','Waiting for an action.'));renderDatabase({});renderOperation(null);renderActions();$('input-status').textContent='Room data reset. Cedar is booked at 11:00.';});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else if(timer===null)start();});
-  renderDatabase({});renderActions();
+  renderDatabase({});renderOperation(null);renderActions();
 })();

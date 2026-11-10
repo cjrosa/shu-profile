@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>MCP Booking Explorer | AI-100</title><link rel="stylesheet" href="../assets/css/pages/mcp-explorer.css"></head>
-<body><main class="shell">
-<header class="page-header"><div class="header-copy"><div class="eyebrow">AI-100 · AI beyond the chat box</div><h1>MCP Booking Explorer</h1><p class="intro">A request travels down. The result travels back up. Watch how ChatGPT uses a booking system through MCP.</p></div><div class="action-bar"><span id="run-status" class="sr-only" role="status"></span><button id="open-actions" aria-expanded="false" aria-controls="actions-panel">Actions <span id="action-count">0</span></button></div></header>
+<body class="actions-open"><main class="shell">
+<header class="page-header"><div class="header-copy"><div class="eyebrow">AI-100 · AI beyond the chat box</div><h1>MCP Booking Explorer</h1><p class="intro">A request travels down. The result travels back up. Watch how ChatGPT uses a booking system through MCP.</p></div><span id="run-status" class="sr-only" role="status"></span></header>
 <div id="review-banner" hidden><span id="review-context"></span><button id="latest">Back to latest</button></div>
 
-<section class="chat panel" aria-labelledby="chat-title">
+<div class="explorer-layout"><div class="flow-column"><section class="chat panel" aria-labelledby="chat-title">
 <div class="section-head chat-header"><h2 id="chat-title">ChatGPT</h2><span class="badge">Campus booking demo</span></div>
 <div id="chat-thread" class="chat-thread" aria-label="Conversation">
 <div id="chat-welcome" class="assistant-message"><p>Hi Alex. I can help you find a room, make a booking, or cancel a reservation. What would you like to do?</p></div>
@@ -38,5 +38,5 @@
 </section>
 
 
-<aside id="actions-panel" class="actions-panel" aria-labelledby="actions-title" hidden><div class="actions-heading"><div><div class="eyebrow">Current request</div><h2 id="actions-title">Actions</h2></div><button id="close-actions" aria-label="Close actions panel">×</button></div><div id="actions-prompt" class="actions-prompt" hidden><span class="message-author">Original prompt</span><p id="actions-prompt-text"></p></div><p class="hint">Actions appear as they happen. Select one to inspect its context in the flow.</p><p id="actions-status" role="status">No actions yet.</p><ol id="action-list"></ol></aside>
+</div><aside id="actions-panel" class="actions-panel" aria-labelledby="actions-title"><div class="actions-heading"><div><div class="eyebrow">Current request</div><h2 id="actions-title">Actions</h2></div></div><div class="scenario-controls"><button id="stop-scenario" disabled>Stop</button><button id="reset-scenario">Reset</button></div><div id="actions-prompt" class="actions-prompt" hidden><span class="sr-only">Original prompt</span><p id="actions-prompt-text"></p></div><p class="hint">Actions appear as they happen. Select one to inspect its context in the flow.</p><p id="actions-status" role="status">No actions yet.</p><ol id="action-list"></ol></aside></div>
 </main><script src="../assets/js/ai100/mcp-engine.js"></script><script src="../assets/js/ai100/mcp-explorer.js"></script></body></html>
