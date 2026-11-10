@@ -51,3 +51,5 @@ svg[data-icon=chat]{color:#2774c8}svg[data-icon=tools]{color:#8053b4}svg[data-ic
 @media(max-width:740px){.actions-panel .actions-heading{top:-12px;margin:-12px -15px 0;padding:12px 15px 9px}}
 @media(min-width:741px){.actions-panel{max-height:var(--actions-available-height,calc(100dvh - 32px))}}
 .actions-panel #actions-status.sr-only{padding:0;margin:-1px;border:0}
+.actions-empty{border-top:1px solid var(--line);margin-top:18px;padding:24px 12px 10px;text-align:center;color:#87958c}.actions-empty svg{display:block;margin:0 auto;color:#7b9785}.actions-empty p{margin:9px 0 0;font-size:12px;color:var(--muted)}
+.chat-header h2{display:flex;align-items:center;gap:9px}.chat-header h2 svg{flex-shrink:0;color:var(--green)}

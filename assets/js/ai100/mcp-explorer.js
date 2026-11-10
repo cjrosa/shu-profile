@@ -193,6 +193,7 @@
   function follow(){const frame=frames[position];const target=frame.answer?$('final-reply'):blocked()?$('approval-message'):frame.flow?$(frame.flow):document.querySelector(`[data-node="${frame.node}"]`);if(!target?.scrollIntoView)return;const box=target.getBoundingClientRect();if(box.top<160||box.bottom>window.innerHeight-40)target.scrollIntoView({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'center'});}
   function renderActions(){
     const active=frames[livePosition];
+    $('actions-empty').hidden=frames.length>0;
     $('actions-prompt').hidden=!frames.length;
     $('actions-prompt-text').textContent=frames.length?preparedPrompt:'';
     $('run-status').textContent=!active?'Send a message to begin':stopped?'Scenario stopped':blocked()?'Waiting for your approval in chat':livePosition===frames.length-1?'Request complete':active.title;
