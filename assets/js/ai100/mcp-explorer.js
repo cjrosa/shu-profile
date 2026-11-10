@@ -120,6 +120,26 @@
     if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;
     const duration=1100;
     const animate=(node,keys,options={})=>{if(node?.animate)motion.push(node.animate(keys,{duration,easing:'cubic-bezier(.2,.7,.2,1)',...options}));};
+    const incoming=frame.kind==='prompt'||frame.kind==='model-result';
+    if(incoming){
+      const panel=document.querySelector('.model-panel'),target=document.querySelector('.mini-transformer');
+      if(target?.animate){
+        const destination=target.getBoundingClientRect(),bounds=panel.getBoundingClientRect();
+        const entry=frame.kind==='prompt'?{x:bounds.left+30,y:bounds.top}:{x:bounds.right-30,y:bounds.bottom};
+        const packet=el('div',undefined,`transformer-input ${frame.kind==='prompt'?'from-chat':'from-mcp'}`);
+        packet.setAttribute('aria-hidden','true');packet.append(packetIcon(frame),el('span',frame.kind==='prompt'?'Your message':'Tool result'));
+        packet.style.left=`${destination.left-bounds.left+destination.width/2}px`;
+        packet.style.top=`${destination.top-bounds.top+20}px`;panel.append(packet);
+        const dx=entry.x-destination.left-destination.width/2;
+        const dy=entry.y-destination.top-20;
+        const flight=packet.animate([{transform:`translate(calc(-50% + ${dx}px), ${dy}px) scale(.9)`,opacity:0},{transform:`translate(calc(-50% + ${dx*.8}px), ${dy*.8}px) scale(1)`,opacity:1,offset:.2},{transform:'translate(-50%, 0) scale(.85)',opacity:1,offset:.8},{transform:'translate(-50%, 12px) scale(.2)',opacity:0}],{duration:950,easing:'cubic-bezier(.3,.1,.25,1)'});
+        flight.onfinish=()=>packet.remove();flight.oncancel=()=>packet.remove();motion.push(flight);
+      }
+    }
+    if(frame.node==='model'){
+      document.querySelectorAll('.mini-transformer-layer rect').forEach((node,index)=>{const style=getComputedStyle(node),fill=style.fill,stroke=style.stroke,pulse=style.getPropertyValue('--layer-pulse').trim();animate(node,[{fill,stroke},{fill:pulse,stroke:style.getPropertyValue('--layer-ink').trim(),offset:.45},{fill,stroke}],{delay:(incoming?800:0)+index*170,duration:500});});
+      animate(document.querySelector('.mini-transformer-flow'),[{strokeDashoffset:12},{strokeDashoffset:0}],{duration:1200,easing:'linear'});
+    }
     if(frame.flow){const connector=$(frame.flow);animate(connector.querySelector('.flow-packet'),[{transform:`translateY(${frame.up?42:-42}px) scale(.94)`,opacity:0},{transform:`translateY(${frame.up?-5:5}px) scale(1.02)`,opacity:1,offset:.72},{transform:'translateY(0) scale(1)',opacity:1}]);animate(connector.querySelector(frame.up?'.return-arrow':'.flow-arrow'),[{transform:`translateY(${frame.up?25:-25}px)`,opacity:.25},{transform:'translateY(0)',opacity:1}]);}
     const receiver=frame.answer?$('final-reply'):blocked()?$('approval-message'):document.querySelector(`[data-node="${frame.node}"] .avatar`);
     animate(receiver,[{boxShadow:`0 0 0 0 ${frame.up?'#2774c860':'#1f7a4660'}`,transform:'scale(.94)'},{boxShadow:`0 0 0 15px ${frame.up?'#2774c800':'#1f7a4600'}`,transform:'scale(1.08)',offset:.65},{boxShadow:'0 0 0 0 transparent',transform:'scale(1)'}]);
@@ -161,6 +181,23 @@
     $('db-status').textContent=frame.changed?`${frame.title}: ${frame.changed.room} at ${frame.changed.time}.`:`${db.length} reservation(s) · One-hour slots · Nov 9, 2026`;
   }
   function showResult(id,text){$(id).hidden=!text;$(id).textContent=text||'';}
+  function renderReasoning(seen=[]){
+    const latest=seen.at(-1);
+    const decision=seen.findLast(f=>['choose','decide','approval'].includes(f.kind));
+    const evidence=seen.findLast(f=>f.kind==='model-result');
+    const phase=!latest? -1:latest.answer?3:evidence&&seen.lastIndexOf(evidence)>seen.lastIndexOf(decision)?2:decision||seen.some(f=>f.kind==='loading-tools')?1:0;
+    const stages=[['Understand',{kind:'prompt'}],['Choose',{kind:'discover'}],['Check result',{up:true}],['Reply',{answer:true}]];
+    $('reasoning').replaceChildren(...stages.map(([label,icon],index)=>{
+      const item=el('li',undefined,`reason-stage ${index===phase?'current':index<phase?'done':'pending'}`);
+      item.dataset.phase=index;
+      item.append(packetIcon(icon),el('span',label));
+      if(index===phase)item.setAttribute('aria-current','step');
+      return item;
+    }));
+    let detail=$('reasoning-detail');
+    if(!detail){detail=el('p',undefined,'reasoning-detail');detail.id='reasoning-detail';$('reasoning').after(detail);}
+    detail.textContent=phase===3?(latest.summary||'Compose a reply using the available information.'):phase===2?evidence.summary:phase===1?(decision?.summary||'Compare the available tool descriptions with the request.'):phase===0?(seen.findLast(f=>f.kind==='understand')?.summary||'Identify what the user wants and which details are provided.'):'Send a message to see how the request becomes an action.';
+  }
   function render(){
     const frame=frames[position];const seen=frames.slice(0,position+1);
     document.querySelectorAll('[data-node]').forEach(node=>{const active=node.dataset.node===frame.node;node.classList.toggle('active',active);node.classList.toggle('returning',active&&Boolean(frame.up));});
@@ -175,7 +212,7 @@
     document.querySelectorAll('[data-model-tool]').forEach(node=>{const selected=node.dataset.modelTool===frame.selected;node.classList.toggle('selected',selected);node.classList.toggle('not-selected',Boolean(frame.selected)&&!selected);});
     $('chat-welcome').hidden=true;
     $('user-message').hidden=false;$('user-message').textContent=preparedPrompt;
-    const summaries=seen.filter(f=>f.summary).map(f=>f.summary);$('reasoning').replaceChildren(...summaries.map((text,index)=>el('li',text,index===summaries.length-1&&frame.node==='model'&&!frame.answer?'current':'done')));
+    renderReasoning(seen);
     $('model-status').textContent=frame.answer?'Replied':blocked()?'Awaiting approval':frame.node==='model'?'Processing':'Waiting for tools';
     const activeCall=seen.findLastIndex(f=>f.kind==='call');const cycle=seen.slice(Math.max(0,activeCall));
     const latestAction=seen.findLast(f=>f.action);$('server-action').textContent=latestAction?.action||'Available actions: find rooms, book a room, or cancel a booking.';
@@ -231,7 +268,7 @@
   $('latest').addEventListener('click',latest);
   $('approve').addEventListener('click',()=>{if(review!==null||!blocked())return;approvals.add(livePosition);next();start();});
   $('decline').addEventListener('click',()=>{if(review!==null||!blocked())return;stop();const current=frames[livePosition];frames=frames.slice(0,livePosition+1).concat({...current,kind:'answer',approval:false,node:'model',title:'Action declined',explanation:'No booking action was sent. Your reservations are unchanged.',summary:'Respect the user’s decision; leave the reservations unchanged.',decision:'Decline. Don’t make this change.',answer:'Okay, I did not change any reservation.',flow:'prompt-flow',up:true});livePosition++;position=livePosition;render();follow();});
-  $('reset').addEventListener('click',()=>{stop();stopped=false;db=M.initialDB();frames=[];position=0;livePosition=0;review=null;approvals.clear();$('chat-welcome').hidden=false;['user-message','approval-message','approval','decision-message','final-reply','chat-activity','model-tools','model-result','server-result','database-result','server-action','operations'].forEach(id=>$(id).hidden=true);document.querySelectorAll('.active,.selected,.returning,.up').forEach(node=>node.classList.remove('active','selected','returning','up'));$('reasoning').replaceChildren(el('li','Send a prompt to begin.'));$('model-status').textContent='Ready';$('server-status').textContent='Waiting';$('server-action').textContent='Waiting for ChatGPT to choose a tool.';$('operations').replaceChildren(el('li','Waiting for an action.'));renderDatabase({});renderOperation(null);renderActions();$('input-status').textContent='Room data reset. Cedar is booked at 11:00.';});
+  $('reset').addEventListener('click',()=>{stop();stopped=false;db=M.initialDB();frames=[];position=0;livePosition=0;review=null;approvals.clear();$('chat-welcome').hidden=false;['user-message','approval-message','approval','decision-message','final-reply','chat-activity','model-tools','model-result','server-result','database-result','server-action','operations'].forEach(id=>$(id).hidden=true);document.querySelectorAll('.active,.selected,.returning,.up').forEach(node=>node.classList.remove('active','selected','returning','up'));renderReasoning();$('model-status').textContent='Ready';$('server-status').textContent='Waiting';$('server-action').textContent='Waiting for ChatGPT to choose a tool.';$('operations').replaceChildren(el('li','Waiting for an action.'));renderDatabase({});renderOperation(null);renderActions();$('input-status').textContent='Room data reset. Cedar is booked at 11:00.';});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else if(timer===null)start();});
   let panelSizeFrame=null;
   function sizeActionsPanel(){
@@ -249,5 +286,5 @@
   window.addEventListener('resize',schedulePanelSize);
   if(window.ResizeObserver){const observer=new ResizeObserver(schedulePanelSize);observer.observe(document.querySelector('.page-header'));observer.observe($('review-banner'));}
   schedulePanelSize();
-  renderDatabase({});renderOperation(null);renderActions();
+  renderReasoning();renderDatabase({});renderOperation(null);renderActions();
 })();
