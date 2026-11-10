@@ -76,7 +76,12 @@
         add(frame,{kind:'decide',title:frame.title,explanation:frame.explanation,summary:frame.title === 'No tool is needed' ? 'Answer directly: this question does not need the booking system.' : 'Ask for clarification rather than inventing a room, time, or booking ID.'});
       }
     }
-    return visual;
+    return visual.flatMap(frame=>{
+      if(frame.kind==='loading-tools'||frame.kind==='discover')return [{...frame,node:'client'}];
+      if(frame.kind==='call')return [{...frame,kind:'client-call',node:'client',flow:undefined,title:'MCP client sends the selected tool call',explanation:frame.action},frame];
+      if(frame.kind==='model-result')return [{...frame,kind:'client-result',node:'client',title:'MCP client receives the tool result',explanation:'Deliver the server’s result to the LLM.'},{...frame,flow:undefined,title:'LLM receives the result'}];
+      return [frame];
+    });
   }
   M.examples.forEach(([label,prompt]) => {const button=el('button',label);button.title=prompt;button.addEventListener('click',()=>{$('prompt').value=prompt;prepare(true);});$('examples').append(button);});
   M.tools.forEach(tool=>{const card=el('div',undefined,'tool');card.dataset.tool=tool.name;card.append(el('strong',names[tool.name]),el('small',tool.name==='search_availability'?'Read availability':tool.name==='create_booking'?'Reserve a free slot':'Release a reservation'));$('catalog').append(card);});
@@ -107,6 +112,9 @@
   ['Receive action','Check request','Return result'].forEach((label,index)=>{const phase=el('span',undefined,'server-phase');phase.append(el('span',String(index+1),'phase-number'),el('span',label));serverWorkflow.append(phase);});
   document.querySelector('.server-panel .current-operation').after(serverWorkflow);
   document.querySelectorAll('.connector').forEach(node=>{const packet=el('div',undefined,'flow-packet');packet.setAttribute('aria-hidden','true');packet.append(el('span','','packet-icon'),el('div',undefined,'packet-copy'));packet.lastChild.append(el('strong','','packet-title'),el('span','','packet-detail'));node.append(packet,el('span','↑','return-arrow'));node.querySelector('.return-arrow').setAttribute('aria-hidden','true');});
+  const discoveryPreview=el('div',undefined,'discovery-preview');discoveryPreview.hidden=true;discoveryPreview.setAttribute('aria-hidden','true');
+  for(let i=0;i<3;i++){const slot=el('div',undefined,'discovery-slot');slot.append(el('span','', 'discovery-symbol'),el('span','Reading tool description…'));discoveryPreview.append(slot);}
+  $('loaded-tools').before(discoveryPreview);
   function animateStep(frame){
     motion.forEach(animation=>animation.cancel());motion=[];
     if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;
@@ -115,8 +123,12 @@
     if(frame.flow){const connector=$(frame.flow);animate(connector.querySelector('.flow-packet'),[{transform:`translateY(${frame.up?42:-42}px) scale(.94)`,opacity:0},{transform:`translateY(${frame.up?-5:5}px) scale(1.02)`,opacity:1,offset:.72},{transform:'translateY(0) scale(1)',opacity:1}]);animate(connector.querySelector(frame.up?'.return-arrow':'.flow-arrow'),[{transform:`translateY(${frame.up?25:-25}px)`,opacity:.25},{transform:'translateY(0)',opacity:1}]);}
     const receiver=frame.answer?$('final-reply'):blocked()?$('approval-message'):document.querySelector(`[data-node="${frame.node}"] .avatar`);
     animate(receiver,[{boxShadow:`0 0 0 0 ${frame.up?'#2774c860':'#1f7a4660'}`,transform:'scale(.94)'},{boxShadow:`0 0 0 15px ${frame.up?'#2774c800':'#1f7a4600'}`,transform:'scale(1.08)',offset:.65},{boxShadow:'0 0 0 0 transparent',transform:'scale(1)'}]);
-    if(frame.kind==='discover')document.querySelectorAll('[data-model-tool]').forEach((node,i)=>animate(node,[{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'translateY(0)'}],{delay:i*110,duration:400}));
-    if(frame.kind==='choose')animate(document.querySelector('[data-model-tool].selected'),[{transform:'scale(1)'},{transform:'scale(1.045)',offset:.5},{transform:'scale(1)'}]);
+    if(frame.kind==='loading-tools')discoveryPreview.querySelectorAll('.discovery-slot').forEach((node,i)=>animate(node,[{opacity:.35,background:'#f4f0fa',transform:'translateY(3px)'},{opacity:1,background:'#e2d4f2',transform:'translateY(0)',offset:.5},{opacity:.35,background:'#f4f0fa',transform:'translateY(3px)'}],{delay:i*220,duration:950,iterations:Infinity}));
+    if(frame.kind==='discover')document.querySelectorAll('[data-model-tool]').forEach((node,i)=>animate(node,[{opacity:0,transform:'translateY(24px) scale(.94)',background:'#eee4f8'},{opacity:1,transform:'translateY(-3px) scale(1.02)',background:'#eee4f8',offset:.7},{opacity:1,transform:'translateY(0) scale(1)',background:'#fbfcfb'}],{delay:i*260,duration:650,fill:'backwards'}));
+    if(frame.kind==='choose'){
+      document.querySelectorAll('[data-model-tool]').forEach((node,i)=>animate(node,[{opacity:1,boxShadow:'inset 0 0 0 2px #8053b4',background:'#f0e9f8'},{opacity:1,boxShadow:'inset 0 0 0 2px transparent',background:'#fbfcfb'}],{delay:i*150,duration:400}));
+      animate(document.querySelector('[data-model-tool].selected'),[{transform:'scale(1)',boxShadow:'0 0 0 0 #1f7a4655'},{transform:'translateY(-5px) scale(1.03)',boxShadow:'0 0 0 6px #1f7a4625',offset:.55},{transform:'scale(1)',boxShadow:'0 0 0 10px #1f7a4600'}],{delay:700,duration:850});
+    }
     if(frame.node==='model'&&frame.summary)animate(document.querySelector('#reasoning li.current'),[{opacity:.2,transform:'translateX(-10px)'},{opacity:1,transform:'translateX(0)'}],{duration:550});
     if(frame.node==='server'){
       animate(serverWorkflow.querySelector('.current'),[{background:'#ece3f6',boxShadow:'inset 0 -3px #8053b4',transform:'translateY(3px)'},{background:'#f4f0fa',boxShadow:'inset 0 -3px #8053b4',transform:'translateY(0)'}],{duration:800});
@@ -154,6 +166,7 @@
     document.querySelectorAll('[data-node]').forEach(node=>{const active=node.dataset.node===frame.node;node.classList.toggle('active',active);node.classList.toggle('returning',active&&Boolean(frame.up));});
     document.querySelectorAll('[data-tool]').forEach(node=>node.classList.toggle('selected',node.dataset.tool===frame.selected));
     const loading=frame.kind==='loading-tools',loaded=seen.some(f=>f.kind==='discover');
+    discoveryPreview.hidden=!loading;
     $('model-tools').hidden=!loading&&!loaded;
     $('model-tools').classList.toggle('loading',loading);
     $('loaded-tools').hidden=!loaded;
