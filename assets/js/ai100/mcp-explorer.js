@@ -219,5 +219,21 @@
   $('decline').addEventListener('click',()=>{if(review!==null||!blocked())return;stop();const current=frames[livePosition];frames=frames.slice(0,livePosition+1).concat({...current,kind:'answer',approval:false,node:'model',title:'Action declined',explanation:'No booking action was sent. Your reservations are unchanged.',summary:'Respect the user’s decision; leave the reservations unchanged.',decision:'Decline. Don’t make this change.',answer:'Okay, I did not change any reservation.',flow:'prompt-flow',up:true});livePosition++;position=livePosition;render();follow();});
   $('reset').addEventListener('click',()=>{stop();stopped=false;db=M.initialDB();frames=[];position=0;livePosition=0;review=null;approvals.clear();$('chat-welcome').hidden=false;['user-message','approval-message','approval','decision-message','final-reply','chat-activity','model-tools','model-result','server-result','database-result','server-action','operations'].forEach(id=>$(id).hidden=true);document.querySelectorAll('.active,.selected,.returning,.up').forEach(node=>node.classList.remove('active','selected','returning','up'));$('reasoning').replaceChildren(el('li','Send a prompt to begin.'));$('model-status').textContent='Ready';$('server-status').textContent='Waiting';$('server-action').textContent='Waiting for ChatGPT to choose a tool.';$('operations').replaceChildren(el('li','Waiting for an action.'));renderDatabase({});renderOperation(null);renderActions();$('input-status').textContent='Room data reset. Cedar is booked at 11:00.';});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else if(timer===null)start();});
+  let panelSizeFrame=null;
+  function sizeActionsPanel(){
+    const panel=$('actions-panel');
+    if(window.innerWidth<=740){panel.style.removeProperty('--actions-available-height');return;}
+    const top=Math.max(16,panel.getBoundingClientRect().top);
+    panel.style.setProperty('--actions-available-height',`${Math.max(120,window.innerHeight-top-16)}px`);
+  }
+  function schedulePanelSize(){
+    if(!window.requestAnimationFrame){sizeActionsPanel();return;}
+    if(panelSizeFrame!==null)return;
+    panelSizeFrame=window.requestAnimationFrame(()=>{panelSizeFrame=null;sizeActionsPanel();});
+  }
+  window.addEventListener('scroll',schedulePanelSize,{passive:true});
+  window.addEventListener('resize',schedulePanelSize);
+  if(window.ResizeObserver){const observer=new ResizeObserver(schedulePanelSize);observer.observe(document.querySelector('.page-header'));observer.observe($('review-banner'));}
+  schedulePanelSize();
   renderDatabase({});renderOperation(null);renderActions();
 })();
