@@ -1,0 +1,93 @@
+CS-339 TCP SEQ/ACK Quiz - Instructor Guide
+
+FORMAT AND IMPORT
+The companion cs339-seq-ack-blackboard.txt file uses Blackboard's tab-delimited Upload Questions format: MC, question, then answer/correctness pairs. It contains 14 questions, four choices each, and exactly one correct answer per question. No header row is included.
+This is a question-upload text file, not a Blackboard course-package or QTI ZIP.
+
+In Blackboard Original, open or create a test, open its Test Canvas, choose Upload Questions, and select the companion TXT file.
+In Blackboard Ultra, open the test and use Upload questions from file where available. Availability and menu wording vary by institution/version. If your course only offers question-bank/package import, this TXT is not that package format; use the supported question-upload workflow or copy the questions into the test.
+After importing, verify that all 14 questions and their correct-answer flags are present. Preview the test as a student.
+Suggested grading: 2 points per question, 28 points total. Set point values in Blackboard; the upload file does not encode them.
+Suggested time: 35-45 minutes with the tool available. Keep question order and allow backtracking. Answer choices may be randomized because no choice refers to its letter.
+For a graded quiz, hide correct answers and automatic feedback until all students have finished. Keep this guide instructor-only.
+Import has not been tested in your Blackboard course.
+
+STUDENT INSTRUCTIONS TO PASTE INTO THE TEST
+Use the CS-339 TCP SEQ/ACK Visualizer to investigate each scenario. Host A is the client; Host B is the server. Questions state the starting conditions; do not assume that earlier quiz questions changed the current scenario.
+For a fresh scenario, reset, set A ISN=41 and B ISN=78 in the TCP settings, and complete the connection handshake. Configure message size in Application settings and MSS in TCP settings before connecting. The default MSS is 2 bytes. Use the specified message size rather than the tool's default.
+Send Data submits bytes to TCP's send buffer. Send Segment transmits a segment. Deliver or Drop acts on a packet in transit. Send ACK creates an ACK; deliver it separately. Read Data consumes received bytes at the application.
+Use manual packet delivery and ACK controls. Do not read received data unless instructed. Turn on Show full duplex for server application sends.
+For prediction questions, record your prediction before revealing the result, then use the tool to check your reasoning. Blackboard grades your final selected answer; it does not enforce a pause inside the tool.
+SEQ identifies the first byte in a data segment. LEN is its application-data byte count. ACK names the next expected byte and cumulatively acknowledges preceding bytes.
+The tool's sender teaching window is fixed in size. Real advertised receive-window flow control is outside its model.
+For FIN scenarios, complete all required data transmissions and acknowledgments and empty the in-transit queues before initiating close.
+Submit your answers in Blackboard.
+
+COVERAGE
+Q01-Q02: SYN and three-way handshake.
+Q03-Q04: Successful message and ACK delivery.
+Q05-Q06: Dropped sender segment and gap repair.
+Q07-Q08: Dropped ACK and duplicate suppression.
+Q09-Q10: Successful full-duplex server send and acknowledgment.
+Q11-Q12: Application reads, receive buffers, and the limits of the receive-window model.
+Q13-Q14: FIN sequence accounting and half-close.
+
+ANSWER KEY AND EXPLANATIONS
+Q01: B (original upload order)
+Correct answer: SEQ=78, ACK=42
+Reason: A SYN consumes one sequence number. B acknowledges 42 and sends its own SYN using its ISN, 78.
+
+Q02: C (original upload order)
+Correct answer: Final ACK: SEQ=42, ACK=79; first data SEQ=42
+Reason: Each SYN consumes one sequence number; a pure ACK consumes none.
+
+Q03: A (original upload order)
+Correct answer: Segment SEQs=42 and 44; ACK=46
+Reason: The segments carry bytes 42-43 and 44-45. ACK=46 names the next expected byte.
+
+Q04: D (original upload order)
+Correct answer: When ACK=46 is delivered to A
+Reason: Only receipt of the ACK updates A's knowledge of acknowledged bytes.
+
+Q05: B (original upload order)
+Correct answer: 42, because bytes 42-43 are missing
+Reason: ACK stays at the first missing byte, even while later bytes are buffered.
+
+Q06: C (original upload order)
+Correct answer: Retransmission SEQ=42; ACK=46
+Reason: Retransmission reuses bytes 42-43. Repairing the gap makes bytes 42-45 contiguous, so ACK becomes 46.
+
+Q07: A (original upload order)
+Correct answer: B retains 2 received bytes, while A still considers those bytes unacknowledged
+Reason: Loss of an ACK does not undo data receipt. A cannot learn from an ACK it never receives.
+
+Q08: D (original upload order)
+Correct answer: B discards the duplicate payload, still holds 2 unread bytes, and sends ACK=44
+Reason: TCP avoids delivering duplicate bytes to the application. The repeated cumulative ACK remains 44.
+
+Q09: B (original upload order)
+Correct answer: SEQ=79, ACK=46, LEN=2
+Reason: B uses its own sequence space for SEQ and acknowledges A's stream with ACK. The data can carry the acknowledgment.
+
+Q10: C (original upload order)
+Correct answer: A ACK=81; B next SEQ=81
+Reason: A received B's bytes 79-80, so it expects 81. The pure ACK does not consume sequence space.
+
+Q11: A (original upload order)
+Correct answer: B's unread buffer falls from 4 to 2 bytes; its next expected byte remains 46; this read does not move A's sender window
+Reason: Reading removes already received data from the receive buffer. It does not change the next expected network byte or acknowledge additional data.
+
+Q12: D (original upload order)
+Correct answer: TCP can acknowledge data before the application reads it; available receive-buffer space affects the advertised receive window
+Reason: ACK progress and application consumption are separate. Real TCP flow control advertises receiving capacity; this simulator omits that mechanism.
+
+Q13: B (original upload order)
+Correct answer: FIN SEQ=46; ACK=47
+Reason: A's four bytes were 42-45. FIN uses 46 and consumes one sequence number, so the acknowledgment is 47.
+
+Q14: C (original upload order)
+Correct answer: Send ACK acknowledges A's FIN while leaving B's sending side open; Send FIN + ACK also closes B's sending side; neither action reads the buffered application data
+Reason: The two sending directions close independently. Acknowledging a FIN, closing the local sending side, and reading buffered data are distinct operations.
+
+TEACHING NOTE
+Do not describe receive buffers as independent of the advertised receive window in real TCP. The intended distinction is that receipt/ACK progress is independent of when the application reads already received data. Free receive-buffer capacity affects real TCP flow control. Q12 explicitly checks this distinction.

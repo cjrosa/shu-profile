@@ -1,0 +1,1 @@
+MC	Q01. SYN: Reset the tool. Set Host A (client) ISN=41 and Host B (server) ISN=78. A sends SYN with SEQ=41. Predict B's SYN-ACK header.	SEQ=42, ACK=78	incorrect	SEQ=78, ACK=42	correct	SEQ=79, ACK=41	incorrect	SEQ=78, ACK=41	incorrect
