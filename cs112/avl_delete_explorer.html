@@ -3,24 +3,134 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AVL Tree Delete Visualizer · CS-112</title>
+<title>AVL Tree Visualizer · CS-112</title>
 <style>
-*{box-sizing:border-box}body{margin:0;padding:16px;font-family:Arial,sans-serif;color:#2C2C2A;background:#fff;display:flex;flex-direction:column;min-height:100dvh;gap:12px}h1{font-size:20px;margin:0 0 5px}p{margin:0;font-size:13px;line-height:1.5;color:#5F5E5A}.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.types{display:flex;flex-wrap:wrap;gap:4px}button,input{font:inherit;font-size:13px;border:1px solid #D3D1C7;border-radius:8px;padding:8px 13px}button{background:#F1EFE8;color:#2C2C2A;cursor:pointer}button:hover{background:#E8E5DC}button.active,button.primary{background:#185FA5;color:white;border-color:#185FA5}button:disabled{opacity:.4;cursor:default}button:focus-visible,input:focus-visible{outline:3px solid #378ADD;outline-offset:2px}input{width:90px}label{font-size:13px}.status{display:flex;gap:12px;align-items:center;background:#F1EFE8;border:1px solid #D3D1C7;border-radius:8px;padding:12px;min-height:70px}.badge{background:#E6F1FB;color:#0C447C;border-radius:20px;padding:5px 10px;font-size:12px;white-space:nowrap;font-weight:bold}#status-text{flex:1}#counter{white-space:nowrap;font:12px monospace;color:#5F5E5A}.canvas{flex:1;min-height:330px;overflow:auto;border:1px solid #e5e4df;border-radius:12px;background:#fff}svg{display:block;width:100%;min-width:590px;height:100%;min-height:330px;max-height:65vh}.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:#5F5E5A}.legend span:before{content:'';display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--dot);margin-right:5px}.note{padding:10px 12px;background:#E6F1FB;border-radius:8px;color:#0C447C}#error{color:#A32D2D;font-size:13px}#order{font:12px monospace;overflow-wrap:anywhere}@media(max-width:600px){body{padding:10px}.status{align-items:flex-start;flex-wrap:wrap}#status-text{flex-basis:65%}.canvas{min-height:350px}.badge{white-space:normal}#counter{margin-left:auto}}
+
+* { box-sizing: border-box; }
+body { margin:0; padding:16px; font-family:Arial,sans-serif; color:#2C2C2A; background:#fff; display:flex; flex-direction:column; min-height:100dvh; gap:12px; }
+h1 { font-size:20px; margin:0 0 4px; }
+p { margin:0; font-size:13px; line-height:1.5; color:#5F5E5A; }
+button,input,select { font:inherit; font-size:13px; border:1px solid #D3D1C7; border-radius:8px; padding:8px 13px; }
+button { background:#fff; color:#2C2C2A; cursor:pointer; white-space:nowrap; }
+button:hover { background:#E8EDF4; }
+button.active,button.primary { background:#185FA5; color:white; border-color:#185FA5; }
+button:disabled { opacity:.4; cursor:default; }
+button:focus-visible,input:focus-visible,select:focus-visible { outline:3px solid #378ADD; outline-offset:2px; }
+.controls,.types { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+.setup { padding:14px 16px; border:1px solid #DDE3EB; border-radius:12px; background:#F8FAFC; display:grid; gap:12px; }
+.setup-heading { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+.mode-toggle { padding:3px; border:1px solid #DDE3EB; border-radius:10px; background:#fff; flex-wrap:nowrap; }
+.mode-toggle button { border-color:transparent; min-width:76px; }
+.example-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; border-top:1px solid #E2E7EF; padding-top:12px; }
+.field-label { font-size:12px; font-weight:bold; color:#526174; }
+.types { flex:1; }
+.types button { padding:6px 10px; font-size:12px; }
+#new-values { font-size:12px; padding:6px 10px; }
+.input-row { display:flex; gap:12px; align-items:center; }
+#target { flex:1; min-width:0; width:100%; max-width:none; background:white; }
+#target::placeholder { color:#8491A3; font-size:12px; opacity:1; }
+#selection-hint { font-size:12px; }
+#example-description { font-size:12px; color:#64748B; overflow-wrap:anywhere; }
+.playback { border:1px solid #DDE3EB; border-radius:12px; }
+.playback-toolbar { border-radius:12px 12px 0 0; }
+.speed-picker { position:relative; }
+#speed-trigger { display:flex; align-items:center; justify-content:space-between; gap:20px; min-width:112px; background:white; border-color:#CBD5E1; color:#24466C; font-weight:600; }
+#speed-trigger[aria-expanded="true"] { border-color:#378ADD; background:#EFF6FF; box-shadow:0 0 0 3px #DBEAFE; }
+.speed-chevron { width:7px; height:7px; border-right:1.8px solid currentColor; border-bottom:1.8px solid currentColor; transform:translateY(-2px) rotate(45deg); }
+#speed-trigger[aria-expanded="true"] .speed-chevron { transform:translateY(2px) rotate(225deg); }
+.speed-menu { position:absolute; top:calc(100% + 8px); left:0; z-index:20; min-width:174px; padding:5px; background:#fff; border:1px solid #DDE3EB; border-radius:12px; box-shadow:0 10px 28px #1E3A5F26; }
+.speed-menu button { display:flex; width:100%; gap:10px; align-items:center; padding:10px; border:0; border-radius:7px; text-align:left; color:#334155; }
+.speed-menu button:hover,.speed-menu button:focus-visible { background:#F1F5F9; outline:none; }
+.speed-menu button[aria-checked="true"] { color:#185FA5; background:#E6F1FB; font-weight:bold; }
+.speed-menu button:focus-visible { box-shadow:inset 0 0 0 2px #378ADD; }
+.speed-bars { display:inline-flex; flex:0 0 32px; width:32px; white-space:nowrap; color:#6486AA; font-size:12px; letter-spacing:1px; }
+.speed-check { margin-left:auto; flex:0 0 12px; width:12px; }
+[aria-checked="true"] > .speed-check:after { content:'✓'; color:#185FA5; }
+.playback-toolbar { display:flex; align-items:center; gap:12px; padding:10px 12px; background:#F8FAFC; flex-wrap:wrap; }
+#sequence-progress { color:#185FA5; font-size:12px; font-weight:bold; margin-left:auto; }
+#counter { white-space:nowrap; font:12px monospace; color:#5F5E5A; margin-left:auto; }
+.status { display:flex; align-items:center; gap:12px; padding:12px; min-height:62px; border-top:1px solid #E2E7EF; }
+.badge { background:#E6F1FB; color:#0C447C; border-radius:20px; padding:5px 10px; font-size:12px; white-space:nowrap; font-weight:bold; }
+#status-text { flex:1; min-width:0; }
+.canvas { flex:1; min-height:330px; min-width:0; overflow:auto; border:1px solid #e5e4df; border-radius:12px; background:#fff; }
+svg { display:block; width:100%; min-width:590px; height:100%; min-height:330px; max-height:65vh; }
+.legend { display:flex; flex-wrap:wrap; gap:16px; font-size:12px; color:#5F5E5A; }
+.legend span:before { content:''; display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--dot); margin-right:5px; }
+.note { padding:10px 12px; background:#E6F1FB; border-radius:8px; color:#0C447C; }
+#error { color:#A32D2D; font-size:13px; }
+#order { font:12px monospace; overflow-wrap:anywhere; }
+@media(max-width:600px) {
+ body { padding:10px; gap:10px; }
+ .setup { padding:12px; }
+ .setup-heading { align-items:flex-start; }
+ .example-row { align-items:flex-start; }
+ .types { flex-basis:75%; }
+ .input-row { align-items:stretch; flex-direction:column; gap:6px; }
+ .status { align-items:flex-start; flex-direction:column; gap:8px; }
+ .playback-toolbar { gap:8px; }
+ #sequence-progress { margin-left:0; }
+ .canvas { min-height:350px; }
+}
+.tree-node.selectable{cursor:pointer;outline:none}.tree-node.selectable:hover circle,.tree-node.selectable:focus-visible circle{stroke:#185FA5;stroke-width:4}.rotation-guide{pointer-events:none}
+.bf-recalculated{animation:bf-recalculate .9s ease-out}
+@keyframes bf-recalculate{0%,35%{fill:#FFE082;stroke:#A85A00;stroke-width:2.5;filter:drop-shadow(0 0 5px #EF9F27)}100%{stroke:transparent;stroke-width:0;filter:none}}
+@media(prefers-reduced-motion:reduce){.bf-recalculated{animation:none;stroke:#A85A00;stroke-width:2.5}}
+.insert-queue { display:flex; align-items:center; gap:10px; overflow-x:auto; padding:6px; min-width:0; }
+.insert-queue[hidden] { display:none; }
+.insert-chip { flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; min-width:34px; height:32px; padding:0 9px; border:1px solid #CBD5E1; border-radius:8px; background:white; color:#64748B; font-size:13px; }
+.insert-chip.completed { background:#E1F5EE; border-color:#A7DCCB; color:#085041; }
+.insert-chip.current { background:#185FA5; border-color:#185FA5; color:white; font-weight:bold; box-shadow:0 0 0 3px #DBEAFE; }
+.flying-insert-chip { position:fixed; z-index:100; pointer-events:none; display:flex; align-items:center; justify-content:center; width:42px; height:42px; border-radius:50%; background:#E6F1FB; border:2px solid #185FA5; color:#0C447C; font-size:15px; font-weight:bold; box-shadow:0 5px 15px #185FA533; }
+.entry-flight .incoming-number { visibility:hidden; }
+.insert-chip.plain { background:#F8FAFC; border-color:#CBD5E1; color:#526174; }
+.insert-chip.ll { background:#FFF2D5; border-color:#D99A24; color:#7B4800; }
+.insert-chip.rr { background:#E1F3FA; border-color:#399DC0; color:#125670; }
+.insert-chip.lr { background:#F1E8FF; border-color:#A17BCC; color:#653C93; }
+.insert-chip.rl { background:#FCE7F0; border-color:#CF78A0; color:#923657; }
+.insert-chip.completed { opacity:.55; }
+.insert-chip.current { outline:none; box-shadow:0 0 0 3px #185FA5; font-weight:bold; }
+.insert-chip.current:focus-visible { outline:2px solid #93C5FD; outline-offset:4px; }
+.queue-tooltip { position:fixed; z-index:150; max-width:300px; padding:10px 12px; background:#15191F; color:white; border-radius:8px; font-size:12px; line-height:1.5; box-shadow:0 6px 20px #0003; pointer-events:none; }
+.queue-legend { font-size:11px; color:#526174; }
+.queue-legend span { display:inline-block; margin-right:12px; }
+.queue-legend span:before { content:''; display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--dot); margin-right:4px; }
+.next-picker { position:relative; display:flex; }
+.next-picker #next { border-radius:8px 0 0 8px; }
+#step-trigger { border-radius:0 8px 8px 0; border-left:1px solid #ffffff55; padding:8px 10px; display:flex; align-items:center; }
+#step-menu { min-width:180px; }
+.collapse-option { display:inline-flex; align-items:center; gap:9px; padding:7px 10px; border:1px solid transparent; border-radius:8px; cursor:pointer; transition:background .15s,border-color .15s; }
+.collapse-option:hover { background:#EAF1F9; border-color:#D4E1F0; }
+.collapse-option:has(input:checked) { color:#185FA5; }
+#collapse-subtrees { appearance:none; -webkit-appearance:none; flex:0 0 19px; width:19px; height:19px; margin:0; padding:0; border:1.5px solid #A8B8CC; border-radius:5px; background:#fff; cursor:pointer; display:grid; place-content:center; transition:background .15s,border-color .15s,box-shadow .15s; }
+#collapse-subtrees:checked { background:#185FA5; border-color:#185FA5; box-shadow:0 1px 3px #185FA52B; }
+#collapse-subtrees:checked:after { content:''; width:8px; height:4px; border-left:2px solid white; border-bottom:2px solid white; transform:translateY(-1px) rotate(-45deg); }
+#collapse-subtrees:focus-visible { outline:3px solid #93C5FD; outline-offset:3px; }
+@media(forced-colors:active) { #collapse-subtrees { appearance:auto; } #collapse-subtrees:after { display:none; } }
 </style>
 </head>
 <body>
-<header><h1>AVL Tree Delete</h1><p>Remove a key, check the ancestors, and watch the rotations restore balance.</p></header>
-<div class="types" role="group" aria-label="Deletion examples" id="types"></div>
-<div class="controls">
-<button id="prev" disabled>← Prev</button><button id="next">Next →</button><button id="auto">Auto</button><button id="replay">↻ Replay</button><button id="new-values" class="primary">New values</button>
-<label for="target">Delete key</label><input id="target" type="number" step="1"><button id="apply">Show deletion</button>
+<section class="setup" aria-label="Tree setup">
+<div class="setup-heading">
+<header><h1>AVL Tree Visualizer</h1><p id="mode-description"></p></header>
+<div class="controls mode-toggle" role="group" aria-label="Operation mode"><button data-operation="insert">Insert</button><button data-operation="delete" class="active">Delete</button></div>
 </div>
+<div class="example-row"><span class="field-label">Examples</span><div class="types" role="group" aria-label="Prebuilt examples" id="types"></div><button id="new-values">New values</button></div>
+<p id="example-description"></p>
+<div class="input-row"><label class="field-label" for="target" id="target-label">Delete key</label><input id="target" type="number" step="1" aria-describedby="selection-hint"></div>
+<div id="insert-queue" class="insert-queue" role="group" aria-label="Insertion sequence" hidden></div>
+<p id="queue-legend" class="queue-legend" hidden><span style="--dot:#D99A24">LL</span><span style="--dot:#399DC0">RR</span><span style="--dot:#A17BCC">LR</span><span style="--dot:#CF78A0">RL</span><span style="--dot:#CBD5E1">No AVL rotation</span>Click a value to jump to its insertion.</p>
+<div id="queue-tooltip" class="queue-tooltip" role="tooltip" hidden></div>
+<p id="selection-hint"></p>
 <div id="error" role="alert" hidden></div>
-<div class="status" aria-live="polite" aria-atomic="true"><span class="badge" id="badge"></span><p id="status-text"></p><span id="counter"></span></div>
-<div class="canvas"><svg id="tree" viewBox="0 0 820 420" role="img" aria-label="AVL tree with node heights and balance factors"></svg></div>
+</section>
+<section class="playback" aria-label="Walkthrough">
+<div class="playback-toolbar"><div class="controls" role="group" aria-label="Playback controls"><button id="prev" disabled>← Prev</button><div class="next-picker" id="next-picker"><button id="next" class="primary">Next &#8594;</button><button id="step-trigger" class="primary" aria-label="Choose next action" aria-haspopup="menu" aria-controls="step-menu" aria-expanded="false"><span class="speed-chevron" aria-hidden="true"></span></button><div id="step-menu" class="speed-menu" role="menu" aria-label="Step through" hidden><button data-step="all" role="menuitemradio" aria-checked="true" tabindex="-1">Every step<span class="speed-check"></span></button><button data-step="bst" role="menuitemradio" aria-checked="false" tabindex="-1">BST action<span class="speed-check"></span></button><button data-step="avl" role="menuitemradio" aria-checked="false" tabindex="-1">AVL action<span class="speed-check"></span></button></div></div><button id="auto">Auto</button><span class="field-label" id="speed-label">Speed</span><div class="speed-picker" id="speed-picker"><button id="speed-trigger" aria-haspopup="menu" aria-expanded="false" aria-controls="speed-menu" aria-labelledby="speed-label speed-current"><span id="speed-current">Medium</span><span class="speed-chevron" aria-hidden="true"></span></button><div id="speed-menu" class="speed-menu" role="menu" aria-label="Auto speed" hidden><button role="menuitemradio" aria-checked="false" data-speed="slow" tabindex="-1"><span class="speed-bars" aria-hidden="true">&#9646;</span>Slow<span class="speed-check" aria-hidden="true"></span></button><button role="menuitemradio" aria-checked="true" data-speed="medium" tabindex="-1"><span class="speed-bars" aria-hidden="true">&#9646;&#9646;</span>Medium<span class="speed-check" aria-hidden="true"></span></button><button role="menuitemradio" aria-checked="false" data-speed="fast" tabindex="-1"><span class="speed-bars" aria-hidden="true">&#9646;&#9646;&#9646;</span>Fast<span class="speed-check" aria-hidden="true"></span></button></div></div><select id="auto-speed" hidden aria-hidden="true" tabindex="-1"><option value="slow">Slow</option><option value="medium" selected>Medium</option><option value="fast">Fast</option></select><button id="replay">↻ Replay</button></div><label class="field-label collapse-option"><input id="collapse-subtrees" type="checkbox"> Collapse subtrees during rotations</label><p id="sequence-progress" aria-live="polite" hidden></p><span id="counter"></span></div>
+<div class="status" aria-live="polite" aria-atomic="true"><span class="badge" id="badge"></span><p id="status-text"></p></div>
+</section>
+<div class="canvas"><svg id="tree" viewBox="0 0 820 420" role="group" aria-label="AVL tree with node heights and balance factors"></svg></div>
 <div class="legend"><span style="--dot:#EF9F27">Current node / rotation plan</span><span style="--dot:#E24B4A">Delete / unbalanced</span><span style="--dot:#D4537E">Rotating</span><span style="--dot:#1D9E75">Balanced result</span></div>
 <p id="order"></p>
-<p class="note"><strong>BF = left subtree height − right subtree height.</strong> Empty subtree height = 0; leaf height = 1. Deletion can require rebalancing at multiple ancestors. A heavy child with BF = 0 uses a single rotation.</p>
+<p class="note"><strong>BF = left subtree height − right subtree height.</strong> Empty subtree height = 0; leaf height = 1. <span id="mode-note"></span></p>
 <script src="../assets/js/avl-delete-engine.js"></script>
 <script src="../assets/js/avl-delete-ui.js"></script>
 </body>

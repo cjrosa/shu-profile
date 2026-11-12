@@ -1,6 +1,20 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const E=require('../assets/js/avl-delete-engine.js');
+test('sequence parser accepts commas, whitespace, negatives and rejects invalid input',()=>{
+ assert.deepEqual(E.parseSequence('30, 10 20\n-5 +8'),[30,10,20,-5,8]);
+ for(const text of ['', '2 nope', '1.5', '9007199254740992',Array(33).fill('1').join(' ')])assert.throws(()=>E.parseSequence(text));
+});
+test('sequence walks the BST and balances after every insertion, including duplicates',()=>{
+ const values=[30,10,20,40,50,25,20,-5];
+ const steps=E.traceSequence(null,values),completed=steps.filter(s=>s.kind==='done');
+ assert.equal(completed.length,values.length);
+ completed.forEach((s,i)=>{validate(s.tree);assert.deepEqual(keys(s.tree),[...new Set(values.slice(0,i+1))].sort((a,b)=>a-b));assert.equal(s.insertionIndex,i+1);});
+ assert.ok(steps.some(s=>s.label==='Search' && s.text.includes('follow the left child')));
+ assert.ok(steps.some(s=>s.label==='Search' && s.text.includes('follow the right child')));
+ assert.ok(steps.filter(s=>s.kind==='rotation').length>=3);
+ assert.ok(steps.some(s=>s.label==='Already present'));
+});
 function keys(n){return n?[...keys(n.left),n.key,...keys(n.right)]:[];}
 function validate(n,min=-Infinity,max=Infinity){if(!n)return;assert.ok(n.key>min&&n.key<max);assert.ok(Math.abs(E.balance(n))<=1);validate(n.left,min,n.key);validate(n.right,n.key,max);}
 for(const [name,p] of Object.entries(E.presets))test(name+' deletion preserves BST order and AVL balance',()=>{
@@ -15,6 +29,31 @@ test('empty, singleton, missing key and root with one child',()=>{
  for(const [values,target] of [[[],1],[[1],1],[[2,1],2],[[2,1,3],9]]){
  const tree=E.trace(E.build(values),target).at(-1).tree;validate(tree);assert.deepEqual(keys(tree),values.filter(v=>v!==target).sort((a,b)=>a-b));
  }
+});
+for(const [name,p] of Object.entries(E.insertPresets))test(name+' insertion traces preserve ordering and restore balance',()=>{
+ const initial=E.build(p.values),steps=E.trace(initial,p.target,'insert');
+ assert.deepEqual(keys(initial),p.values.slice().sort((a,b)=>a-b));
+ validate(steps.at(-1).tree);
+ assert.deepEqual(keys(steps.at(-1).tree),[...p.values,p.target].sort((a,b)=>a-b));
+ if(['ll','rr','lr','rl'].includes(name))assert.ok(steps.some(s=>s.label===name.toUpperCase()+' case'));
+});
+test('complicated examples demonstrate successor repair and multiple ancestor repairs',()=>{
+ const p=E.presets.cascade,s=E.trace(E.build(p.values),p.target);
+ assert.equal(s.filter(x=>x.label.startsWith('Rotate ')).length,3);
+ assert.equal(s.filter(x=>x.label.endsWith(' case')).length,2);
+ const q=E.presets.successor,t=E.trace(E.build(q.values),q.target);
+ assert.ok(t.some(x=>x.label==='Successor removed'));
+ assert.equal(t.filter(x=>x.label.startsWith('Rotate ')).length,2);
+});
+test('duplicate insertion is a no-op; insertion after deletion has unique identities',()=>{
+ const initial=E.build([30,20,40,10,25]);
+ const duplicate=E.trace(initial,20,'insert');
+ assert.ok(duplicate.some(s=>s.label==='Already present'));
+ assert.deepEqual(duplicate.at(-1).tree,initial);
+ const removed=E.trace(initial,20).at(-1).tree;
+ const added=E.trace(removed,20,'insert').at(-1).tree,ids=[];
+ (function visit(n){if(n){ids.push(n.id);visit(n.left);visit(n.right);}})(added);
+ assert.equal(ids.length,new Set(ids).size);validate(added);
 });
 test('repeated deletions across deterministic shuffled AVL trees',()=>{
  let seed=12345,rotationAncestors=false;
