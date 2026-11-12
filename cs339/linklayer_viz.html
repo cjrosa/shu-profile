@@ -226,15 +226,7 @@ select{font-family:inherit;font-size:11px;height:26px;border:0.5px solid var(--b
 <header class="hdr">
   <div class="hl">
     <div class="hi">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <rect x="4" y="1" width="6" height="3" rx="1" fill="white" opacity=".9"/>
-        <rect x="1" y="10" width="4" height="3" rx="1" fill="white" opacity=".9"/>
-        <rect x="9" y="10" width="4" height="3" rx="1" fill="white" opacity=".9"/>
-        <rect x="3" y="5" width="8" height="5" rx="1" fill="white"/>
-        <line x1="3" y1="12" x2="4" y2="9" stroke="white" stroke-width="1.1"/>
-        <line x1="11" y1="12" x2="10" y2="9" stroke="white" stroke-width="1.1"/>
-        <line x1="7" y1="4" x2="7" y2="5" stroke="white" stroke-width="1.1"/>
-      </svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color:currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v3M5 15v3m14-3v3"/><rect x="8.5" y="1.5" width="7" height="3.5" rx="1"/><rect x="2" y="8" width="20" height="7" rx="2"/><path d="M5 11.5h2m3 0h2m3 0h1"/><circle cx="19" cy="11.5" r=".8" fill="currentColor" stroke="none"/><rect x="1.5" y="18" width="7" height="4.5" rx="1"/><rect x="15.5" y="18" width="7" height="4.5" rx="1"/></svg>
     </div>
     <span class="ht">Link Layer Visualizer</span>
   </div>
@@ -2155,6 +2147,17 @@ function examineEvent(nodeKey, type, ctx2, cb) {
     );
     bodyHTML += '<div class="ex-prose" style="font-size:10px;color:var(--text3);padding-top:0">The MAC changes at each hop; the IP addresses stay constant end-to-end.</div>';
 
+  } else if (type === 'broadcast_send' || type === 'broadcast_receive') {
+    hdrCls='ex-hdr-a';
+    title = (nodeKey==='RT' ? 'RT' : 'Host '+nodeKey)+' — '+(type==='broadcast_send'?'Sending broadcast':'Broadcast received');
+    sub = 'Ethernet broadcast · FF:FF:FF:FF:FF:FF';
+    bodyHTML += sh('Frame addresses');
+    bodyHTML += '<div style="padding:4px 16px">'+frameHTML('FF:FF:FF:FF:FF:FF',ctx2.smac,'0x0800 IPv4',ctx2.sip,'255.255.255.255',null,'dmac')+'</div>';
+    bodyHTML += prose(type==='broadcast_send'
+      ? 'The destination is the IPv4 limited broadcast address. The host uses the Ethernet broadcast MAC directly; no ARP lookup is needed. The switch will flood copies within this broadcast domain, excluding the incoming port.'
+      : 'The interface accepts the Ethernet broadcast and passes its IPv4 payload up the stack, even though the destination MAC is not its individual MAC address.');
+    if (nodeKey==='RT') bodyHTML += prose('The router receives this copy through Gi0/0 on switch port P0. It does not forward the limited broadcast to its other networks, so hosts E and F do not receive it.');
+
   } else if (type === 'rt_forward') {
     hdrCls='ex-hdr-b';
     title = 'RT — Routing Decision';
@@ -3161,13 +3164,27 @@ function doBroadcast(srcK) {
     frame:frameHTML('FF:FF:FF:FF:FF:FF',src.mac,'0x0800 IPv4',src.ip,'255.255.255.255',null,'dmac'),
     srcK:swTable[src.mac]?'Yes':'No', dstK:'N/A — broadcast MAC',
     act:vlanEnabled?'Flood VLAN '+vlanConfig[src.port]+' ports only':'Flood all ports (mandatory)',
-    explain:bcExplain
+    explain:bcExplain+' The router also receives a copy on P0, but does not forward this limited broadcast to other networks.'
   }, function(){
     swLearn(src.mac,src.port);
     nextPktMeta={dmac:'FF:FF:FF:FF:FF:FF',smac:src.mac,etype:'0x0800 IPv4',sip:src.ip,dip:'255.255.255.255',from:srcK,to:'SW',note:'Broadcast frame — switch will flood to all ports in VLAN'};
-    launchPkt(srcK,'SW','#EF9F27','BC',function(){
-      launchFlood(srcK,vlanFloodPorts(src.port,[src.port]),'#EF9F27','BC',function(){
-        setStatus('✓ Broadcast delivered to all hosts.');
+    queueExamine(srcK,'broadcast_send',{smac:src.mac,sip:src.ip});
+    flushExamineQueue(function(){
+      launchPkt(srcK,'SW','#EF9F27','BC',function(){
+        queueExamine('SW','mac_learned',{mac:src.mac,port:src.port,host:srcK});
+        queueExamine('SW','sw_decision',{dmac:'FF:FF:FF:FF:FF:FF',smac:src.mac,etype:'0x0800 IPv4',sip:src.ip,dip:'255.255.255.255',inPort:src.port,flooded:true,isBroadcast:true});
+        flushExamineQueue(function(){
+          var excluded = vlanFloodPorts(src.port,[src.port]);
+          launchFloodWithRT(srcK,excluded,'#EF9F27','BC',function(){
+            HKEYS.forEach(function(k){
+              if (excluded.indexOf(HOSTS[k].port)<0) queueExamine(k,'broadcast_receive',{smac:src.mac,sip:src.ip});
+            });
+            queueExamine('RT','broadcast_receive',{smac:src.mac,sip:src.ip});
+            flushExamineQueue(function(){
+              setStatus('✓ Broadcast delivered to hosts in the broadcast domain and router (P0).');
+            });
+          });
+        });
       });
     });
   });
