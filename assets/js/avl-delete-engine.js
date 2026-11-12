@@ -116,14 +116,30 @@
       const double = b > 1 ? cb < 0 : cb > 0;
       const type = b > 1 ? (double ? 'LR' : 'LL') : (double ? 'RL' : 'RR');
       emit(type+' case', `Heavy child ${child.key} has BF ${cb}.${cb === 0 ? ' In deletion, child BF = 0 still uses a single rotation.' : ''} ${double ? 'Use two rotations: first at the heavy child, then at the unbalanced node.' : `Use one ${b > 1 ? 'right' : 'left'} rotation at ${n.key}.`}`, [n.id,child.id], 'plan');
+      const decision={type,pivot:n.id,pivotKey:n.key,pivotBF:b,child:child.id,childKey:child.key,childBF:cb};
+      steps[steps.length-1].decision=decision;
+      const firstPlan=steps.length;
       const rotations = [];
       if(double) rotations.push({pivot:child.id,key:child.key,direction:b>1?'left':'right',order:1});
       rotations.push({pivot:n.id,key:n.key,direction:b>1?'right':'left',order:double?2:1});
       steps[steps.length-1].rotations = rotations;
       // Preview the repair as soon as the imbalance is identified.
       steps[steps.length-2].rotations = rotations;
-      if (double) turn(n, b > 1 ? 'left' : 'right', b > 1 ? 'left' : 'right');
+      let halfway;
+      if (double) {
+        turn(n, b > 1 ? 'left' : 'right', b > 1 ? 'left' : 'right');
+        halfway=steps[steps.length-1];
+      }
       turn(parent, side, b > 1 ? 'right' : 'left', double?2:1);
+      steps[firstPlan].decision=decision;
+      if(double) {
+        const note=`${type} double rotation in progress: temporary balance factors can be outside -1 to +1. Complete the planned ${b>1?'right':'left'} rotation at ${n.key} before checking for another imbalance.`;
+        halfway.text=note;
+        halfway.intermediateRotation=type;
+        const secondPlan=steps[steps.length-2];
+        secondPlan.text=note+' '+secondPlan.text;
+        secondPlan.intermediateRotation=type;
+      }
     }
     const inserting=operation==='insert';
     emit('Before', inserting ? `Insert ${target} into this AVL tree. Follow BST comparisons to an empty link, then check balance back toward the root.` : `Delete ${target} from this AVL tree. First use BST deletion, then check balance back toward the root.`);

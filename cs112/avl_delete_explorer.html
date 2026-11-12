@@ -27,10 +27,12 @@ button:focus-visible,input:focus-visible,select:focus-visible { outline:3px soli
 .types button { padding:6px 10px; font-size:12px; }
 #new-values { font-size:12px; padding:6px 10px; }
 .input-row { display:flex; gap:12px; align-items:center; }
+.setup.inserting .types { flex:0 1 auto; }
+.setup.inserting .input-row { flex:1 1 320px; min-width:0; padding-left:16px; margin-left:6px; border-left:1px solid #CBD5E1; }
+.setup.inserting #target-label { white-space:nowrap; }
 #target { flex:1; min-width:0; width:100%; max-width:none; background:white; }
 #target::placeholder { color:#8491A3; font-size:12px; opacity:1; }
 #selection-hint { font-size:12px; }
-#example-description { font-size:12px; color:#64748B; overflow-wrap:anywhere; }
 .playback { border:1px solid #DDE3EB; border-radius:12px; }
 .playback-toolbar { border-radius:12px 12px 0 0; }
 .speed-picker { position:relative; }
@@ -51,7 +53,20 @@ button:focus-visible,input:focus-visible,select:focus-visible { outline:3px soli
 #counter { white-space:nowrap; font:12px monospace; color:#5F5E5A; margin-left:auto; }
 .status { display:flex; align-items:center; gap:12px; padding:12px; min-height:62px; border-top:1px solid #E2E7EF; }
 .badge { background:#E6F1FB; color:#0C447C; border-radius:20px; padding:5px 10px; font-size:12px; white-space:nowrap; font-weight:bold; }
+.status-badges { display:flex; flex-direction:column; align-items:center; gap:6px; flex-shrink:0; }
+.action-badge.bst { background:#E1F5EE; color:#085041; }
+.action-badge.avl { background:#F1E9FA; color:#7941A3; }
 #status-text { flex:1; min-width:0; }
+.status[hidden] { display:none; }
+.status-copy { flex:1; min-width:0; display:grid; gap:6px; }
+.rotation-decision { padding:10px 12px; border:1px solid #D8E1EE; border-radius:9px; background:#F8FAFC; font-size:13px; line-height:1.7; }
+.rotation-decision[hidden] { display:none; }
+.decision-a,.decision-b { display:inline-block; padding:1px 7px; border-radius:6px; font-weight:bold; }
+.decision-a { color:#185FA5; background:#E6F1FB; }
+.decision-b { color:#7941A3; background:#F1E9FA; }
+.decision-pair { display:flex; align-items:center; gap:16px; margin-bottom:6px; }
+.decision-item { min-width:0; }
+.decision-item + .decision-item { border-left:1px solid #CBD5E1; padding-left:16px; }
 .canvas { flex:1; min-height:330px; min-width:0; overflow:auto; border:1px solid #e5e4df; border-radius:12px; background:#fff; }
 svg { display:block; width:100%; min-width:590px; height:100%; min-height:330px; max-height:65vh; }
 .legend { display:flex; flex-wrap:wrap; gap:16px; font-size:12px; color:#5F5E5A; }
@@ -115,7 +130,6 @@ svg { display:block; width:100%; min-width:590px; height:100%; min-height:330px;
 <div class="controls mode-toggle" role="group" aria-label="Operation mode"><button data-operation="insert">Insert</button><button data-operation="delete" class="active">Delete</button></div>
 </div>
 <div class="example-row"><span class="field-label">Examples</span><div class="types" role="group" aria-label="Prebuilt examples" id="types"></div><button id="new-values">New values</button></div>
-<p id="example-description"></p>
 <div class="input-row"><label class="field-label" for="target" id="target-label">Delete key</label><input id="target" type="number" step="1" aria-describedby="selection-hint"></div>
 <div id="insert-queue" class="insert-queue" role="group" aria-label="Insertion sequence" hidden></div>
 <p id="queue-legend" class="queue-legend" hidden><span style="--dot:#D99A24">LL</span><span style="--dot:#399DC0">RR</span><span style="--dot:#A17BCC">LR</span><span style="--dot:#CF78A0">RL</span><span style="--dot:#CBD5E1">No AVL rotation</span>Click a value to jump to its insertion.</p>
@@ -125,7 +139,7 @@ svg { display:block; width:100%; min-width:590px; height:100%; min-height:330px;
 </section>
 <section class="playback" aria-label="Walkthrough">
 <div class="playback-toolbar"><div class="controls" role="group" aria-label="Playback controls"><button id="prev" disabled>← Prev</button><div class="next-picker" id="next-picker"><button id="next" class="primary">Next &#8594;</button><button id="step-trigger" class="primary" aria-label="Choose next action" aria-haspopup="menu" aria-controls="step-menu" aria-expanded="false"><span class="speed-chevron" aria-hidden="true"></span></button><div id="step-menu" class="speed-menu" role="menu" aria-label="Step through" hidden><button data-step="all" role="menuitemradio" aria-checked="true" tabindex="-1">Every step<span class="speed-check"></span></button><button data-step="bst" role="menuitemradio" aria-checked="false" tabindex="-1">BST action<span class="speed-check"></span></button><button data-step="avl" role="menuitemradio" aria-checked="false" tabindex="-1">AVL action<span class="speed-check"></span></button></div></div><button id="auto">Auto</button><span class="field-label" id="speed-label">Speed</span><div class="speed-picker" id="speed-picker"><button id="speed-trigger" aria-haspopup="menu" aria-expanded="false" aria-controls="speed-menu" aria-labelledby="speed-label speed-current"><span id="speed-current">Medium</span><span class="speed-chevron" aria-hidden="true"></span></button><div id="speed-menu" class="speed-menu" role="menu" aria-label="Auto speed" hidden><button role="menuitemradio" aria-checked="false" data-speed="slow" tabindex="-1"><span class="speed-bars" aria-hidden="true">&#9646;</span>Slow<span class="speed-check" aria-hidden="true"></span></button><button role="menuitemradio" aria-checked="true" data-speed="medium" tabindex="-1"><span class="speed-bars" aria-hidden="true">&#9646;&#9646;</span>Medium<span class="speed-check" aria-hidden="true"></span></button><button role="menuitemradio" aria-checked="false" data-speed="fast" tabindex="-1"><span class="speed-bars" aria-hidden="true">&#9646;&#9646;&#9646;</span>Fast<span class="speed-check" aria-hidden="true"></span></button></div></div><select id="auto-speed" hidden aria-hidden="true" tabindex="-1"><option value="slow">Slow</option><option value="medium" selected>Medium</option><option value="fast">Fast</option></select><button id="replay">↻ Replay</button></div><label class="field-label collapse-option"><input id="collapse-subtrees" type="checkbox"> Collapse subtrees during rotations</label><p id="sequence-progress" aria-live="polite" hidden></p><span id="counter"></span></div>
-<div class="status" aria-live="polite" aria-atomic="true"><span class="badge" id="badge"></span><p id="status-text"></p></div>
+<div class="status" aria-live="polite" aria-atomic="true"><div class="status-badges"><span class="badge action-badge" id="action-badge"></span><span class="badge" id="badge"></span></div><div class="status-copy"><p id="status-text"></p><div id="rotation-decision" class="rotation-decision" hidden></div></div></div>
 </section>
 <div class="canvas"><svg id="tree" viewBox="0 0 820 420" role="group" aria-label="AVL tree with node heights and balance factors"></svg></div>
 <div class="legend"><span style="--dot:#EF9F27">Current node / rotation plan</span><span style="--dot:#E24B4A">Delete / unbalanced</span><span style="--dot:#D4537E">Rotating</span><span style="--dot:#1D9E75">Balanced result</span></div>

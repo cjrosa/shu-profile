@@ -7,9 +7,10 @@
   const speeds={slow:{interval:3200,animation:1.6},medium:{interval:1900,animation:1},fast:{interval:600,animation:0.3}};
   let stepFilter='all';
   const actionType=s=>s.label==='Check balance'||s.label==='Rotation plan'||s.label.endsWith(' case')||s.kind==='rotation'?'avl':'bst';
+  const combinedRemoval=i=>stepFilter!=='bst'&&steps[i].kind==='removed'&&steps[i+1]?.label==='Check balance';
   function destination(direction) {
     let next=index+direction;
-    while(next>0&&next<steps.length-1&&stepFilter!=='all'&&actionType(steps[next])!==stepFilter&&steps[next].label!=='Before'&&steps[next].kind!=='done')next+=direction;
+    while(next>0&&next<steps.length-1&&(combinedRemoval(next)||(stepFilter!=='all'&&actionType(steps[next])!==stepFilter&&steps[next].label!=='Before'&&steps[next].kind!=='done')))next+=direction;
     return Math.max(0,Math.min(steps.length-1,next));
   }
   const autoSpeed=()=>speeds[$('auto-speed').value] || speeds.medium;
@@ -49,6 +50,21 @@
   }
   function prepare(key) {
     steps=operation==='insert'?E.traceSequence(initial,Array.isArray(key)?key:[key]):E.trace(initial,key,operation);
+    // Track which displayed measurements have actually been recalculated.
+    let pending=new Set(), priorNodes=new Map();
+    steps.forEach(s=>{
+      const nodes=layout(s.tree).nodes;
+      if(s.label==='Before')pending.clear();
+      else nodes.forEach(n=>{
+        const old=priorNodes.get(n.id);
+        if(old&&(E.height(old)!==E.height(n)||E.balance(old)!==E.balance(n)))pending.add(n.id);
+      });
+      s.pendingBefore=[...pending];
+      if(s.label==='Check balance'||s.kind==='rotation'||s.kind==='insert')s.focus.forEach(id=>pending.delete(id));
+      if(s.kind==='done')pending.clear();
+      s.pendingAfter=[...pending];
+      priorNodes=new Map(nodes.map(n=>[n.id,n]));
+    });
     width=Math.max(820,...steps.map(s=>layout(s.tree).nodes.length*76+200));
     treeHeight=Math.max(330,...steps.map(s=>96+E.height(s.tree)*110));
   }
@@ -102,14 +118,15 @@
     const checked=steps.findIndex((s,i)=>i>removed&&s.label==='Check balance'&&s.focus.includes(parent));
     // A removed root has no parent to check; retain its outline until completion.
     const until=checked<0?steps.length-1:checked;
-    return index<=until?{node,until}:null;
+    return index<=until?{node,until,successor:steps[removed].label==='Successor removed'}:null;
   }
   function draw(current, previous, progress) {
     const s = steps[index], map = new Map();
+    const rotations=s.label==='Check balance'&&progress<1?[]:(s.rotations||[]);
     const collapsed=new Map(), hidden=new Set();
-    if($('collapse-subtrees').checked && (s.rotations?.length || s.kind==='rotation')) {
+    if($('collapse-subtrees').checked && (rotations.length || s.kind==='rotation')) {
       const core=new Set(s.focus);
-      (s.rotations || []).forEach(r=>{
+      rotations.forEach(r=>{
         core.add(r.pivot);
         const pivot=current.nodes.find(n=>n.id===r.pivot);
         const child=pivot?.[r.direction==='right'?'left':'right'];
@@ -159,17 +176,19 @@
     const ghost=deletedGhost();
     if(ghost) {
       const n=ghost.node;
-      html+=`<g class="deleted-ghost" opacity="0.45" pointer-events="none" aria-label="Removed node ${n.key}; waiting for parent balance check"><circle cx="${n.x}" cy="${n.y}" r="23" fill="#FFF7F7" stroke="#B45A65" stroke-width="2" stroke-dasharray="5 4"/><text x="${n.x}" y="${n.y+5}" text-anchor="middle" font-size="15" fill="#98505A">${n.key}</text><text x="${n.x}" y="${n.y+39}" text-anchor="middle" font-size="10" fill="#98505A">removed</text></g>`;
+      html+=`<g class="deleted-ghost" opacity="0.45" pointer-events="none" aria-label="${ghost.successor?'Successor moved from this position':'Removed node'} ${n.key}; waiting for parent balance check"><circle cx="${n.x}" cy="${n.y}" r="23" fill="#FFF7F7" stroke="#B45A65" stroke-width="2" stroke-dasharray="5 4"/><text x="${n.x}" y="${n.y+5}" text-anchor="middle" font-size="15" fill="#98505A">${n.key}</text><text x="${n.x}" y="${n.y+39}" text-anchor="middle" font-size="10" fill="#98505A">${ghost.successor?'successor moved':'removed'}</text></g>`;
     }
     current.edges.forEach(([a,b])=>{if(hidden.has(a)||hidden.has(b)||collapsed.has(a))return;const p=map.get(a),q=map.get(b);const arriving=s.kind==='insert'&&s.focus.includes(b);html+=`<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" stroke="#B4B2A9" stroke-width="2" opacity="${arriving?progress:1}"/>`;});
+    if(s.decision) {
+      const a=map.get(s.decision.pivot),b=map.get(s.decision.child);
+      html+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#7941A3" stroke-width="4" opacity="0.65"/>`;
+    }
     const walk=balanceWalk(s,current);
     let walker=null;
     if(walk.length>1) {
       const points=walk.map(n=>map.get(n.id)||n);
       const last=points.length-1, end=points[last], before=points[last-1], distance=Math.hypot(end.x-before.x,end.y-before.y);
       points[last]={x:end.x+(before.x-end.x)*31/distance,y:end.y+(before.y-end.y)*31/distance};
-      const d=points.map((p,i)=>`${i?'L':'M'} ${p.x} ${p.y}`).join(' ');
-      html+=`<g class="balance-walk" aria-label="Walk upward from ${walk[0].key} to ${end.key} to recalculate balance"><path d="${d}" fill="none" stroke="white" stroke-width="9"/><path d="${d}" fill="none" stroke="#0D9488" stroke-width="4" stroke-dasharray="7 5" marker-end="url(#balance-arrow)"/></g>`;
       const lengths=points.slice(1).map((p,i)=>Math.hypot(p.x-points[i].x,p.y-points[i].y));
       let remaining=progress*lengths.reduce((a,b)=>a+b,0);
       for(let i=0;i<lengths.length;i++) {
@@ -182,20 +201,32 @@
     }
     map.forEach(n=>{
       if(hidden.has(n.id))return;
+      if(operation==='delete'&&s.label==='Successor'&&n.id===s.focus[0]) {
+        html+=`<g class="removed-target" data-key="${n.key}" opacity="0.45" aria-label="Key ${n.key} removed; awaiting successor replacement"><circle cx="${n.x}" cy="${n.y}" r="23" fill="#FFF7F7" stroke="#B45A65" stroke-width="2" stroke-dasharray="5 4"/><text x="${n.x}" y="${n.y+5}" text-anchor="middle" font-size="15" fill="#98505A">${n.key}</text><text x="${n.x}" y="${n.y+39}" text-anchor="middle" font-size="10" fill="#98505A">removed</text></g>`;
+        return;
+      }
       if(collapsed.has(n.id)) {
         const subtree=collapsed.get(n.id);
         html+=`<g class="subtree-triangle" role="img" aria-label="Subtree rooted at ${n.key}, ${subtree.count} nodes, keys ${subtree.min} to ${subtree.max}"><title>Root ${n.key}; ${subtree.count} nodes; keys ${subtree.min} to ${subtree.max}; height ${E.height(n)}. Expands after rotation.</title><polygon points="${n.x},${n.y} ${n.x-30},${n.y+48} ${n.x+30},${n.y+48}" fill="#E6F1FB" stroke="#185FA5" stroke-width="2"/><text x="${n.x}" y="${n.y+35}" text-anchor="middle" font-size="12" fill="#0C447C">${n.key}</text><text x="${n.x}" y="${n.y+63}" text-anchor="middle" font-size="10" fill="#0C447C">${subtree.count} nodes</text></g>`;
         return;
       }
       const bf=E.balance(n), focus=s.focus.includes(n.id);
-      const rechecking=s.label==='Check balance'&&focus&&progress<1;
-      const color=s.kind==='done'?'done':Math.abs(bf)>1?'red':focus?(s.kind==='delete'?'red':s.kind==='rotation'?'rotation':'focus'):'normal';
+      const rechecking=(progress<1?s.pendingBefore:s.pendingAfter).includes(n.id)||(s.label==='Check balance'&&focus&&progress<1);
+      const temporary=!rechecking&&s.intermediateRotation&&Math.abs(bf)>1;
+      const color=s.kind==='done'?'done':temporary?'rotation':!rechecking&&Math.abs(bf)>1?'red':focus?(s.kind==='delete'?'red':s.kind==='rotation'?'rotation':'focus'):'normal';
       const [fill,stroke]=colors[color];
-      html+=`<g class="tree-node ${selectable?'selectable':''}" data-key="${n.key}" ${selectable ? `role="button" tabindex="0" aria-label="Delete ${n.key}"` : ''}><title>Key ${n.key}; height ${E.height(n)}; balance factor ${bf}</title><circle cx="${n.x}" cy="${n.y}" r="23" fill="${fill}" stroke="${stroke}" stroke-width="2"/><text x="${n.x}" y="${n.y+5}" text-anchor="middle" font-size="15" fill="#2C2C2A">${n.key}</text><g class="bf-readout" visibility="${rechecking?'hidden':'visible'}"><rect class="bf-badge" data-node-id="${n.id}" x="${n.x-32}" y="${n.y+26}" width="64" height="19" rx="5" fill="${Math.abs(bf)>1?'#FCEBEB':'#E1F5EE'}"/><text x="${n.x}" y="${n.y+39}" text-anchor="middle" font-size="10" fill="${Math.abs(bf)>1?'#A32D2D':'#085041'}">h=${E.height(n)} BF=${bf>0?'+':''}${bf}</text></g></g>`;
+      html+=`<g class="tree-node ${selectable?'selectable':''}" data-key="${n.key}" ${selectable ? `role="button" tabindex="0" aria-label="Delete ${n.key}"` : ''}><title>Key ${n.key}; ${rechecking?'height and balance factor awaiting recalculation':`height ${E.height(n)}; balance factor ${bf}`}</title><circle cx="${n.x}" cy="${n.y}" r="23" fill="${fill}" stroke="${stroke}" stroke-width="2"/><text x="${n.x}" y="${n.y+5}" text-anchor="middle" font-size="15" fill="#2C2C2A">${n.key}</text><g class="bf-readout" visibility="${rechecking?'hidden':'visible'}"><rect class="bf-badge" data-node-id="${n.id}" x="${n.x-24}" y="${n.y+26}" width="48" height="19" rx="5" fill="${Math.abs(bf)>1?'#FCEBEB':'#E1F5EE'}"/><text x="${n.x}" y="${n.y+39}" text-anchor="middle" font-size="10" fill="${Math.abs(bf)>1?'#A32D2D':'#085041'}">BF=${bf>0?'+':''}${bf}</text></g></g>`;
+      if(temporary)html+=`<text class="temporary-bf" x="${n.x}" y="${n.y+59}" text-anchor="middle" font-size="10" fill="#7941A3">temporary BF</text>`;
     });
+    if(s.decision) {
+      [[s.decision.pivot,'A','#185FA5'],[s.decision.child,'B','#7941A3']].forEach(([id,label,color])=>{
+        const n=map.get(id);
+        html+=`<g class="decision-node" aria-label="${label}: node ${n.key}, BF ${E.balance(n)} determines ${s.decision.type}"><circle cx="${n.x}" cy="${n.y}" r="28" fill="none" stroke="${color}" stroke-width="3"/><circle cx="${n.x}" cy="${n.y+61}" r="10" fill="${color}"/><text x="${n.x}" y="${n.y+65}" text-anchor="middle" fill="white" font-size="11" font-weight="bold">${label}</text></g>`;
+      });
+    }
     if(s.label==='Check balance') {
       const n=map.get(s.focus[0]);
-      if(n)html+=`<g class="balance-check-guide" aria-label="Recheck BF at ${n.key}"><circle cx="${n.x}" cy="${n.y}" r="29" fill="none" stroke="#0D9488" stroke-width="3"/><rect x="${n.x-48}" y="${n.y+49}" width="96" height="21" rx="10" fill="#CCFBF1" stroke="#0D9488"/><text x="${n.x}" y="${n.y+63}" text-anchor="middle" font-size="11" font-weight="bold" fill="#115E59">↑ Recheck BF</text></g>`;
+      if(n)html+=`<g class="balance-check-guide" aria-label="Recheck BF at ${n.key}"><circle cx="${n.x}" cy="${n.y}" r="29" fill="none" stroke="#0D9488" stroke-width="3"/><g visibility="${progress<1?'visible':'hidden'}"><rect x="${n.x-48}" y="${n.y+49}" width="96" height="21" rx="10" fill="#CCFBF1" stroke="#0D9488"/><text x="${n.x}" y="${n.y+63}" text-anchor="middle" font-size="11" font-weight="bold" fill="#115E59">↑ Recheck BF</text></g></g>`;
       if(walker)html+=`<circle class="balance-walker" cx="${walker.x}" cy="${walker.y}" r="7" fill="#0D9488" stroke="white" stroke-width="3"/>`;
     }
     if(operation==='insert' && ['Before','Search','Already present'].includes(s.label)) {
@@ -208,7 +239,7 @@
       }
       html+=`<g class="incoming-number" aria-label="Incoming ${s.insertionKey}${comparison?' comparing with '+comparison.key:''}"><text x="${x}" y="${y-26}" text-anchor="middle" font-size="10" fill="#185FA5">${comparison?'Compare':'Incoming'}</text><circle cx="${x}" cy="${y}" r="21" fill="#E6F1FB" stroke="#185FA5" stroke-width="2"/><text x="${x}" y="${y+5}" text-anchor="middle" font-size="15" fill="#0C447C">${s.insertionKey}</text></g>`;
     }
-    (s.rotations || []).forEach(rotation=>{
+    rotations.forEach(rotation=>{
       const n=map.get(rotation.pivot); if(!n)return;
       const sign=rotation.direction==='right'?1:-1;
       const color=rotation.order===1?'#A85A00':'#7941A3';
@@ -217,6 +248,14 @@
     });
     if(!map.size) html+='<text x="410" y="150" text-anchor="middle" fill="#5F5E5A">Empty tree — balanced</text>';
     $('tree').innerHTML=html;
+    // Keep removed-node outlines and labels above edges and traversal guides.
+    $('tree').querySelectorAll('.deleted-ghost,.removed-target').forEach(node=>{
+      node.setAttribute('opacity','1');
+      node.querySelector('circle').setAttribute('fill','#FFFFFF');
+      node.querySelector('circle').setAttribute('stroke','#DDB5BA');
+      node.querySelectorAll('text').forEach(text=>text.setAttribute('fill','#C7ADB1'));
+      $('tree').append(node);
+    });
   }
   function stop() { if(timer) clearInterval(timer);timer=null;$('auto').textContent='Auto'; }
   function show(animate=false) {
@@ -225,7 +264,22 @@
     const s=steps[index], next=layout(s.tree), previous=displayed;
     displayed=next;
     showQueue(s);
-    $('badge').textContent=s.label;$('status-text').textContent=s.text;$('counter').textContent=`Step ${index+1} of ${steps.length}`;
+    const mergedRemoval=s.label==='Check balance'&&index>0&&combinedRemoval(index-1);
+    $('badge').textContent=s.intermediateRotation?`${s.intermediateRotation} in progress`:s.label;
+    const category=s.kind==='done'?'avl':actionType(s);
+    $('action-badge').textContent=category.toUpperCase();
+    $('action-badge').className=`badge action-badge ${category}`;
+    $('status-text').textContent=(mergedRemoval?steps[index-1].text+' ':'')+s.text;
+    const visibleSteps=steps.map((step,i)=>i).filter(i=>!combinedRemoval(i)&&(stepFilter==='all'||actionType(steps[i])===stepFilter||steps[i].label==='Before'||steps[i].kind==='done'||i===0||i===steps.length-1));
+    $('counter').textContent=`Step ${visibleSteps.filter(i=>i<=index).length} of ${visibleSteps.length}`;
+    const decision=s.decision, panel=$('rotation-decision');
+    panel.hidden=!decision;
+    document.querySelector('.status').hidden=s.label==='Before';
+    $('status-text').hidden=!!decision;
+    if(decision) {
+      const signed=n=>n>0?'+'+n:String(n), first=decision.pivotBF>0?'L':'R', second=decision.childBF>0?'L':'R';
+      panel.innerHTML=`<div class="decision-pair"><div class="decision-item"><span class="decision-a">A: ${decision.pivotKey}, BF ${signed(decision.pivotBF)}</span> ${first==='L'?'positive = left-heavy':'negative = right-heavy'} → <b>${first}</b></div><div class="decision-item"><span class="decision-b">B: ${decision.childKey}, BF ${signed(decision.childBF)}</span> ${decision.childBF===0?'zero = equal child heights; deletion uses a single rotation':`${second==='L'?'positive = left-heavy':'negative = right-heavy'} → <b>${second}</b>`}</div></div><strong>${decision.type} case</strong> · ${decision.type==='LL'?'Rotate right at A':decision.type==='RR'?'Rotate left at A':decision.type==='LR'?'Rotate left at B, then right at A':'Rotate right at B, then left at A'}.<br>BF = left height − right height. + means left-heavy; − means right-heavy. The letters describe the heavy sides, not the rotation directions.`;
+    }
     $('sequence-progress').hidden=operation!=='insert';
     $('sequence-progress').textContent=operation==='insert'?`Inserting ${s.insertionKey} · Number ${s.insertionIndex} of ${s.insertionCount}`:'';
     $('prev').disabled=index===0;$('next').disabled=index===steps.length-1;
@@ -261,7 +315,7 @@
       if(!element||index!==ghost?.until)return;
       if(!duration){element.remove();return;}
       const scale=timer?autoSpeed().animation:1;
-      const fade=element.animate([{opacity:0.45},{opacity:0}],{delay:250*scale,duration:300*scale,fill:'forwards'});
+      const fade=element.animate([{opacity:1},{opacity:0}],{delay:250*scale,duration:300*scale,fill:'forwards'});
       fade.onfinish=()=>element.remove();
     }
     if(s.label==='Before'&&operation==='insert'){draw(next,null,1);flyFromQueue();return;}
@@ -277,14 +331,15 @@
     const targets=(p.targets || [p.target]).map(v=>v+shift);
     $('target').value=operation==='insert'?targets.join(', '):p.target+shift;
     prepare(operation==='insert'?targets:p.target+shift);$('error').hidden=true;
-    $('example-description').textContent=p.description || (operation==='insert' ? `Insert ${p.target+shift} and follow the balance checks.` : `Delete ${p.target+shift} and follow the balance checks.`);
-    if(fresh && p.description) $('example-description').textContent=p.description.replace(/Delete 30/,`Delete ${p.target+shift}`);
-    if(operation==='insert') $('example-description').textContent=`${p.values.length?'Prebuilt starting tree':'Empty starting tree'} · ${targets.length} number${targets.length===1?'':'s'} queued.`;
     document.querySelectorAll('#types button').forEach(b=>{const active=b.dataset.mode===m;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
     show();
   }
   function setOperation(value) {
     operation=value;
+    const setup=document.querySelector('.setup'), inputRow=$('target').parentElement;
+    setup.classList.toggle('inserting',value==='insert');
+    if(value==='insert')$('new-values').before(inputRow);
+    else document.querySelector('.example-row').after(inputRow);
     document.querySelectorAll('[data-operation]').forEach(b=>{const active=b.dataset.operation===value;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
     $('target').type=value==='insert'?'text':'number';
     $('target').placeholder=value==='insert'?'Separate up to 32 numbers with commas or spaces. Press Enter, then Next or Auto.':'';
@@ -396,7 +451,7 @@
       key=operation==='insert'?E.parseSequence($('target').value):Number($('target').value);
       if(operation==='delete' && (!$('target').value.trim()||!Number.isSafeInteger(key)))throw new Error('Enter a whole-number key.');
     } catch(error) {$('error').textContent=error.message;$('error').hidden=false;return;}
-    prepare(key);index=0;$('error').hidden=true;$('example-description').textContent=operation==='insert'?`${initial?'Prebuilt starting tree':'Empty starting tree'} · ${key.length} number${key.length===1?'':'s'} queued.`:`Delete ${key} in this example's starting tree.`;show();
+    prepare(key);index=0;$('error').hidden=true;show();
   };
   $('target').addEventListener('change',applyKey);
   $('target').addEventListener('keydown',event=>{if(event.key==='Enter')applyKey();});
