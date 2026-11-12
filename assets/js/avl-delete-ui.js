@@ -122,7 +122,7 @@
   }
   function draw(current, previous, progress) {
     const s = steps[index], map = new Map();
-    const rotations=s.label==='Check balance'&&progress<1?[]:(s.rotations||[]);
+    const rotations=s.label==='Check balance'?[]:(s.rotations||[]);
     const collapsed=new Map(), hidden=new Set();
     if($('collapse-subtrees').checked && (rotations.length || s.kind==='rotation')) {
       const core=new Set(s.focus);
@@ -278,7 +278,7 @@
     $('status-text').hidden=!!decision;
     if(decision) {
       const signed=n=>n>0?'+'+n:String(n), first=decision.pivotBF>0?'L':'R', second=decision.childBF>0?'L':'R';
-      panel.innerHTML=`<div class="decision-pair"><div class="decision-item"><span class="decision-a">A: ${decision.pivotKey}, BF ${signed(decision.pivotBF)}</span> ${first==='L'?'positive = left-heavy':'negative = right-heavy'} → <b>${first}</b></div><div class="decision-item"><span class="decision-b">B: ${decision.childKey}, BF ${signed(decision.childBF)}</span> ${decision.childBF===0?'zero = equal child heights; deletion uses a single rotation':`${second==='L'?'positive = left-heavy':'negative = right-heavy'} → <b>${second}</b>`}</div></div><strong>${decision.type} case</strong> · ${decision.type==='LL'?'Rotate right at A':decision.type==='RR'?'Rotate left at A':decision.type==='LR'?'Rotate left at B, then right at A':'Rotate right at B, then left at A'}.<br>BF = left height − right height. + means left-heavy; − means right-heavy. The letters describe the heavy sides, not the rotation directions.`;
+      panel.innerHTML=`<div class="decision-pair"><div class="decision-item"><span class="decision-a">A: ${decision.pivotKey}, BF ${signed(decision.pivotBF)}</span> ${first==='L'?'positive = left-heavy':'negative = right-heavy'} → <b>${first}</b></div><div class="decision-item"><span class="decision-b">B: ${decision.childKey}, BF ${signed(decision.childBF)}</span> ${decision.childBF===0?'zero = equal child heights; deletion uses a single rotation':`${second==='L'?'positive = left-heavy':'negative = right-heavy'} → <b>${second}</b>`}</div></div><strong>${decision.type} case</strong> · ${decision.type==='LL'?'Rotate right at A':decision.type==='RR'?'Rotate left at A':decision.type==='LR'?'Rotate left at B, then right at A':'Rotate right at B, then left at A'}.`;
     }
     $('sequence-progress').hidden=operation!=='insert';
     $('sequence-progress').textContent=operation==='insert'?`Inserting ${s.insertionKey} · Number ${s.insertionIndex} of ${s.insertionCount}`:'';

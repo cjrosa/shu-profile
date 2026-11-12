@@ -123,8 +123,6 @@
       if(double) rotations.push({pivot:child.id,key:child.key,direction:b>1?'left':'right',order:1});
       rotations.push({pivot:n.id,key:n.key,direction:b>1?'right':'left',order:double?2:1});
       steps[steps.length-1].rotations = rotations;
-      // Preview the repair as soon as the imbalance is identified.
-      steps[steps.length-2].rotations = rotations;
       let halfway;
       if (double) {
         turn(n, b > 1 ? 'left' : 'right', b > 1 ? 'left' : 'right');
