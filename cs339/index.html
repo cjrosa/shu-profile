@@ -340,6 +340,22 @@
             </div>
           </a>
 
+          <!-- Network Explorer -->
+          <a class="tool-card" href="../viewer.html?tool=cs339/network_explorer.html&amp;course=CS339&amp;label=Computer%20Networks&amp;name=Network%20Explorer&amp;back=cs339/index.html">
+            <div class="tool-card-header">
+              <div class="tool-icon teal"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.5" aria-hidden="true"><rect x="7" y="8" width="10" height="6" rx="1"/><path d="M9 11h2m2 0h2M12 8V4M7 11H4v7m13-7h3v7"/><rect x="9" y="1" width="6" height="3" rx="1"/><rect x="1" y="18" width="6" height="4" rx="1"/><rect x="17" y="18" width="6" height="4" rx="1"/></svg></div>
+              <div><div class="tool-subtitle teal">Build &amp; Examine a LAN</div><div class="tool-title">Network Explorer</div></div>
+            </div>
+            <div class="tool-body"><p class="tool-desc">Build a network with hosts, switches, and Ethernet connections. Configure addresses, run ping, and watch each device explain ARP and frame forwarding.</p>
+              <div class="tool-features">
+                <div class="tool-feature"><div class="tool-feature-dot teal"></div>Device palette and explicit port connections</div>
+                <div class="tool-feature"><div class="tool-feature-dot teal"></div>Watch &amp; Examine ARP and MAC learning</div>
+                <div class="tool-feature"><div class="tool-feature-dot teal"></div>Guided LAN build, commands, and save/load</div>
+              </div>
+            </div>
+            <div class="tool-footer"><span class="tool-cta teal">Open tool →</span><span class="tool-tag teal">Interactive</span></div>
+          </a>
+
           <!-- Subnet Topology Builder -->
           <a class="tool-card" href="../viewer.html?tool=cs339/subnet_topology_builder.html&course=CS339&label=Computer%20Networks&name=Subnet%20Topology%20Builder&back=cs339/index.html">
             <div class="tool-card-header">
@@ -670,6 +686,9 @@ const TOOLS = [
   { name:'CIDR Teaching Tool', file:'cidr_viz.html', layer:'Network &mdash; Layer 3',
     desc:'IP addressing, subnet masks, CIDR notation, block sizes, route aggregation, same-subnet check',
     keywords:['cidr','subnet','subnetting','ip address','mask','prefix','block','network address','broadcast','aggregation','route summarization','/24','/16','/8','classless','addressing'] },
+  { name:'Network Explorer', file:'network_explorer.html', layer:'Network &amp; Link Layers',
+    desc:'Build a switched LAN with explicit ports, configure hosts, run ping, and examine ARP and MAC learning',
+    keywords:['network explorer','build network','lan','switch','host','ethernet','arp','ping','mac learning','watch','examine','topology','connections'] },
   { name:'Subnet Topology Builder', file:'subnet_topology_builder.html', layer:'Network &mdash; Layer 3',
     desc:'NAT, PAT, DHCP, routing between subnets, host-to-host packet simulation, translation table',
     keywords:['nat','pat','dhcp','topology','subnet topology','network design','translation','private address','public address','port mapping','packet routing'] },

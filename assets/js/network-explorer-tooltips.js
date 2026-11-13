@@ -1,0 +1,11 @@
+﻿(function(){
+ 'use strict';
+ function install(win){const doc=win.document;if(doc.getElementById('network-tooltip'))return;const tip=doc.createElement('div');tip.id='network-tooltip';tip.className='network-tooltip';tip.setAttribute('role','tooltip');tip.hidden=true;doc.body.append(tip);let owner=null;
+ function prepare(root){if(root.nodeType!==1)return;for(const el of [root,...root.querySelectorAll('[title]')]){if(el.hasAttribute('title')){el.dataset.tooltip=el.getAttribute('title');el.removeAttribute('title');}}}
+ prepare(doc.body);const observer=new win.MutationObserver(records=>{for(const r of records){if(r.type==='attributes')prepare(r.target);else r.addedNodes.forEach(prepare);}if(owner&&!owner.isConnected)hide();});observer.observe(doc.body,{subtree:true,childList:true,attributes:true,attributeFilter:['title']});
+ function hide(){tip.hidden=true;if(owner){const ids=(owner.getAttribute('aria-describedby')||'').split(' ').filter(id=>id&&id!==tip.id);if(ids.length)owner.setAttribute('aria-describedby',ids.join(' '));else owner.removeAttribute('aria-describedby');}owner=null;}
+ function show(e){const el=e.target.closest('[data-tooltip],button[aria-label]');if(!el)return;const text=el.dataset.tooltip||el.getAttribute('aria-label');if(!text)return;if(owner===el&&!tip.hidden)return;hide();owner=el;tip.textContent=text;(el.closest('dialog[open]')||doc.body).append(tip);tip.hidden=false;el.setAttribute('aria-describedby',((el.getAttribute('aria-describedby')||'')+' '+tip.id).trim());const r=el.getBoundingClientRect();tip.style.left=Math.max(6,Math.min(r.left+(r.width-tip.offsetWidth)/2,win.innerWidth-tip.offsetWidth-6))+'px';tip.style.top=(r.bottom+tip.offsetHeight+12<win.innerHeight?r.bottom+8:Math.max(6,r.top-tip.offsetHeight-8))+'px';}
+ doc.addEventListener('pointerover',show);doc.addEventListener('focusin',show);doc.addEventListener('pointerout',e=>{if(owner&&!owner.contains(e.relatedTarget))hide();});doc.addEventListener('focusout',hide);doc.addEventListener('pointerdown',hide);doc.addEventListener('keydown',e=>{if(e.key==='Escape')hide();});doc.addEventListener('scroll',hide,true);win.addEventListener('blur',hide);win.addEventListener('resize',hide);
+ }
+ window.NetworkExplorerTooltips={install};install(window);
+})();
