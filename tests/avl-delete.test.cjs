@@ -66,3 +66,21 @@ test('repeated deletions across deterministic shuffled AVL trees',()=>{
  }
  assert.ok(rotationAncestors,'covered rebalancing at multiple ancestors');
 });
+
+test('BST mode preserves degenerate insertion order without AVL steps',()=>{
+ for(const values of [[10,20,30,40,50,60],[60,50,40,30,20,10],[60,10,50,20,40,30]]){
+  const steps=E.traceSequence(null,values,'bst');
+  assert.equal(E.height(steps.at(-1).tree),6);
+  assert.equal(E.height(E.build(values,'bst')),6);
+  assert.ok(steps.every(s=>!s.rotations&&!s.decision&&s.label!=='Check balance'));
+  assert.deepEqual(keys(steps.at(-1).tree),[10,20,30,40,50,60]);
+ }
+});
+for(const [name,p] of Object.entries(E.bstPresets))test('BST deletion: '+name,()=>{
+ const tree=E.build(p.values,'bst'),original=JSON.stringify(tree),steps=E.trace(tree,p.target,'delete','bst');
+ assert.equal(JSON.stringify(tree),original);
+ assert.deepEqual(keys(steps.at(-1).tree),p.values.filter(v=>v!==p.target).sort((a,b)=>a-b));
+ assert.ok(steps.every(s=>!s.rotations&&s.label!=='Check balance'&&s.kind!=='rotation'));
+ assert.equal(steps.at(-1).label,'Complete');
+ for(const s of steps)assert.deepEqual(keys(s.tree),[...new Set(keys(s.tree))].sort((a,b)=>a-b));
+});

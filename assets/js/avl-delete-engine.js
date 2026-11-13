@@ -8,10 +8,11 @@
     const other = side === 'left' ? 'right' : 'left';
     const top = n[side]; n[side] = top[other]; top[other] = n; return top;
   }
-  function insert(n, key) {
+  function insert(n, key, balanced=true) {
     if (!n) return {key, id:key, left:null, right:null};
     if (key === n.key) return n;
-    const side = key < n.key ? 'left' : 'right'; n[side] = insert(n[side], key);
+    const side = key < n.key ? 'left' : 'right'; n[side] = insert(n[side], key, balanced);
+    if(!balanced)return n;
     if (balance(n) > 1) {
       if (balance(n.left) < 0) n.left = rotate(n.left, 'left');
       return rotate(n, 'right');
@@ -22,7 +23,7 @@
     }
     return n;
   }
-  const build = values => values.reduce(insert, null);
+  const build = (values, treeMode='avl') => values.reduce((n,key)=>insert(n,key,treeMode==='avl'), null);
   const presets = {
     ll:{label:'LL', values:[30,20,40,10], target:40},
     rr:{label:'RR', values:[20,10,30,40], target:10},
@@ -43,10 +44,14 @@
     balanced:{label:'No rotation',values:[30,20,40],target:10},
     empty:{label:'Empty tree',values:[],target:30}
   };
-  function trace(tree, target, operation='delete') {
+  function trace(tree, target, operation='delete', treeMode='avl') {
     const holder = {root:copy(tree)}, steps = [];
     let changed = false;
     function emit(label, text, focus=[], kind='normal') {
+      if(treeMode==='bst') {
+        text=text.replace(' (height 1, BF 0)','').replaceAll('AVL tree','BST').replace(' Check the ancestors for an imbalance.','').replace(' Now check the ancestors.','');
+        if(label==='Balanced'){label='Complete';text=(changed?(operation==='insert'?'Insertion':'Deletion')+' is complete.':'The tree is unchanged.')+' BST ordering is preserved.';}
+      }
       steps.push({tree:copy(holder.root), label, text, focus, kind});
     }
     function turn(parent, side, dir, order=1) {
@@ -108,6 +113,7 @@
       rebalance(parent,side);
     }
     function rebalance(parent, side) {
+      if(treeMode==='bst')return;
       const n = parent[side]; if (!n) return;
       const b = balance(n), l = height(n.left), r = height(n.right);
       emit('Check balance', `At ${n.key}: left height ${l} − right height ${r} = BF ${b > 0 ? '+' : ''}${b}.${Math.abs(b) <= 1 ? ' Balanced; continue upward.' : ' Outside −1…+1; a rotation is needed.'}`, [n.id], Math.abs(b)>1 ? 'imbalance' : 'check');
@@ -151,17 +157,36 @@
     if(tokens.length>32) throw new Error('Use up to 32 numbers per sequence.');
     return tokens.map(Number);
   }
-  function traceSequence(tree, values) {
+  function traceSequence(tree, values, treeMode='avl') {
     let current=tree;
     const steps=[];
     values.forEach((key,i)=>{
-      const insertion=trace(current,key,'insert');
+      const insertion=trace(current,key,'insert',treeMode);
       insertion.forEach(step=>steps.push({...step,insertionIndex:i+1,insertionCount:values.length,insertionKey:key}));
       current=insertion[insertion.length-1].tree;
     });
     return steps;
   }
-  const api = {height,balance,build,trace,traceSequence,parseSequence,presets,insertPresets};
+  const bstInsertPresets = {
+    ascending:{label:'Right-skewed',values:[],targets:[10,20,30,40,50,60]},
+    descending:{label:'Left-skewed',values:[],targets:[60,50,40,30,20,10]},
+    zigzag:{label:'Zigzag',values:[],targets:[60,10,50,20,40,30]},
+    balanced:{label:'Branching tree',values:[],targets:[40,20,60,10,30,50,70]},
+    duplicate:{label:'Duplicate',values:[30,20,40],targets:[20]},
+    empty:{label:'Empty tree',values:[],target:30}
+  };
+  const bstPresets = {
+    leaf:{label:'Leaf',values:[40,20,60,10,30],target:10},
+    left:{label:'Only left child',values:[40,20,60,10],target:20},
+    right:{label:'Only right child',values:[40,20,60,30],target:20},
+    two:{label:'Two children',values:[40,20,60,10,30,50,70],target:20},
+    successor:{label:'Deep successor',values:[40,20,70,50,80,60,55],target:40},
+    root:{label:'Root with one child',values:[40,20,10,30],target:40},
+    singleton:{label:'Last node',values:[40],target:40},
+    missing:{label:'Missing key',values:[40,20,60],target:30},
+    skewed:{label:'Degenerate tree',values:[10,20,30,40,50,60],target:30}
+  };
+  const api = {height,balance,build,trace,traceSequence,parseSequence,presets,insertPresets,bstPresets,bstInsertPresets};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else scope.AVLDelete = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

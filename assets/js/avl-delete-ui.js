@@ -3,7 +3,8 @@
   'use strict';
   const E = window.AVLDelete, $ = id => document.getElementById(id);
   let mode = 'll', operation = 'delete', initial, steps, index = 0, timer = null, frame = null, displayed = null, width = 820, treeHeight = 330;
-  const examples = () => operation === 'insert' ? E.insertPresets : E.presets;
+  let treeMode='avl';
+  const examples = () => treeMode==='bst'?(operation==='insert'?E.bstInsertPresets:E.bstPresets):(operation==='insert'?E.insertPresets:E.presets);
   const speeds={slow:{interval:3200,animation:1.6},medium:{interval:1900,animation:1},fast:{interval:600,animation:0.3}};
   let stepFilter='all';
   const actionType=s=>s.label==='Check balance'||s.label==='Rotation plan'||s.label.endsWith(' case')||s.kind==='rotation'?'avl':'bst';
@@ -14,6 +15,42 @@
     return Math.max(0,Math.min(steps.length-1,next));
   }
   const autoSpeed=()=>speeds[$('auto-speed').value] || speeds.medium;
+  const traversalStyles={
+    'Pre-order':{color:'#185FA5',x:-23,y:0},
+    'In-order':{color:'#087F6D',x:0,y:20},
+    'Post-order':{color:'#9450AD',x:23,y:0},
+    'Level-order':{color:'#A85A00',x:0,y:-23}
+  };
+  let traversalTimer=null, traversalActive=false, activeTraversal=null;
+  function clearTraversal() {
+    clearTimeout(traversalTimer);traversalTimer=null;traversalActive=false;activeTraversal=null;
+    $('tree').querySelectorAll('.traversal-visit').forEach(n=>n.remove());
+    $('order').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed','false'));
+  }
+  function playTraversal(label,keys) {
+    if(activeTraversal===label){clearTraversal();draw(displayed,null,1);return;}
+    stop();show(false);cancelEntryFlight();
+    traversalActive=true;activeTraversal=label;
+    const style=traversalStyles[label];
+    draw(displayed,null,1);
+    const button=Array.from($('order').querySelectorAll('button')).find(b=>b.dataset.traversal===label);
+    button.setAttribute('aria-pressed','true');
+    let i=0;
+    function visitNext() {
+      if(i>=keys.length)return;
+      const key=keys[i++], node=$('tree').querySelector(`.tree-node[data-key="${key}"] > circle`);
+      if(node) {
+        const x=Number(node.getAttribute('cx'))+style.x,y=Number(node.getAttribute('cy'))+style.y;
+        const marker=document.createElementNS('http://www.w3.org/2000/svg','g');
+        marker.setAttribute('class','traversal-visit');
+        marker.setAttribute('aria-label',`${label}: visit ${i}, node ${key}`);
+        marker.innerHTML=`<circle cx="${x}" cy="${y}" r="10" fill="${style.color}" stroke="white" stroke-width="2"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="10" font-weight="bold" fill="white">${i}</text>`;
+        $('tree').append(marker);
+      }
+      traversalTimer=setTimeout(visitNext,650*autoSpeed().animation);
+    }
+    visitNext();
+  }
   let entryFlight=null;
   function cancelEntryFlight() {
     if(entryFlight){entryFlight.animation.cancel();entryFlight.element.remove();entryFlight=null;}
@@ -21,7 +58,7 @@
   }
   function showQueue(s) {
     const queue=$('insert-queue');queue.hidden=operation!=='insert';
-    $('queue-legend').hidden=operation!=='insert';
+    $('queue-legend').hidden=operation!=='insert'||treeMode==='bst';
     $('queue-tooltip').hidden=true;
     if(operation!=='insert'){queue.replaceChildren();return;}
     queue.innerHTML=steps.filter(step=>step.label==='Before').map(step=>{
@@ -29,7 +66,7 @@
       const trace=steps.filter(t=>t.insertionIndex===step.insertionIndex);
       const rotationCase=trace.find(t=>/^(LL|RR|LR|RL) case$/.test(t.label))?.label.split(' ')[0];
       const category=rotationCase?rotationCase.toLowerCase():'plain';
-      const tip=`${step.insertionKey}: ${rotationCase?rotationCase+' rotation':'No AVL rotation'}`;
+      const tip=treeMode==='bst'?`Insert ${step.insertionKey}`:`${step.insertionKey}: ${rotationCase?rotationCase+' rotation':'No AVL rotation'}`;
       return `<button type="button" class="insert-chip ${category} ${state}" data-insertion="${step.insertionIndex}" data-tip="${tip}" ${state==='current'?'aria-current="step"':''} aria-label="Number ${step.insertionIndex}: ${tip}">${step.insertionKey}</button>`;
     }).join('');
     const chip=queue.querySelector('.current');
@@ -49,7 +86,7 @@
     animation.onfinish=()=>{if(entryFlight?.element===element){element.remove();entryFlight=null;$('tree').classList.remove('entry-flight');}};
   }
   function prepare(key) {
-    steps=operation==='insert'?E.traceSequence(initial,Array.isArray(key)?key:[key]):E.trace(initial,key,operation);
+    steps=operation==='insert'?E.traceSequence(initial,Array.isArray(key)?key:[key],treeMode):E.trace(initial,key,operation,treeMode);
     // Track which displayed measurements have actually been recalculated.
     let pending=new Set(), priorNodes=new Map();
     steps.forEach(s=>{
@@ -124,7 +161,7 @@
     const s = steps[index], map = new Map();
     const rotations=s.label==='Check balance'?[]:(s.rotations||[]);
     const collapsed=new Map(), hidden=new Set();
-    if($('collapse-subtrees').checked && (rotations.length || s.kind==='rotation')) {
+    if(!traversalActive && $('collapse-subtrees').checked && (rotations.length || s.kind==='rotation')) {
       const core=new Set(s.focus);
       rotations.forEach(r=>{
         core.add(r.pivot);
@@ -213,9 +250,9 @@
       const bf=E.balance(n), focus=s.focus.includes(n.id);
       const rechecking=(progress<1?s.pendingBefore:s.pendingAfter).includes(n.id)||(s.label==='Check balance'&&focus&&progress<1);
       const temporary=!rechecking&&s.intermediateRotation&&Math.abs(bf)>1;
-      const color=s.kind==='done'?'done':temporary?'rotation':!rechecking&&Math.abs(bf)>1?'red':focus?(s.kind==='delete'?'red':s.kind==='rotation'?'rotation':'focus'):'normal';
+      const color=s.kind==='done'?'done':temporary?'rotation':treeMode==='avl'&&!rechecking&&Math.abs(bf)>1?'red':focus?(s.kind==='delete'?'red':s.kind==='rotation'?'rotation':'focus'):'normal';
       const [fill,stroke]=colors[color];
-      html+=`<g class="tree-node ${selectable?'selectable':''}" data-key="${n.key}" ${selectable ? `role="button" tabindex="0" aria-label="Delete ${n.key}"` : ''}><title>Key ${n.key}; ${rechecking?'height and balance factor awaiting recalculation':`height ${E.height(n)}; balance factor ${bf}`}</title><circle cx="${n.x}" cy="${n.y}" r="23" fill="${fill}" stroke="${stroke}" stroke-width="2"/><text x="${n.x}" y="${n.y+5}" text-anchor="middle" font-size="15" fill="#2C2C2A">${n.key}</text><g class="bf-readout" visibility="${rechecking?'hidden':'visible'}"><rect class="bf-badge" data-node-id="${n.id}" x="${n.x-24}" y="${n.y+26}" width="48" height="19" rx="5" fill="${Math.abs(bf)>1?'#FCEBEB':'#E1F5EE'}"/><text x="${n.x}" y="${n.y+39}" text-anchor="middle" font-size="10" fill="${Math.abs(bf)>1?'#A32D2D':'#085041'}">BF=${bf>0?'+':''}${bf}</text></g></g>`;
+      html+=`<g class="tree-node ${selectable?'selectable':''}" data-key="${n.key}" ${selectable ? `role="button" tabindex="0" aria-label="Delete ${n.key}"` : ''}><title>Key ${n.key}; ${treeMode==='bst'?`height ${E.height(n)}`:rechecking?'height and balance factor awaiting recalculation':`height ${E.height(n)}; balance factor ${bf}`}</title><circle cx="${n.x}" cy="${n.y}" r="23" fill="${fill}" stroke="${stroke}" stroke-width="2"/><text x="${n.x}" y="${n.y+5}" text-anchor="middle" font-size="15" fill="#2C2C2A">${n.key}</text><g class="bf-readout" visibility="${rechecking?'hidden':'visible'}"><rect class="bf-badge" data-node-id="${n.id}" x="${n.x-24}" y="${n.y+26}" width="48" height="19" rx="5" fill="${Math.abs(bf)>1?'#FCEBEB':'#E1F5EE'}"/><text x="${n.x}" y="${n.y+39}" text-anchor="middle" font-size="10" fill="${Math.abs(bf)>1?'#A32D2D':'#085041'}">BF=${bf>0?'+':''}${bf}</text></g></g>`;
       if(temporary)html+=`<text class="temporary-bf" x="${n.x}" y="${n.y+59}" text-anchor="middle" font-size="10" fill="#7941A3">temporary BF</text>`;
     });
     if(s.decision) {
@@ -246,7 +283,7 @@
       const label=`${rotation.order}. ${rotation.direction==='right'?'Right':'Left'}`;
       html+=`<g class="rotation-guide" role="img" aria-label="Rotation ${rotation.order}: rotate ${rotation.direction} at ${rotation.key}"><title>Rotation ${rotation.order}: rotate ${rotation.direction} at ${rotation.key}</title><path d="M ${n.x-sign*36} ${n.y} C ${n.x-sign*48} ${n.y-58}, ${n.x+sign*48} ${n.y-58}, ${n.x+sign*36} ${n.y}" fill="none" stroke="white" stroke-width="7"/><path class="rotation-arrow" d="M ${n.x-sign*36} ${n.y} C ${n.x-sign*48} ${n.y-58}, ${n.x+sign*48} ${n.y-58}, ${n.x+sign*36} ${n.y}" fill="none" stroke="${color}" stroke-width="2.5" marker-end="url(#rotation-arrow-${rotation.order})"/><rect x="${n.x-39}" y="${n.y-68}" width="78" height="20" rx="5" fill="white" stroke="${color}"/><text x="${n.x}" y="${n.y-54}" text-anchor="middle" fill="${color}" font-size="12" font-weight="bold">${label}</text></g>`;
     });
-    if(!map.size) html+='<text x="410" y="150" text-anchor="middle" fill="#5F5E5A">Empty tree — balanced</text>';
+    if(!map.size) html+='<text x="410" y="150" text-anchor="middle" fill="#5F5E5A">Empty tree</text>';
     $('tree').innerHTML=html;
     // Keep removed-node outlines and labels above edges and traversal guides.
     $('tree').querySelectorAll('.deleted-ghost,.removed-target').forEach(node=>{
@@ -259,6 +296,7 @@
   }
   function stop() { if(timer) clearInterval(timer);timer=null;$('auto').textContent='Auto'; }
   function show(animate=false) {
+    clearTraversal();
     cancelEntryFlight();
     if(frame) cancelAnimationFrame(frame);
     const s=steps[index], next=layout(s.tree), previous=displayed;
@@ -266,7 +304,7 @@
     showQueue(s);
     const mergedRemoval=s.label==='Check balance'&&index>0&&combinedRemoval(index-1);
     $('badge').textContent=s.intermediateRotation?`${s.intermediateRotation} in progress`:s.label;
-    const category=s.kind==='done'?'avl':actionType(s);
+    const category=treeMode==='bst'?'bst':s.kind==='done'?'avl':actionType(s);
     $('action-badge').textContent=category.toUpperCase();
     $('action-badge').className=`badge action-badge ${category}`;
     $('status-text').textContent=(mergedRemoval?steps[index-1].text+' ':'')+s.text;
@@ -283,7 +321,36 @@
     $('sequence-progress').hidden=operation!=='insert';
     $('sequence-progress').textContent=operation==='insert'?`Inserting ${s.insertionKey} · Number ${s.insertionIndex} of ${s.insertionCount}`:'';
     $('prev').disabled=index===0;$('next').disabled=index===steps.length-1;
-    $('order').textContent='In-order keys: '+(next.nodes.map(n=>n.key).join(' < ')||'(empty)');
+    const traversals={'In-order':[], 'Pre-order':[], 'Post-order':[], 'Level-order':[]};
+    function visit(n) {
+      if(!n)return;
+      traversals['Pre-order'].push(n.key);
+      visit(n.left);
+      traversals['In-order'].push(n.key);
+      visit(n.right);
+      traversals['Post-order'].push(n.key);
+    }
+    visit(s.tree);
+    const queue=s.tree?[s.tree]:[];
+    for(let i=0;i<queue.length;i++) {
+      const n=queue[i];traversals['Level-order'].push(n.key);
+      if(n.left)queue.push(n.left);
+      if(n.right)queue.push(n.right);
+    }
+    $('order').replaceChildren(...Object.entries(traversals).map(([label,keys])=>{
+      const item=document.createElement('button'), title=document.createElement('strong');
+      item.type='button';item.dataset.traversal=label;item.setAttribute('aria-pressed','false');
+      item.style.setProperty('--traversal-color',traversalStyles[label].color);
+      item.title='Animate '+label.toLowerCase()+' traversal';
+      item.onclick=()=>playTraversal(label,keys);
+      title.textContent=label+': ';
+      const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');
+      icon.setAttribute('class','traversal-icon');icon.setAttribute('viewBox','0 0 32 32');icon.setAttribute('aria-hidden','true');
+      const visitNumbers={'Pre-order':[1,2,3],'In-order':[2,1,3],'Post-order':[3,1,2],'Level-order':[1,2,3]}[label];
+      icon.innerHTML=`<path d="M16 8L7 24M16 8L25 24" fill="none" stroke="currentColor" stroke-width="1.5"/>${[[16,7],[7,25],[25,25]].map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="6" fill="white" stroke="currentColor" stroke-width="1.5"/><text x="${x}" y="${y+2.8}" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" font-weight="bold" fill="currentColor">${visitNumbers[i]}</text>`).join('')}`;
+      item.append(icon,title,keys.join(' \u2192 ')||'(empty)');
+      return item;
+    }));
     $('tree').setAttribute('viewBox',`0 0 ${width} ${treeHeight}`);
     $('tree').style.minWidth=Math.max(590,width*.8)+'px';
     $('selection-hint').textContent=operation==='delete'
@@ -327,7 +394,7 @@
   function load(m, fresh=false) {
     stop();mode=m;index=0;displayed=null;
     const p=examples()[m], shift=fresh?10+Math.floor(Math.random()*30):0;
-    initial=E.build(p.values.map(v=>v+shift));
+    initial=E.build(p.values.map(v=>v+shift),treeMode);
     const targets=(p.targets || [p.target]).map(v=>v+shift);
     $('target').value=operation==='insert'?targets.join(', '):p.target+shift;
     prepare(operation==='insert'?targets:p.target+shift);$('error').hidden=true;
@@ -345,12 +412,23 @@
     $('target').placeholder=value==='insert'?'Separate up to 32 numbers with commas or spaces. Press Enter, then Next or Auto.':'';
     $('selection-hint').hidden=value==='insert';
     $('target-label').textContent=value==='insert'?'Insert numbers':'Delete key';
-    $('mode-description').textContent=value==='insert'?'Walk the BST, insert each key, and restore balance.':'Remove a key, check the ancestors, and watch rotations restore balance.';
+    $('mode-description').textContent=value==='insert'?'AVL: follow BST insertion, then restore balance with rotations.':'AVL: follow BST deletion, then check balance and rotate as needed.';
     $('mode-note').textContent=value==='insert'?'Insertion repairs the first unbalanced ancestor with one single or double rotation. The remaining ancestors are checked as we return to the root.':'Deletion can require rebalancing at multiple ancestors. A heavy child with BF = 0 uses a single rotation.';
     $('types').replaceChildren();
     Object.entries(examples()).forEach(([key,p])=>{const b=document.createElement('button');b.textContent=p.label;b.dataset.mode=key;b.addEventListener('click',()=>load(key));$('types').append(b);});
-    load(value==='insert'?'empty':'ll');
+    if(treeMode==='bst') {
+      $('mode-description').textContent=value==='insert'?'BST: insert by key order and explore how insertion order shapes the tree.':'BST: explore leaf, one-child, and two-child deletion.';
+    }
+    load(value==='insert'?'empty':treeMode==='bst'?'leaf':'ll');
   }
+  document.querySelectorAll('button[data-tree-mode]').forEach(b=>b.onclick=()=>{
+    treeMode=b.dataset.treeMode;document.body.dataset.treeMode=treeMode;
+    document.querySelectorAll('button[data-tree-mode]').forEach(button=>{const active=button.dataset.treeMode===treeMode;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
+    stepFilter='all';$('next').textContent='Next \u2192';
+    document.querySelectorAll('[data-step]').forEach(option=>option.setAttribute('aria-checked',String(option.dataset.step==='all')));
+    $('tree').setAttribute('aria-label',treeMode==='bst'?'Binary search tree with level and height rulers':'AVL tree with balance factors, level and height rulers');
+    setOperation(operation);
+  });
   document.querySelectorAll('[data-operation]').forEach(b=>b.onclick=()=>setOperation(b.dataset.operation));
   $('collapse-subtrees').addEventListener('change',()=>show());
   $('prev').onclick=()=>{stop();index=destination(-1);show();};

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AVL Tree Visualizer · CS-112</title>
+<title>BST &amp; AVL Tree Visualizer · CS-112</title>
 <style>
 
 * { box-sizing: border-box; }
@@ -18,7 +18,11 @@ button:disabled { opacity:.4; cursor:default; }
 button:focus-visible,input:focus-visible,select:focus-visible { outline:3px solid #378ADD; outline-offset:2px; }
 .controls,.types { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
 .setup { padding:14px 16px; border:1px solid #DDE3EB; border-radius:12px; background:#F8FAFC; display:grid; gap:12px; }
-.setup-heading { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+.setup-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:14px 24px; flex-wrap:wrap; }
+.setup-heading header { flex:1 1 360px; }
+.setup-modes { display:flex; align-items:center; gap:20px; flex-wrap:wrap; margin-left:auto; }
+.mode-field { display:flex; align-items:center; gap:10px; }
+.mode-field + .mode-field { border-left:1px solid #CBD5E1; padding-left:20px; }
 .mode-toggle { padding:3px; border:1px solid #DDE3EB; border-radius:10px; background:#fff; flex-wrap:nowrap; }
 .mode-toggle button { border-color:transparent; min-width:76px; }
 .example-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; border-top:1px solid #E2E7EF; padding-top:12px; }
@@ -69,15 +73,25 @@ button:focus-visible,input:focus-visible,select:focus-visible { outline:3px soli
 .decision-item + .decision-item { border-left:1px solid #CBD5E1; padding-left:16px; }
 .canvas { flex:1; min-height:330px; min-width:0; overflow:auto; border:1px solid #e5e4df; border-radius:12px; background:#fff; }
 svg { display:block; width:100%; min-width:590px; height:100%; min-height:330px; max-height:65vh; }
-.legend { display:flex; flex-wrap:wrap; gap:16px; font-size:12px; color:#5F5E5A; }
-.legend span:before { content:''; display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--dot); margin-right:5px; }
 .note { padding:10px 12px; background:#E6F1FB; border-radius:8px; color:#0C447C; }
 #error { color:#A32D2D; font-size:13px; }
-#order { font:12px monospace; overflow-wrap:anywhere; }
+#order { display:flex; align-items:center; font:13px Arial,sans-serif; overflow-x:auto; padding:12px; border:1px solid #DDE3EB; border-radius:12px; background:#fff; }
+#order .traversal-icon { display:inline-block; width:24px; height:24px; min-width:24px; min-height:0; max-height:none; vertical-align:middle; margin-right:7px; color:var(--traversal-color); }
+#order > button { flex:0 0 auto; white-space:nowrap; padding:6px 16px; font:inherit; border:0; border-radius:0; background:transparent; color:#5F5E5A; }
+#order > button:hover { background:#E8EDF4; }
+#order > button:first-child { padding-left:6px; }
+#order > button + button { border-left:1px solid #CBD5E1; }
+#order > button[aria-pressed="true"] { background:color-mix(in srgb,var(--traversal-color) 12%,white); color:var(--traversal-color); }
+#order > button strong { color:var(--traversal-color); }
+.traversal-visit { pointer-events:none; }
+#order strong { color:#526174; }
 @media(max-width:600px) {
  body { padding:10px; gap:10px; }
  .setup { padding:12px; }
- .setup-heading { align-items:flex-start; }
+ .setup-modes { gap:12px; }
+ .mode-field { flex-wrap:wrap; gap:6px; }
+ .mode-field + .mode-field { padding-left:12px; }
+ .mode-toggle button { min-width:60px; padding:8px 10px; }
  .example-row { align-items:flex-start; }
  .types { flex-basis:75%; }
  .input-row { align-items:stretch; flex-direction:column; gap:6px; }
@@ -121,13 +135,22 @@ svg { display:block; width:100%; min-width:590px; height:100%; min-height:330px;
 #collapse-subtrees:checked:after { content:''; width:8px; height:4px; border-left:2px solid white; border-bottom:2px solid white; transform:translateY(-1px) rotate(-45deg); }
 #collapse-subtrees:focus-visible { outline:3px solid #93C5FD; outline-offset:3px; }
 @media(forced-colors:active) { #collapse-subtrees { appearance:auto; } #collapse-subtrees:after { display:none; } }
+body[data-tree-mode="bst"] .bf-readout,body[data-tree-mode="bst"] .collapse-option,body[data-tree-mode="bst"] .note,body[data-tree-mode="bst"] #step-trigger,body[data-tree-mode="bst"] #step-menu { display:none; }
+body[data-tree-mode="bst"] #next { border-radius:8px; }
 </style>
 </head>
-<body>
+<body data-tree-mode="avl">
 <section class="setup" aria-label="Tree setup">
 <div class="setup-heading">
-<header><h1>AVL Tree Visualizer</h1><p id="mode-description"></p></header>
+<header><h1>BST &amp; AVL Tree Visualizer</h1><p id="mode-description"></p></header>
+<div class="setup-modes">
+<div class="mode-field"><span class="field-label" id="tree-mode-label">Tree</span>
+<div class="controls mode-toggle" role="group" aria-label="Tree mode"><button data-tree-mode="bst" aria-pressed="false">BST</button><button data-tree-mode="avl" class="active" aria-pressed="true">AVL</button></div>
+</div>
+<div class="mode-field"><span class="field-label" id="operation-mode-label">Operation</span>
 <div class="controls mode-toggle" role="group" aria-label="Operation mode"><button data-operation="insert">Insert</button><button data-operation="delete" class="active">Delete</button></div>
+</div>
+</div>
 </div>
 <div class="example-row"><span class="field-label">Examples</span><div class="types" role="group" aria-label="Prebuilt examples" id="types"></div><button id="new-values">New values</button></div>
 <div class="input-row"><label class="field-label" for="target" id="target-label">Delete key</label><input id="target" type="number" step="1" aria-describedby="selection-hint"></div>
@@ -142,7 +165,6 @@ svg { display:block; width:100%; min-width:590px; height:100%; min-height:330px;
 <div class="status" aria-live="polite" aria-atomic="true"><div class="status-badges"><span class="badge action-badge" id="action-badge"></span><span class="badge" id="badge"></span></div><div class="status-copy"><p id="status-text"></p><div id="rotation-decision" class="rotation-decision" hidden></div></div></div>
 </section>
 <div class="canvas"><svg id="tree" viewBox="0 0 820 420" role="group" aria-label="AVL tree with node heights and balance factors"></svg></div>
-<div class="legend"><span style="--dot:#EF9F27">Current node / rotation plan</span><span style="--dot:#E24B4A">Delete / unbalanced</span><span style="--dot:#D4537E">Rotating</span><span style="--dot:#1D9E75">Balanced result</span></div>
 <p id="order"></p>
 <p class="note"><strong>BF = left subtree height − right subtree height.</strong> Empty subtree height = 0; leaf height = 1. <span id="mode-note"></span></p>
 <script src="../assets/js/avl-delete-engine.js"></script>
