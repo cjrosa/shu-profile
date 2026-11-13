@@ -206,3 +206,13 @@ body.external-panel-page { padding: 0 !important; background: #f4f8fb; }
 .examine-watch-control{gap:8px;padding:6px 10px;border-radius:8px}.examine-watch-control .watch-switch-track{width:32px;height:20px}.examine-watch-control .watch-switch-track:before{width:14px;height:14px;left:3px;top:3px}.examine-watch-control input:checked+.watch-switch-track:before{transform:translateX(12px)}
 
 #examine footer,.external-examine footer{justify-content:flex-end;gap:10px}#examine footer>span,.external-examine footer>span{margin-right:auto;flex:1 1 200px}.examine-watch-control{flex:none}
+
+.prefix-heading{display:flex;align-items:center;justify-content:space-between;gap:5px}.prefix-field input{margin-top:4px}.cidr-tool-link{display:inline-flex;align-items:center;gap:3px;font-size:11px;white-space:nowrap}
+
+.address-heading{display:flex;align-items:center;gap:6px}.address-field input{margin-top:4px}.address-heading .cidr-tool-link{padding:2px;line-height:1}.address-heading .cidr-tool-link svg{width:13px;height:13px}
+
+#inspector .address-heading label,#inspector .prefix-heading label{margin:0}#inspector .address-field,#inspector .prefix-field{margin:10px 0}#inspector .address-field input,#inspector .prefix-field input{font-size:12px;line-height:1.5}
+
+#inspector-title{display:inline-flex;align-items:center;gap:9px;min-width:0}.inspector-device-icon{width:36px;height:31px;flex:none}
+
+.device-watch-eye{cursor:pointer}.device-watch-eye:hover{stroke:#185f5b;filter:drop-shadow(0 0 2px #287d7860)}
