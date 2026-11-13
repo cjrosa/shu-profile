@@ -16,15 +16,15 @@
   }
   const autoSpeed=()=>speeds[$('auto-speed').value] || speeds.medium;
   const traversalStyles={
-    'Pre-order':{color:'#185FA5',x:-23,y:0},
-    'In-order':{color:'#087F6D',x:0,y:20},
-    'Post-order':{color:'#9450AD',x:23,y:0},
-    'Level-order':{color:'#A85A00',x:0,y:-23}
+    'Pre-order':{color:'#185FA5',x:-36,y:0},
+    'In-order':{color:'#087F6D',x:0,y:56},
+    'Post-order':{color:'#9450AD',x:36,y:0},
+    'Level-order':{color:'#A85A00',x:0,y:-36}
   };
   let traversalTimer=null, traversalActive=false, activeTraversal=null;
   function clearTraversal() {
     clearTimeout(traversalTimer);traversalTimer=null;traversalActive=false;activeTraversal=null;
-    $('tree').querySelectorAll('.traversal-visit').forEach(n=>n.remove());
+    $('tree').querySelectorAll('.traversal-visit,.traversal-route').forEach(n=>n.remove());
     $('order').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed','false'));
   }
   function playTraversal(label,keys) {
@@ -35,22 +35,60 @@
     draw(displayed,null,1);
     const button=Array.from($('order').querySelectorAll('button')).find(b=>b.dataset.traversal===label);
     button.setAttribute('aria-pressed','true');
-    let i=0;
-    function visitNext() {
-      if(i>=keys.length)return;
-      const key=keys[i++], node=$('tree').querySelector(`.tree-node[data-key="${key}"] > circle`);
-      if(node) {
-        const x=Number(node.getAttribute('cx'))+style.x,y=Number(node.getAttribute('cy'))+style.y;
-        const marker=document.createElementNS('http://www.w3.org/2000/svg','g');
-        marker.setAttribute('class','traversal-visit');
-        marker.setAttribute('aria-label',`${label}: visit ${i}, node ${key}`);
-        marker.innerHTML=`<circle cx="${x}" cy="${y}" r="10" fill="${style.color}" stroke="white" stroke-width="2"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="10" font-weight="bold" fill="white">${i}</text>`;
-        $('tree').append(marker);
-      }
-      traversalTimer=setTimeout(visitNext,650*autoSpeed().animation);
+    const points=[], positions=new Map(displayed.nodes.map(n=>[n.key,n]));
+    const add=(n,phase)=>{
+      const offset=traversalStyles[phase],p=positions.get(n.key);
+      points.push({x:p.x+offset.x,y:p.y+offset.y,key:n.key,phase,visit:phase===label});
+    };
+    function contour(n) {
+      if(!n)return;
+      add(n,'Pre-order');contour(n.left);add(n,'In-order');contour(n.right);add(n,'Post-order');
     }
-    visitNext();
+    if(label==='Level-order')keys.forEach(key=>add(positions.get(key),label));
+    else contour(steps[index].tree);
+    if(!points.length)return;
+    const ns='http://www.w3.org/2000/svg',route=document.createElementNS(ns,'path');
+    route.setAttribute('class','traversal-route');route.setAttribute('fill','none');
+    route.setAttribute('stroke',style.color);route.setAttribute('stroke-width','2');
+    route.setAttribute('stroke-linecap','round');route.setAttribute('stroke-linejoin','round');
+    route.setAttribute('pointer-events','none');
+    $('tree').append(route);
+    let d='M '+points[0].x+' '+points[0].y,visited=0,position=0;
+    function advance() {
+      const p=points[position],previous=points[position-1];
+      const before=position?route.getTotalLength():0;
+      if(previous) {
+        if(label==='Level-order'&&p.y!==previous.y) {
+          const right=Math.max(...displayed.nodes.map(n=>n.x))+62,left=Math.min(...displayed.nodes.map(n=>n.x))-62,mid=(p.y+previous.y)/2;
+          d+=' C '+right+' '+previous.y+' '+right+' '+mid+' '+right+' '+mid;
+          d+=' L '+left+' '+mid+' Q '+left+' '+p.y+' '+p.x+' '+p.y;
+        } else {
+          const mid=(previous.y+p.y)/2;
+          const bend=Math.min(36,Math.max(12,Math.abs(p.x-previous.x)*.5));
+          const c1=previous.phase==='In-order'?{x:previous.x+bend,y:previous.y}:{x:previous.x,y:mid};
+          const c2=p.phase==='In-order'?{x:p.x-bend,y:p.y}:{x:p.x,y:mid};
+          d+=' C '+c1.x+' '+c1.y+' '+c2.x+' '+c2.y+' '+p.x+' '+p.y;
+        }
+      }
+      route.setAttribute('d',d);
+      const length=route.getTotalLength(),duration=matchMedia('(prefers-reduced-motion: reduce)').matches?0:350*autoSpeed().animation;
+      route.style.strokeDasharray=length+' '+length;
+      route.style.strokeDashoffset='0';
+      if(length>before&&duration)route.animate([{strokeDashoffset:length-before},{strokeDashoffset:0}],{duration,easing:'linear'});
+      traversalTimer=setTimeout(()=>{
+        if(p.visit) {
+          const marker=document.createElementNS(ns,'g');
+          marker.setAttribute('class','traversal-visit');
+          marker.setAttribute('aria-label',label+': visit '+(++visited)+', node '+p.key);
+          marker.innerHTML='<circle cx="'+p.x+'" cy="'+p.y+'" r="10" fill="'+style.color+'" stroke="white" stroke-width="2"/><text x="'+p.x+'" y="'+(p.y+4)+'" text-anchor="middle" font-size="10" font-weight="bold" fill="white">'+visited+'</text>';
+          $('tree').append(marker);
+        }
+        if(++position<points.length)traversalTimer=setTimeout(advance,p.visit?250*autoSpeed().animation:0);
+      },duration);
+    }
+    advance();
   }
+
   let entryFlight=null;
   function cancelEntryFlight() {
     if(entryFlight){entryFlight.animation.cancel();entryFlight.element.remove();entryFlight=null;}
