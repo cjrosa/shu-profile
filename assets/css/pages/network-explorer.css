@@ -1022,3 +1022,53 @@ body.welcome-open #network-welcome{height:auto;overflow:visible;border:0;border-
 #network-welcome .guide-section-divider span:last-child{transform:rotate(180deg)}
 #network-welcome .guide-section-divider svg{width:48px;height:18px;stroke:#7aa5bf;stroke-width:1.3;fill:#fff}
 #network-welcome .guide-intro{padding-top:22px}
+
+#network-welcome .guide-port-demo{min-width:0;text-align:center}
+#network-welcome .guide-port-scene{width:100%;height:auto;display:block;stroke:none;fill:none}
+.guide-port-chassis{fill:#f1f6f4;stroke:#839e96;stroke-width:1.5}
+.guide-port text{font:700 12px "Segoe UI",sans-serif;text-anchor:middle;fill:#8b989c}
+.guide-socket{fill:#8d9b9e}
+.guide-contacts{stroke:#f4ecc5;stroke-width:2}
+.guide-socket-edge{stroke:#bdcdcb;stroke-width:1;fill:none}
+.guide-link-light{fill:#a3aeaa}
+.guide-port-live .guide-socket{fill:#294b59}
+.guide-port-live text{fill:#294b59}
+.guide-port-live .guide-link-light{animation:guide-port-blink 2s infinite}
+.guide-port-target .guide-socket{animation:guide-port-seat 7s infinite}
+.guide-port-target .guide-link-light{animation:guide-port-traffic 7s infinite}
+.guide-plug-motion{animation:guide-plug-in 7s infinite}
+.guide-cable{stroke:#608eb6;stroke-width:8;stroke-linecap:round}
+.guide-plug-body{fill:#d5e5ec;fill-opacity:.93;stroke:#537b94;stroke-width:1.5}
+.guide-plug-pins{stroke:#bc9952;stroke-width:2}
+.guide-plug-latch{fill:#a8c4d4;stroke:#537b94;stroke-width:1}
+.guide-port-caption{position:relative;height:22px;font-size:12px;color:#4b786e}
+.guide-port-caption span{position:absolute;inset:0}
+.guide-connecting-caption{animation:guide-connect-label 7s infinite}
+.guide-connected-caption{animation:guide-connected-label 7s infinite}
+.guide-port-demo>small{font-size:10px;color:#7c8d9b}
+.guide-connections-section:not(.guide-in-view) .guide-port-demo *{animation-play-state:paused}
+@keyframes guide-plug-in{0%,10%{transform:translateY(72px);opacity:0}18%{opacity:1}38%,80%{transform:translateY(0);opacity:1}95%,100%{transform:translateY(72px);opacity:0}}
+@keyframes guide-port-seat{0%,36%,90%,100%{fill:#8d9b9e}38%,85%{fill:#294b59}}
+@keyframes guide-port-traffic{0%,36%,90%,100%{fill:#a3aeaa}38%,49%,61%,73%,85%{fill:#71c87d}55%,67%,79%{fill:#e9bf59}}
+@keyframes guide-port-blink{0%,40%,100%{fill:#71c87d}55%,70%{fill:#e9bf59}}
+@keyframes guide-connect-label{0%,36%,90%,100%{opacity:1}38%,85%{opacity:0}}
+@keyframes guide-connected-label{0%,36%,90%,100%{opacity:0}38%,85%{opacity:1}}
+@media(prefers-reduced-motion:reduce){
+ .guide-port-demo *{animation:none!important}
+ .guide-port-target .guide-socket{fill:#294b59}
+ .guide-port-live .guide-link-light,.guide-port-target .guide-link-light{fill:#71c87d}
+ .guide-connecting-caption{display:none}
+}
+
+/* Compact, unframed port illustration and detailed RJ45 connector. */
+#network-welcome .guide-port-demo{width:100%;max-width:420px;margin-inline:auto}
+.guide-plug-body{fill:#eaf3f8;fill-opacity:.85;stroke:#65849b;stroke-width:1.1}
+.guide-plug-highlight{fill:none;stroke:#fff;stroke-width:1.4}
+.guide-plug-pins{stroke:#bb9850;stroke-width:1.5;stroke-linecap:butt}
+.guide-plug-wires{stroke:#a5bdca;stroke-width:1;fill:none}
+.guide-plug-latch{fill:#d5e6ef;fill-opacity:.8;stroke:#7c9bae;stroke-width:.8}
+.guide-plug-boot{fill:#6089ae;stroke:#517796;stroke-width:1}
+.guide-boot-ribs{stroke:#a2bed4;stroke-width:1;fill:none}
+.guide-cable{stroke:#6089ae;stroke-width:7}
+.guide-cable-shine{stroke:#a5c3da;stroke-width:1;fill:none}
+@keyframes guide-plug-in{0%,10%{transform:translateY(48px);opacity:0}18%{opacity:1}38%,80%{transform:translateY(0);opacity:1}95%,100%{transform:translateY(48px);opacity:0}}
