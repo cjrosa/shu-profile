@@ -1085,3 +1085,31 @@ body.welcome-open #network-welcome{height:auto;overflow:visible;border:0;border-
 .guide-plug-click{offset-path:path("M 0 0 C 4 -24 35 -42 68 -48");offset-rotate:0deg;offset-anchor:0 0;animation-timing-function:linear}
 
 @media(prefers-reduced-motion:reduce){.guide-plug-click{display:none}}
+
+/* Switch faceplate and compact labels. */
+.guide-switch-face>rect{fill:#fff;stroke:#9baeb9;stroke-width:1.3}
+.guide-switch-rim{stroke:#dce6ec;stroke-width:1;fill:none}
+.guide-switch-header-rule{stroke:#e4ebef;stroke-width:.8}
+.guide-switch-brand{font:700 9px "Segoe UI",sans-serif;letter-spacing:1.2px;fill:#397c98}
+.guide-switch-model{font:600 6px "Segoe UI",sans-serif;letter-spacing:.7px;text-anchor:end;fill:#8396a3}
+.guide-switch-screws{fill:#e3eaee;stroke:#9caeb9;stroke-width:.7}
+.guide-switch-vents{stroke:#c0cdd5;stroke-width:1.4;stroke-linecap:round}
+#network-welcome .guide-port-scene .os-choice-icon{width:25px;height:25px;fill:none;stroke:none}
+.guide-port text{font-size:9px}
+
+/* Silver chassis with machined screw heads and closer port banks. */
+.guide-switch-face>rect{fill:url(#guide-switch-metal);stroke:#858d95;stroke-width:1.3}
+.guide-switch-rim{stroke:#f8f9fa;stroke-width:1.2}
+.guide-switch-header-rule{stroke:#a5adb4}
+.guide-switch-brand{fill:#505c65}
+.guide-switch-model{fill:#5f6972}
+.guide-switch-face .os-choice-icon g{stroke:#65717a}
+.guide-switch-screws circle{fill:#e5e8eb;stroke:#737e87;stroke-width:.8}
+.guide-switch-screws path{stroke:#68747e;stroke-width:.7;stroke-linecap:round;fill:none}
+.guide-switch-vents{stroke:#7d8890}
+.guide-port text{fill:#636f78}
+.guide-socket{fill:#7c858c;stroke:#e8ecef;stroke-width:.7}
+.guide-socket-edge{stroke:#c3cbd1}
+.guide-port-live .guide-socket{fill:#35424b}
+.guide-port-live text{fill:#35424b}
+@keyframes guide-port-seat{0%,36%,90%,100%{fill:#7c858c}38%,85%{fill:#35424b}}
