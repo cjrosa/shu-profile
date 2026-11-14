@@ -835,3 +835,13 @@ body[data-panel^="browser:"] .browser-tab{flex:0 1 240px}
 .cli-ip-picker svg{width:24px;height:24px;flex:none}
 .cli-ip-picker strong,.cli-ip-picker small{display:block;font-size:11px}.cli-ip-picker small{font-size:10px;color:#738192;font-weight:400}
 .cli-ip-picker code{margin-left:auto;font-size:11px;white-space:nowrap;color:#315e5a}
+
+@keyframes history-field-pulse{0%,45%{box-shadow:0 0 0 3px #d99a36a6;background-color:#fff0cc}100%{box-shadow:0 0 0 0 #d99a3600}}
+.history-highlight{animation:history-field-pulse 1.6s ease-out}
+@keyframes history-item-pulse{0%{opacity:1}35%{opacity:.4}60%{opacity:1}100%{opacity:0}}
+.history-item-highlight{fill:#f6c45b26;stroke:#c58a27;stroke-width:2.5;vector-effect:non-scaling-stroke;animation:history-item-pulse 1.8s ease-out forwards}
+.history-removed{stroke-dasharray:5 4;fill:none}
+.history-link-highlight,.history-link-highlight path,.history-link-highlight line{stroke:#d99a36!important;stroke-width:5!important;fill:none;pointer-events:none;animation:history-item-pulse 1.8s ease-out forwards}
+@media(prefers-reduced-motion:reduce){.history-highlight{animation:none;outline:2px solid #c58a27;outline-offset:2px}.history-item-highlight,.history-link-highlight{animation:none}}
+
+#fast-forward .playback-glyph,#pause-animation .playback-glyph{width:18px;height:18px;fill:currentColor;stroke:none}
