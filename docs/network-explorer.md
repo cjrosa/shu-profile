@@ -11,7 +11,7 @@ Each watched device pauses traffic with an examination overlay. It shows the inc
 ## Files and extension boundaries
 
 - [Engine](../assets/js/network-explorer-engine.js): topology, interfaces, event queue, ARP, MAC learning, ICMP. Exports to the browser and Node tests.
-- [UI](../assets/js/network-explorer-ui.js): SVG topology, connection picker, inspector, examination dialogs, commands, guided progress, save/load.
+- [UI](../assets/js/network-explorer-ui.js): SVG topology, connection picker, inspector, examination dialogs, commands, examples, save/load.
 - [Styles](../assets/css/pages/network-explorer.css): standalone course-style layout.
 - [Tests](../tests/network-explorer.test.cjs): protocol and topology checks, run with `node --test tests/network-explorer.test.cjs`.
 
@@ -19,6 +19,22 @@ Topology JSON version 1 stores configuration, interface identities, layout, and 
 
 ## Scope and expansion
 
-This release models untagged Ethernet, IPv4 host interfaces, ARP, and a single ICMP Echo exchange per ping. It blocks Layer 2 loops, requires /1–/30 unicast host configuration, and does not model physical errors, bandwidth contention, real operating-system timing, or real network access. Routing, gateways, DHCP, DNS, NAT, VLANs, and spanning tree are not implemented.
+This release models untagged Ethernet, IPv4 host interfaces, ARP, and a single ICMP Echo exchange per ping. It blocks Layer 2 loops, requires /1–/30 unicast host configuration, and does not model physical errors, bandwidth contention, real operating-system timing, or real network access. Access VLANs are supported. Routing, gateways, DHCP, DNS, NAT, trunks, and spanning tree are not implemented.
 
 Next: introduce router interfaces and a routing table, with LPM examination reports produced by the engine. Then add service handlers for DHCP/DNS and transport messages for TCP/HTTP and NAT. Retain stable device/interface IDs and structured reports so terminal output, animations, and examination use the same state. As lesson count grows, move the initial UI lesson checks to a dedicated lesson-data module. Do not couple this explorer to runtime state in the existing visualizers.
+
+## Access VLANs
+
+All switch ports start in access VLAN 1. Click a port to change its access VLAN or administrative state; right-click for quick enable/disable. Create and name VLANs in the inspector. Configuration changes clear learned state. The Two VLANs example has hosts 1/2 on VLAN 10 and hosts 3/4 on VLAN 20, using the same IP subnet to expose Layer 2 isolation.
+
+The CLI supports `configure terminal`, `vlan 10`, `name Students`, `exit`, `interface P1`, `switchport mode access`, `switchport access vlan 10`, `shutdown`, `no shutdown`, and `end`. Use `show vlan brief`, `show interfaces switchport`, and `show mac address-table` (optionally `vlan 10`). `exit` leaves a configuration mode; at the top level it dismisses the console. `close` always dismisses it.
+
+MAC learning and flooding are scoped to the ingress access VLAN. Watch explains excluded ports, and capture lists switch classification in its VLAN column (filter `vlan.id==10`). These are untagged access frames, not 802.1Q tags. Saved topology remains version 1; older networks load with all ports in VLAN 1. Trunks and inter-VLAN routing are deferred.
+
+## Global platform setting
+
+The header's Global settings control selects Cisco IOS or Palo Alto PAN-OS for the entire Layer 2 teaching model. Selection persists locally and is included in saved topology JSON; legacy saves continue to load. Switching preserves device IDs, cables, VLAN membership, colors, and layout. Cisco uses P1-P8 port names and immediate configuration. PAN-OS uses ethernet1/1-ethernet1/8, named VLAN objects, and shared UI/CLI candidate changes with Commit/Revert in the header. Host CLI remains unchanged.
+
+PAN-OS syntax is a supported subset of the [official configuration hierarchy](https://docs.paloaltonetworks.com/ngfw/pan-os-cli-quick-start/cli-command-hierarchy/pan-os-11-2-configure-cli-command-hierarchy). Use `configure`, `set network interface ethernet ethernet1/1 layer2`, `set network vlan Students interface ethernet1/1`, `set network interface ethernet ethernet1/1 link-state down` (or `auto`), `show network vlan`, `show network interface ethernet`, `commit`, `revert config`, and `exit`. Operational commands include `show interface all` and `show mac all`. Quoted names and bracketed interface lists are accepted. Unassigned VLAN objects can be deleted with `delete network vlan Name`; the model retains its Default object.
+
+Teaching simplifications: all switch interfaces are Layer 2, VLAN object internal IDs are not wire tags, and the app requires committing or reverting candidate changes before traffic or export. Commit/Revert cover the workspace's configuration together rather than modeling separate management sessions per physical appliance. Revert retains layout and watch choices. Examples load as committed configurations with Watch off. No firewall policies, zones, routing, or trunks are introduced.

@@ -216,3 +216,87 @@ body.external-panel-page { padding: 0 !important; background: #f4f8fb; }
 #inspector-title{display:inline-flex;align-items:center;gap:9px;min-width:0}.inspector-device-icon{width:36px;height:31px;flex:none}
 
 .device-watch-eye{cursor:pointer}.device-watch-eye:hover{stroke:#185f5b;filter:drop-shadow(0 0 2px #287d7860)}
+
+.examples-menu{position:relative}#toggle-examples{display:flex;align-items:center;gap:7px}#toggle-examples svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6}#examples-dropdown{position:absolute;top:calc(100% + 6px);left:0;width:280px;max-width:calc(100vw - 32px);padding:6px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px #23344b25;z-index:50}#examples-dropdown[hidden]{display:none}#examples-dropdown button{display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;border:0;padding:10px}#examples-dropdown button span{font-weight:400;color:var(--muted);font-size:12px}
+.vlan-badge{display:inline-block;border-radius:5px;background:var(--vlan-color,#61758a);color:#fff;padding:2px 6px;font-size:11px;font-weight:700;line-height:1.4}.interface-port .vlan-badge{margin-top:4px}.vlan-row{display:grid;grid-template-columns:44px minmax(0,1fr) 34px;gap:8px;align-items:center;margin:6px 0}.vlan-row input{min-width:0;width:100%;margin:0;padding:5px;height:32px}.vlan-row input[type=color]{padding:3px}.vlan-add{display:grid;grid-template-columns:65px minmax(0,1fr);gap:6px;margin:10px 0}.vlan-add input{min-width:0;width:100%;margin:0}.vlan-add button{grid-column:1/-1}#port-config{width:min(400px,90vw);border:1px solid #cbd8e4;border-radius:14px;padding:22px;color:#29394b}#port-config h2{font-size:18px;margin:0 0 18px}#port-config label:not(.examine-watch-control){display:grid;gap:4px}#port-config select{width:100%;padding:8px}#port-config footer{display:flex;justify-content:flex-end;margin-top:20px}#port-config::backdrop{background:#182b4655}.port-context-menu{position:fixed;z-index:1000;background:white;border:1px solid #cbd8e4;padding:5px;border-radius:8px;box-shadow:0 8px 24px #182b4633}.port-context-menu[hidden]{display:none}
+
+#links .wire.port-highlight path:nth-of-type(2){stroke:#21a9a0;stroke-width:4;filter:drop-shadow(0 0 3px #21a9a0) drop-shadow(0 0 7px #21a9a099)}
+#links .wire.port-highlight text{fill:#187c77;font-weight:700}
+/* Capture workspace: shared typography, restrained protocol colors and clear detail panes. */
+#events-panel.capture-panel{padding:0;border-radius:12px;background:#fff}
+#events-panel>h2{margin:0;padding:12px 16px;min-height:56px;font-size:14px;background:var(--pale);border-bottom:1px solid var(--line)}
+#events-panel>h2>svg{color:var(--teal);width:22px;height:22px;flex:none}
+#events-panel .capture-subtitle{font-size:12px;margin-left:2px}
+#events-panel .capture-controls{margin:0;padding:12px 16px;gap:8px;background:#fff;border-bottom:1px solid var(--line)}
+#events-panel .capture-controls label{font-weight:600;color:var(--ink)}
+#events-panel .capture-controls input{font:12px/1.4 Consolas,monospace;min-height:34px;background:#fbfcfe}
+#events-panel .capture-controls button{min-height:34px;padding:7px 10px;font-family:inherit;font-size:12px;font-weight:600;line-height:1.4}
+#events-panel .capture-controls button[type=submit],#events-panel .capture-controls button:not([type]){background:var(--blue);color:white;border-color:var(--blue)}
+#capture-count{white-space:nowrap;padding:4px 8px;background:var(--pale);border-radius:5px;font-variant-numeric:tabular-nums}
+#events-panel .capture-scroll{min-height:180px;max-height:clamp(210px,34vh,360px);background:#fff}
+#events-panel .capture-table{margin:0;font:12px/1.5 Consolas,monospace}
+#events-panel .capture-table th{text-transform:none;letter-spacing:0;font:600 11px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--pale);color:var(--muted);padding:10px 12px;border-bottom:1px solid var(--line)}
+#events-panel .capture-table td{padding:8px 12px;border-bottom:1px solid #e5ebf0}
+#events-panel .capture-arp{background:#f4f2fb;color:#514575}
+#events-panel .capture-icmp{background:#edf7f5;color:#2c6560}
+#events-panel .capture-event{background:#fafbfd;color:#61758a}
+#events-panel .capture-table tr:hover{filter:none;background:#e9f1f5}
+#events-panel .capture-table tr.is-selected{background:#dfefed;color:#204e4a;box-shadow:inset 3px 0 var(--teal)}
+#events-panel .capture-inspection{min-height:160px;grid-template-columns:minmax(0,3fr) minmax(0,2fr);background:#fff;border-top:1px solid var(--line)}
+#capture-detail,#capture-bytes{padding:16px;max-height:280px;font:12px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+#capture-bytes{background:#fafcfd;border-left:1px solid var(--line)}
+.capture-empty-detail{display:flex;flex-direction:column;gap:6px;color:var(--muted);padding:8px 0}
+.capture-empty-detail strong{font-size:13px;font-weight:600;color:var(--ink)}
+#capture-detail details{border:1px solid var(--line);border-radius:7px;margin-bottom:8px;overflow:hidden}
+#capture-detail summary{padding:8px 10px;background:var(--pale);font-size:12px;color:var(--ink)}
+#capture-detail dl{margin:10px;grid-template-columns:130px minmax(0,1fr);gap:6px 12px}
+#capture-bytes>strong{font-size:13px;color:var(--ink)}
+#capture-bytes pre{padding:12px;border:1px solid var(--line);background:white;font:12px/1.7 Consolas,monospace}
+@media(max-width:700px){#events-panel .capture-subtitle{display:none}#events-panel .capture-controls input{flex-basis:70%}#events-panel .capture-inspection{grid-template-columns:1fr}#capture-bytes{border-left:0;border-top:1px solid var(--line)}}
+/* Compact interface editor. */
+#port-config{width:min(360px,calc(100vw - 32px));padding:0;font-size:13px}
+#port-config .port-config-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:var(--pale);border-bottom:1px solid var(--line)}
+#port-config h2{padding:0;margin:0;border:0;background:none;font-size:15px;line-height:1.4}
+#port-config .examine-watch-control{margin:0;padding:4px 7px;font-size:12px;white-space:nowrap}
+#port-config>p{margin:10px 16px;font-size:12px}
+#port-config>label:not(.examine-watch-control){margin:12px 16px 8px;gap:4px}
+#port-config select{margin-top:0;padding:6px 9px;min-height:32px;font-size:12px}
+#port-config>.hint{font-size:11px;margin:8px 16px 12px}
+#port-config footer{padding:10px 16px;margin-top:12px;background:var(--pale)}
+#port-config footer button{min-height:30px;padding:5px 12px}
+.vlan-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.vlan-icon-button{display:inline-flex;align-items:center;justify-content:center;width:28px;min-height:28px;padding:4px;border-color:transparent;background:transparent;color:var(--teal);flex:none}
+.vlan-icon-button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.vlan-icon-button:hover{background:#e7f4f1;border-color:var(--line)}
+.vlan-add{grid-template-columns:58px minmax(0,1fr) 28px 28px;gap:5px;align-items:center}
+.vlan-add[hidden]{display:none}
+.vlan-add button{grid-column:auto}
+.vlan-add input{height:32px;min-height:32px;padding:5px 7px;font-size:12px}
+.port-vlan-picker{margin:12px 16px 8px;display:grid;gap:5px;font-size:12px}
+#port-vlan-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:7px 9px;background:#fff;font-weight:400;text-align:left}
+#port-vlan-value,#port-vlan-options [role=option]{display:flex;align-items:center;gap:9px;min-width:0}
+.port-vlan-picker svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.vlan-option-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#port-vlan-options{border:1px solid var(--line);border-radius:8px;padding:4px;max-height:174px;overflow-y:auto;background:#fff;box-shadow:0 5px 14px #203f6015}
+#port-vlan-options[hidden]{display:none}
+#port-vlan-options [role=option]{width:100%;padding:7px 8px;border:0;border-radius:5px;background:#fff;text-align:left;font-weight:400;min-height:34px}
+#port-vlan-options [role=option]:hover,#port-vlan-options [role=option]:focus{background:var(--pale);outline:none}
+#port-vlan-options [aria-selected=true]{background:#e7f4f1;color:#245b58}
+#port-vlan-options .vlan-check{margin-left:auto;visibility:hidden;color:var(--teal)}
+#port-vlan-options [aria-selected=true] .vlan-check{visibility:visible}
+#port-vlan-options [role=option]:focus-visible{box-shadow:inset 0 0 0 2px var(--teal)}
+.vlan-list [draggable=true]{cursor:grab;user-select:none}
+.vlan-list [draggable=true]:active{cursor:grabbing}
+.vlan-dragging .interface-port{outline:1px dashed #9ab0c2;outline-offset:2px}
+.vlan-dragging .interface-port.vlan-drop-target{background:#e7f4f1;outline:2px solid var(--drop-color,var(--teal));outline-offset:2px;box-shadow:0 0 0 4px #287d7818}
+.vlan-list [data-drag-vlan]{cursor:grab;user-select:none;touch-action:none}
+.vlan-list [data-drag-vlan]:active{cursor:grabbing}
+.vlan-drag-ghost{position:fixed;pointer-events:none;z-index:10000;box-shadow:0 3px 12px #182b4640;opacity:.92}
+.platform-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.platform-bar>button:first-child{display:flex;align-items:center;gap:7px}.platform-bar svg{width:18px;height:18px;fill:var(--pale);stroke:currentColor;stroke-width:1.7}.platform-bar #commit-config{background:var(--teal);color:white;border-color:var(--teal)}#candidate-status{font-size:12px;color:var(--muted)}#global-settings{width:min(460px,calc(100vw - 24px))}#global-settings .dialog-header{padding:12px 16px}#global-settings h2{font-size:17px;margin:0}.settings-content{padding:16px}.settings-content fieldset{border:0;padding:0;margin:0}.settings-content legend{font-weight:600;margin-bottom:8px}.platform-choice{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:8px;margin:8px 0;cursor:pointer}.platform-choice:has(input:checked){border-color:var(--teal);background:#e7f4f1}.platform-choice input[type=radio]{width:16px;min-height:16px;accent-color:var(--teal)}.platform-choice span{display:grid;gap:3px}.platform-choice small{font-size:12px;color:var(--muted)}#global-settings footer{padding:10px 16px;justify-content:flex-end}
+body[data-platform=paloalto] .interface-ports{grid-template-columns:repeat(2,minmax(0,1fr))}
+body[data-platform=paloalto] .vlan-row{grid-template-columns:minmax(60px,1fr) minmax(0,1.4fr) 34px}
+body[data-platform=paloalto] .vlan-badge{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vlan-add.named-vlan-add{grid-template-columns:minmax(0,1fr) 28px 28px}
+.vlan-add input[hidden]{display:none}
+.view-controls .canvas-speed{display:flex;align-items:center;gap:6px;white-space:nowrap;margin:0}
+.view-controls .canvas-speed select{width:auto;margin:0;min-height:28px;padding:4px 7px;font-size:12px}
