@@ -135,3 +135,24 @@ Examples > Campus network creates three routers in a triangle, each with three i
 Acquire a lease on Browser Client using the renew icon or ipconfig /renew. Client Router relays DHCP to 192.168.20.2; the pool supplies 192.168.10.100-120, gateway 192.168.10.1 and DNS 192.168.20.3. Open the Browser application and visit http://www.campus.example/ to resolve and fetch the page at 192.168.30.10. Watch starts off on all devices and applications. Three-interface routers and routed cycles persist in saved networks; Layer 2 cycles are still rejected.
 
 Arrange spaces devices by connected branches, keeps routed triangles, places installed applications beside their hosts, and fits the complete drawing with padding. Fit network includes device/application labels and leaves space for the overview. Zoom supports 10-400%. Drag empty canvas space to pan; middle-drag or Space-drag also pans over devices. Pan changes only the camera. Placement and cable connection modes retain their gestures.
+
+## UI maintenance
+
+The page remains a static script-based application that works through the course viewer and directly from a local file. Keep the script order in [network_explorer.html](../cs339/network_explorer.html); no bundler is required.
+
+- [UI controller](../assets/js/network-explorer-ui.js) owns the current network, selection, simulation scheduling, dialogs and protocol actions.
+- [Terminal sessions](../assets/js/network-explorer-terminal.js) owns each device's transcript, command history, draft and scroll position. Simulation snapshots and configuration undo adopt the existing session map; opening a different network starts a fresh map even when device IDs are reused. Terminal data is not serialized into network saves.
+- [Search](../assets/js/network-explorer-search.js) and [canvas pickers](../assets/js/network-explorer-pickers.js) receive a current-network getter and selection callbacks. Their refresh methods preserve focused result IDs. They own dropdown keyboard and outside-click behavior.
+- [Inspector ports](../assets/js/network-explorer-inspector-ports.js) produces port and VLAN markup; the controller binds configuration actions.
+- [Status](../assets/js/network-explorer-status.js) renders Ready or Running from explicit active/paused flags. Examination state stays in the controller; labels never control simulation behavior.
+- [Actions](../assets/js/network-explorer-actions.js) registers commands and example metadata for Home and the guides, without hidden toolbar proxies.
+
+The [stylesheet](../assets/css/pages/network-explorer.css) is formatted for review. Preserve cascade order when consolidating selectors: later component refinements can override earlier rules with equal specificity. Header, search and toolbar control sizes have shared CSS variables.
+
+Run the focused suite with:
+
+~~~powershell
+node --test tests/network-explorer*.test.cjs
+~~~
+
+For browser regression checks, use a separate test tab: load Campus network, renew Browser Client's DHCP lease, resolve www.campus.example, then retrieve http://www.campus.example and check HTTP 200. Check animated traffic as well as Fast forward, Watch/Continue, per-device CLI drafts/history, detached Terminal/Dock, keyboard search and inventory pickers, and the course viewer. Verify desktop and narrow layouts before changing spacing.
