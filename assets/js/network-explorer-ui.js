@@ -5969,7 +5969,19 @@
     cancelConnect();
     render();
   });
-  NetworkExplorerActions.register("example-dhcp", () => {
+  function registerExample(id, load) {
+    NetworkExplorerActions.register(id, () => {
+      const previous = net;
+      const result = load();
+      if (net !== previous) {
+        document.dispatchEvent(new CustomEvent("network-recent-record", {
+          detail: { name: NetworkExplorerActions.examples[id].title, data: net.save() },
+        }));
+      }
+      return result;
+    });
+  }
+  registerExample("example-dhcp", () => {
     if (
       (net.devices.length || net.applicationDrafts.length) &&
       !confirm("Replace this network with the DHCP example?")
@@ -6051,7 +6063,7 @@
       "Watch the relay router to see broadcast become unicast. Acquire a lease, then ping 192.168.2.2.",
     );
   });
-  NetworkExplorerActions.register("example-static", () => {
+  registerExample("example-static", () => {
     if (
       (net.devices.length || net.applicationDrafts.length) &&
       !confirm("Replace this network with the two-router example?")
@@ -6086,7 +6098,7 @@
     cancelConnect();
     render();
   });
-  NetworkExplorerActions.register("example-routed", () => {
+  registerExample("example-routed", () => {
     if (
       (net.devices.length || net.applicationDrafts.length) &&
       !confirm("Replace this network with the two-subnet example?")
@@ -6115,7 +6127,7 @@
     cancelConnect();
     render();
   });
-  NetworkExplorerActions.register("example-vlans", () => {
+  registerExample("example-vlans", () => {
     if (
       (net.devices.length || net.applicationDrafts.length) &&
       !confirm("Replace this network with the two-VLAN example?")
@@ -6145,7 +6157,7 @@
     cancelConnect();
     render();
   });
-  NetworkExplorerActions.register("example", () => {
+  registerExample("example", () => {
     if (
       (net.devices.length || net.applicationDrafts.length) &&
       !confirm("Replace this network with the example LAN?")
@@ -7624,7 +7636,7 @@
       render();
     }
   });
-  NetworkExplorerActions.register("example-dns", () => {
+  registerExample("example-dns", () => {
     if (
       (net.devices.length || net.applicationDrafts.length) &&
       !confirm("Replace the current network with the DNS example?")
@@ -7657,7 +7669,7 @@
     );
   });
 
-  NetworkExplorerActions.register("example-http", () => {
+  registerExample("example-http", () => {
     if (
       (net.devices.length || net.applicationDrafts.length) &&
       !confirm("Replace this network with the web browsing example?")
@@ -7703,7 +7715,7 @@
       "Open the page in Browser. Watch hosts for TCP, and applications for DNS and HTTP.",
     );
   });
-  NetworkExplorerActions.register("example-complex", () => {
+  registerExample("example-complex", () => {
     if (
       (net.devices.length || net.applicationDrafts.length) &&
       !confirm("Replace this network with the campus example?")
@@ -7723,7 +7735,7 @@
       "Acquire a DHCP lease on Browser Client, then open its Browser and visit www.campus.example.",
     );
   });
-  NetworkExplorerActions.register("example-internet", () => {
+  registerExample("example-internet", () => {
     if (
       (net.devices.length || net.applicationDrafts.length) &&
       !confirm("Replace this network with the Internet and NAT example?")
@@ -7873,28 +7885,6 @@
       say(err.message);
     }
   });
-  document.addEventListener(
-    "click",
-    (e) => {
-      const button = e.target.closest("#examples-dropdown button");
-      if (!button) return;
-      const previous = net;
-      setTimeout(() => {
-        if (net !== previous)
-          document.dispatchEvent(
-            new CustomEvent("network-recent-record", {
-              detail: {
-                name:
-                  button.querySelector("strong")?.textContent ||
-                  button.textContent,
-                data: net.save(),
-              },
-            }),
-          );
-      }, 0);
-    },
-    true,
-  );
   window.NetworkExplorerIcons = { device: icon, os: osIcon };
   installSubnetTooltip();
   const subnetButton = document.createElement("button"),
