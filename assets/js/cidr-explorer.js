@@ -399,6 +399,8 @@ function changeSubnetPage(direction) {
 }
 if (typeof module !== 'undefined') module.exports={parseIP,ipToNum,numToIP,mkMask,subnet};
 if (typeof document !== 'undefined') {
+  const params=new URLSearchParams(location.search),incomingIP=parseIP(params.get('ip')||''),incomingMask=parseIP(params.get('mask')||'');
+  if(incomingIP&&incomingMask){const mask=ipToNum(incomingMask),prefix=Array.from({length:33},(_,i)=>i).find(p=>mkMask(p)===mask);if(prefix!==undefined){$('ip-input').value=incomingIP.join('.');$('prefix').value=prefix;}}
   update();
   initStatTooltips();
   const stickyNav=document.querySelector('.section-nav');
