@@ -1160,3 +1160,8 @@ body.welcome-open #network-welcome{height:auto;overflow:visible;border:0;border-
 @keyframes guide-light-4{0%{fill:#8c9791;filter:none}27.5000%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}30.4166%{fill:#33483e;filter:none}33.3333%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}36.2500%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}39.1666%{fill:#33483e;filter:none}42.0833%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}45.0000%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}47.9166%{fill:#33483e;filter:none}50.8333%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}53.7500%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}56.6666%{fill:#33483e;filter:none}59.5833%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}94%,100%{fill:#8c9791;filter:none}}
 @media(prefers-reduced-motion:reduce){.guide-port-demo *{animation:none!important}.guide-port-target .guide-socket{fill:#35424b}.guide-port-target .guide-link-light{fill:#40bf68;filter:none}}
 .terminal-command-help{display:inline-flex;align-items:center;gap:5px;color:inherit;text-decoration:none}.terminal-command-help:hover{color:#fff}.terminal-command-help:focus-visible{outline:2px solid #69a9dc;outline-offset:3px;border-radius:2px}
+
+/* A collapsed canvas palette must not occupy a grid row on Home. */
+body.welcome-open #compact-palette{display:none!important}
+body.welcome-open:not(.external-panel-page)>main{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto}
+body.welcome-open:not(.external-panel-page)>main>.center{grid-column:1/-1;grid-row:1;min-width:0}
