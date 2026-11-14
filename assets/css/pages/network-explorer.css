@@ -303,6 +303,20 @@ body[data-platform=paloalto] .vlan-badge{max-width:100%;overflow:hidden;text-ove
 .vlan-add input[hidden]{display:none}
 .view-controls .canvas-speed{display:flex;align-items:center;gap:6px;white-space:nowrap;margin:0}
 .view-controls .canvas-speed select{width:auto;margin:0;min-height:28px;padding:4px 7px;font-size:12px}
+.speed-picker{position:relative}
+.view-controls .canvas-icon-button{display:inline-flex;align-items:center;justify-content:center;flex:none;width:30px;height:30px;min-height:30px;padding:5px;border-radius:7px}
+.view-controls .canvas-icon-button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.view-controls .canvas-speed{margin-left:3px;padding-left:10px;border-left:1px solid var(--line)}
+.view-controls #speed-toggle{height:30px;min-height:30px;padding:4px 8px;border-radius:7px}
+#speed-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:91px}
+.speed-picker svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#speed-options{position:absolute;top:calc(100% + 5px);right:0;z-index:40;min-width:128px;padding:4px;border:1px solid var(--line);border-radius:8px;background:#fff;box-shadow:0 5px 14px #203f6026}
+#speed-options[hidden]{display:none}
+#speed-options [role=option]{display:flex;align-items:center;justify-content:space-between;gap:18px;width:100%;min-height:32px;padding:7px 9px;border:0;border-radius:5px;background:#fff;text-align:left;font-weight:400}
+#speed-options [role=option]:hover,#speed-options [role=option]:focus-visible{background:var(--pale);outline:2px solid var(--teal);outline-offset:-2px}
+#speed-options [aria-selected=true]{background:#e7f4f1;color:#245b58}
+#speed-options svg{visibility:hidden;color:var(--teal)}
+#speed-options [aria-selected=true] svg{visibility:visible}
 #terminal-panel h2 .terminal-icon-button{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;min-height:30px;padding:5px;flex:none;border-radius:7px}
 #terminal-panel .terminal-icon-button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #events-panel h2 .events-icon-button{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;min-height:30px;padding:5px;flex:none;border-radius:7px}
@@ -345,3 +359,5 @@ body[data-platform=paloalto] .vlan-badge{max-width:100%;overflow:hidden;text-ove
 .canvas-toolbar .animation-pause span{color:inherit;flex:none}
 .flight-paused .in-flight-frame{pointer-events:all;cursor:pointer;stroke:#fff;stroke-width:3;filter:drop-shadow(0 0 5px #284d73)}
 #flight-inspection{width:min(600px,94vw)}#flight-frame{padding:16px 20px}
+.route-table-wrap{overflow-x:auto}.route-table{font-size:10px}.route-table td{vertical-align:top}.route-table small{display:block;font:10px/1.4 system-ui,sans-serif;color:var(--muted);margin-top:3px}.route-table .vlan-icon-button{width:23px;min-height:23px;padding:3px}.route-selected{background:#e0f2ed;box-shadow:inset 3px 0 var(--teal)}.route-inactive{color:var(--muted)}
+.route-form{border:1px solid var(--line);background:var(--pale);border-radius:7px;padding:10px;margin-top:8px}.route-form[hidden]{display:none}.route-destination{display:grid;grid-template-columns:minmax(0,1fr) 60px;gap:8px}.route-form-actions{display:flex;justify-content:flex-end;gap:5px}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}

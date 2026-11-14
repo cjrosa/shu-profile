@@ -2,7 +2,7 @@
 (function(root){
  'use strict';
  const nextId=d=>{let id=2;while(d.vlans.some(v=>v.id===id))id++;if(id>4094)throw Error('No VLAN identifiers available.');return id;};
- function normalize(net,platform){net.platform=platform;net.devices.filter(d=>d.type==='switch').forEach(d=>d.ports.forEach((p,i)=>{p.name=platform==='paloalto'?'ethernet1/'+(i+1):'P'+(i+1);}));}
+ function normalize(net,platform){net.platform=platform;net.devices.filter(d=>['switch','router'].includes(d.type)).forEach(d=>d.ports.forEach((p,i)=>{p.name=platform==='paloalto'?'ethernet1/'+(i+1):d.type==='router'?'G0/'+i:'P'+(i+1);}));}
  function vlanName(d,id){return d.vlans.find(v=>v.id===id)?.name||String(id);}
  function commands(mode){return mode==='exec'?['help','configure','show interface all','show mac all','close','exit']:['help','show network vlan','show network interface ethernet','set network interface ethernet','set network vlan','delete network vlan','commit','revert config','exit','close'];}
  function run(net,id,context,raw,apply){
