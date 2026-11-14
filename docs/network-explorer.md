@@ -15,7 +15,7 @@ Each watched device pauses traffic with an examination overlay. It shows the inc
 - [Styles](../assets/css/pages/network-explorer.css): standalone course-style layout.
 - [Tests](../tests/network-explorer.test.cjs): protocol and topology checks, run with `node --test tests/network-explorer.test.cjs`.
 
-Topology JSON version 1 stores configuration, interface identities, layout, and watched devices. Runtime caches and queued exchanges are not persisted. Configuration changes reset runtime state and are blocked during an exchange; clearing learned state cancels the exchange explicitly. MAC entries expire after 300 simulation ticks; ARP entries after 120. The clock advances with events, not wall time, and animation speed does not affect outcomes.
+Topology JSON version 1 stores configuration, interface identities, layout, and watched devices. Runtime caches and queued exchanges are not persisted. Configuration changes reset runtime state and are blocked during an exchange; clearing learned state cancels the exchange explicitly. Both MAC and ARP entries expire 120 seconds after learning, using wall-clock deadlines. Compact ring countdowns update while idle; expiry removes live entries and learning refreshes the deadline. The clock advances with events, not wall time, and animation speed does not affect outcomes.
 
 ## Scope and expansion
 

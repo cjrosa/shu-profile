@@ -63,7 +63,10 @@
 [data-table-mac]:hover, [data-table-mac]:focus { background: #e1f2ee; outline: none; }
 .node.table-highlight { filter: drop-shadow(0 0 5px #e7a52c); }
 .node.table-highlight .device-body { fill: #fff1c9; stroke: #d99516; stroke-width: 2; }
-#float-table { float: right; padding: 2px 7px; font-size: 11px; }
+.inspector-section-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:32px; margin:16px 0 8px; padding:3px 8px; background:var(--pale); border-block:1px solid var(--line); font-size:12px; line-height:1.4; }
+#float-table.section-expand { display:inline-flex; align-items:center; justify-content:center; flex:none; width:26px; min-height:26px; padding:4px; border:0; border-radius:4px; background:transparent; color:var(--muted); }
+#float-table.section-expand:hover { background:#e3edf4; color:var(--blue); }
+.section-expand svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
 #floating-table { position: fixed; z-index: 15; top: 120px; right: 30px; width: 340px; max-width: calc(100vw - 16px); padding: 0; background: white; border: 1px solid #b6c8d6; border-radius: 10px; box-shadow: 0 8px 28px #203f6033; resize: both; overflow: auto; min-width: 260px; min-height: 120px; max-height: 80vh; }
 #floating-table[hidden] { display: none; }
 .floating-table-header { display: flex; gap: 6px; align-items: center; padding: 8px; background: #edf4f7; }
@@ -308,3 +311,7 @@ body[data-platform=paloalto] .vlan-badge{max-width:100%;overflow:hidden;text-ove
 #events-panel h2{gap:12px}
 #events-panel h2 #float-events{margin-left:auto}
 #events-panel h2 .close-tool{margin-left:0}
+.table-expiry{font-variant-numeric:tabular-nums;color:var(--muted)}
+.cache-countdown{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;font-size:11px;line-height:1.4;font-variant-numeric:tabular-nums}
+.cache-countdown svg{width:18px;height:18px;flex:none;fill:none;stroke-width:2.4;transform:rotate(-90deg)}
+.countdown-track{stroke:#dce3e8}.countdown-progress{stroke:var(--teal);stroke-linecap:round}
