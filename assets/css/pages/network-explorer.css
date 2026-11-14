@@ -1072,3 +1072,16 @@ body.welcome-open #network-welcome{height:auto;overflow:visible;border:0;border-
 .guide-cable{stroke:#6089ae;stroke-width:7}
 .guide-cable-shine{stroke:#a5c3da;stroke-width:1;fill:none}
 @keyframes guide-plug-in{0%,10%{transform:translateY(48px);opacity:0}18%{opacity:1}38%,80%{transform:translateY(0);opacity:1}95%,100%{transform:translateY(48px);opacity:0}}
+
+/* The latch click rises directly from the seated connector. */
+.guide-plug-click{opacity:0;animation:guide-latch-click 7s infinite;pointer-events:none}
+.guide-plug-click text{font:700 13px "Segoe UI",sans-serif;text-anchor:middle;fill:#477f92;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
+.guide-plug-click path{fill:none;stroke:#76a9b7;stroke-width:1.5;stroke-linecap:round}
+@keyframes guide-latch-click{
+ 0%,37.999%{opacity:0;offset-distance:0%;transform:scale(.9)}
+ 38%{opacity:1;offset-distance:0%;transform:scale(1)}
+ 66.5714%,100%{opacity:0;offset-distance:100%;transform:scale(1)}
+}
+.guide-plug-click{offset-path:path("M 0 0 C 4 -24 35 -42 68 -48");offset-rotate:0deg;offset-anchor:0 0;animation-timing-function:linear}
+
+@media(prefers-reduced-motion:reduce){.guide-plug-click{display:none}}
