@@ -315,3 +315,31 @@ body[data-platform=paloalto] .vlan-badge{max-width:100%;overflow:hidden;text-ove
 .cache-countdown{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;font-size:11px;line-height:1.4;font-variant-numeric:tabular-nums}
 .cache-countdown svg{width:18px;height:18px;flex:none;fill:none;stroke-width:2.4;transform:rotate(-90deg)}
 .countdown-track{stroke:#dce3e8}.countdown-progress{stroke:var(--teal);stroke-linecap:round}
+
+.router-address{display:grid;grid-template-columns:minmax(0,1fr) 76px;gap:8px}.router-address label{min-width:0}
+#examine{width:min(1080px,96vw)}
+.frame-comparison{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin-top:10px}
+.frame-comparison.has-outgoing{grid-template-columns:repeat(2,minmax(0,1fr))}
+.frame-header-card{min-width:0;border:1px solid var(--line);border-radius:8px;background:white;overflow:hidden}
+.frame-header-card h4{margin:0;padding:9px 12px;background:var(--pale);border-bottom:1px solid var(--line);font-size:13px}
+.frame-layer-label{padding:7px 10px;font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--muted)}
+.ethernet-fields{display:grid;grid-template-columns:1fr 1fr .65fr;border-block:1px solid #b8ccdf;background:#edf4fb}
+.frame-field{min-width:0;padding:8px;border-right:1px solid #b8ccdf;display:flex;flex-direction:column;gap:5px}
+.frame-field:last-child{border-right:0}
+.frame-field>span{font-size:10px;color:var(--muted)}
+.frame-field code{font:11px/1.5 Consolas,monospace;overflow-wrap:anywhere;color:var(--ink)}
+.frame-payload{margin:10px;border:1px solid #bad7d1;border-radius:5px;background:#f0f8f6;overflow:hidden}
+.frame-payload .frame-layer-label{border-bottom:1px solid #bad7d1;color:var(--teal)}
+.packet-fields{display:grid}.ip-fields{grid-template-columns:1fr 1fr .4fr .65fr}.arp-fields{grid-template-columns:.75fr 1fr 1fr}
+.packet-fields .frame-field{border-color:#bad7d1}
+.frame-message{border-top:1px solid #bad7d1;padding:7px 10px;font-size:11px;color:var(--teal)}
+.frame-field-changed{background:#fff0d8;box-shadow:inset 0 -3px #bd812b}
+.frame-schematic-note{font-size:10px;color:var(--muted);margin:6px 0 12px}
+@media(max-width:680px){.frame-comparison.has-outgoing{grid-template-columns:minmax(0,1fr)}}
+
+.examine-expand{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;min-height:30px;padding:5px;flex:none;border-radius:7px}.examine-expand svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.animation-pause{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;min-height:28px}
+.animation-pause svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.canvas-toolbar .animation-pause span{color:inherit;flex:none}
+.flight-paused .in-flight-frame{pointer-events:all;cursor:pointer;stroke:#fff;stroke-width:3;filter:drop-shadow(0 0 5px #284d73)}
+#flight-inspection{width:min(600px,94vw)}#flight-frame{padding:16px 20px}
