@@ -395,3 +395,29 @@ body[data-platform=paloalto] .vlan-badge{max-width:100%;overflow:hidden;text-ove
 .dhcp-pool-actions{display:flex;align-items:end;justify-content:flex-end;gap:4px;padding-bottom:10px}
 #dhcp-server-form .inspector-section-heading{margin-top:10px}
 
+.application-node{cursor:grab;color:var(--teal)}
+.application-node>rect:not(.application-hit){fill:var(--pale);stroke:currentColor;stroke-width:2}
+.application-node>path{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.application-node text{font-size:11px;font-weight:600;fill:var(--ink)}
+.application-hit{fill:transparent;stroke:none}
+.application-node.selected>rect:not(.application-hit){fill:#d9efeb;filter:drop-shadow(0 0 3px #4d807c80)}
+.application-node:focus-visible{outline:none}
+.application-node:focus-visible>rect:not(.application-hit){filter:drop-shadow(0 0 4px #4d807c)}
+.application-attachment{stroke:var(--teal);stroke-width:1.5;stroke-dasharray:4 5;pointer-events:none;opacity:.65}
+.application-anchor{fill:white;stroke:var(--teal);stroke-width:2;cursor:crosshair}
+.installed-application{display:flex;align-items:center;gap:8px;width:100%;margin:8px 0 16px;text-align:left}
+.installed-application svg{width:28px;height:28px;fill:none;stroke:var(--teal);stroke-width:2}
+.installed-application span{margin-left:auto;color:var(--muted);font-size:11px}
+.application-host{padding:2px 5px;font-size:inherit}
+.application-icon{fill:none;stroke:var(--teal);stroke-width:2}
+#add-dhcp-application{display:flex;flex-direction:column;align-items:center;gap:3px}
+#add-dhcp-application span{font-size:11px}
+
+.palette button:has(.palette-label){display:flex;flex-direction:column;align-items:center;gap:3px}
+.palette-label{font-size:11px}
+
+.palette-guidance{color:var(--muted);font-size:12px}
+
+
+.palette-heading{display:flex;align-items:center;gap:8px}
+.palette-heading-icon{width:18px;height:18px;flex:0 0 18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}

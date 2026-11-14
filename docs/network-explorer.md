@@ -103,3 +103,9 @@ end
 ```
 
 In interface mode, use `no ip helper-address 192.168.2.2` to remove that helper. `G0/0` and `Gi0/0` aliases are accepted. `exit` returns from interface mode to global configuration; `end` returns directly to operational mode. The model permits one helper per interface and shares its value with the port dialog. Interface IPv4 addresses are still configured in the inspector.
+
+### Canvas applications
+
+Applications live in the left palette. Drag DHCP Server onto a host to install it, or place it on empty canvas and drag its top attachment anchor to a host. Clicking the palette adds an uninstalled application; its inspector also offers Connect to host, followed by a host click. Escape cancels connection. A host supports one DHCP server application with multiple pools.
+
+Select the application icon to configure its enable state, pools and leases in the right inspector. The host inspector contains a compact shortcut to its installed application. Dashed attachment lines represent installation, not Ethernet cables: applications share the host address and interfaces, and traffic still arrives at the host. Move the host to move its application, or drag the application to adjust its position. Uninstall removes the server settings and server lease records while retaining the host and cables. Existing clients keep their leases until expiry. Existing DHCP saves and examples automatically display installed application icons. Detached applications and installed positions persist in saved networks.

@@ -5,6 +5,7 @@
   const broadcast='ff:ff:ff:ff:ff:ff',clone=x=>JSON.parse(JSON.stringify(x));
   function validate(d,c){
    if(!c||typeof c.enabled!=='boolean')throw Error('Invalid DHCP server configuration.');
+   if(!c.enabled&&Array.isArray(c.pools)&&!c.pools.length)return;
    if(d.addressMode==='dhcp'||!d.ip)throw Error('A DHCP server needs a manually configured IPv4 address.');
    if(Array.isArray(c.pools)){
     if(c.pools.length>32|| (c.enabled&&!c.pools.length))throw Error('Add at least one pool before enabling DHCP (maximum 32).');
