@@ -7,19 +7,28 @@
   const panel = get('viewport-panel');
   const stage = get('canvas-stage');
   const handle = get('viewport-handle');
+  const minimize=document.createElement('button');minimize.id='viewport-minimize';minimize.type='button';minimize.setAttribute('aria-controls','viewport-map');
+  const panelHeader=document.createElement('div');panelHeader.className='viewport-panel-header';handle.before(panelHeader);panelHeader.append(handle,minimize);
+  let expandedPosition=null;
+  minimize.onclick=()=>{if(!overview.hidden)expandedPosition={x:panel.offsetLeft,y:panel.offsetTop};moving=null;overview.hidden=!overview.hidden;overview.style.display=overview.hidden?'none':'';minimize.setAttribute('aria-expanded',String(!overview.hidden));minimize.title=overview.hidden?'Restore viewport':'Minimize viewport';minimize.setAttribute('aria-label',minimize.title);minimize.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+(overview.hidden?'<path d="m6 14 6-6 6 6"/>':'<path d="M5 17h14"/>')+'</svg>';if(overview.hidden)anchorCollapsedPanel();else if(expandedPosition)placePanel(expandedPosition.x,expandedPosition.y);};
+  minimize.setAttribute('aria-expanded','true');minimize.setAttribute('aria-label','Minimize viewport');minimize.title='Minimize viewport';minimize.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17h14"/></svg>';
   let moving = null;
   const camera = { x: 0, y: 0, zoom: 1 };
   let pan = null;
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
+  function anchorCollapsedPanel() {
+    panel.style.left='auto';panel.style.top='auto';panel.style.right='10px';panel.style.bottom='10px';
+  }
   function placePanel(x, y) {
+    if(overview.hidden){anchorCollapsedPanel();return;}
     panel.style.left = `${clamp(x, 0, stage.clientWidth - panel.offsetWidth)}px`;
     panel.style.top = `${clamp(y, 0, stage.clientHeight - panel.offsetHeight)}px`;
     panel.style.right = 'auto';
     panel.style.bottom = 'auto';
   }
   handle.addEventListener('pointerdown', event => {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || overview.hidden) return;
     event.preventDefault();
     handle.focus();
     const bounds = stage.getBoundingClientRect();
@@ -45,10 +54,21 @@
     if (panel.style.left) placePanel(panel.offsetLeft, panel.offsetTop);
   }).observe(stage);
 
+  // Keep a small margin around all rendered nodes, labels and connections.
+  // When zoomed out farther than the network, center that axis instead of panning into empty space.
+  function navigationBounds() {
+    const b = contentBounds(), buffer = 60;
+    const width = Math.max(b.width + buffer * 2, 900 / camera.zoom);
+    const height = Math.max(b.height + buffer * 2, 560 / camera.zoom);
+    return {x: b.x + b.width / 2 - width / 2, y: b.y + b.height / 2 - height / 2, width, height};
+  }
   function update() {
     const width = 900 / camera.zoom;
     const height = 560 / camera.zoom;
 
+    const bounds = navigationBounds();
+    camera.x = clamp(camera.x, bounds.x, bounds.x + bounds.width - width);
+    camera.y = clamp(camera.y, bounds.y, bounds.y + bounds.height - height);
     canvas.setAttribute('viewBox', `${camera.x} ${camera.y} ${width} ${height}`);
     const window = get('viewport-window');
     for (const [key, value] of Object.entries({x: camera.x, y: camera.y, width, height})) {
@@ -59,6 +79,12 @@
     get('zoom-slider').setAttribute('aria-valuetext', `${Math.round(camera.zoom * 100)} percent`);
   }
 
+  canvas.addEventListener('network-locate', event => {
+    camera.zoom = Math.max(camera.zoom, 1);
+    camera.x = event.detail.x - 450 / camera.zoom;
+    camera.y = event.detail.y - 280 / camera.zoom;
+    update(); refreshOverview();
+  });
   function zoom(delta) {
     const cx = camera.x + 450 / camera.zoom;
     const cy = camera.y + 280 / camera.zoom;
@@ -76,8 +102,8 @@
   }
 
   function refreshOverview() {
-    const b=contentBounds(),x=Math.min(b.x-60,camera.x),y=Math.min(b.y-60,camera.y);
-    overview.setAttribute('viewBox', [x,y,Math.max(b.x+b.width+60,camera.x+900/camera.zoom)-x,Math.max(b.y+b.height+60,camera.y+560/camera.zoom)-y].join(' '));
+    const bounds = navigationBounds();
+    overview.setAttribute('viewBox', [bounds.x, bounds.y, bounds.width, bounds.height].join(' '));
     // Copy only graphical elements; the overview is one keyboard-accessible control.
     for (const [source, target] of [['links', 'viewport-links'], ['devices', 'viewport-nodes']]) {
       const clones = [...get(source).children,...(source==='devices'?[...(get('applications')?.children||[])]:[])].map(node => {
@@ -101,6 +127,45 @@
   document.addEventListener('keyup',event=>{if(event.code==='Space'){spaceHeld=false;canvas.classList.remove('pan-ready');}});
   const endPan=()=>{if(canvasPan){suppressClick=canvasPan.moved;if(canvas.hasPointerCapture(canvasPan.id))canvas.releasePointerCapture(canvasPan.id);}canvasPan=null;canvas.classList.remove('panning');};
   window.addEventListener('blur',()=>{spaceHeld=false;canvas.classList.remove('pan-ready');endPan();});
+  function zoomAt(value, x, y) {
+    const p=canvas.createSVGPoint();p.x=x;p.y=y;
+    const before=p.matrixTransform(canvas.getScreenCTM().inverse());
+    const previous=camera.zoom;camera.zoom=clamp(value,.1,4);
+    camera.x=before.x-(before.x-camera.x)*previous/camera.zoom;
+    camera.y=before.y-(before.y-camera.y)*previous/camera.zoom;
+    update();refreshOverview();
+  }
+  canvas.addEventListener('wheel',event=>{
+    event.preventDefault();
+    const delta=event.deltaY*(event.deltaMode===1?16:event.deltaMode===2?canvas.clientHeight:1);
+    zoomAt(camera.zoom*Math.exp(-clamp(delta,-300,300)*.002),event.clientX,event.clientY);
+  },{passive:false});
+  const touches=new Map();let pinching=false,pinchDistance=0;
+  const distance=()=>{const [a,b]=[...touches.values()];return Math.hypot(a.x-b.x,a.y-b.y);};
+  stage.addEventListener('pointerdown',event=>{
+    if(event.pointerType!=='touch'||!canvas.contains(event.target))return;
+    touches.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    if(touches.size<2)return;
+    event.preventDefault();event.stopImmediatePropagation();endPan();pinching=true;suppressClick=true;pinchDistance=distance();
+    canvas.dispatchEvent(new Event('viewport-gesture-start'));
+    for(const id of touches.keys())canvas.setPointerCapture(id);
+  },true);
+  stage.addEventListener('pointermove',event=>{
+    if(!touches.has(event.pointerId))return;
+    touches.set(event.pointerId,{x:event.clientX,y:event.clientY});if(!pinching)return;
+    event.preventDefault();event.stopImmediatePropagation();
+    if(touches.size<2)return;
+    const [a,b]=[...touches.values()],next=distance();
+    if(pinchDistance>0&&next>0)zoomAt(camera.zoom*next/pinchDistance,(a.x+b.x)/2,(a.y+b.y)/2);
+    pinchDistance=next;
+  },true);
+  for(const type of ['pointerup','pointercancel'])stage.addEventListener(type,event=>{
+    if(!touches.delete(event.pointerId)||!pinching)return;
+    event.preventDefault();event.stopImmediatePropagation();suppressClick=true;
+    if(canvas.hasPointerCapture(event.pointerId))canvas.releasePointerCapture(event.pointerId);
+    if(!touches.size)pinching=false;
+  },true);
+  window.addEventListener('blur',()=>{touches.clear();pinching=false;});
   stage.addEventListener('pointerdown',event=>{
     if(!canvas.contains(event.target)||![0,1].includes(event.button))return;
     if(canvas.classList.contains('placing')||!get('cancel-connect').hidden)return;
@@ -117,6 +182,7 @@
   canvas.addEventListener('auxclick',event=>{if(event.button===1)event.preventDefault();});
   get('zoom-slider').oninput = event => zoom(Number(event.target.value) / 100 - camera.zoom);
   function contentBounds(){
+    if(!get('devices').querySelector('[data-device]')&&!get('applications')?.children.length)return {x:0,y:0,width:900,height:560};
     const boxes=['devices','applications','links'].map(id=>get(id)).filter(e=>e?.children.length).map(e=>e.getBBox());
     if(!boxes.length)return {x:0,y:0,width:900,height:560};
     const x=Math.min(...boxes.map(b=>b.x)),y=Math.min(...boxes.map(b=>b.y));return {x,y,width:Math.max(...boxes.map(b=>b.x+b.width))-x,height:Math.max(...boxes.map(b=>b.y+b.height))-y};
@@ -164,7 +230,7 @@
     camera.y += direction[1] * 45 / camera.zoom;
     update();
   });
-  const observer = new MutationObserver(refreshOverview);
+  const observer = new MutationObserver(() => { update(); refreshOverview(); });
   observer.observe(get('devices'), {childList: true});
   observer.observe(get('links'), {childList: true});
   if(get('applications'))observer.observe(get('applications'), {childList:true});

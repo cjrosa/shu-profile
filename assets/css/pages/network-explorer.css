@@ -450,3 +450,233 @@ body.external-panel-page[data-panel="events"]{display:flex;flex-direction:column
 @media(max-width:700px){.external-panel-page[data-panel="events"] #events-panel .capture-inspection{grid-template-rows:1fr 1fr}}
 
 #canvas{touch-action:none}#canvas.pan-ready,#canvas.pan-ready *{cursor:grab!important}#canvas.panning,#canvas.panning *{cursor:grabbing!important}
+
+/* Compact palettes and a viewport-sized desktop workspace. */
+.canvas-network-actions{display:flex;align-items:center;gap:4px;flex:none;padding-right:10px;margin-right:3px;border-right:1px solid var(--line)}
+.canvas-network-actions #load[hidden]{display:none}
+.canvas-network-actions #clear-state{margin-left:5px;position:relative}
+.canvas-network-actions #clear-state:before{content:"";position:absolute;left:-6px;top:4px;bottom:4px;border-left:1px solid var(--line)}
+.view-controls #examples-dropdown{position:fixed;overflow-y:auto;overscroll-behavior:contain}
+body:not(.external-panel-page)>header{margin-bottom:10px;gap:8px}
+body:not(.external-panel-page)>header h1{font-size:23px}
+body:not(.external-panel-page)>header .brand{width:48px;height:40px}
+body:not(.external-panel-page)>header p{font-size:12px}
+body:not(.external-panel-page)>.toolbar{gap:8px;margin-bottom:10px}
+#left-panel,#right-panel{align-content:start;gap:10px}
+#left-panel>section,#right-panel>section{padding:10px;border-radius:9px}
+#left-panel>section>h2,#right-panel>section>h2{margin:-10px -10px 8px;padding:5px 10px;min-height:32px;font-size:12px}
+#inspector-title{gap:6px}
+#inspector-title .inspector-device-icon{width:26px;height:23px}
+#left-panel .palette{gap:4px;margin:6px 0}
+#left-panel .palette button{min-height:55px;padding:4px}
+#left-panel .palette svg{width:44px;height:36px}
+#left-panel .palette-guidance,#left-panel .hint{font-size:11px;line-height:1.45;margin:6px 0}
+.canvas-toolbar{padding:4px 8px;gap:8px;min-height:36px}
+.view-controls{padding:5px 8px;gap:6px}
+#zoom-slider{width:clamp(70px,8vw,125px)}
+.view-controls output{min-width:34px}
+@media(min-width:901px){
+ body:not(.external-panel-page){height:100dvh;max-width:none;padding:12px;display:flex;flex-direction:column;overflow:hidden}
+ body:not(.external-panel-page)>header,body:not(.external-panel-page)>.toolbar{flex:none}
+ body:not(.external-panel-page)>main{flex:1;min-height:0;grid-template-columns:180px minmax(0,1fr) 260px;gap:10px;align-items:stretch}
+ body:not(.external-panel-page)>main.left-collapsed{grid-template-columns:58px minmax(0,1fr) 260px}
+ body:not(.external-panel-page)>main.right-collapsed{grid-template-columns:180px minmax(0,1fr)}
+ body:not(.external-panel-page)>main.left-collapsed.right-collapsed{grid-template-columns:58px minmax(0,1fr)}
+ body:not(.external-panel-page) #left-panel,body:not(.external-panel-page) #right-panel{min-height:0;overflow:auto;overscroll-behavior:contain;grid-column:auto;grid-template-columns:minmax(0,1fr)}
+ body:not(.external-panel-page) .center{min-height:0;display:flex;flex-direction:column;overflow:auto}
+ body:not(.external-panel-page) .canvas-panel{display:flex;flex-direction:column;flex:1;min-height:0}
+ body:not(.external-panel-page) .canvas-toolbar,body:not(.external-panel-page) .view-controls{flex:none}
+ body:not(.external-panel-page) .canvas-stage{flex:1;min-height:0;overflow:hidden}
+ body:not(.external-panel-page) #canvas{height:100%;min-height:0;position:absolute;inset:0}
+ body:not(.external-panel-page) #compact-palette{min-height:0;max-height:100%;overflow-y:auto;position:static;align-self:start}
+ .viewport-panel{width:120px}
+}
+@media(min-width:901px) and (max-width:1100px){
+ body:not(.external-panel-page)>main{grid-template-columns:160px minmax(0,1fr) 230px}
+ body:not(.external-panel-page)>main.left-collapsed{grid-template-columns:58px minmax(0,1fr) 230px}
+ body:not(.external-panel-page)>main.right-collapsed{grid-template-columns:160px minmax(0,1fr)}
+}
+/* Bottom tool window: tabbed or split, with an adjustable height. */
+.empty-network-state{opacity:.28}
+#tool-overlay.canvas-tool-dock{position:relative;inset:auto;width:100%;max-width:none;height:var(--dock-height,40%);max-height:calc(100% - 240px);min-height:160px;flex:0 0 auto;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line);border-radius:8px;box-shadow:none;z-index:3}
+#tool-overlay.canvas-tool-dock[hidden]{display:none}
+.dock-resize{height:6px;flex:none;cursor:ns-resize;background:var(--pale);touch-action:none}
+.dock-resize:hover,.dock-resize:focus-visible{background:#8aabae}
+.dock-header{display:flex;align-items:center;gap:4px;padding:3px 6px;background:var(--pale);border-bottom:1px solid var(--line);flex:none}
+.dock-header [role=tablist]{display:flex;gap:3px;flex:1}
+.dock-header [role=tab]{border:0;background:transparent;border-radius:4px;min-height:28px;padding:4px 10px}
+.dock-header [aria-selected=true]{background:#fff;box-shadow:inset 0 -2px var(--teal);color:var(--teal)}
+.dock-icon{width:28px;min-height:28px;padding:4px;display:grid;place-items:center}
+.dock-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
+.dock-icon[aria-pressed=true]{background:#dff2ef;border-color:var(--teal)}
+.dock-body{display:flex;flex:1;min-height:0;min-width:0;overflow:hidden}
+#tool-overlay .dock-body>section{flex:1;min-width:0;min-height:0;margin:0;border:0;border-radius:0;overflow:auto}
+#tool-overlay.split .dock-body>section+section{border-left:1px solid var(--line)}
+#tool-overlay .dock-body #terminal-panel{display:flex;flex-direction:column}
+#tool-overlay .dock-body #terminal-panel[hidden],#tool-overlay .dock-body #events-panel[hidden]{display:none}
+#tool-overlay .dock-body #terminal-panel>h2{padding:4px 8px;gap:8px;flex:none}
+#tool-overlay .dock-body .terminal-help{padding:3px 8px;font-size:10px;flex:none}
+#tool-overlay .dock-body #terminal{flex:1;min-height:0;max-height:none;padding:8px;margin:0}
+#tool-overlay .dock-body #command-form{padding:5px 8px;flex:none;overflow:auto}
+#tool-overlay .dock-body #events-panel{display:flex;flex-direction:column;padding:8px}
+#tool-overlay .dock-body #events-panel>h2{margin:-8px -8px 6px;padding:4px 8px;flex:none}
+#tool-overlay .dock-body .capture-controls{flex:none;flex-wrap:wrap}
+#tool-overlay .dock-body .capture-scroll{flex:1;min-height:65px;max-height:none;overflow:auto}
+#tool-overlay .dock-body .capture-inspection{flex:1;min-height:65px;overflow:auto}
+@media(max-width:900px){#tool-overlay.canvas-tool-dock{max-height:none;height:var(--dock-height,340px)}}
+/* Keep both tool tabs reachable when the bottom dock is minimized. */
+#tool-overlay.canvas-tool-dock.minimized{height:auto;min-height:0;max-height:none;flex:none}
+#tool-overlay.minimized .dock-body,#tool-overlay.minimized .dock-resize,#tool-overlay.minimized #dock-close{display:none}
+#tool-overlay.canvas-tool-dock .close-tool{display:none}
+.terminal-os{display:inline-flex;align-items:center;gap:5px;padding:2px 6px;border:1px solid #465364;border-radius:5px;color:#d5dce5;font:11px/1.4 system-ui,sans-serif;white-space:nowrap;flex:none}
+.terminal-os[hidden]{display:none}
+.terminal-os svg{width:18px;height:18px;flex:none}
+#terminal-panel>h2{flex-wrap:wrap}
+/* Plain tool tabs without a surrounding shaded card. */
+#tool-overlay.canvas-tool-dock{border:0;border-radius:0;background:transparent;box-shadow:none}
+#tool-overlay .dock-header{background:transparent;border:0;padding:0;gap:6px}
+#tool-overlay .dock-header [role=tab]{border-radius:0;background:transparent;padding:5px 10px;box-shadow:none;border-bottom:2px solid transparent}
+#tool-overlay .dock-header [role=tab][aria-selected=true]{border-bottom-color:var(--teal);color:var(--teal)}
+#tool-overlay .dock-header .dock-icon{border-color:transparent;background:transparent}
+#tool-overlay .dock-header .dock-icon:hover,#tool-overlay .dock-header [role=tab]:hover{background:var(--pale)}
+.dock-header [role=tab]{display:inline-flex;align-items:center;gap:6px}
+.dock-header [role=tab] svg{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+/* Each pane owns its tab and expand action. */
+#tool-overlay .dock-body #events-panel>h2{display:none}
+.dock-tab-group{display:flex;align-items:center;gap:2px;min-width:0}
+#tool-overlay .dock-tab-group .heading-popout{float:none;margin:0;flex:none}
+#tool-overlay .dock-header{position:relative}
+#tool-overlay.split:not(.minimized) .dock-header [role=tablist]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;width:100%}
+#tool-overlay.split:not(.minimized) .dock-header{padding-right:0}
+#tool-overlay.split:not(.minimized) .dock-tab-group{padding-right:8px}
+#tool-overlay.split:not(.minimized) .dock-tab-group:last-child{padding-right:70px}
+#tool-overlay.split:not(.minimized) .dock-tab-group .heading-popout{margin-left:auto}
+#tool-overlay.split:not(.minimized) #dock-split{position:absolute;right:34px}
+#tool-overlay.split:not(.minimized) #dock-close{position:absolute;right:0}
+#tool-overlay.split .dock-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+#tool-overlay.split .dock-body:has(>section[hidden]){grid-template-columns:minmax(0,1fr)}
+#tool-overlay .dock-body #events-panel{padding-top:8px}
+/* Compact outlined tabs and secondary expand controls. */
+#tool-overlay .dock-header [role=tab]{border:1px solid var(--line);border-radius:6px;padding:4px 9px}
+#tool-overlay .dock-header [role=tab][aria-selected=true]{border-color:var(--teal);color:var(--teal);background:transparent}
+#tool-overlay .dock-tab-group .heading-popout{width:24px;min-height:24px;height:24px;padding:5px}
+#tool-overlay .dock-tab-group .heading-popout svg{width:13px;height:13px;stroke-width:1.7}
+/* Subtle resize divider with a usable drag target. */
+body:not(.external-panel-page) .center{gap:6px}
+.dock-resize{height:6px;background:transparent;position:relative}
+.dock-resize::after{content:"";position:absolute;left:0;right:0;top:2px;height:1px;background:#d7e1e880}
+.dock-resize:hover,.dock-resize:focus-visible{background:transparent}
+.dock-resize:hover::after,.dock-resize:focus-visible::after{background:#8aabae80}
+/* Join open-bottom tabs to one shared dock baseline. */
+#tool-overlay .dock-header{border-bottom:1px solid var(--line)}
+#tool-overlay .dock-header [role=tab]{border-bottom:0;border-radius:6px 6px 0 0;box-shadow:none}
+#tool-overlay .dock-header [role=tab][aria-selected=true]{border-bottom:0}
+/* Centered grip and a shared tab outline around label and expand action. */
+.dock-resize::after{left:50%;right:auto;top:2px;width:3px;height:3px;border-radius:50%;transform:translateX(-50%);background:#a7afb8;box-shadow:-7px 0 #a7afb8,7px 0 #a7afb8}
+.dock-resize:hover::after,.dock-resize:focus-visible::after{background:#7f929a;box-shadow:-7px 0 #7f929a,7px 0 #7f929a}
+.dock-tab-shell{display:inline-flex;align-items:center;flex:none;border:1px solid var(--line);border-bottom:0;border-radius:6px 6px 0 0;padding-right:4px}
+.dock-tab-shell:has([aria-selected=true]){border-color:var(--teal)}
+#tool-overlay .dock-header .dock-tab-shell [role=tab]{border:0;border-radius:6px 0 0 0}
+#tool-overlay .dock-header .dock-tab-shell .heading-popout{margin:0;width:24px;min-height:24px}
+.dock-resize{margin-bottom:5px}
+/* Frame the expanded dock beneath its shared tab baseline. */
+#tool-overlay.canvas-tool-dock:not(.minimized) .dock-body{border:1px solid var(--line);border-top:0;border-radius:0 0 8px 8px;overflow:hidden}
+/* Keep example filter text visually secondary to entered filters. */
+#capture-filter::placeholder{color:#61758a;opacity:.4}
+.viewport-panel-header{display:flex;align-items:center;background:var(--pale);border-radius:7px 7px 0 0;border-bottom:1px solid var(--line)}
+.viewport-panel-header #viewport-handle{flex:1;min-width:0;border-bottom:0}
+#viewport-minimize{display:grid;place-items:center;flex:none;width:24px;height:24px;min-height:24px;padding:4px;border:0;background:transparent}
+#viewport-minimize svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.viewport-panel-header #viewport-handle{justify-content:flex-start;gap:7px}
+
+/* Compact network search and OS identities. */
+.network-search{position:fixed;z-index:1000;width:min(340px,calc(100vw - 16px));box-sizing:border-box;padding:12px;background:#fff;border:1px solid #cbd7e1;border-radius:8px;box-shadow:0 8px 24px #26334226;overflow:auto}.network-search[hidden]{display:none}.network-search>label{display:block;font-weight:600;margin-bottom:6px}.network-search input{width:100%;box-sizing:border-box}.network-search-count{font-size:11px;color:#61758a;margin:8px 0}.network-search-results{display:grid;gap:4px;max-height:300px;overflow:auto}.network-search-results button{text-align:left;padding:8px;display:block;width:100%}.network-search-results strong,.inspector-picker button>span{display:flex;align-items:center;gap:8px}.network-search-results small{display:block;color:#61758a;margin-top:4px;overflow-wrap:anywhere}.inspector-picker .os-choice-icon,.network-search .os-choice-icon{width:18px;height:18px;flex:0 0 18px;stroke:none;fill:none}
+
+/* Keep route addresses intact and reserve only a narrow action column. */
+.route-table{width:100%;table-layout:auto}
+.route-table th,.route-table td{padding:6px 3px;white-space:nowrap;overflow-wrap:normal;word-break:normal}
+.route-table th{font-size:10px}
+.route-table th:first-child{width:40%}
+.route-table th:nth-child(2){width:30%}
+.route-table th:nth-child(3){width:auto}
+.route-table th:nth-child(4),.route-table td:nth-child(4){width:22px;padding-left:1px;padding-right:1px}
+.route-table .vlan-icon-button{display:flex;width:20px;height:20px;min-height:20px;padding:3px;margin:0 auto;border-radius:4px}
+.route-table .vlan-icon-button svg{width:12px;height:12px;flex:0 0 12px}
+.route-table .vlan-icon-button+.vlan-icon-button{margin-top:2px}
+
+/* Addressing and lease acquisition share one compact control row. */
+.addressing-picker{grid-template-columns:minmax(0,1fr) 32px;column-gap:6px}
+.addressing-picker>span{grid-column:1/-1}
+.addressing-picker>#host-address-mode-toggle{grid-column:1;grid-row:2;min-width:0;padding-left:8px;padding-right:8px;font-size:11px}
+.addressing-picker>#dhcp-acquire{grid-column:2;grid-row:2;width:32px;min-height:34px;padding:7px;justify-content:center}
+.addressing-picker>#dhcp-acquire svg{width:16px;height:16px}
+.dhcp-client[hidden]{display:none}
+.dhcp-client{margin-top:-5px;padding:8px 10px}
+
+/* Consistent, faint hints in every text-entry control. */
+input::placeholder,textarea::placeholder,#capture-filter::placeholder{color:#61758a;opacity:.4}
+
+/* Activity: neutral rows, compact protocol badges, and explicit live following. */
+#events-panel .capture-table tbody tr{background:#fff;color:#344454;box-shadow:none}
+#events-panel .capture-table tbody tr:hover{background:#f6f8fa;filter:none}
+#events-panel .capture-table tbody tr.is-selected{background:#f0f7f7;color:#263f43;box-shadow:inset 2px 0 var(--teal)}
+#events-panel .capture-table tbody tr:focus{outline:none}
+#events-panel .capture-table tbody tr:focus-visible{outline:1px solid #7b9eaa;outline-offset:-1px}
+#events-panel .capture-table td{border-bottom:1px solid #eef1f4}
+.protocol-badge{display:inline-block;font:600 10px/1.5 system-ui,sans-serif;border-radius:4px;padding:1px 5px;background:#eff2f6;color:#526175}
+.capture-dhcp .protocol-badge,.capture-dns .protocol-badge{background:#e9f3ef;color:#407263}
+.capture-arp .protocol-badge{background:#f0edf8;color:#72618d}
+.capture-tcp .protocol-badge,.capture-http .protocol-badge{background:#eaf1f9;color:#4e7093}
+.capture-icmp .protocol-badge{background:#eaf4f7;color:#487789}
+#capture-follow{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+#capture-follow svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#capture-follow[aria-pressed=true]{background:#edf5f4;color:#356b67;border-color:#9dbfbc}
+
+/* Lease status and acquisition use lightweight SVG affordances. */
+#dhcp-client-status{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%}
+.lease-summary{display:grid;gap:3px;min-width:0}
+.lease-ring{flex:none;display:flex;align-items:center}
+.lease-ring .cache-countdown{position:relative;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center}
+.lease-ring .cache-countdown svg{width:32px;height:32px}
+.lease-ring .cache-countdown>span{position:absolute;font-size:8px;line-height:1;color:var(--muted)}
+.addressing-picker>#dhcp-acquire{border:0;background:transparent;box-shadow:none;color:var(--teal);border-radius:4px}
+.addressing-picker>#dhcp-acquire:hover:not(:disabled){background:#edf5f4}
+.addressing-picker>#dhcp-acquire:disabled{opacity:.35}
+.addressing-picker>#dhcp-acquire svg{width:20px;height:20px}
+
+/* Compact inspector rhythm without reducing readable text. */
+#inspector label{margin:6px 0}
+#inspector input:not([type=checkbox]),#inspector select{min-height:30px;padding:5px 8px;font-size:12px}
+#inspector label input:not([type=checkbox]),#inspector label select{margin-top:3px}
+#inspector .inspector-picker{margin-bottom:8px;gap:3px}
+#inspector .inspector-picker>button{min-height:30px;padding-top:5px;padding-bottom:5px}
+#inspector .address-field,#inspector .prefix-field{margin:5px 0}
+#inspector .address-heading label,#inspector .prefix-heading label{margin:0}
+#inspector .address-field input,#inspector .prefix-field input{margin-top:3px}
+#inspector .small-heading{margin-top:10px}
+#inspector .hint{margin:5px 0}
+#inspector .danger{margin-top:8px}
+#inspector .dhcp-client{padding:6px 8px;margin-bottom:6px}
+#inspector .inspector-section-heading{padding-top:6px;padding-bottom:6px}
+
+/* A browser frame shared by the inspector and its expanded window. */
+.sim-browser{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff;margin-top:8px}
+.browser-tabbar{display:flex;align-items:center;justify-content:space-between;gap:4px;background:#edf2f6;padding:5px 5px 0}
+.browser-tab{min-width:0;display:flex;align-items:center;gap:6px;background:#fff;border-radius:6px 6px 0 0;padding:6px 8px;font-size:11px;flex:1}
+.browser-tab span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sim-browser svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.sim-browser button{display:inline-flex;align-items:center;justify-content:center;min-height:26px;width:26px;padding:4px;border:0;background:transparent;flex:none}
+.sim-browser button:hover{background:#e8eff4}
+#inspector #browser-form,.sim-browser #browser-form{display:flex;align-items:center;gap:3px;padding:6px;margin:0;border-bottom:1px solid var(--line);background:#fff}
+#inspector #browser-url,.sim-browser #browser-url{flex:1;min-width:0;min-height:28px;padding:4px 7px;margin:0;font-size:11px;border-radius:14px;background:#f6f8fa}
+#inspector .browser-page,.sim-browser .browser-page{border:0;border-radius:0;margin:0;padding:16px 12px;min-height:180px;background:white}
+.sim-browser .browser-page h3{font-size:17px;line-height:1.35;margin:0 0 12px}
+.sim-browser .browser-page p{font-size:12px;line-height:1.6;white-space:pre-wrap}
+.sim-browser #browser-status{font-size:10px;color:var(--muted);padding:5px 8px;border-top:1px solid #edf1f4;background:#fafbfc}
+.browser-empty{text-align:center;color:#8191a1;padding:28px 4px}.browser-empty svg{width:36px;height:36px;opacity:.45}
+body[data-panel^="browser:"] #external-content{display:block;max-width:none;width:100%}
+body[data-panel^="browser:"] .sim-browser{min-height:calc(100vh - 150px);display:flex;flex-direction:column}
+body[data-panel^="browser:"] .browser-page{flex:1;padding:28px;min-height:300px}
+body[data-panel^="browser:"] .browser-page h3{font-size:26px}
+body[data-panel^="browser:"] .browser-page p{font-size:15px;max-width:70ch}
+body[data-panel^="browser:"] .browser-tab{flex:0 1 240px}
