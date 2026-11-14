@@ -1082,7 +1082,7 @@ body.welcome-open #network-welcome{height:auto;overflow:visible;border:0;border-
  38%{opacity:1;offset-distance:0%;transform:scale(1)}
  66.5714%,100%{opacity:0;offset-distance:100%;transform:scale(1)}
 }
-.guide-plug-click{offset-path:path("M 0 0 C 4 -24 35 -42 68 -48");offset-rotate:0deg;offset-anchor:0 0;animation-timing-function:linear}
+.guide-plug-click{offset-path:path("M 0 0 C 6 -12 32 -24 58 -28");offset-rotate:0deg;offset-anchor:0 0;animation-timing-function:linear}
 
 @media(prefers-reduced-motion:reduce){.guide-plug-click{display:none}}
 
@@ -1113,3 +1113,50 @@ body.welcome-open #network-welcome{height:auto;overflow:visible;border:0;border-
 .guide-port-live .guide-socket{fill:#35424b}
 .guide-port-live text{fill:#35424b}
 @keyframes guide-port-seat{0%,36%,90%,100%{fill:#7c858c}38%,85%{fill:#35424b}}
+
+/* Distinct traffic pulses on the switch showcase. */
+.guide-port-live .guide-link-light{animation:guide-port-blink 1.2s steps(1,end) infinite}
+.guide-port-target .guide-link-light{animation:guide-port-traffic 7s steps(1,end) infinite}
+@keyframes guide-port-blink{
+ 0%,50%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}
+ 20%,72%{fill:#33483e;filter:none}
+ 35%,85%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}
+}
+@keyframes guide-port-traffic{
+ 0%,90%,100%{fill:#8c9791;filter:none}
+ 38%,52%,66%,80%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}
+ 43%,57%,71%,85%{fill:#33483e;filter:none}
+ 47%,61%,75%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}
+}
+@media(prefers-reduced-motion:reduce){
+ .guide-port-live .guide-link-light,.guide-port-target .guide-link-light{animation:none!important;fill:#40bf68;filter:none}
+}
+
+/* Three successive connections share one twelve-second timeline. */
+.guide-port-caption .guide-connecting-caption{animation:none;opacity:1}
+[data-guide-connection="2"] .guide-plug-motion{animation:guide-seat-2 12s ease-in-out infinite}
+[data-guide-connection="2"] .guide-plug-click{animation:guide-click-2 12s linear infinite}
+[data-guide-port="2"] .guide-socket{animation:guide-socket-2 12s steps(1,end) infinite}
+[data-guide-port="2"] .guide-link-light{animation:guide-light-2 12s steps(1,end) infinite}
+@keyframes guide-seat-2{0%,8.3333%{transform:translateY(48px);opacity:0}10.8333%{opacity:1}16.6667%,90%{transform:translateY(0);opacity:1}98%,100%{transform:translateY(48px);opacity:0}}
+@keyframes guide-click-2{0%,16.6583%{opacity:0;offset-distance:0%;transform:scale(.9)}16.6667%{opacity:1;offset-distance:0%;transform:scale(1)}33.3333%,100%{opacity:0;offset-distance:100%;transform:scale(1)}}
+@keyframes guide-socket-2{0%{fill:#7c858c}16.6667%{fill:#35424b}94%,100%{fill:#7c858c}}
+@keyframes guide-light-2{0%{fill:#8c9791;filter:none}16.6667%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}19.5833%{fill:#33483e;filter:none}22.5000%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}25.4167%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}28.3333%{fill:#33483e;filter:none}31.2500%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}34.1667%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}37.0833%{fill:#33483e;filter:none}40.0000%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}42.9167%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}45.8333%{fill:#33483e;filter:none}48.7500%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}51.6667%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}54.5833%{fill:#33483e;filter:none}57.5000%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}60.4167%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}63.3333%{fill:#33483e;filter:none}66.2500%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}69.1667%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}72.0833%{fill:#33483e;filter:none}75.0000%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}77.9167%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}80.8333%{fill:#33483e;filter:none}83.7500%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}86.6667%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}89.5833%{fill:#33483e;filter:none}94%,100%{fill:#8c9791;filter:none}}
+[data-guide-connection="3"] .guide-plug-motion{animation:guide-seat-3 12s ease-in-out infinite}
+[data-guide-connection="3"] .guide-plug-click{animation:guide-click-3 12s linear infinite}
+[data-guide-port="3"] .guide-socket{animation:guide-socket-3 12s steps(1,end) infinite}
+[data-guide-port="3"] .guide-link-light{animation:guide-light-3 12s steps(1,end) infinite}
+@keyframes guide-seat-3{0%,13.7500%{transform:translateY(48px);opacity:0}16.2500%{opacity:1}22.0834%,90%{transform:translateY(0);opacity:1}98%,100%{transform:translateY(48px);opacity:0}}
+@keyframes guide-click-3{0%,22.0750%{opacity:0;offset-distance:0%;transform:scale(.9)}22.0834%{opacity:1;offset-distance:0%;transform:scale(1)}38.7500%,100%{opacity:0;offset-distance:100%;transform:scale(1)}}
+@keyframes guide-socket-3{0%{fill:#7c858c}22.0834%{fill:#35424b}94%,100%{fill:#7c858c}}
+@keyframes guide-light-3{0%{fill:#8c9791;filter:none}22.0834%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}25.0000%{fill:#33483e;filter:none}27.9167%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}30.8334%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}33.7500%{fill:#33483e;filter:none}36.6667%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}39.5834%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}42.5000%{fill:#33483e;filter:none}45.4167%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}48.3334%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}51.2500%{fill:#33483e;filter:none}54.1667%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}57.0834%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}60.0000%{fill:#33483e;filter:none}62.9167%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}65.8334%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}68.7500%{fill:#33483e;filter:none}71.6667%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}74.5834%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}94%,100%{fill:#8c9791;filter:none}}
+[data-guide-connection="4"] .guide-plug-motion{animation:guide-seat-4 12s ease-in-out infinite}
+[data-guide-connection="4"] .guide-plug-click{animation:guide-click-4 12s linear infinite}
+[data-guide-port="4"] .guide-socket{animation:guide-socket-4 12s steps(1,end) infinite}
+[data-guide-port="4"] .guide-link-light{animation:guide-light-4 12s steps(1,end) infinite}
+@keyframes guide-seat-4{0%,19.1666%{transform:translateY(48px);opacity:0}21.6666%{opacity:1}27.5000%,90%{transform:translateY(0);opacity:1}98%,100%{transform:translateY(48px);opacity:0}}
+@keyframes guide-click-4{0%,27.4916%{opacity:0;offset-distance:0%;transform:scale(.9)}27.5000%{opacity:1;offset-distance:0%;transform:scale(1)}44.1666%,100%{opacity:0;offset-distance:100%;transform:scale(1)}}
+@keyframes guide-socket-4{0%{fill:#7c858c}27.5000%{fill:#35424b}94%,100%{fill:#7c858c}}
+@keyframes guide-light-4{0%{fill:#8c9791;filter:none}27.5000%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}30.4166%{fill:#33483e;filter:none}33.3333%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}36.2500%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}39.1666%{fill:#33483e;filter:none}42.0833%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}45.0000%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}47.9166%{fill:#33483e;filter:none}50.8333%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}53.7500%{fill:#40ef70;filter:drop-shadow(0 0 3px #3ee96a)}56.6666%{fill:#33483e;filter:none}59.5833%{fill:#ffd34e;filter:drop-shadow(0 0 3px #ffc634)}94%,100%{fill:#8c9791;filter:none}}
+@media(prefers-reduced-motion:reduce){.guide-port-demo *{animation:none!important}.guide-port-target .guide-socket{fill:#35424b}.guide-port-target .guide-link-light{fill:#40bf68;filter:none}}
+.terminal-command-help{display:inline-flex;align-items:center;gap:5px;color:inherit;text-decoration:none}.terminal-command-help:hover{color:#fff}.terminal-command-help:focus-visible{outline:2px solid #69a9dc;outline-offset:3px;border-radius:2px}
