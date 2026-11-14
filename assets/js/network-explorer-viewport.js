@@ -121,7 +121,7 @@
     }
   }
 
-  let canvasPan=null,spaceHeld=false,suppressClick=false;
+  let canvasPan=null,spaceHeld=false,suppressClick=false,emptyCanvasClick=false;
   const editing=target=>target.closest('input,textarea,select,[contenteditable=true]');
   document.addEventListener('keydown',event=>{if(event.code==='Space'&&!editing(event.target)&&!document.querySelector('dialog[open]')){spaceHeld=true;canvas.classList.add('pan-ready');if(event.target===canvas||stage.contains(event.target))event.preventDefault();}});
   document.addEventListener('keyup',event=>{if(event.code==='Space'){spaceHeld=false;canvas.classList.remove('pan-ready');}});
@@ -167,10 +167,12 @@
   },true);
   window.addEventListener('blur',()=>{touches.clear();pinching=false;});
   stage.addEventListener('pointerdown',event=>{
+    emptyCanvasClick=false;
     if(!canvas.contains(event.target)||![0,1].includes(event.button))return;
     if(canvas.classList.contains('placing')||!get('cancel-connect').hidden)return;
     const object=event.target.closest('[data-device],[data-application],[data-link],[data-anchor-device],.in-flight-frame');
     if(event.button!==1&&!spaceHeld&&object)return;
+    emptyCanvasClick=!object&&event.button===0&&!spaceHeld;
     event.preventDefault();event.stopImmediatePropagation();
     const matrix=canvas.getScreenCTM();canvasPan={id:event.pointerId,x:event.clientX,y:event.clientY,cx:camera.x,cy:camera.y,scale:matrix.a,moved:false};
     canvas.setPointerCapture(event.pointerId);canvas.classList.add('panning');
@@ -178,7 +180,7 @@
   stage.addEventListener('pointermove',event=>{if(!canvasPan)return;event.preventDefault();event.stopImmediatePropagation();const dx=event.clientX-canvasPan.x,dy=event.clientY-canvasPan.y;canvasPan.moved ||= Math.hypot(dx,dy)>3;camera.x=canvasPan.cx-dx/canvasPan.scale;camera.y=canvasPan.cy-dy/canvasPan.scale;update();refreshOverview();},true);
   for(const type of ['pointerup','pointercancel'])stage.addEventListener(type,event=>{if(!canvasPan)return;event.preventDefault();event.stopImmediatePropagation();endPan();},true);
   canvas.addEventListener('lostpointercapture',()=>{canvasPan=null;canvas.classList.remove('panning');});
-  stage.addEventListener('click',event=>{if(suppressClick){suppressClick=false;event.preventDefault();event.stopImmediatePropagation();}},true);
+  stage.addEventListener('click',event=>{const empty=emptyCanvasClick;emptyCanvasClick=false;if(suppressClick){suppressClick=false;event.preventDefault();event.stopImmediatePropagation();return;}if(empty&&canvas.contains(event.target))canvas.dispatchEvent(new Event('canvas-deselect'));},true);
   canvas.addEventListener('auxclick',event=>{if(event.button===1)event.preventDefault();});
   get('zoom-slider').oninput = event => zoom(Number(event.target.value) / 100 - camera.zoom);
   function contentBounds(){

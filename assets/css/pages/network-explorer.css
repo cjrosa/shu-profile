@@ -680,3 +680,12 @@ body[data-panel^="browser:"] .browser-page{flex:1;padding:28px;min-height:300px}
 body[data-panel^="browser:"] .browser-page h3{font-size:26px}
 body[data-panel^="browser:"] .browser-page p{font-size:15px;max-width:70ch}
 body[data-panel^="browser:"] .browser-tab{flex:0 1 240px}
+
+/* Highlight selection warnings while retaining the inline console prompt. */
+#terminal-panel #command-form{background:#0e1116;padding:0 18px 16px;color:#edf2fa}
+#terminal-panel #command-form #prompt{color:#87b7ff}
+#terminal-panel #command-form:focus-within #prompt{color:#b7d4ff}
+#terminal-panel #command-form.cli-needs-device{background:#e8b550;color:#302714;min-height:38px;padding:8px 12px}
+#terminal-panel #command-form.cli-needs-device #prompt{color:#302714;font:600 12px/1.5 system-ui,sans-serif;white-space:normal}
+#terminal-panel #command-form.cli-needs-device .command-row{display:none}
+#terminal-panel #command-form.cli-needs-device #prompt::before{content:'!';display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border:1.5px solid currentColor;border-radius:50%;margin-right:8px;font-weight:800}
