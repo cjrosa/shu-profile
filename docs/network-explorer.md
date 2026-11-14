@@ -19,9 +19,9 @@ Topology JSON version 1 stores configuration, interface identities, layout, and 
 
 ## Scope and expansion
 
-This release models untagged Ethernet, IPv4 host interfaces, ARP, and a single ICMP Echo exchange per ping. It blocks Layer 2 loops, requires /1–/30 unicast host configuration, and does not model physical errors, bandwidth contention, real operating-system timing, or real network access. Access VLANs are supported. Connected routing and default gateways are supported. Static routes are supported. DHCP, DNS, NAT, trunks, and spanning tree are not implemented.
+This release models untagged Ethernet, IPv4 host interfaces, ARP, and a single ICMP Echo exchange per ping. It blocks Layer 2 loops, requires /1–/30 unicast host configuration, and does not model physical errors, bandwidth contention, real operating-system timing, or real network access. Access VLANs are supported. Connected routing and default gateways are supported. Static routes are supported. DHCP supports local clients and routed relay. DNS, NAT, trunks, and spanning tree are not implemented.
 
-Later add service handlers for DHCP/DNS and transport messages for TCP/HTTP and NAT. Retain stable device/interface IDs and structured reports so terminal output, animations, and examination use the same state. As lesson count grows, move the initial UI lesson checks to a dedicated lesson-data module. Do not couple this explorer to runtime state in the existing visualizers.
+Later add service handlers for DNS and transport messages for TCP/HTTP and NAT. Retain stable device/interface IDs and structured reports so terminal output, animations, and examination use the same state. As lesson count grows, move the initial UI lesson checks to a dedicated lesson-data module. Do not couple this explorer to runtime state in the existing visualizers.
 
 ## Access VLANs
 
@@ -64,3 +64,42 @@ Windows sends ICMP Echo Requests. Linux/macOS send UDP probes to closed destinat
 Watch and Events show TTL, UDP ports, ICMP type/code, and the original destination quoted by an error. Pause can freeze any probe or response in flight.
 
 References: [Windows tracert](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/tracert), [Linux traceroute](https://man7.org/linux/man-pages/man8/traceroute.8.html).
+
+
+## DHCP application
+
+Load Examples > DHCP LAN. Select DHCP Client and use the circular-arrow Acquire DHCP lease control, or run `ipconfig /renew` in its Windows terminal. The server at 192.168.1.2 offers addresses 192.168.1.100-120, a /24 prefix and a 120-second lease, with no default gateway. This simple example contains only a client, switch and server. After ACK, try `ping 192.168.1.2`.
+
+Any manually addressed host can run the DHCP server application. Expand Applications > DHCP server and use the small + beside Pools. Give each pool a unique name, endpoints, prefix, optional gateway and lease duration, then save with the disk icon. Enable the server after saving its first pool. Expand an existing pool to edit or delete it; X cancels unsaved changes. Each pool serves a different, non-overlapping subnet, either local or relayed. Pool size is limited to 1024 addresses and lease duration to 30-86400 seconds. Known manually configured addresses, active client addresses and the gateway are excluded from allocation; conflict detection by ARP probe is not modeled.
+
+Choose Automatic (DHCP) on a client to start acquisition (PAN-OS candidate changes must be committed first). IPv4 address, prefix and gateway become read-only and are installed only after ACK. Changing back to Manual clears the dynamic configuration. Windows supports `ipconfig /renew`, Linux `dhclient eth0`, and macOS `ipconfig set eth0 DHCP` for the simulated eth0 interface; these are educational command subsets, not programs executed on the user's computer.
+
+Discover and selecting Request are broadcasts. The simulated client supports receiving unicast before IP configuration and clears the BOOTP broadcast flag, so Offer and ACK unicast directly to its MAC address. Watch explains each decision; Events supports a `dhcp` filter and shows message, UDP ports, transaction, pool parameters and broadcast/unicast delivery. VLAN isolation applies. Routers relay DHCP only when a server address is configured on the client-facing interface.
+
+Client and server leases count down in real time, including while animation is paused. The renewal control sends a unicast Request/ACK exchange. Renewal is manual in this increment: automatic T1/T2, rebinding, NAK/retry handling and DHCP release are deferred. On expiry, the client loses its address/gateway and must acquire again. Clearing learned state cancels pending acquisition while retaining bound leases. Saved topologies include client mode and server configuration, but omit runtime leases and DHCP-assigned addresses; clients acquire again after loading. Examples start with Watch off.
+
+Protocol reference: [RFC 2131](https://www.rfc-editor.org/rfc/rfc2131.html).
+
+
+### Advanced DHCP relay example
+
+Examples > DHCP relay places the client on 192.168.1.0/24 and the server at 192.168.2.2/24, with two routers joined by 10.0.0.0/30. The client-facing interface at 192.168.1.1 relays to 192.168.2.2. Static routes connect both LANs; the server uses gateway 192.168.2.1. All devices start with Watch off.
+
+Click a router interface to set or clear its DHCP relay server address. The setting belongs on the client-facing interface; the transit router only needs ordinary routes. Relay settings use the same PAN-OS candidate/commit workflow as interface settings. Cisco relay configuration is also available in interface CLI mode. PAN-OS relay configuration remains in the inspector.
+
+The relay receives Discover/Request broadcasts, sets giaddr to its client-facing IP, and sends unicast UDP 67-to-67 traffic to the server through routing and ARP. The server compares giaddr with its configured pool subnet and sends Offer/ACK back to the relay. The relay delivers the reply to the client MAC on the original LAN using UDP port 68. Watch and Events show giaddr and the incoming/outgoing headers. Missing relay configuration, a mismatched pool, or missing forward/return routes prevents acquisition. Manual renewal after acquisition uses normal routed unicast directly between client and server.
+
+This version supports up to 32 named pools per host and one relay server per router interface. Local discovery selects the pool matching the server interface subnet; relayed discovery uses giaddr, and renewal uses the client source IP. Lease rows show the selected pool. Legacy single-pool saved topologies remain supported and appear as Default. Relay chaining and Option 82 are not modeled. To demonstrate DORA again, switch the client to Manual and back to Automatic, or reload the example. After acquisition, ping 192.168.2.2 to exercise the complete routed path.
+
+
+Cisco DHCP relay CLI:
+
+```text
+configure terminal
+interface GigabitEthernet0/0
+ip helper-address 192.168.2.2
+exit
+end
+```
+
+In interface mode, use `no ip helper-address 192.168.2.2` to remove that helper. `G0/0` and `Gi0/0` aliases are accepted. `exit` returns from interface mode to global configuration; `end` returns directly to operational mode. The model permits one helper per interface and shares its value with the port dialog. Interface IPv4 addresses are still configured in the inspector.

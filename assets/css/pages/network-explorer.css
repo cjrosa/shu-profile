@@ -361,3 +361,37 @@ body[data-platform=paloalto] .vlan-badge{max-width:100%;overflow:hidden;text-ove
 #flight-inspection{width:min(600px,94vw)}#flight-frame{padding:16px 20px}
 .route-table-wrap{overflow-x:auto}.route-table{font-size:10px}.route-table td{vertical-align:top}.route-table small{display:block;font:10px/1.4 system-ui,sans-serif;color:var(--muted);margin-top:3px}.route-table .vlan-icon-button{width:23px;min-height:23px;padding:3px}.route-selected{background:#e0f2ed;box-shadow:inset 3px 0 var(--teal)}.route-inactive{color:var(--muted)}
 .route-form{border:1px solid var(--line);background:var(--pale);border-radius:7px;padding:10px;margin-top:8px}.route-form[hidden]{display:none}.route-destination{display:grid;grid-template-columns:minmax(0,1fr) 60px;gap:8px}.route-form-actions{display:flex;justify-content:flex-end;gap:5px}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.dhcp-application{border:1px solid var(--line);border-radius:8px;margin:8px 0 14px;overflow:hidden}
+.dhcp-application summary{cursor:pointer;padding:9px 10px;background:var(--pale);font-weight:600}
+.dhcp-application summary>span{float:right;color:var(--teal);font-size:11px;font-weight:400}
+#dhcp-server-form{padding:10px}
+#dhcp-server-form .pair{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+#dhcp-server-form label{font-size:11px}
+#dhcp-server-form input{min-width:0;font-size:12px}
+#dhcp-server-form .dhcp-enable{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+#dhcp-server-enabled{width:auto;margin:0}
+.dhcp-form-actions{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.dhcp-client{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--pale);border:1px solid var(--line);border-radius:8px;margin:8px 0 12px;gap:8px}
+#dhcp-client-status{display:grid;gap:3px;font-size:11px}
+.dhcp-countdown{font-variant-numeric:tabular-nums;color:var(--teal);white-space:nowrap}
+#dhcp-leases{padding:0 10px 10px;overflow-x:auto}
+#dhcp-leases table{font-size:11px}
+#dhcp-leases small{display:block;font-size:10px;color:var(--muted)}
+.capture-dhcp{background:#e7f4f1;color:#245b58}
+.inspector-picker{position:relative;margin-bottom:12px;display:grid;gap:5px;font-size:12px}
+.inspector-picker>button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;font-weight:400;min-height:34px}
+.inspector-picker svg{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.inspector-picker [role=listbox]{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:45;padding:4px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 5px 14px #203f6026}
+.inspector-picker [role=listbox][hidden]{display:none}
+.inspector-picker [role=option]{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;border:0;border-radius:5px;padding:8px;text-align:left;font-weight:400;background:#fff}
+.inspector-picker [role=option]:hover,.inspector-picker [role=option]:focus-visible{background:var(--pale);outline:2px solid var(--teal);outline-offset:-2px}
+.inspector-picker [aria-selected=true]{background:#e7f4f1;color:#245b58}
+.inspector-picker .picker-check{visibility:hidden;color:var(--teal)}
+.inspector-picker [aria-selected=true] .picker-check{visibility:visible}
+
+.dhcp-pool{border:1px solid var(--line);border-radius:6px;margin:8px 0;overflow:hidden}
+.dhcp-pool summary small{display:block;font-size:10px;font-weight:400;color:var(--muted);margin-top:3px}
+.dhcp-pool-form{padding:10px;border-bottom:1px solid var(--line)}
+.dhcp-pool-actions{display:flex;align-items:end;justify-content:flex-end;gap:4px;padding-bottom:10px}
+#dhcp-server-form .inspector-section-heading{margin-top:10px}
+
