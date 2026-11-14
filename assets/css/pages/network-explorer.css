@@ -448,3 +448,5 @@ body.external-panel-page[data-panel="events"]{display:flex;flex-direction:column
 .external-panel-page[data-panel="events"] #events-panel .capture-inspection{min-height:0;overflow:hidden}
 .external-panel-page[data-panel="events"] #capture-detail,.external-panel-page[data-panel="events"] #capture-bytes{min-height:0;max-height:none}
 @media(max-width:700px){.external-panel-page[data-panel="events"] #events-panel .capture-inspection{grid-template-rows:1fr 1fr}}
+
+#canvas{touch-action:none}#canvas.pan-ready,#canvas.pan-ready *{cursor:grab!important}#canvas.panning,#canvas.panning *{cursor:grabbing!important}

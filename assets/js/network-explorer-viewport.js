@@ -48,8 +48,7 @@
   function update() {
     const width = 900 / camera.zoom;
     const height = 560 / camera.zoom;
-    camera.x = clamp(camera.x, 0, 900 - width);
-    camera.y = clamp(camera.y, 0, 560 - height);
+
     canvas.setAttribute('viewBox', `${camera.x} ${camera.y} ${width} ${height}`);
     const window = get('viewport-window');
     for (const [key, value] of Object.entries({x: camera.x, y: camera.y, width, height})) {
@@ -63,10 +62,10 @@
   function zoom(delta) {
     const cx = camera.x + 450 / camera.zoom;
     const cy = camera.y + 280 / camera.zoom;
-    camera.zoom = clamp(camera.zoom + delta, 1, 4);
+    camera.zoom = clamp(camera.zoom + delta, .1, 4);
     camera.x = cx - 450 / camera.zoom;
     camera.y = cy - 280 / camera.zoom;
-    update();
+    update();refreshOverview();
   }
 
   function point(event) {
@@ -77,9 +76,11 @@
   }
 
   function refreshOverview() {
+    const b=contentBounds(),x=Math.min(b.x-60,camera.x),y=Math.min(b.y-60,camera.y);
+    overview.setAttribute('viewBox', [x,y,Math.max(b.x+b.width+60,camera.x+900/camera.zoom)-x,Math.max(b.y+b.height+60,camera.y+560/camera.zoom)-y].join(' '));
     // Copy only graphical elements; the overview is one keyboard-accessible control.
     for (const [source, target] of [['links', 'viewport-links'], ['devices', 'viewport-nodes']]) {
-      const clones = [...get(source).children].map(node => {
+      const clones = [...get(source).children,...(source==='devices'?[...(get('applications')?.children||[])]:[])].map(node => {
         const clone = node.cloneNode(true);
         for (const element of [clone, ...clone.querySelectorAll('*')]) {
           for (const attribute of [...element.attributes]) {
@@ -94,11 +95,42 @@
     }
   }
 
+  let canvasPan=null,spaceHeld=false,suppressClick=false;
+  const editing=target=>target.closest('input,textarea,select,[contenteditable=true]');
+  document.addEventListener('keydown',event=>{if(event.code==='Space'&&!editing(event.target)&&!document.querySelector('dialog[open]')){spaceHeld=true;canvas.classList.add('pan-ready');if(event.target===canvas||stage.contains(event.target))event.preventDefault();}});
+  document.addEventListener('keyup',event=>{if(event.code==='Space'){spaceHeld=false;canvas.classList.remove('pan-ready');}});
+  const endPan=()=>{if(canvasPan){suppressClick=canvasPan.moved;if(canvas.hasPointerCapture(canvasPan.id))canvas.releasePointerCapture(canvasPan.id);}canvasPan=null;canvas.classList.remove('panning');};
+  window.addEventListener('blur',()=>{spaceHeld=false;canvas.classList.remove('pan-ready');endPan();});
+  stage.addEventListener('pointerdown',event=>{
+    if(!canvas.contains(event.target)||![0,1].includes(event.button))return;
+    if(canvas.classList.contains('placing')||!get('cancel-connect').hidden)return;
+    const object=event.target.closest('[data-device],[data-application],[data-link],[data-anchor-device],.in-flight-frame');
+    if(event.button!==1&&!spaceHeld&&object)return;
+    event.preventDefault();event.stopImmediatePropagation();
+    const matrix=canvas.getScreenCTM();canvasPan={id:event.pointerId,x:event.clientX,y:event.clientY,cx:camera.x,cy:camera.y,scale:matrix.a,moved:false};
+    canvas.setPointerCapture(event.pointerId);canvas.classList.add('panning');
+  },true);
+  stage.addEventListener('pointermove',event=>{if(!canvasPan)return;event.preventDefault();event.stopImmediatePropagation();const dx=event.clientX-canvasPan.x,dy=event.clientY-canvasPan.y;canvasPan.moved ||= Math.hypot(dx,dy)>3;camera.x=canvasPan.cx-dx/canvasPan.scale;camera.y=canvasPan.cy-dy/canvasPan.scale;update();refreshOverview();},true);
+  for(const type of ['pointerup','pointercancel'])stage.addEventListener(type,event=>{if(!canvasPan)return;event.preventDefault();event.stopImmediatePropagation();endPan();},true);
+  canvas.addEventListener('lostpointercapture',()=>{canvasPan=null;canvas.classList.remove('panning');});
+  stage.addEventListener('click',event=>{if(suppressClick){suppressClick=false;event.preventDefault();event.stopImmediatePropagation();}},true);
+  canvas.addEventListener('auxclick',event=>{if(event.button===1)event.preventDefault();});
   get('zoom-slider').oninput = event => zoom(Number(event.target.value) / 100 - camera.zoom);
-  get('zoom-reset').onclick = () => {
-    Object.assign(camera, {x: 0, y: 0, zoom: 1});
-    update();
-  };
+  function contentBounds(){
+    const boxes=['devices','applications','links'].map(id=>get(id)).filter(e=>e?.children.length).map(e=>e.getBBox());
+    if(!boxes.length)return {x:0,y:0,width:900,height:560};
+    const x=Math.min(...boxes.map(b=>b.x)),y=Math.min(...boxes.map(b=>b.y));return {x,y,width:Math.max(...boxes.map(b=>b.x+b.width))-x,height:Math.max(...boxes.map(b=>b.y+b.height))-y};
+  }
+  function fit(){
+    const b=contentBounds(),reserve=Math.min(.3,(panel.offsetHeight+28)/Math.max(1,canvas.clientHeight));
+    camera.zoom=clamp(Math.min(1,900/(b.width+120),560*(1-reserve)/(b.height+120)),.1,4);
+    camera.x=b.x+b.width/2-450/camera.zoom;camera.y=b.y-60;
+    update();refreshOverview();
+  }
+  get('zoom-slider').min='10';
+  get('zoom-reset').onclick=fit;
+  get('zoom-reset').title='Fit network';get('zoom-reset').setAttribute('aria-label','Fit network');
+  window.NetworkExplorerViewport={fit};
   overview.addEventListener('pointerdown', event => {
     if (event.button !== 0) return;
     event.preventDefault();
@@ -135,6 +167,7 @@
   const observer = new MutationObserver(refreshOverview);
   observer.observe(get('devices'), {childList: true});
   observer.observe(get('links'), {childList: true});
+  if(get('applications'))observer.observe(get('applications'), {childList:true});
   refreshOverview();
   update();
 })();
