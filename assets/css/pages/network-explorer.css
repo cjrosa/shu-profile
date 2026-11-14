@@ -300,3 +300,11 @@ body[data-platform=paloalto] .vlan-badge{max-width:100%;overflow:hidden;text-ove
 .vlan-add input[hidden]{display:none}
 .view-controls .canvas-speed{display:flex;align-items:center;gap:6px;white-space:nowrap;margin:0}
 .view-controls .canvas-speed select{width:auto;margin:0;min-height:28px;padding:4px 7px;font-size:12px}
+#terminal-panel h2 .terminal-icon-button{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;min-height:30px;padding:5px;flex:none;border-radius:7px}
+#terminal-panel .terminal-icon-button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#events-panel h2 .events-icon-button{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;min-height:30px;padding:5px;flex:none;border-radius:7px}
+#events-panel h2 .events-icon-button[hidden]{display:none}
+#events-panel .events-icon-button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#events-panel h2{gap:12px}
+#events-panel h2 #float-events{margin-left:auto}
+#events-panel h2 .close-tool{margin-left:0}

@@ -478,9 +478,11 @@
   const close=document.createElement('button');close.type='button';close.className='close-tool';close.textContent='Close';close.onclick=closeTool;heading.append(close);
  }
  const eventsClose=document.createElement('button');eventsClose.type='button';eventsClose.className='close-tool';eventsClose.textContent='Close';eventsClose.hidden=true;eventsClose.onclick=closeTool;eventsPanel.querySelector('h2').append(eventsClose);
- const eventsPop=document.createElement('button');eventsPop.id='float-events';eventsPop.type='button';eventsPop.className='heading-popout';eventsPop.textContent='Pop out';eventsPanel.querySelector('h2').append(eventsPop);
+ const eventsPop=document.createElement('button');eventsPop.id='float-events';eventsPop.type='button';eventsPop.className='heading-popout';eventsPop.textContent='Pop out';eventsPanel.querySelector('h2').insertBefore(eventsPop,eventsClose);
+ for(const [button,label,path] of [[eventsPop,'Pop out events','M14 3h7v7M21 3l-7 7M10 21H3v-7M3 21l7-7'],[eventsClose,'Close events','M6 6l12 12M18 6 6 18']]){button.classList.add('events-icon-button');button.setAttribute('aria-label',label);button.title=label;button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+path+'"/></svg>';}
  eventsPop.onclick=()=>{if(openExternal('events','Events - Network Explorer',()=>{const clone=eventsPanel.cloneNode(true);clone.hidden=false;clone.querySelector('#float-events').remove();clone.querySelector('.close-tool').remove();clone.querySelector('#capture-filter').setAttribute('value',$('capture-filter').value);return clone.outerHTML;},()=>{eventsPanel.hidden=false;openTool('events',true);})){closeTool();eventsPanel.hidden=true;}};
  document.addEventListener('capture-updated',()=>syncExternal());
+ for(const [button,label,path] of [[$('float-terminal'),'Pop out console','M14 3h7v7M21 3l-7 7M10 21H3v-7M3 21l7-7'],[terminalPanel.querySelector('.close-tool'),'Close console','M6 6l12 12M18 6 6 18']]){button.classList.add('terminal-icon-button');button.setAttribute('aria-label',label);button.title=label;button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+path+'"/></svg>';}
  const originalTerminalPop=$('float-terminal').onclick;
  $('float-terminal').onclick=()=>{originalTerminalPop();if(externalPanels.has('terminal'))closeTool();};
  terminalPanel.hidden=true;
