@@ -1165,3 +1165,174 @@ body.welcome-open #network-welcome{height:auto;overflow:visible;border:0;border-
 body.welcome-open #compact-palette{display:none!important}
 body.welcome-open:not(.external-panel-page)>main{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto}
 body.welcome-open:not(.external-panel-page)>main>.center{grid-column:1/-1;grid-row:1;min-width:0}
+
+#devices .connection-drop-target .device-body{stroke:#287d78;stroke-width:4;stroke-dasharray:5 3;fill:#d6eee8}
+#links .cable-select-handle{fill:#fff;stroke:#287d78;stroke-width:2;opacity:0;pointer-events:none;transition:opacity .12s}
+#links .wire:hover .cable-select-handle,#links .wire:focus .cable-select-handle{opacity:1;pointer-events:all;cursor:pointer}
+.canvas-network-actions #new,.canvas-network-actions .examples-menu{display:none!important}
+
+.canvas-network-actions #load-network{display:none!important}
+
+/* Keep pool actions below the lease input, including narrow inspectors. */
+#dhcp-server-form .dhcp-pool-form>.pair:last-child{grid-template-columns:minmax(0,1fr);gap:10px}
+.dhcp-pool-form>.pair:last-child>.dhcp-pool-actions{justify-content:flex-end;padding-bottom:0}
+
+.dhcp-pool>summary{position:relative;padding-right:44px}
+.dhcp-pool>summary>[data-pool-delete]{position:absolute;right:7px;top:7px}
+.dhcp-pool [data-pool-delete],#dhcp-pool-add{border:0;background:transparent;box-shadow:none}
+.dhcp-pool [data-pool-delete]:hover{color:#a14949;background:#f7eded}
+#dhcp-pool-add:hover{background:#eaf3fa}
+
+/* Installed applications link to their host using the Notes device-pill style. */
+.application-host{display:inline-flex;align-items:center;vertical-align:middle;gap:3px;min-height:0;height:auto;padding:0 5px;margin:0;border:1px solid #cdd2eb;border-radius:999px;background:#e7eaf8;color:#4e5683;font:600 10px/1.5 system-ui,sans-serif;max-width:100%}
+.application-host svg{width:14px;height:14px;flex:none}
+.application-host span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.application-host:hover{filter:brightness(.96);border-color:#4e5683}
+.application-host:focus-visible{outline:2px solid #4e5683;outline-offset:2px}
+#dhcp-server-enabled{appearance:none;position:relative;flex:none;width:32px;height:18px;padding:0;border:1px solid #98a6b5;border-radius:999px;background:#c7cfd7;cursor:pointer;transition:background .15s}
+#dhcp-server-enabled::before{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 1px 2px #0003;transition:transform .15s}
+#dhcp-server-enabled:checked{background:#4e807e;border-color:#4e807e}
+#dhcp-server-enabled:checked::before{transform:translateX(14px)}
+#dhcp-server-enabled:focus-visible{outline:2px solid #4e807e;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){#dhcp-server-enabled,#dhcp-server-enabled::before{transition:none}}
+
+/* Match the terminal surface in both docked and detached windows. */
+#terminal{color-scheme:dark;scrollbar-color:#50545b #0e1116;scrollbar-width:thin}
+#terminal::-webkit-scrollbar{width:9px;height:9px}
+#terminal::-webkit-scrollbar-track,#terminal::-webkit-scrollbar-corner{background:#0e1116}
+#terminal::-webkit-scrollbar-thumb{background:#50545b;border:2px solid #0e1116;border-radius:9px}
+#terminal::-webkit-scrollbar-thumb:hover{background:#70757d}
+
+/* A slim, dedicated footer keeps simulation status out of the toolbar. */
+.canvas-status-bar{display:flex;align-items:center;flex:0 0 auto;min-height:23px;padding:3px 10px;border-top:1px solid var(--line);background:#f5f8fa;border-radius:0 0 8px 8px;box-sizing:border-box}
+.canvas-status-bar #sim-status{margin:0;font-size:11px;line-height:16px;font-weight:400;overflow-wrap:anywhere}
+body.welcome-open .canvas-status-bar{display:none}
+.canvas-status-bar{position:relative;gap:10px;z-index:5;overflow:visible}
+.canvas-device-pickers{display:flex;align-items:center;gap:4px;border-left:1px solid var(--line);padding-left:10px}
+.canvas-device-picker{position:relative;display:flex}
+.device-picker-toggle{display:inline-flex;align-items:center;gap:4px;padding:0 5px;min-height:22px;border:0;background:transparent;border-radius:4px;font-size:11px;color:var(--ink)}
+.device-picker-toggle svg{width:22px;height:20px}
+.device-picker-toggle:hover,.device-picker-toggle[aria-expanded=true]{background:#e4edf3}
+.device-picker-list{position:absolute;bottom:100%;left:0;min-width:160px;max-width:240px;max-height:220px;overflow:auto;padding:4px;background:#fff;border:1px solid var(--line);border-radius:7px;box-shadow:0 -3px 14px #233b501c;z-index:80}
+.device-picker-list[hidden]{display:none}
+.device-picker-list button{display:flex;align-items:center;gap:7px;width:100%;padding:5px 7px;border:0;border-radius:4px;background:transparent;font-size:11px;text-align:left}
+.device-picker-list button:hover,.device-picker-list button:focus-visible{background:#e9f3f2}
+.device-picker-list svg{width:24px;height:22px;flex:none}
+.device-picker-list button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.device-picker-empty{display:block;padding:6px;color:var(--muted);font-size:11px}
+.canvas-device-picker.picker-divider{border-left:1px solid var(--line);padding-left:7px;margin-left:3px}
+.device-picker-toggle.is-empty{opacity:.35}
+.canvas-status-view{display:flex;align-items:center;gap:5px;margin-left:auto;flex:none;font-size:10px}
+.canvas-status-view label{font-size:10px;margin:0}
+.canvas-status-view #zoom-slider{width:70px;min-width:40px;margin:0}
+.canvas-status-view #zoom-level{font-size:10px;min-width:30px}
+.canvas-status-view .canvas-icon-button{width:24px;height:24px;min-width:24px;padding:3px;border:0;background:transparent;border-radius:4px}
+.canvas-status-view .canvas-icon-button svg{width:17px;height:17px}
+.canvas-status-view .canvas-icon-button:hover{background:#e4edf3}
+.canvas-status-bar{flex-wrap:wrap;gap:4px 8px}
+.canvas-device-pickers{gap:1px;flex-wrap:wrap}
+.device-picker-toggle .note-symbol{fill:#fff8d8;stroke:#968947;stroke-width:1.8}
+.device-picker-list .note-symbol{fill:#fff8d8;stroke:#968947;stroke-width:1.8}
+/* Preserve outline glyphs after moving controls out of the top toolbar. */
+.canvas-status-view .canvas-icon-button svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.device-picker-toggle[data-type=dhcp] svg,.device-picker-toggle[data-type=dns] svg,.device-picker-toggle[data-type=web] svg,.device-picker-toggle[data-type=browser] svg,.device-picker-list svg[viewBox="-30 -26 60 52"]{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.device-picker-toggle{color:#567582}
+.canvas-status-view .canvas-icon-button{color:#53677e}
+.canvas-status-view #zoom-slider{height:14px;accent-color:#547d7c}
+/* Persistent centered search; results remain anchored below the input. */
+.canvas-toolbar{position:relative}
+.canvas-header-search{position:absolute;left:50%;transform:translateX(-50%);width:clamp(160px,35%,320px);display:flex;align-items:center;z-index:2}
+.canvas-header-search>svg{position:absolute;left:9px;width:15px;height:15px;fill:none;stroke:#8193a5;stroke-width:1.8;stroke-linecap:round;pointer-events:none}
+.canvas-header-search #network-query{box-sizing:border-box;width:100%;height:28px;padding:4px 25px 4px 30px;margin:0;border:1px solid #d2dce5;border-radius:6px;background:#fff;color:var(--ink);font:12px/1.4 system-ui,sans-serif}
+.canvas-header-search #network-query::placeholder{color:#8a99a8;opacity:1}
+.canvas-header-search #network-query:focus{outline:2px solid #85aaca;outline-offset:1px;border-color:transparent}
+#search-network[hidden]{display:none!important}
+#network-search-dropdown{padding:7px}
+#network-search-dropdown .network-search-count{margin:3px 6px 7px}
+#network-search-dropdown .network-search-results button{border:0;background:transparent;border-radius:5px}
+#network-search-dropdown .network-search-results button:hover,#network-search-dropdown .network-search-results button:focus-visible{background:#edf4f9}
+@media(max-width:850px){.canvas-header-search{position:relative;left:auto;transform:none;order:10;width:100%;flex-basis:100%}}
+.canvas-header-search #network-query::-webkit-search-cancel-button{appearance:none;display:none}
+.canvas-header-search .network-search-clear{position:absolute;right:4px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;width:20px;height:20px;min-width:0;padding:2px;border:0;background:transparent;color:#647d9b;border-radius:3px}
+.canvas-header-search .network-search-clear[hidden]{display:none}
+.canvas-header-search .network-search-clear svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.canvas-header-search .network-search-clear:hover{background:#edf3f8}
+/* The warning row remains editable so @ can select a terminal device. */
+#terminal-panel #command-form.cli-needs-device .command-row{display:flex;flex:1;min-width:0}
+#terminal-panel #command-form.cli-needs-device #prompt{font-size:0;flex:none}
+#terminal-panel #command-form.cli-needs-device #prompt::before{font-size:12px;margin-right:0}
+#terminal-panel #command-form.cli-needs-device #command{color:#302714;caret-color:#302714}
+#terminal-panel #command-form.cli-needs-device #command::placeholder{color:#4a3a1b;opacity:1;font:600 12px/1.5 system-ui,sans-serif}
+/* Align the three primary panel header baselines and borders. */
+#palette-title,#right-panel .inspector-heading,.canvas-toolbar{box-sizing:border-box;height:34px;min-height:34px;margin:0;padding:2px 10px;display:flex;align-items:center;flex:none}
+.canvas-toolbar .panel-toggle{box-sizing:border-box;width:28px;height:28px;min-height:28px;padding:4px}
+#right-panel .inspector-heading .watch-toggle{max-height:28px}
+@media(max-width:850px){.canvas-toolbar{height:auto;min-height:34px}}
+/* Keep the compact headers flush with their surrounding panel borders. */
+#left-panel .unified-palette>#palette-title,#right-panel>section>.inspector-heading{margin:-10px -10px 8px}
+.canvas-header-search #network-query{height:24px;min-height:24px;padding-top:2px;padding-bottom:2px;font-size:11px}
+.canvas-header-search>svg{width:13px;height:13px}
+.canvas-header-search .network-search-clear{width:18px;height:18px}
+.canvas-header-search #network-query::placeholder{font-style:italic}
+/* Match Canvas header controls to the Palette heading icon. */
+.canvas-toolbar .panel-toggle svg{width:18px;height:18px;stroke-width:1.6}
+.canvas-toolbar .panel-toggle svg [stroke-width]{stroke-width:1.6}
+.canvas-toolbar .panel-toggle .panel-icon-fill{fill-opacity:.25}
+/* Let the compact palette icons sit directly on the page. */
+#compact-palette{background:transparent;border:0;box-shadow:none}
+/* Stretch the expanded palette to match the Inspector panel. */
+body:not(.external-panel-page) #left-panel{align-self:stretch;display:flex;flex-direction:column;align-content:stretch}
+body:not(.external-panel-page) #left-panel[hidden]{display:none}
+body:not(.external-panel-page) #left-panel>.unified-palette{flex:1 0 auto;box-sizing:border-box;min-height:100%;margin:0}
+.inspector-empty{padding:8px 2px;color:var(--muted);text-align:center}
+.inspector-empty>svg{display:block;width:40px;height:40px;margin:4px auto 10px;fill:none;stroke:#94a8b9;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.inspector-empty .inspector-empty-pointer{fill:#f3f7fa;stroke:#718b9e}
+.inspector-empty p{margin:0;font-size:12px;line-height:1.5}
+
+
+/* Compact icon button interiors; retain the spacing between controls. */
+.view-controls .canvas-icon-button{box-sizing:border-box;width:26px;height:26px;min-height:26px;padding:3px}
+.view-controls #subnet-highlight{box-sizing:border-box;width:26px;height:26px;min-height:26px;padding:3px}
+.view-controls #speed-toggle{height:26px;min-height:26px;padding:2px 6px}
+/* Give the Save divider the same breathing room as the Home divider. */
+.canvas-network-actions #clear-state{margin-left:15px}
+.canvas-network-actions #clear-state::before{left:-11px;top:1px;bottom:1px}
+/* A fine zoom scale with a circular handle and evenly spaced ticks. */
+.canvas-status-view #zoom-slider{appearance:none;-webkit-appearance:none;height:18px;padding:0;border:0;border-radius:0;cursor:pointer;background:repeating-linear-gradient(to right,#aabac7 0 1px,transparent 1px 10%) center bottom / calc(100% - 10px) 4px no-repeat}
+.canvas-status-view #zoom-slider::-webkit-slider-runnable-track{height:2px;border:0;border-radius:1px;background:#aabac7}
+.canvas-status-view #zoom-slider::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:10px;height:10px;margin-top:-4px;border:1px solid #547d7c;border-radius:50%;background:#547d7c;box-shadow:0 0 0 2px #f5f8fa}
+.canvas-status-view #zoom-slider::-moz-range-track{height:2px;border:0;background:#aabac7}
+.canvas-status-view #zoom-slider::-moz-range-progress{height:2px;background:#aabac7}
+.canvas-status-view #zoom-slider::-moz-range-thumb{width:10px;height:10px;border:1px solid #547d7c;border-radius:50%;background:#547d7c}
+.canvas-status-view #zoom-slider:focus-visible{outline:2px solid #85aaca;outline-offset:3px}
+/* Tighten the canvas footer vertically. */
+.canvas-status-bar{padding-top:1px;padding-bottom:1px;min-height:26px}
+.canvas-status-bar .device-picker-toggle{min-height:20px}
+.canvas-status-view .canvas-icon-button{height:22px;min-height:22px}
+.canvas-status-view #zoom-slider{background-position:center center;background-size:calc(100% - 10px) 6px}
+/* Fine, full-width zoom scale, including both endpoints. */
+.canvas-status-view #zoom-slider{background-image:linear-gradient(#aabac7,#aabac7),linear-gradient(#aabac7,#aabac7),repeating-linear-gradient(to right,#aabac7 0 .5px,transparent .5px 10%);background-position:left center,right center,center center;background-size:.5px 5px,.5px 5px,100% 5px;background-repeat:no-repeat}
+.canvas-status-view #zoom-slider::-webkit-slider-runnable-track{height:1px}
+.canvas-status-view #zoom-slider::-webkit-slider-thumb{margin-top:-4.5px}
+.canvas-status-view #zoom-slider::-moz-range-track,.canvas-status-view #zoom-slider::-moz-range-progress{height:1px}
+/* Compact Inspector ports without changing the cable endpoint picker. */
+#inspector .interface-chassis{padding:6px;margin:6px 0 10px}
+#inspector .interface-ports{gap:5px 4px}
+#inspector .interface-port{gap:1px;padding:2px;min-height:0}
+#inspector .interface-port svg{width:32px;max-width:100%;height:24px}
+#inspector .interface-port .port-name{font-size:10px}
+#inspector .interface-port .port-led{width:7px;height:4px;margin:1px 0 2px}
+#inspector .interface-port .vlan-badge{font-size:10px;padding:1px 4px;margin-top:2px}
+/* Keep simulation status at the right end of the top toolbar. */
+.view-controls>#sim-status{margin-left:auto;padding-left:8px;font-size:11px;line-height:16px;font-weight:400;text-align:right}
+.canvas-device-pickers{border-left:0;padding-left:0}
+.view-controls>#sim-status{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.simulation-spinner{width:14px;height:14px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;animation:simulation-spin 1s linear infinite}
+.simulation-spinner circle{opacity:.2}
+.simulation-spinner path{stroke-linecap:round}
+.simulation-paused .simulation-spinner{animation-play-state:paused}
+@keyframes simulation-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.simulation-spinner{animation:none}}
+/* Clear selection with a quiet tint and a fine outline at every zoom level. */
+.node.selected:not(.table-highlight) .device-body{fill:#eaf5f3;stroke:#4e9690;stroke-width:1.5;vector-effect:non-scaling-stroke}
+.node.selected{filter:none}

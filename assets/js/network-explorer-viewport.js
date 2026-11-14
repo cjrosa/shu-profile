@@ -69,6 +69,9 @@
     const bounds = navigationBounds();
     camera.x = clamp(camera.x, bounds.x, bounds.x + bounds.width - width);
     camera.y = clamp(camera.y, bounds.y, bounds.y + bounds.height - height);
+    // Extend the dot field through the full visible SVG, including aspect-ratio gutters.
+    const grid=canvas.querySelector('rect[fill="url(#grid)"]');
+    if(grid){const aspect=canvas.clientWidth&&canvas.clientHeight?canvas.clientWidth/canvas.clientHeight:width/height,visibleWidth=Math.max(width,height*aspect),visibleHeight=Math.max(height,width/aspect);for(const [key,value] of Object.entries({x:camera.x-(visibleWidth-width)/2,y:camera.y-(visibleHeight-height)/2,width:visibleWidth,height:visibleHeight}))grid.setAttribute(key,value);}
     canvas.setAttribute('viewBox', `${camera.x} ${camera.y} ${width} ${height}`);
     const window = get('viewport-window');
     for (const [key, value] of Object.entries({x: camera.x, y: camera.y, width, height})) {
@@ -237,6 +240,7 @@
   observer.observe(get('links'), {childList: true});
   if(get('applications'))observer.observe(get('applications'), {childList:true});
   if(get('notes'))observer.observe(get('notes'),{childList:true});
+  new ResizeObserver(() => update()).observe(canvas);
   refreshOverview();
   update();
 })();
