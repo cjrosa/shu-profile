@@ -926,7 +926,7 @@ body.welcome-open>header{display:none}
 .guide-divider{display:flex;justify-content:space-between;border-top:1px solid #dce5eb;padding-top:16px;font-size:10px;letter-spacing:2px;color:#718a9b}
 .guide-intro{text-align:center;padding:58px 15px 26px}.guide-kicker{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--chapter-accent,#4c8986)}
 #network-welcome .guide-intro h2{font-size:34px;letter-spacing:-1px;margin:12px 0;color:#2d495c}.guide-intro p{font-size:15px;color:#6a8090}
-.guide-features{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;padding:20px 0 50px}.guide-features article{padding:18px 12px;border-top:2px solid #d7e8e7}.guide-features article:nth-child(2){border-color:#dce3f0}.guide-features article:nth-child(3){border-color:#ede2cf}.guide-features article>span{font-size:10px;letter-spacing:1.5px;color:#718a9b}.guide-features h3{font-size:17px;margin:14px 0 9px}.guide-features p,.guide-copy>p{font-size:14px;line-height:1.8;color:#6a7d8c}
+.guide-features{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;padding:20px 0 50px}.guide-features article{padding:18px 12px;border-top:0}.guide-features article:nth-child(2){border-color:#dce3f0}.guide-features article:nth-child(3){border-color:#ede2cf}.guide-features article>span{font-size:10px;letter-spacing:1.5px;color:#718a9b}.guide-features h3{font-size:17px;margin:14px 0 9px}.guide-features p,.guide-copy>p{font-size:14px;line-height:1.8;color:#6a7d8c}
 #network-welcome .guide-chapter{display:grid;grid-template-columns:1fr 1.15fr;align-items:center;gap:45px;min-height:390px;padding:48px 0;border:0;border-top:1px solid #edf1f4;background:transparent;border-radius:0;box-shadow:none}.guide-chapter:nth-of-type(even) .guide-copy{order:2}.guide-chapter:nth-of-type(even) figure{order:1}.guide-copy h3{font-size:28px;line-height:1.2;letter-spacing:-.6px;margin:14px 0}.guide-callout{border-left:3px solid var(--chapter-accent);padding:6px 0 6px 14px;margin:22px 0}.guide-callout strong{font-size:12px;color:var(--chapter-accent)}.guide-callout p{font-size:12px;line-height:1.7;margin:5px 0;color:#61788a}.guide-actions{display:flex;flex-wrap:wrap;gap:10px}
 #network-welcome .guide-actions button,#network-welcome .guide-finish button{border:0;background:#edf4f6;color:#355b71;font-size:12px;padding:9px 12px;border-radius:7px;gap:12px}#network-welcome .guide-actions button:hover,#network-welcome .guide-finish button:hover{background:#dfedef}
 .guide-chapter figure{margin:0;min-width:0;border-radius:20px;padding:18px 10px;background:radial-gradient(ellipse at center,#edf4f8,#fafcfd 75%);overflow:hidden}#network-welcome svg.guide-scene{display:block;width:100%;height:auto;fill:none;stroke:none;overflow:visible}.guide-scene text{font-family:inherit;font-size:11px;text-anchor:middle;fill:#527084;stroke:none}.guide-scene text.guide-svg-heading{font-size:19px;font-weight:700;fill:#344f64}.guide-wire{stroke:#9ab8c8;stroke-width:2;fill:none}.guide-packet{fill:#d2a04b;stroke:#fff;stroke-width:2}.guide-chapter figcaption{text-align:center;font-size:10px;color:#8496a4;margin-top:8px}.guide-finish{text-align:center;padding:55px 15px 65px;border-top:1px solid #dce5eb}.guide-finish h3{font-size:30px;margin:0 0 15px}.guide-finish p{font-size:14px;color:#6a8090;line-height:1.9}#network-welcome .guide-finish button{margin:22px auto 0}
@@ -1006,3 +1006,19 @@ body.welcome-open>header{display:none}
 }
 #network-welcome>header>.welcome-eyebrow,#network-welcome>header>h1,#network-welcome>header>p{position:relative}
 #network-welcome .welcome-network-art rect[fill="url(#welcome-art-grid)"]{display:none}
+
+/* The welcome page uses document scrolling, outside the canvas frame. */
+body.welcome-open:not(.external-panel-page){height:auto;min-height:100dvh;overflow:visible}
+body.welcome-open:not(.external-panel-page)>main{flex:none;min-height:0}
+body.welcome-open:not(.external-panel-page) .center{display:block;overflow:visible;height:auto}
+body.welcome-open:not(.external-panel-page) .canvas-panel{display:block;height:auto;border:0;border-radius:0;box-shadow:none;background:transparent}
+body.welcome-open:not(.external-panel-page) #canvas-stage{height:auto;min-height:0;overflow:visible}
+body.welcome-open #network-welcome{height:auto;overflow:visible;border:0;border-radius:0;box-shadow:none}
+
+/* Compact transition from example networks into the guided overview. */
+#network-welcome #welcome-guide{margin-top:22px}
+#network-welcome .guide-section-divider{display:flex;align-items:center;gap:12px;width:100%;margin:0 auto}
+#network-welcome .guide-section-divider span{height:1px;flex:1;background:linear-gradient(90deg,transparent,#bad1e2 12%,#bad1e2)}
+#network-welcome .guide-section-divider span:last-child{transform:rotate(180deg)}
+#network-welcome .guide-section-divider svg{width:48px;height:18px;stroke:#7aa5bf;stroke-width:1.3;fill:#fff}
+#network-welcome .guide-intro{padding-top:22px}
