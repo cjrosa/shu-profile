@@ -432,3 +432,19 @@ body[data-platform=paloalto] .vlan-badge{max-width:100%;overflow:hidden;text-ove
 .capture-dns{background:#f0edf9;color:#5c4981}
 
 .compact-palette-divider{height:1px;background:var(--line);margin:2px 3px;width:44px}
+
+#add-web-application,#add-browser-application{display:flex;flex-direction:column;align-items:center;gap:3px}
+#add-web-application span,#add-browser-application span{font-size:11px}
+#web-settings label{display:block;margin:12px 0}#web-settings textarea{box-sizing:border-box;width:100%;resize:vertical;font:inherit;padding:8px;border:1px solid var(--border,#bccbdd);border-radius:8px}#browser-form{display:flex;align-items:end;gap:8px}#browser-form label{flex:1;min-width:0}#browser-form button{flex:none;margin-bottom:10px}.browser-page{border:1px solid #d6e1e8;border-radius:8px;padding:12px;background:#fff;overflow-wrap:anywhere}.browser-page p,.http-evidence pre{white-space:pre-wrap;overflow-wrap:anywhere}.http-evidence pre{font:inherit}.capture-tcp td:nth-child(7){color:#286d96}.capture-http td:nth-child(7){color:#976025}
+
+.tcp-fields{grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid #d6e1e8;background:#f6f1e8}
+
+/* Let the detached capture workspace use the entire resizable window. */
+body.external-panel-page[data-panel="events"]{display:flex;flex-direction:column;height:100dvh;min-height:480px;margin:0;box-sizing:border-box}
+.external-panel-page[data-panel="events"]>.external-panel-header{flex:none}
+.external-panel-page[data-panel="events"] #external-content{flex:1;min-height:0;min-width:0;width:100%;max-width:none;margin:0;padding:16px;box-sizing:border-box}
+.external-panel-page[data-panel="events"] #events-panel{display:grid;grid-template-rows:auto auto minmax(120px,1fr) minmax(160px,1fr);height:100%;min-width:0;margin:0}
+.external-panel-page[data-panel="events"] #events-panel .capture-scroll{min-height:0;max-height:none}
+.external-panel-page[data-panel="events"] #events-panel .capture-inspection{min-height:0;overflow:hidden}
+.external-panel-page[data-panel="events"] #capture-detail,.external-panel-page[data-panel="events"] #capture-bytes{min-height:0;max-height:none}
+@media(max-width:700px){.external-panel-page[data-panel="events"] #events-panel .capture-inspection{grid-template-rows:1fr 1fr}}
