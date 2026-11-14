@@ -43,7 +43,7 @@ Teaching simplifications: all switch interfaces are Layer 2, VLAN object interna
 
 Add a two-interface router from the palette. Click G0/0 or G0/1 to assign an IPv4 address/prefix or change administrative state. Enabled addressed interfaces add connected routes automatically; overlapping interface subnets are rejected. Hosts have an optional default gateway in their own subnet. Load Examples > Two subnets, then use Host 1's CLI to run `ping 192.168.2.20`. Examples start with Watch off; double-click the router to watch its decisions.
 
-Off-subnet hosts ARP for their gateway, keeping the remote destination IP. Routers keep separate ARP entries per interface, resolve the directly connected next hop, replace the Ethernet header, preserve IP endpoints, and decrement IP TTL. Watch shows incoming/outgoing frames and connected-route decisions. Broadcasts stay on their LAN. Unreachable next hops and missing forward/return routes time out; this version records drops without synthesizing ICMP unreachable/time-exceeded messages.
+Off-subnet hosts ARP for their gateway, keeping the remote destination IP. Routers keep separate ARP entries per interface, resolve the directly connected next hop, replace the Ethernet header, preserve IP endpoints, and decrement IP TTL. Watch shows incoming/outgoing frames and connected-route decisions. Broadcasts stay on their LAN. Unreachable next hops and missing forward/return routes time out; routers return ICMP Destination Unreachable when no route matches and ICMP Time Exceeded when TTL expires, provided a return route exists. Unresolved ARP still times out.
 
 The router console provides `show ip route`, `show ip interface brief`, and `show arp` as a small display-command subset. Configure addresses through the interface inspector; static routes can also be configured through the routing table or console. Router interfaces and host gateways persist in topology JSON; legacy hosts load without a gateway.
 
@@ -54,3 +54,13 @@ Examples > Two routers connects two /24 LANs through a /30 router link. Each rou
 Cisco configuration mode accepts `ip route NETWORK MASK NEXT_HOP` and `no ip route NETWORK MASK NEXT_HOP`; use `show ip route` to inspect routes. PAN-OS configuration mode accepts `set network virtual-router default routing-table ip static-route NAME destination NETWORK/PREFIX nexthop ip-address NEXT_HOP` and `delete network virtual-router default routing-table ip static-route NAME`, followed by `commit` or `revert config`. Use `show routing route` operationally. This teaching subset requires a complete destination and next hop in each set command, and only models the default virtual router. Next hops must be directly reachable; recursive routing and dynamic protocols are not modeled.
 
 Command references: [Cisco ip route](https://www.cisco.com/E-Learning/bulk/public/tac/cim/cib/using_cisco_ios_software/cmdrefs/ip_route.htm) and [PAN-OS static routes](https://knowledgebase.paloaltonetworks.com/KCSArticleDetail?id=kA10g000000Cm2lCAC&lang=en_US).
+
+## Traceroute and routing errors
+
+On a Windows host run `tracert 192.168.2.20`; on Linux or macOS run `traceroute 192.168.2.20`. Load Two routers to see two router hops followed by the destination. Each probe starts with TTL 1, then 2, then 3, until the destination replies or the 30-hop limit is reached. This teaching subset sends one probe per hop, uses numeric IPv4 addresses, and does not simulate measured RTTs, DNS lookup, or optional command flags.
+
+Windows sends ICMP Echo Requests. Linux/macOS send UDP probes to closed destination ports starting at 33434; a destination Port Unreachable response completes that trace. Intermediate routers return Time Exceeded. No matching route produces Network Unreachable and stops the trace. Silent hops show an asterisk and tracing continues. Error replies travel through ordinary routing and ARP; a missing return route therefore still causes a timeout. ICMP errors do not trigger further ICMP errors. Clear learned state cancels the trace.
+
+Watch and Events show TTL, UDP ports, ICMP type/code, and the original destination quoted by an error. Pause can freeze any probe or response in flight.
+
+References: [Windows tracert](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/tracert), [Linux traceroute](https://man7.org/linux/man-pages/man8/traceroute.8.html).
