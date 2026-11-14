@@ -862,3 +862,61 @@ body[data-panel^="browser:"] .browser-tab{flex:0 1 240px}
 #subnet-tooltip{max-width:370px}.subnet-cidr-details{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:6px 0 8px;font-size:11px}.subnet-cidr-details dt{color:#637184}.subnet-cidr-details dd{margin:0;font-variant-numeric:tabular-nums}
 
 #subnet-tooltip{pointer-events:auto;max-height:calc(100vh - 16px);overflow:auto}.subnet-examine{display:inline-flex;align-items:center;gap:5px;margin-top:7px;color:#355f86;font-size:11px}.subnet-examine svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.6}
+.home-toolbar-divider{width:1px;height:22px;background:var(--line);margin:0 5px;flex:none}
+#network-welcome{height:100%;overflow:auto;box-sizing:border-box;padding:38px clamp(24px,6vw,90px);background:#fff;color:#344154}#network-welcome[hidden]{display:none}#network-welcome header{margin-bottom:28px}#network-welcome h1{font-size:28px;font-weight:600;margin:0 0 6px}#network-welcome header p{color:#6a7b8e;margin:0;font-size:14px}#network-welcome h2{font-size:16px;margin:0 0 12px}.welcome-columns{display:grid;grid-template-columns:1fr 1.2fr;gap:clamp(24px,6vw,80px);max-width:950px}.welcome-start{display:grid;gap:4px;margin-bottom:30px}#network-welcome button{display:flex;align-items:center;gap:10px;text-align:left}.welcome-start button,.welcome-help{border:0;background:none;padding:7px 0;color:#426ba0;font-size:13px}#network-welcome svg{width:21px;height:21px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}.welcome-copy{font-size:13px;line-height:1.65;color:#6a7b8e;max-width:340px}.welcome-example{border:0;border-left:3px solid #7199b0;background:#f3f6f8;width:100%;padding:12px;margin-bottom:9px;border-radius:5px}.welcome-example:hover{background:#e8f0f5}.welcome-example strong{display:block;font-size:13px}.welcome-example span span{display:block;font-size:12px;line-height:1.5;color:#6a7b8e;margin-top:4px}.welcome-tip{display:flex;gap:18px;max-width:780px;margin:28px auto 22px;padding:20px;border:1px solid var(--line);border-radius:10px;font-size:13px}.welcome-tip p{margin:6px 0 0;color:#6a7b8e;line-height:1.6}.welcome-startup{display:flex;justify-content:center;align-items:center;gap:8px;font-size:12px}.welcome-startup input{width:auto}.welcome-open #canvas-stage>:not(#network-welcome){display:none!important}.welcome-open #left-panel,.welcome-open #right-panel,.welcome-open #inspector-divider{display:none!important}.welcome-open main{grid-template-columns:minmax(0,1fr)!important}.welcome-open .center{grid-column:1/-1}.welcome-open #canvas-stage{min-height:500px}.welcome-open .center> :not(.canvas-panel){display:none!important}@media(max-width:650px){.welcome-columns{grid-template-columns:1fr}#network-welcome{padding:24px}.welcome-tip{margin-top:18px}}
+
+.welcome-open .canvas-toolbar,.welcome-open .view-controls{display:none!important}
+/* Welcome: a compact network-lab identity with distinct example accents. */
+#network-welcome{background:radial-gradient(ellipse at 95% 0%,#dcefeb80,transparent 50%),radial-gradient(ellipse at 0% 100%,#e9edfa70,transparent 45%),#fcfdfd;padding:32px clamp(24px,6vw,90px)}
+#network-welcome>header{position:relative;display:block;padding:24px 300px 26px 28px;min-height:150px;box-sizing:border-box;border:1px solid #d6e8e7;border-radius:16px;background:linear-gradient(115deg,#edf7f5,#f5f8fd);margin:0 auto 28px;max-width:1050px;overflow:hidden}
+#network-welcome .welcome-eyebrow{display:block;font-size:10px;font-weight:700;letter-spacing:1.8px;color:#4e8888;margin-bottom:12px}#network-welcome h1{font-size:32px;letter-spacing:-.8px;color:#284b5c}#network-welcome header p{margin-top:10px;line-height:1.5;color:#567381}.welcome-network-art{position:absolute;right:15px;top:12px;width:280px}#network-welcome .welcome-network-art svg{width:100%;height:130px;stroke:none}
+#network-welcome .welcome-columns{max-width:1050px;margin:0 auto;grid-template-columns:.85fr 1.2fr;gap:32px}#network-welcome .welcome-columns>section{border:0;background:transparent;padding:0;box-shadow:none}#network-welcome h2{border:0;background:none;padding:0;margin:0 0 15px;color:#385367;font-size:15px}
+#network-welcome .welcome-start{gap:8px;margin-bottom:28px}#network-welcome .welcome-start button{padding:12px 14px;border-radius:9px;background:#fff;border:1px solid #dee7ec;transition:background .15s,border-color .15s;color:#3f627f}#network-welcome .welcome-start button:first-child{background:#377c7b;border-color:#377c7b;color:#fff}#network-welcome .welcome-start button:hover{background:#e9f3f4;border-color:#93b9bf}#network-welcome .welcome-start button:first-child:hover{background:#2c6867}
+#network-welcome .welcome-example{--example-accent:#638ba7;border:1px solid #e0e6ed;border-left:3px solid var(--example-accent);background:#fff;border-radius:10px;padding:13px;box-shadow:0 2px 5px #25475205;transition:background .15s,box-shadow .15s}#network-welcome .welcome-example>svg{color:var(--example-accent);width:23px;height:23px;padding:9px;box-sizing:content-box;border-radius:10px;background:color-mix(in srgb,var(--example-accent) 10%,white)}#network-welcome .welcome-example:hover{background:#f6fafb;box-shadow:0 4px 12px #25475212}#network-welcome [data-action=example-complex]{--example-accent:#3c8b81}#network-welcome [data-action=example-http]{--example-accent:#7b70b0}#network-welcome [data-action=example-dns]{--example-accent:#ac8245}#network-welcome [data-action=example-vlans]{--example-accent:#ae6d86}#network-welcome .welcome-example strong{font-weight:650;font-size:13px}
+#network-welcome .welcome-tip{max-width:1008px;margin:24px auto 20px;border:1px solid #dbe8ec;background:#f1f6f9;color:#3f6074;padding:18px 20px}#network-welcome .welcome-tip>svg{color:#5e8da1;width:27px;height:27px}.welcome-startup{color:#70818c}@media(max-width:750px){#network-welcome>header{padding:24px}.welcome-network-art{display:none}#network-welcome .welcome-columns{grid-template-columns:1fr}}
+#network-welcome .welcome-network-art{width:310px;right:10px;top:3px}#network-welcome .welcome-network-art svg{height:145px}@media(prefers-reduced-motion:reduce){.welcome-packets{display:none}}
+/* Keep the welcome page predominantly white with restrained accents. */
+#network-welcome{background:#fff}
+#network-welcome>header{background:linear-gradient(110deg,#fff 55%,#f6fafb);border-color:#e4ebef}
+#network-welcome .welcome-tip{background:#fff;border-color:#e1e8ed}
+
+/* Borderless welcome actions and persistent recent networks. */
+#network-welcome>header,#network-welcome .welcome-tip,#network-welcome .welcome-start button,#network-welcome .welcome-example{border:0;box-shadow:none}
+#network-welcome .welcome-recent{border:0;background:transparent;color:#426b8e;padding:8px 2px;width:100%;font-size:13px;border-radius:5px}
+#network-welcome .welcome-recent:hover{background:#f2f6f8}
+#network-welcome .welcome-recent span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#network-welcome .welcome-start button:first-child,#network-welcome .welcome-start button:first-child:hover{background:transparent;border:0;box-shadow:none;color:#3f627f}
+
+#network-welcome .welcome-start button:first-child:hover{background:#e9f3f4}
+#network-welcome .welcome-start{gap:2px;margin-bottom:20px}
+#network-welcome .welcome-start button{padding:7px 12px;margin:0}
+/* Link state is carried by the jack and LED; details remain in the tooltip. */
+.interface-port .port-state{display:none}
+.interface-port.enabled:not(.link-up):not(.link-down){color:#87969a}
+.interface-port.link-up{color:#287953}
+.interface-port.link-down{color:#af8135}
+.interface-port .port-led{width:9px;height:5px;margin:2px 0 4px}
+.interface-port.link-up .port-led{background:#4bd477;box-shadow:0 0 5px #35ce7680;animation:none}
+.interface-port.link-down .port-led{background:#dfaa44;box-shadow:0 0 4px #dfaa4440}
+.interface-port.port-activity .port-led{animation:port-traffic-blink .15s steps(1,end) 6}
+@media(prefers-reduced-motion:reduce){.interface-port.port-activity .port-led{animation:none;background:#ffd350}}
+/* Emphasize selectable sockets while choosing a cable endpoint. */
+#port-picker .interface-port:not(:disabled){color:#294b59;opacity:1}
+#port-picker .interface-port:not(:disabled) .port-name{color:#294b59}
+#port-picker .interface-port:not(:disabled) .port-led{background:#5f7d86}
+#port-picker .interface-port:not(:disabled):hover{background:#fff;border-color:#648c96}
+#port-picker .interface-port:disabled{color:#9ba7ac;opacity:.5}
+
+.interface-port.link-up{color:#294b59}
+
+#network-welcome .welcome-example,#network-welcome .welcome-example:hover{box-shadow:none}
+/* Consistent welcome typography. */
+#network-welcome,#network-welcome button,#network-welcome input{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+#network-welcome h1{font-weight:700}
+
+#network-welcome>header{border:1px solid #dce5eb}
+/* Center the welcome banner and its content independently of the workspace grid. */
+#network-welcome>header{width:100%;max-width:1050px;margin-inline:auto}
+#network-welcome .welcome-columns{width:100%;max-width:940px;margin-inline:auto;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:48px;box-sizing:border-box}
+#network-welcome .welcome-tip{width:100%;max-width:940px;box-sizing:border-box;margin-inline:auto}
+@media(max-width:750px){#network-welcome .welcome-columns{grid-template-columns:1fr;gap:24px}}
