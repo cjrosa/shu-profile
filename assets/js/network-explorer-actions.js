@@ -3,6 +3,11 @@
   "use strict";
   const handlers = new Map();
   const examples = {
+    "example-internet": {
+      title: "Internet and NAT",
+      description:
+        "Two private clients share one outside address using NAT/PAT.",
+    },
     example: {
       title: "Simple LAN",
       description: "Two configured hosts and an Ethernet switch.",

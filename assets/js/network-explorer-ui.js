@@ -756,6 +756,84 @@
           "</tbody></table></div>"
       : '<p class="hint">No routes. Configure an interface to add a connected route.</p>';
   }
+  function natPanel(d) {
+    const c = d.nat || { enabled: false, inside: [], outside: "" },
+      rows = net.natTable[d.id] || [];
+    return (
+      '<div class="nat-panel"><div class="small-heading inspector-section-heading"><span>NAT / PAT</span><label class="examine-watch-control"><input id="nat-enabled" aria-label="Enable outbound NAT" role="switch" type="checkbox" ' +
+      (c.enabled ? "checked" : "") +
+      '><span class="watch-switch-track" aria-hidden="true"></span><span>Enabled</span></label></div><p class="hint">Set Inside or Outside / WAN in each port&#39;s settings.</p><div class="small-heading inspector-section-heading"><span>NAT translations</span></div><p class="hint">Mappings expire after 120 seconds of inactivity.</p><div class="nat-table"><table><thead><tr><th>Protocol</th><th>Inside</th><th>Outside</th><th>Remote</th><th>Expires</th></tr></thead><tbody>' +
+      rows
+        .map(
+          (r) =>
+            "<tr><td>" +
+            esc(r.protocol) +
+            "</td><td>" +
+            esc(r.privateIp + ":" + (r.privatePort ?? r.probe)) +
+            "</td><td>" +
+            esc(
+              r.publicIp +
+                ":" +
+                (r.protocol === "ICMP" ? r.probe : r.publicPort),
+            ) +
+            "</td><td>" +
+            esc(r.remoteIp + (r.remotePort ? ":" + r.remotePort : "")) +
+            "</td><td>" +
+            expiryMarkup(r.expiresAt) +
+            "</td></tr>",
+        )
+        .join("") +
+      "</tbody></table>" +
+      (rows.length ? "" : '<p class="hint">No active translations.</p>') +
+      "</div></div>"
+    );
+  }
+  function bindNat(d) {
+    if (d.type !== "router") return;
+    $("nat-enabled").onchange = () => {
+      if (!editable()) {
+        render();
+        return;
+      }
+      safely(() =>
+        configurationChange(() =>
+          net.configureNat(d.id, {
+            ...(d.nat || { inside: [], outside: "" }),
+            enabled: $("nat-enabled").checked,
+          }),
+        ),
+      );
+      render();
+    };
+  }
+  function natRoleMarkup(d, p) {
+    const role =
+      d.nat?.outside === p.id
+        ? "outside"
+        : d.nat?.inside.includes(p.id)
+          ? "inside"
+          : "none";
+    return (
+      '<label>NAT role<select id="port-nat-role">' +
+      [
+        ["none", "None"],
+        ["inside", "Inside"],
+        ["outside", "Outside / WAN"],
+      ]
+        .map(
+          ([value, label]) =>
+            '<option value="' +
+            value +
+            '" ' +
+            (role === value ? "selected" : "") +
+            ">" +
+            label +
+            "</option>",
+        )
+        .join("") +
+      "</select></label>"
+    );
+  }
   function routePanel(d) {
     return (
       '<div class="small-heading inspector-section-heading"><span>Routing table</span><button id="show-add-route" type="button" class="vlan-icon-button" aria-label="Add static route" title="Add static route" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>' +
@@ -1099,6 +1177,19 @@
     for (const c of cidr) hash = (hash * 31 + c.charCodeAt(0)) >>> 0;
     return "hsl(" + (hash % 360) + " 48% 48%)";
   }
+  function subnetOutsideRouters(cidr) {
+    return net.devices
+      .filter(
+        (d) =>
+          d.type === "router" &&
+          d.nat?.enabled &&
+          NetworkExplorerSubnets.outsideSubnets(net, d).has(cidr),
+      )
+      .map((d) => d.name);
+  }
+  function subnetLabel(cidr) {
+    return cidr + (subnetOutsideRouters(cidr).length ? " - Outside" : "");
+  }
   function drawSubnetClouds() {
     const canvas = $("canvas");
     let layer = $("subnet-clouds");
@@ -1110,8 +1201,7 @@
     }
     const groups = NetworkExplorerSubnets.groups(net);
     if (
-      subnetMode !== "off" &&
-      subnetMode !== "all" &&
+      !["off", "all", "inside", "outside"].includes(subnetMode) &&
       !groups.some((g) => g.cidr === subnetMode)
     )
       subnetMode = "off";
@@ -1119,7 +1209,15 @@
       subnetMode === "off"
         ? ""
         : groups
-            .filter((g) => subnetMode === "all" || g.cidr === subnetMode)
+            .filter(
+              (g) =>
+                subnetMode === "all" ||
+                g.cidr === subnetMode ||
+                (subnetMode === "outside" &&
+                  subnetOutsideRouters(g.cidr).length > 0) ||
+                (subnetMode === "inside" &&
+                  subnetOutsideRouters(g.cidr).length === 0),
+            )
             .map((g) => {
               const points = g.ids.map((id) => net.device(id)),
                 top = points.reduce((a, b) => (a.y < b.y ? a : b));
@@ -1132,7 +1230,17 @@
                 subnetColor(g.cidr) +
                 '"><path d="' +
                 NetworkExplorerSubnets.cloud(points) +
-                '"/></g>'
+                '"/>' +
+                (subnetOutsideRouters(g.cidr).length
+                  ? '<text class="subnet-outside-label" x="' +
+                    top.x +
+                    '" y="' +
+                    (top.y - 75) +
+                    '" text-anchor="middle">' +
+                    esc(subnetLabel(g.cidr)) +
+                    "</text>"
+                  : "") +
+                "</g>"
               );
             })
             .join("");
@@ -1218,7 +1326,11 @@
           const text = document.createElement("div"),
             name = document.createElement("strong"),
             members = document.createElement("small");
-          name.textContent = g.dataset.subnet;
+          name.textContent = subnetLabel(g.dataset.subnet);
+          if (subnetOutsideRouters(g.dataset.subnet).length)
+            name.title =
+              "Outside network of " +
+              subnetOutsideRouters(g.dataset.subnet).join(", ");
           members.textContent = g.dataset.members;
           text.append(name);
           const info = NetworkExplorerSubnets.details(g.dataset.subnet),
@@ -1309,17 +1421,24 @@
           ? "Off"
           : subnetMode === "all"
             ? "All subnets"
-            : subnetMode),
+            : subnetMode === "inside"
+              ? "All inside"
+              : subnetMode === "outside"
+                ? "All outside"
+                : subnetMode),
     );
     button.classList.toggle("active", subnetMode !== "off");
-    const signature = groups.map((g) => g.cidr).join("|") + "|" + subnetMode;
+    const signature =
+      groups.map((g) => subnetLabel(g.cidr)).join("|") + "|" + subnetMode;
     if (list.dataset.signature === signature) return;
     list.dataset.signature = signature;
     list.replaceChildren();
     for (const option of [
       { value: "off", label: "Off" },
       { value: "all", label: "All subnets" },
-      ...groups.map((g) => ({ value: g.cidr, label: g.cidr })),
+      { value: "inside", label: "All inside" },
+      { value: "outside", label: "All outside" },
+      ...groups.map((g) => ({ value: g.cidr, label: subnetLabel(g.cidr) })),
     ]) {
       const b = document.createElement("button");
       b.type = "button";
@@ -1330,7 +1449,7 @@
         '<span class="subnet-swatch" style="background:' +
         (option.value.includes("/")
           ? subnetColor(option.value)
-          : option.value === "all"
+          : ["all", "inside", "outside"].includes(option.value)
             ? "linear-gradient(120deg,#81b9c8,#b29bcb,#c9b77a)"
             : "transparent") +
         '"></span><span>' +
@@ -1429,6 +1548,9 @@
           (d.type === "host" ? "#eaf3fa" : "#e7f4f1") +
           '" stroke="currentColor" stroke-width="2"/>' +
           icon(d) +
+          (d.nat?.enabled
+            ? '<g class="nat-badge"><title>NAT enabled</title><rect x="18" y="-44" width="34" height="16" rx="5"/><text x="35" y="-32" text-anchor="middle">NAT</text></g>'
+            : "") +
           '<text text-anchor="middle" y="55" font-size="14" font-weight="600" fill="#29394b">' +
           esc(d.name) +
           '</text><text text-anchor="middle" y="73" font-size="12" fill="#61758a">' +
@@ -1857,7 +1979,8 @@
             esc(p.prefix ?? 24) +
             '"></label></div><label>DHCP relay server<input id="router-dhcp-relay" value="' +
             esc(p.dhcpRelay || "") +
-            '" placeholder="Optional server IPv4 address"></label><p class="hint">Set relay on the client-facing interface to reach a DHCP server on another subnet.</p>'
+            '" placeholder="Optional server IPv4 address"></label><p class="hint">Set relay on the client-facing interface to reach a DHCP server on another subnet.</p>' +
+            natRoleMarkup(d, p)
           : "") +
       '<footer><button id="close-port-config">Close</button></footer>';
     $("close-port-config").onclick = () => portConfig.close();
@@ -1898,6 +2021,28 @@
           );
           render();
         });
+      };
+      $("port-nat-role").onchange = (e) => {
+        if (!editable()) {
+          openPortConfig(deviceId, portId);
+          return;
+        }
+        safely(() => {
+          const c = JSON.parse(
+              JSON.stringify(
+                d.nat || { enabled: false, inside: [], outside: "" },
+              ),
+            ),
+            role = e.target.value;
+          c.inside = c.inside.filter((id) => id !== p.id);
+          if (c.outside === p.id) c.outside = "";
+          if (role === "inside") c.inside.push(p.id);
+          if (role === "outside") c.outside = p.id;
+          if (!c.inside.length || !c.outside) c.enabled = false;
+          configurationChange(() => net.configureNat(d.id, c));
+          render();
+        });
+        openPortConfig(deviceId, portId);
       };
       $("router-ip").onchange = save;
       $("router-prefix").onchange = save;
@@ -3147,7 +3292,7 @@
         (d.type === "switch"
           ? vlanPanel(d)
           : d.type === "router"
-            ? routePanel(d)
+            ? routePanel(d) + natPanel(d)
             : "") +
         (d.type === "host"
           ? '<p class="hint">MAC ' + esc(d.ports[0].mac) + "</p>"
@@ -3251,6 +3396,7 @@
         picker.append($("dhcp-acquire"));
       }
       bindRoutes(d);
+      bindNat(d);
       bindVlanPanel(d);
       $("inspector")
         .querySelectorAll("[data-port]")
@@ -4144,6 +4290,7 @@
       ns = "http://www.w3.org/2000/svg",
       duration = Number($("speed").value) / 1000;
     for (const report of reports) {
+      if (!NetworkExplorerCapture.matchesEvent(report, net)) continue;
       flashPorts(report);
       if (!report.link) continue;
       const link = net.links.find((l) => l.id === report.link);
@@ -4190,6 +4337,7 @@
     );
   }
   function animateApplicationDelivery(report) {
+    if (!NetworkExplorerCapture.matchesEvent(report, net)) return;
     const d = net.device(report.device),
       a = applications().find(
         (a) => a.host === d.id && a.type === report.kind.split("-")[0],
@@ -4201,6 +4349,7 @@
     $("traffic").replaceChildren();
     circle.setAttribute("r", "6");
     circle.setAttribute("fill", "#287d78");
+    circle.flightReport = report;
     const path = applicationPath(a);
     if (report.action === "request") {
       const start = path.start;
@@ -4268,19 +4417,35 @@
   }
   function stage() {
     if (staged) return;
-    const trial = Object.assign(
-      new NetworkExplorer.Network(),
-      JSON.parse(JSON.stringify(net)),
-    );
-    const report = trial.next();
-    if (!report) {
-      net = terminalSessions.adopt(net, trial);
-      arrivedFlights.clear();
-      stop();
-      render();
-      return;
+    let trial,
+      report,
+      skipped = 0;
+    while (true) {
+      trial = Object.assign(
+        new NetworkExplorer.Network(),
+        JSON.parse(JSON.stringify(net)),
+      );
+      report = trial.next();
+      if (!report) {
+        net = terminalSessions.adopt(net, trial);
+        arrivedFlights.clear();
+        $("traffic").replaceChildren();
+        stop();
+        render();
+        return;
+      }
+      staged = { trial, report };
+      flashFilterTraffic(report);
+      if (NetworkExplorerCapture.matchesEvent(report, net)) break;
+      arrivedFlights.delete(report.order);
+      commit(true);
+      if (++skipped >= 200) {
+        $("traffic").replaceChildren();
+        render();
+        schedulePhase(stage, 0);
+        return;
+      }
     }
-    staged = { trial, report };
     let duration = 100;
     if (report.link) {
       if (arrivedFlights.delete(report.order)) {
@@ -4305,9 +4470,10 @@
     schedulePhase(() => {
       if (!staged) return;
       if (
-        (!report.kind.endsWith("-application") &&
+        NetworkExplorerCapture.matchesEvent(report, net) &&
+        ((!report.kind.endsWith("-application") &&
           net.device(report.device).watch) ||
-        watchDhcpReport(report)
+          watchDhcpReport(report))
       )
         examine();
       else commit();
@@ -4486,6 +4652,13 @@
       ? "On"
       : "Off";
     $("examine-title").textContent = r.title;
+    if (r.nat)
+      document
+        .querySelector('#devices [data-device="' + r.device + '"] .nat-badge')
+        ?.animate(
+          [{ opacity: 0.3 }, { opacity: 1 }, { opacity: 0.3 }, { opacity: 1 }],
+          { duration: 900 },
+        );
     $("examine-device").textContent = appWatch
       ? appLabel(appType) +
         " on " +
@@ -4500,6 +4673,27 @@
     $("examine-body").innerHTML = appWatch
       ? applicationEvidence(r)
       : frameComparison(r, d) +
+        (r.nat
+          ? '<section class="nat-evidence"><h3>' +
+            esc(r.nat.direction) +
+            " NAT / PAT</h3><table><thead><tr><th></th><th>Source IP : port</th><th>Destination IP : port</th></tr></thead><tbody>" +
+            [
+              ["Before", r.nat.before],
+              ["After", r.nat.after],
+            ]
+              .map(
+                ([label, f]) =>
+                  "<tr><th>" +
+                  label +
+                  "</th><td>" +
+                  esc(f.sip + (f.sport ? ":" + f.sport : "")) +
+                  "</td><td>" +
+                  esc(f.dip + (f.dport ? ":" + f.dport : "")) +
+                  "</td></tr>",
+              )
+              .join("") +
+            "</tbody></table><p>The translated packet may wait for next-hop ARP resolution before transmission.</p></section>"
+          : "") +
         (r.routingTable
           ? "<h3>Routing decision</h3>" +
             routeRows(d, r.routingTable, r.selectedRoute)
@@ -4557,7 +4751,8 @@
     if (!immediate) render();
     publishResults(oldCount);
     if (immediate) return;
-    if (running && net.queue.length) schedulePhase(stage, 150);
+    if (running && net.queue.length)
+      schedulePhase(stage, NetworkExplorerCapture.getFilter() ? 0 : 150);
     else if (!net.queue.length) {
       stop();
       $("traffic").replaceChildren();
@@ -4622,6 +4817,7 @@
           publishResults(oldCount);
           break;
         }
+        flashFilterTraffic(report);
         // Results are published through the normal commit path, exactly once.
         publishResults(oldCount);
       }
@@ -6284,6 +6480,137 @@
   transport.setAttribute("aria-label", "Canvas status");
   document.querySelector(".view-controls").append($("sim-status"));
   $("canvas-stage").after(transport);
+  const trafficFilter = document.createElement("button");
+  trafficFilter.id = "canvas-traffic-filter";
+  trafficFilter.type = "button";
+  trafficFilter.className = "canvas-filter-button";
+  trafficFilter.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4.5h18l-7 8v6l-4 2v-8Z"/></svg><span class="filter-state-dot" aria-hidden="true"></span>';
+  const filterLabel = document.createElement("span");
+  filterLabel.id = "traffic-filter-label";
+  filterLabel.hidden = true;
+  trafficFilter.append(filterLabel);
+  trafficFilter.setAttribute("aria-labelledby", filterLabel.id);
+  const filterGroup = document.createElement("div");
+  filterGroup.className = "canvas-filter-group";
+  filterGroup.append(trafficFilter);
+  transport.append(filterGroup);
+  let filterFlashTimer = null, filterIncluded = false, filterExcluded = false;
+  function resetFilterFlash() {
+    clearTimeout(filterFlashTimer);
+    filterFlashTimer = null;
+    filterIncluded = filterExcluded = false;
+    delete trafficFilter.dataset.traffic;
+    updateFilterExplanation();
+  }
+  function flashFilterTraffic(report) {
+    if (!NetworkExplorerCapture.getFilter() || !report.frame) return;
+    const included = NetworkExplorerCapture.matchesEvent(report, net);
+    filterIncluded ||= included;
+    filterExcluded ||= !included;
+    trafficFilter.dataset.traffic = filterIncluded && filterExcluded ? "mixed" : included ? "included" : "excluded";
+    updateFilterExplanation();
+    if (!filterFlashTimer) filterFlashTimer = setTimeout(resetFilterFlash, 700);
+  }
+  const filterButtons = [trafficFilter];
+  const filterPopup = document.createElement("div");
+  filterPopup.id = "traffic-filter-popup";
+  filterPopup.setAttribute("popover", "auto");
+  filterPopup.setAttribute("role", "dialog");
+  filterPopup.setAttribute("aria-label", "Traffic filter");
+  filterPopup.innerHTML = '<div class="filter-popup-heading"><strong>Traffic filter</strong><button type="button" class="filter-edit">Edit</button></div><div class="filter-popup-row"><code></code><button type="button" aria-labelledby="clear-traffic-filter-label"><span id="clear-traffic-filter-label" hidden>Clear traffic filter</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><p class="filter-popup-empty">No filter applied.</p><p class="filter-popup-help">Only matching traffic appears in Activity, on the canvas, and in Watch. All traffic still runs.</p><p class="filter-traffic-state"></p>';
+  document.body.append(filterPopup);
+  let filterAnchor = null;
+  function updateFilterExplanation() {
+    const active = !!NetworkExplorerCapture.getFilter();
+    const state = trafficFilter.dataset.traffic;
+    filterPopup.querySelector(".filter-popup-help").textContent = active
+      ? "Filters Activity, canvas, and Watch. Traffic still runs."
+      : "All traffic is visible. Edit to add a filter.";
+    const explanation = filterPopup.querySelector(".filter-traffic-state");
+    explanation.hidden = !active;
+    explanation.textContent = ({ included: "Green: traffic is included.", excluded: "Red: traffic is hidden by the filter.", mixed: "Yellow: some traffic is included and some is hidden." })[state] || "Green: included. Red: hidden. Yellow: mixed.";
+    positionFilterPopup();
+  }
+  function updateTrafficFilter() {
+    const filter = NetworkExplorerCapture.getFilter();
+    for (const button of filterButtons) {
+      button.classList.toggle("active", !!filter);
+
+      filterLabel.textContent = "Traffic filter: " + (filter ? "active" : "off");
+      button.setAttribute("aria-haspopup", "dialog");
+      button.setAttribute("aria-controls", filterPopup.id);
+      button.setAttribute("aria-expanded", String(filterPopup.matches(":popover-open") && filterAnchor === button));
+    }
+    filterPopup.querySelector("code").textContent = filter;
+    filterPopup.querySelector(".filter-popup-row").hidden = !filter;
+    filterPopup.querySelector(".filter-popup-empty").hidden = !!filter;
+    updateFilterExplanation();
+  }
+  function positionFilterPopup() {
+    if (!filterAnchor || !filterPopup.matches(":popover-open")) return;
+    const rect = filterAnchor.getBoundingClientRect();
+    filterPopup.style.left = Math.max(8, Math.min(rect.left, innerWidth - filterPopup.offsetWidth - 8)) + "px";
+    filterPopup.style.top = Math.max(8, rect.top - filterPopup.offsetHeight - 8) + "px";
+  }
+  let filterHoverTimer;
+  function openFilterPopup() {
+    clearTimeout(filterHoverTimer);
+    filterAnchor = trafficFilter;
+    updateTrafficFilter();
+    filterPopup.showPopover();
+    positionFilterPopup();
+    updateTrafficFilter();
+  }
+  function deferFilterClose() {
+    clearTimeout(filterHoverTimer);
+    filterHoverTimer = setTimeout(() => {
+      if (!filterPopup.contains(document.activeElement)) filterPopup.hidePopover();
+    }, 250);
+  }
+  function editTrafficFilter() {
+    clearTimeout(filterHoverTimer);
+    filterPopup.hidePopover();
+    $("dock-tab-events")?.click();
+    $("capture-filter").focus();
+  }
+  trafficFilter.addEventListener("pointerenter", openFilterPopup);
+  trafficFilter.addEventListener("pointerleave", deferFilterClose);
+  filterPopup.addEventListener("pointerenter", () => clearTimeout(filterHoverTimer));
+  filterPopup.addEventListener("pointerleave", deferFilterClose);
+  filterPopup.addEventListener("focusout", deferFilterClose);
+  trafficFilter.addEventListener("keydown", event => {
+    if (event.key === "ArrowDown") {
+      event.preventDefault(); openFilterPopup();
+      filterPopup.querySelector(NetworkExplorerCapture.getFilter() ? '.filter-popup-row button' : '.filter-edit').focus();
+    } else if (event.key === "Escape") filterPopup.hidePopover();
+  });
+  trafficFilter.onclick = editTrafficFilter;
+  filterPopup.addEventListener("toggle", updateTrafficFilter);
+  filterPopup.addEventListener("keydown", event => {
+    if (event.key === "Escape") { event.preventDefault(); filterPopup.hidePopover(); filterAnchor?.focus(); }
+  });
+  filterPopup.querySelector('.filter-popup-row button').onclick = () => {
+    NetworkExplorerCapture.setFilter("");
+    filterPopup.querySelector('.filter-edit').focus();
+    positionFilterPopup();
+  };
+  filterPopup.querySelector('.filter-edit').onclick = editTrafficFilter;
+  window.addEventListener("resize", positionFilterPopup);
+  document.addEventListener("capture-filter-changed", () => {
+    resetFilterFlash();
+    updateTrafficFilter();
+    for (const el of [...$("traffic").children])
+      if (
+        !el.flightReport ||
+        !NetworkExplorerCapture.matchesEvent(el.flightReport, net)
+      )
+        el.remove();
+    if (staged && !NetworkExplorerCapture.matchesEvent(staged.report, net)) {
+      if ($("examine").open) $("examine").close();
+      schedulePhase(() => commit(), 0);
+    }
+  });
+  updateTrafficFilter();
   const statusViewControls = document.createElement("div");
   statusViewControls.className = "canvas-status-view";
   statusViewControls.setAttribute("aria-label", "Canvas view controls");
@@ -6657,7 +6984,7 @@
     list.id = "cli-ip-picker";
     list.className = "cli-ip-picker";
     list.setAttribute("role", "listbox");
-    list.setAttribute("aria-label", "Device IP addresses");
+    list.setAttribute("aria-label", "Device IP addresses and DNS hostnames");
     list.hidden = true;
     doc.body.append(list);
     let input = null,
@@ -6691,7 +7018,7 @@
         next.focus();
         return;
       }
-      input.setRangeText(row.ip, start, end, "end");
+      input.setRangeText(row.hostname || row.ip, start, end, "end");
       $("command").value = input.value;
       commandDraft = input.value;
       close();
@@ -6715,7 +7042,7 @@
         selectingDevice = !net.device(selected);
       list.setAttribute(
         "aria-label",
-        selectingDevice ? "Select a device" : "Device IP addresses",
+        selectingDevice ? "Select a device" : "Device IP addresses and DNS hostnames",
       );
       rows = selectingDevice
         ? net.devices
@@ -6746,13 +7073,26 @@
                 .toLowerCase()
                 .includes(query),
             );
+      if (!selectingDevice) {
+        const names = new Set();
+        for (const device of net.devices) {
+          if (!device.dnsServer?.enabled) continue;
+          for (const record of device.dnsServer.records || []) {
+            const hostname = record.name.toLowerCase();
+            if (names.has(hostname)) continue;
+            if (!(hostname + " " + record.address + " " + device.name).toLowerCase().includes(query)) continue;
+            names.add(hostname);
+            rows.push({ device, hostname, ip: record.address, port: "DNS on " + device.name });
+          }
+        }
+      }
       active = 0;
       list.replaceChildren();
       const heading = doc.createElement("div");
       heading.className = "mention-list-title";
       heading.textContent = selectingDevice
         ? "Select a device for the CLI"
-        : "Insert device IP";
+        : "Insert IP or DNS hostname";
       list.append(heading);
       rows.forEach((row, i) => {
         const b = doc.createElement("button");
@@ -6763,7 +7103,7 @@
         b.innerHTML =
           noteTargetIcon(row.device.id) +
           "<span><strong>" +
-          esc(row.device.name) +
+          esc(row.hostname || row.device.name) +
           "</strong><small>" +
           esc(row.port) +
           "</small></span><code>" +
@@ -6778,7 +7118,7 @@
         empty.className = "mention-list-empty";
         empty.textContent = selectingDevice
           ? "No matching devices"
-          : "No matching configured IP addresses";
+          : "No matching IP addresses or DNS hostnames";
         list.append(empty);
       }
       input.setAttribute("aria-controls", list.id);
@@ -7381,6 +7721,27 @@
     window.NetworkExplorerViewport?.fit();
     say(
       "Acquire a DHCP lease on Browser Client, then open its Browser and visit www.campus.example.",
+    );
+  });
+  NetworkExplorerActions.register("example-internet", () => {
+    if (
+      (net.devices.length || net.applicationDrafts.length) &&
+      !confirm("Replace this network with the Internet and NAT example?")
+    )
+      return;
+    discard();
+    candidateBase = null;
+    const example = NetworkExplorerExamples.internet(NetworkExplorer.Network);
+    net = example.network;
+    subnetMode = "all";
+    selected = example.clientId;
+    examined = false;
+    cancelConnect();
+    openInspector();
+    render();
+    window.NetworkExplorerViewport?.fit();
+    say(
+      "Open either Browser and visit www.internet.example. Inspect NAT Gateway for translations.",
     );
   });
 

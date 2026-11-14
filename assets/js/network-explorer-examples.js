@@ -45,5 +45,15 @@
   if(n.devices.length){const dx=180-Math.min(...n.devices.map(d=>d.x)),dy=120-Math.min(...n.devices.map(d=>d.y));n.devices.forEach(d=>{d.x+=dx;d.y=(d.y+dy-120)*.65+120;});}
   n.links.forEach(l=>{delete l.aAnchor;delete l.bAnchor;});
  }
- const api={complex,arrange};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerExamples=api;
+ function internet(Network){
+ const n=new Network(),a=n.add('host',140,160),b=n.add('host',140,390),sw=n.add('switch',350,275),edge=n.add('router',570,275),isp=n.add('router',820,275),web=n.add('host',1070,275);
+ a.name='Browser A';b.name='Browser B';sw.name='LAN Switch';edge.name='NAT Gateway';isp.name='ISP Router';web.name='Internet Server';
+ for(const [d,addr]of [[a,'192.168.1.10'],[b,'192.168.1.11'],[web,'198.51.100.10']])n.configure(d.id,addr,24);
+ n.configureInterface(edge.id,'p0','192.168.1.1',24);n.configureInterface(edge.id,'p1','203.0.113.2',30);n.configureInterface(isp.id,'p0','203.0.113.1',30);n.configureInterface(isp.id,'p1','198.51.100.1',24);
+ n.setStaticRoute(edge.id,'0.0.0.0',0,'203.0.113.1','internet');n.configureGateway(web.id,'198.51.100.1');
+ for(const d of [a,b]){n.configureGateway(d.id,'192.168.1.1');n.configureDnsAddress(d.id,web.ip);n.configureWeb(d.id,{enabled:true,url:'http://www.internet.example/'},'browser');d.browserOffset={x:0,y:90};}
+ n.configureDnsServer(web.id,{enabled:true,records:[{name:'www.internet.example',address:web.ip,ttl:120}]});n.configureWeb(web.id,{enabled:true,port:80,title:'Across the Internet',body:'Your private host reached this simulated Internet server through NAT/PAT. Inspect the gateway translation table to see the shared outside address and unique ports.'});web.webOffset={x:100,y:-90};web.dnsOffset={x:100,y:90};
+ n.connect(a.id,'p0',sw.id,'p0');n.connect(b.id,'p0',sw.id,'p1');n.connect(sw.id,'p2',edge.id,'p0');n.connect(edge.id,'p1',isp.id,'p0');n.connect(isp.id,'p1',web.id,'p0');n.configureNat(edge.id,{enabled:true,inside:['p0'],outside:'p1'});return {network:n,clientId:a.id};
+ }
+ const api={complex,arrange,internet};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerExamples=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

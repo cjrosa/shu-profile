@@ -346,18 +346,12 @@ Welcome. Select a device and type help.</pre
           </h2>
           <form id="capture-filter-form" class="capture-controls">
             <label for="capture-filter">Filter</label
-            ><input
+            ><div class="capture-filter-field"><input
               id="capture-filter"
-              placeholder="arp, icmp, eth.dst==ff:ff:ff:ff:ff:ff, ip.addr==192.168.1.10"
-              autocomplete="off"
-            /><button>Apply</button
-            ><button
-              id="capture-reset"
-              type="button"
-              aria-label="Reset capture filter"
-            >
-              Reset</button
-            ><span id="capture-count" role="status"></span
+              placeholder="tcp.port == 80 and ip.addr == 192.168.1.10"
+              autocomplete="off" spellcheck="false"
+            /><button id="capture-reset" type="button" aria-label="Clear filter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+            <span id="capture-count" role="status"></span
             ><button id="capture-clear" type="button">Clear capture</button>
           </form>
           <div class="capture-scroll">
@@ -471,7 +465,9 @@ Welcome. Select a device and type help.</pre
     <script src="../assets/js/network-explorer-dhcp.js"></script>
     <script src="../assets/js/network-explorer-dns.js"></script>
     <script src="../assets/js/network-explorer-http.js"></script>
+    <script src="../assets/js/network-explorer-nat.js"></script>
     <script src="../assets/js/network-explorer-engine.js"></script>
+    <script src="../assets/js/network-explorer-filter.js"></script>
     <script src="../assets/js/network-explorer-capture.js"></script>
     <script src="../assets/js/network-explorer-tooltips.js"></script>
     <script src="../assets/js/network-explorer-platform.js"></script>

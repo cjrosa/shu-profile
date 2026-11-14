@@ -60,39 +60,58 @@
   eyebrow.textContent = "INTERACTIVE NETWORK LAB";
   welcome.querySelector("header").prepend(eyebrow);
 
-  for (const id of [
-    "example-complex",
-    "example-routed",
-    "example-http",
-    "example-dns",
-    "example-vlans",
-  ]) {
-    const source = NetworkExplorerActions.examples[id];
-    if (!source) continue;
-    const b = document.createElement("button");
-    b.className = "welcome-example";
-    b.dataset.action = id;
-    const paths = {
-      "example-complex":
-        "M9 3h6v5H9ZM2 16h6v5H2ZM16 16h6v5h-6ZM12 8v4M5 16v-4h14v4",
-      "example-routed": "M2 8h6v8H2ZM16 8h6v8h-6ZM8 12h8m-5-3 3 3-3 3",
-      "example-http":
-        "M3 4h18v16H3ZM3 9h18M6 6h2m3 0h2M10 12l-3 3 3 3m4-6 3 3-3 3",
-      "example-dns":
-        "M3 12h18M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 0c-5 5-5 13 0 18 5-5 5-13 0-18Z",
-      "example-vlans":
-        "M2 4h8v6H2ZM14 14h8v6h-8ZM6 10v7h8M14 4h8v6h-8ZM2 14h8v6H2Z",
-    };
-    b.innerHTML =
-      svg(paths[id]) +
-      "<span>" +
-      "<strong>" +
-      source.title +
-      "</strong><span>" +
-      source.description +
-      "</span>" +
-      "</span>";
-    welcome.querySelector("#welcome-examples").append(b);
+  const exampleGroups = [
+    ["Basic", ["example", "example-dhcp", "example-dns"]],
+    ["Intermediate", ["example-vlans", "example-routed", "example-http"]],
+    [
+      "Advanced",
+      [
+        "example-static",
+        "example-dhcp-relay",
+        "example-internet",
+        "example-complex",
+      ],
+    ],
+  ];
+  for (const [name, ids] of exampleGroups) {
+    const group = document.createElement("details");
+    group.className = "welcome-example-group";
+    group.open = name === "Basic";
+    const summary = document.createElement("summary");
+    summary.textContent = name + " (" + ids.length + ")";
+    group.append(summary);
+    $("welcome-examples").append(group);
+    for (const id of ids) {
+      const source = NetworkExplorerActions.examples[id];
+      if (!source) continue;
+      const b = document.createElement("button");
+      b.className = "welcome-example";
+      b.dataset.action = id;
+
+      const paths = {
+        "example-internet":
+          "M3 12h18M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 0c-5 5-5 13 0 18 5-5 5-13 0-18Z",
+        "example-complex":
+          "M9 3h6v5H9ZM2 16h6v5H2ZM16 16h6v5h-6ZM12 8v4M5 16v-4h14v4",
+        "example-routed": "M2 8h6v8H2ZM16 8h6v8h-6ZM8 12h8m-5-3 3 3-3 3",
+        "example-http":
+          "M3 4h18v16H3ZM3 9h18M6 6h2m3 0h2M10 12l-3 3 3 3m4-6 3 3-3 3",
+        "example-dns":
+          "M3 12h18M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 0c-5 5-5 13 0 18 5-5 5-13 0-18Z",
+        "example-vlans":
+          "M2 4h8v6H2ZM14 14h8v6h-8ZM6 10v7h8M14 4h8v6h-8ZM2 14h8v6H2Z",
+      };
+      b.innerHTML =
+        svg(paths[id] || "M2 8h6v8H2ZM16 8h6v8h-6ZM8 12h8") +
+        "<span>" +
+        "<strong>" +
+        source.title +
+        "</strong><span>" +
+        source.description +
+        "</span>" +
+        "</span>";
+      group.append(b);
+    }
   }
   function show(open, focus = true) {
     welcome.hidden = !open;
