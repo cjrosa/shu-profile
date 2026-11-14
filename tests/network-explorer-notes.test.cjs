@@ -1,0 +1,7 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const {Network}=require('../assets/js/network-explorer-engine.js');
+function fixture(){const n=new Network(),d=n.add('host');d.tags=['Students','VLAN 10'];n.notes.push({id:'note1',text:'Check gateway\n<plain text>',x:100,y:80,width:200,height:130,color:'yellow',target:d.id,tags:['Exercise 1']});return n;}
+test('notes, associations and device tags round trip without sharing references',()=>{const n=fixture(),saved=n.save(),loaded=new Network(saved);assert.deepEqual(loaded.notes,n.notes);assert.deepEqual(loaded.devices[0].tags,n.devices[0].tags);loaded.notes[0].text='changed';assert.notEqual(loaded.notes[0].text,n.notes[0].text);n.reset();assert.equal(n.notes.length,1);});
+test('legacy networks load with no notes',()=>{const n=fixture().save();delete n.notes;assert.deepEqual(new Network(n).notes,[]);});
+test('malformed notes and tags are rejected',()=>{for(const change of [s=>s.notes[0].width=NaN,s=>s.notes.push({...s.notes[0]}),s=>s.notes[0].text='x'.repeat(2001),s=>s.devices[0].tags=[{}]]){const s=fixture().save();change(s);assert.throws(()=>new Network(s));}});
+
+test('optional note titles persist and reject invalid values',()=>{const n=fixture();n.notes[0].title='Client setup';assert.equal(new Network(n.save()).notes[0].title,'Client setup');for(const title of [42,'x'.repeat(101)]){const saved=n.save();saved.notes[0].title=title;assert.throws(()=>new Network(saved));}});

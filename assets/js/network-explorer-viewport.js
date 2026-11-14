@@ -106,7 +106,7 @@
     overview.setAttribute('viewBox', [bounds.x, bounds.y, bounds.width, bounds.height].join(' '));
     // Copy only graphical elements; the overview is one keyboard-accessible control.
     for (const [source, target] of [['links', 'viewport-links'], ['devices', 'viewport-nodes']]) {
-      const clones = [...get(source).children,...(source==='devices'?[...(get('applications')?.children||[])]:[])].map(node => {
+      const clones = [...get(source).children,...(source==='devices'?[...(get('applications')?.children||[]),...(get('notes')?.children||[])]:[])].map(node => {
         const clone = node.cloneNode(true);
         for (const element of [clone, ...clone.querySelectorAll('*')]) {
           for (const attribute of [...element.attributes]) {
@@ -170,7 +170,7 @@
     emptyCanvasClick=false;
     if(!canvas.contains(event.target)||![0,1].includes(event.button))return;
     if(canvas.classList.contains('placing')||!get('cancel-connect').hidden)return;
-    const object=event.target.closest('[data-device],[data-application],[data-link],[data-anchor-device],.in-flight-frame');
+    const object=event.target.closest('[data-device],[data-application],[data-note],[data-link],[data-anchor-device],.in-flight-frame');
     if(event.button!==1&&!spaceHeld&&object)return;
     emptyCanvasClick=!object&&event.button===0&&!spaceHeld;
     event.preventDefault();event.stopImmediatePropagation();
@@ -184,8 +184,8 @@
   canvas.addEventListener('auxclick',event=>{if(event.button===1)event.preventDefault();});
   get('zoom-slider').oninput = event => zoom(Number(event.target.value) / 100 - camera.zoom);
   function contentBounds(){
-    if(!get('devices').querySelector('[data-device]')&&!get('applications')?.children.length)return {x:0,y:0,width:900,height:560};
-    const boxes=['devices','applications','links'].map(id=>get(id)).filter(e=>e?.children.length).map(e=>e.getBBox());
+    if(!get('devices').querySelector('[data-device]')&&!get('applications')?.children.length&&!get('notes')?.children.length)return {x:0,y:0,width:900,height:560};
+    const boxes=['devices','applications','links','notes'].map(id=>get(id)).filter(e=>e?.children.length).map(e=>e.getBBox());
     if(!boxes.length)return {x:0,y:0,width:900,height:560};
     const x=Math.min(...boxes.map(b=>b.x)),y=Math.min(...boxes.map(b=>b.y));return {x,y,width:Math.max(...boxes.map(b=>b.x+b.width))-x,height:Math.max(...boxes.map(b=>b.y+b.height))-y};
   }
@@ -236,6 +236,7 @@
   observer.observe(get('devices'), {childList: true});
   observer.observe(get('links'), {childList: true});
   if(get('applications'))observer.observe(get('applications'), {childList:true});
+  if(get('notes'))observer.observe(get('notes'),{childList:true});
   refreshOverview();
   update();
 })();

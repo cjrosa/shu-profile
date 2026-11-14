@@ -21,7 +21,16 @@
   connect(r1,'p0',sw1,'p0','left','right');connect(sw1,'p1',client,'p0','bottom','top');
   connect(r2,'p0',sw2,'p0','right','left');connect(sw2,'p1',dhcp,'p0','top','right');connect(sw2,'p2',dns,'p0','top','left');
   connect(r3,'p0',sw3,'p0','right','left');connect(sw3,'p1',web,'p0','right','left');
-  arrange(n);return {network:n,clientId:client.id};
+  arrange(n);
+  const note=(target,text,color,tags,offset)=>{const position=offset?{x:target.x+offset.x,y:target.y+offset.y}:target;n.notes.push({id:'note'+(n.notes.length+1),title:text.split('\n')[0],text:text.split('\n').slice(1).join('\n'),color,tags,target:offset?tags[0]+':'+target.id:target.id,x:position.x+52,y:position.y-48,width:200,height:130});};
+  note(client,'Start here: get connected\nSelect @Browser Client and acquire a DHCP lease. Check the acquired IP, default gateway, and DNS server before opening http://www.campus.example/ in its Browser. Use Activity to follow the exchange.','yellow',['walkthrough','client','DHCP']);
+  note(r1,'DHCP across subnets\nThe client starts without an IP address. Its DHCP broadcast stays on the Client LAN; @Client Router relays the request from G0/0 to 192.168.20.2 on the Services LAN. Inspect the interface relay setting.','blue',['DHCP','relay','routing']);
+  note(dhcp,'Address pool for the Client LAN\n@DHCP Host offers 192.168.10.100?192.168.10.120 with /24, gateway 192.168.10.1, and DNS 192.168.20.3. Leases last 120 seconds. Follow Discover, Offer, Request, and ACK in Activity.','green',['dhcp','leases','services'],dhcp.applicationOffset);
+  note(dns,'Turn a name into an address\nwww.campus.example resolves to 192.168.30.10. From @Browser Client, try nslookup www.campus.example, then inspect the DNS query and reply in Activity. The DNS server is on a different LAN from the web server.','blue',['dns','name resolution','services'],dns.dnsOffset);
+  note(web,'Deliver the web page\n@Web Host listens at 192.168.30.10 on TCP port 80. After DNS resolves the name, the browser establishes TCP and sends an HTTP request. Look for the HTTP 200 response and inspect the returned page.','green',['web','HTTP','TCP'],web.webOffset);
+  note(r3,'Three LANs, three transit links\n@Client Router, @Services Router, and @Web Router use static routes to reach the other /24 LANs. Each router-to-router link has its own /30 subnet: 10.0.12.0, 10.0.23.0, or 10.0.13.0. Compare the route next hop with the connected interface; the triangle does not provide automatic failover.','pink',['routing','static routes','subnets']);
+  note(sw1,'Local delivery versus remote delivery\n@Client Switch learns source MAC addresses and forwards frames within the Client LAN. For the remote DNS and web servers, the client sends frames to its gateway MAC, while the IP destination remains the remote server. Inspect ARP and the MAC forwarding table.','yellow',['Ethernet','ARP','MAC','gateway']);
+  return {network:n,clientId:client.id};
  }
  function arrange(n){
   const routers=n.devices.filter(d=>d.type==='router'),placed=new Set(),groups=[];
