@@ -14,13 +14,14 @@
     for(let i=0;i<c.pools.length;i++)for(let j=0;j<i;j++){const a=c.pools[i],b=c.pools[j];if(sameSubnet(a.start,b.start,Math.min(a.prefix??d.prefix,b.prefix??d.prefix)))throw Error('Each DHCP pool must serve a different, non-overlapping subnet.');}
     return;
    }
+   if(c.dns){const v=ip(c.dns);if(v>>>24===0||v>>>24===127||v>>>24>=224)throw Error('Use a unicast DNS server address.');}
    const prefix=c.prefix??d.prefix;validateAddress(c.start,prefix);validateAddress(c.end,prefix);
    if(!sameSubnet(c.start,c.end,prefix)||ip(c.end)<ip(c.start)||ip(c.end)-ip(c.start)>1023)throw Error('Use a pool of up to 1024 addresses in one pool subnet.');
    if(typeof c.gateway!=='string')throw Error('Invalid DHCP gateway.');
    if(c.gateway){validateAddress(c.gateway,prefix);if(!sameSubnet(c.start,c.gateway,prefix))throw Error('The DHCP gateway must be in the pool subnet.');}
    if(!Number.isInteger(c.leaseSeconds)||c.leaseSeconds<30||c.leaseSeconds>86400)throw Error('Use a lease duration from 30 to 86400 seconds.');
   }
-  function clearClient(d){delete d.lease;if(d.addressMode==='dhcp'){d.ip='';d.prefix=null;d.gateway='';}}
+  function clearClient(d){delete d.lease;if(d.addressMode==='dhcp'){d.ip='';d.prefix=null;d.gateway='';d.dnsServerAddress='';}}
   function mode(n,id,value){const d=n.device(id);if(d?.type!=='host'||!['manual','dhcp'].includes(value))throw Error('Choose Manual or Automatic (DHCP).');if(value==='dhcp'&&d.dhcpServer?.enabled)throw Error('Disable the DHCP server before using automatic addressing.');clearClient(d);d.addressMode=value;if(value==='dhcp'){d.ip='';d.prefix=null;d.gateway='';delete d.dhcpServer;}n.reset();}
   function configure(n,id,c){const d=n.device(id);if(d?.type!=='host')throw Error('Select a host.');validate(d,c);d.dhcpServer=clone(c);n.reset();}
   function reset(n){n.dhcpPending={};n.dhcpLeases??={};for(const [id,rows]of Object.entries(n.dhcpLeases)){if(!n.device(id)){delete n.dhcpLeases[id];continue;}for(const [mac,r]of Object.entries(rows))if(r.state==='offered')delete rows[mac];}}
@@ -44,7 +45,7 @@
     if(f.server&&f.server!==d.ip){notes.push('The client selected another server.');if(rows[f.clientMac]?.state==='offered')delete rows[f.clientMac];return result('DHCP server not selected');}
     const reserved=new Set([d.ip,c.gateway,...n.devices.filter(x=>x.type==='host'&&x.ports[0].mac!==f.clientMac&&x.ip).map(x=>x.ip),...n.devices.filter(x=>x.type==='router').flatMap(x=>x.ports.map(q=>q.ip))]);
     const available=address=>ip(address)>=ip(c.start)&&ip(address)<=ip(c.end)&&!reserved.has(address)&&!Object.entries(rows).some(([mac,r])=>mac!==f.clientMac&&r.address===address);
-    const reply=(message,address)=>{const response=packet(message,{src:p.mac,dst:f.broadcast?broadcast:f.clientMac,sip:d.ip,dip:f.giaddr||(f.broadcast?'255.255.255.255':address),sport:67,dport:f.giaddr?67:68,xid:f.xid,clientMac:f.clientMac,server:d.ip,address,prefix,gateway:c.gateway,leaseSeconds:c.leaseSeconds,giaddr:f.giaddr||'',broadcast:!!f.broadcast});if(f.giaddr||f.renew){const hop=hostHop(response.dip);notes.push('Route the unicast '+message+' to '+response.dip+(f.giaddr?' (the relay).':'.'));if(hop)emitIp(p,hop,response);}else send(p.id,response);};
+    const reply=(message,address)=>{const response=packet(message,{src:p.mac,dst:f.broadcast?broadcast:f.clientMac,sip:d.ip,dip:f.giaddr||(f.broadcast?'255.255.255.255':address),sport:67,dport:f.giaddr?67:68,xid:f.xid,clientMac:f.clientMac,server:d.ip,address,prefix,gateway:c.gateway,dnsAddress:c.dns||'',leaseSeconds:c.leaseSeconds,giaddr:f.giaddr||'',broadcast:!!f.broadcast});if(f.giaddr||f.renew){const hop=hostHop(response.dip);notes.push('Route the unicast '+message+' to '+response.dip+(f.giaddr?' (the relay).':'.'));if(hop)emitIp(p,hop,response);}else send(p.id,response);};
     if(f.dhcp==='Discover'){
      let address=rows[f.clientMac]?.address;if(!address||!available(address)){address=null;for(let v=ip(c.start);v<=ip(c.end);v++){const candidate=formatIp(v);if(available(candidate)){address=candidate;break;}}}
      if(!address){notes.push('All usable pool addresses are leased or reserved. No offer is sent.');return result('DHCP pool exhausted');}
@@ -59,7 +60,7 @@
     pending.state='requesting';pending.server=f.server;pending.address=f.address;pending.requestedAt=Date.now();notes.push('Select the offer for '+f.address+'. Broadcast DHCPREQUEST so all servers can see which offer was selected.');send(p.id,packet('Request',{src:p.mac,dst:broadcast,sip:'0.0.0.0',dip:'255.255.255.255',sport:68,dport:67,xid:f.xid,clientMac:p.mac,server:f.server,requested:f.address,broadcast:false}));return result('DHCP Request: select the offer');
    }
    if(f.dhcp==='ACK'&&pending.state==='requesting'&&pending.server===f.server&&pending.address===f.address){
-    validateAddress(f.address,f.prefix);d.ip=f.address;d.prefix=f.prefix;d.gateway=f.gateway;d.lease={address:f.address,server:f.server,serverMac:f.src,leaseSeconds:f.leaseSeconds,expiresAt:pending.requestedAt+f.leaseSeconds*1000};notes.push('Install '+d.ip+'/'+d.prefix+(d.gateway?' and default gateway '+d.gateway:'')+'. The host can now ARP and send IP traffic.');finish(true,'DHCP lease acquired: '+d.ip+'/'+d.prefix+(d.gateway?', gateway '+d.gateway:'')+'.');return result('DHCP lease installed');
+    validateAddress(f.address,f.prefix);d.ip=f.address;d.prefix=f.prefix;d.gateway=f.gateway;d.dnsServerAddress=f.dnsAddress||'';d.lease={address:f.address,server:f.server,serverMac:f.src,leaseSeconds:f.leaseSeconds,expiresAt:pending.requestedAt+f.leaseSeconds*1000};notes.push('Install '+d.ip+'/'+d.prefix+(d.gateway?' and default gateway '+d.gateway:'')+'. The host can now ARP and send IP traffic.');finish(true,'DHCP lease acquired: '+d.ip+'/'+d.prefix+(d.gateway?', gateway '+d.gateway:'')+'.');return result('DHCP lease installed');
    }
    notes.push('Keep waiting for the selected server.');return result('Ignore additional DHCP response');
   }

@@ -421,3 +421,14 @@ body[data-platform=paloalto] .vlan-badge{max-width:100%;overflow:hidden;text-ove
 
 .palette-heading{display:flex;align-items:center;gap:8px}
 .palette-heading-icon{width:18px;height:18px;flex:0 0 18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#add-dns-application{display:flex;flex-direction:column;align-items:center;gap:3px}
+#add-dns-application span{font-size:11px}
+.dns-record-form{padding:10px}
+.dns-record-form input{min-width:0}
+.compact-application svg{fill:none;stroke:var(--teal);stroke-width:2}
+.attachment-anchor{fill:white;stroke:var(--teal);stroke-width:1.3;pointer-events:none}
+.application-node.selected>circle{filter:drop-shadow(0 0 3px #4d807c80)}
+.application-node:focus-visible>circle{filter:drop-shadow(0 0 4px #4d807c)}
+.capture-dns{background:#f0edf9;color:#5c4981}
+
+.compact-palette-divider{height:1px;background:var(--line);margin:2px 3px;width:44px}
