@@ -30,6 +30,10 @@
     svg("M3 5h18v12H3ZM8 21h8m-4-4v4") +
     "<div><strong>Learn by exploring</strong><p>Try the Campus network for a complete journey through DHCP, DNS, routing, and web browsing. Its notes guide you through each step.</p></div></div>";
   $("canvas-stage").append(welcome);
+  const overview = document.createElement("div");
+  overview.className = "welcome-overview";
+  welcome.prepend(overview);
+  overview.append(welcome.querySelector("header"), welcome.querySelector(".welcome-columns"));
   const hero = document.createElement("div");
   hero.className = "welcome-network-art";
   hero.setAttribute("aria-hidden", "true");

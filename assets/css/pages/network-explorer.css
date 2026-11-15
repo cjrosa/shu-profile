@@ -5725,7 +5725,7 @@ body[data-panel^="browser:"] .browser-tab {
 #network-welcome {
   padding: 32px clamp(24px, 6vw, 90px);
 }
-#network-welcome > header {
+#network-welcome .welcome-overview > header {
   position: relative;
   display: block;
   padding: 24px 300px 26px 28px;
@@ -5860,7 +5860,7 @@ body[data-panel^="browser:"] .browser-tab {
   color: #70818c;
 }
 @media (max-width: 750px) {
-  #network-welcome > header {
+  #network-welcome .welcome-overview > header {
     padding: 24px;
   }
   .welcome-network-art {
@@ -5894,7 +5894,7 @@ body[data-panel^="browser:"] .browser-tab {
 }
 
 /* Borderless welcome actions and persistent recent networks. */
-#network-welcome > header,
+#network-welcome .welcome-overview > header,
 #network-welcome .welcome-tip,
 #network-welcome .welcome-start button,
 #network-welcome .welcome-example {
@@ -6009,11 +6009,11 @@ body[data-panel^="browser:"] .browser-tab {
   font-weight: 700;
 }
 
-#network-welcome > header {
+#network-welcome .welcome-overview > header {
   border: 1px solid #dce5eb;
 }
 /* Center the welcome banner and its content independently of the workspace grid. */
-#network-welcome > header {
+#network-welcome .welcome-overview > header {
   width: 100%;
   max-width: 1050px;
   margin-inline: auto;
@@ -6106,6 +6106,71 @@ body.welcome-open > header {
   font-size: 14px;
   line-height: 1.8;
   color: #6a7d8c;
+}
+.guide-labs {
+  position: relative;
+  isolation: isolate;
+  margin-top: 24px;
+  padding: 0 26px;
+  border-radius: 18px;
+  background: linear-gradient(110deg, #fff 15%, color-mix(in srgb, var(--course-cs339-accent, #69a9dc) 8%, white) 55%, color-mix(in srgb, var(--course-cs339-accent, #69a9dc) 22%, white) 100%);
+}
+.guide-labs::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(110deg, #7fa5c5 15%, #c5d9e9 55%, #fff 90%);
+  mask-image: radial-gradient(circle at 1px 1px, #000 1px, transparent 1.3px), linear-gradient(110deg, transparent 15%, #0005 55%, #000 100%);
+  mask-size: 16px 16px, 100% 100%;
+  mask-repeat: repeat, no-repeat;
+  mask-composite: intersect;
+}
+#network-welcome .guide-labs-banner {
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr) minmax(250px, 340px);
+  justify-content: normal;
+  align-items: center;
+  gap: 22px;
+  position: relative;
+  margin: 0 -26px;
+  padding: 30px 32px;
+  border-radius: 18px 18px 0 0;
+  border: 0;
+  background: linear-gradient(110deg, #fff 15%, color-mix(in srgb, var(--course-cs339-accent, #69a9dc) 8%, white) 55%, color-mix(in srgb, var(--course-cs339-accent, #69a9dc) 22%, white) 100%);
+  box-shadow: none;
+}
+#network-welcome .guide-labs-banner > svg {
+  width: 50px;
+  height: 50px;
+  flex: none;
+  fill: none;
+  stroke: #427da8;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+#network-welcome .guide-labs-banner .guide-kicker { color: #43799f; }
+#network-welcome .guide-labs-banner h2 { margin: 7px 0 8px; color: #284f70; font-size: clamp(23px, 2.5vw, 30px); letter-spacing: -.6px; }
+#network-welcome .guide-labs-banner p { margin: 0; color: #506f88; font-size: 13px; line-height: 1.6; }
+#network-welcome .guide-labs-banner-art svg { display: block; width: 100%; height: auto; fill: none; stroke: none; }
+.banner-lab-wire { stroke: #6089ae; stroke-width: 3; }
+.banner-lab-packets rect { fill: #f7fcff; stroke: #5b8b9f; stroke-width: 1.2; }
+.banner-lab-labels text { fill: #64839a; font: 8px inherit; font-size: 8px; letter-spacing: .6px; text-anchor: middle; }
+.banner-lab-terminal rect { fill: #0e1116; stroke: #303944; }
+.banner-lab-terminal circle { fill: #667585; }
+.banner-lab-terminal text { fill: #e2eaf2; font: 11px ui-monospace, monospace; }
+.banner-lab-terminal path { stroke: #79c6a1; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 1000px) {
+  #network-welcome .guide-labs-banner { grid-template-columns: 40px minmax(0, 1fr); }
+  .guide-labs-banner-art { grid-column: 1 / -1; width: min(100%, 350px); justify-self: center; }
+}
+@media (max-width: 750px) {
+  .guide-labs { padding: 0 16px; }
+  #network-welcome .guide-labs-banner { margin-inline: -16px; padding: 24px 20px; gap: 14px; }
+  #network-welcome .guide-labs-banner > svg { width: 36px; height: 36px; }
 }
 #network-welcome .guide-chapter {
   display: grid;
@@ -6947,7 +7012,7 @@ body.welcome-open > header {
 }
 
 /* Welcome banner follows the CS339 viewer blue. */
-#network-welcome > header {
+#network-welcome .welcome-overview > header {
   background: linear-gradient(110deg, #fff 25%, #edf6fc 65%, #69a9dc 140%);
   border-color: #cadfed;
 }
@@ -7088,7 +7153,7 @@ body.welcome-open > header {
 }
 
 /* Dots follow the banner's gradient instead of ending at the illustration. */
-#network-welcome > header::before {
+#network-welcome .welcome-overview > header::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -7111,16 +7176,85 @@ body.welcome-open > header {
   mask-repeat: repeat, no-repeat;
   mask-composite: intersect;
 }
-#network-welcome > header > .welcome-eyebrow,
-#network-welcome > header > h1,
-#network-welcome > header > p {
+#network-welcome .welcome-overview > header > .welcome-eyebrow,
+#network-welcome .welcome-overview > header > h1,
+#network-welcome .welcome-overview > header > p {
   position: relative;
 }
 #network-welcome .welcome-network-art rect[fill="url(#welcome-art-grid)"] {
   display: none;
 }
 
+/* One surface carries the gradient, dots, and inverse border across header and content. */
+#network-welcome .welcome-overview,
+#network-welcome .guide-labs {
+  position: relative;
+  isolation: isolate;
+  border-radius: 18px;
+  background: linear-gradient(90deg, #fff 15%, color-mix(in srgb, var(--course-cs339-accent, #69a9dc) 8%, white) 55%, color-mix(in srgb, var(--course-cs339-accent, #69a9dc) 22%, white) 100%);
+}
+#network-welcome .welcome-overview { width: 100%; max-width: 1050px; margin-inline: auto; }
+#network-welcome .welcome-overview::before,
+#network-welcome .guide-labs::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #7fa5c5 15%, #c5d9e9 55%, #fff 90%);
+  mask-image: radial-gradient(circle at 1px 1px, #000 1px, transparent 1.3px), linear-gradient(90deg, transparent 15%, #0005 55%, #000 100%);
+  mask-size: 16px 16px, 100% 100%;
+  mask-repeat: repeat, no-repeat;
+  mask-composite: intersect;
+}
+#network-welcome .welcome-overview::after,
+#network-welcome .guide-labs::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, #9dbbd3, #d2e2ee 55%, #fff);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+#network-welcome .welcome-overview > header::before,
+#network-welcome .welcome-overview .welcome-columns::before { content: none; }
+#network-welcome .guide-labs > .guide-labs-banner { background: transparent; }
 /* The welcome page uses document scrolling, outside the canvas frame. */
+#network-welcome .welcome-overview > header {
+  border: 0;
+  margin-bottom: 0;
+  border-radius: 18px 18px 0 0;
+  background: transparent;
+}
+#network-welcome .welcome-columns {
+  position: relative;
+  isolation: isolate;
+  max-width: 1050px;
+  margin-top: 0;
+  padding: 30px 54px 34px;
+  border-radius: 0 0 18px 18px;
+  background: transparent;
+}
+#network-welcome .welcome-columns::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(110deg, #7fa5c5 15%, #c5d9e9 55%, #fff 90%);
+  mask-image: radial-gradient(circle at 1px 1px, #000 1px, transparent 1.3px), linear-gradient(110deg, transparent 15%, #0005 55%, #000 100%);
+  mask-size: 16px 16px, 100% 100%;
+  mask-repeat: repeat, no-repeat;
+  mask-composite: intersect;
+}
+@media (max-width: 750px) {
+  #network-welcome .welcome-columns { padding: 24px 20px; }
+}
 body.welcome-open:not(.external-panel-page) {
   height: auto;
   min-height: 100dvh;
