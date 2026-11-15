@@ -3265,11 +3265,11 @@
     $("command").disabled = false;
     $("command").placeholder = cliReady
       ? "Type a command"
-      : "Type @ or select a device on the canvas to use the CLI";
+      : "Type @, select a device on the canvas, or use the selector above to use the CLI";
     refreshTerminalOS();
     $("prompt").textContent = consoleDevice
       ? cliPrompt(consoleDevice)
-      : "Select a device on the canvas to use the CLI";
+      : "Select a device on the canvas or use the selector above to use the CLI";
     $("terminal-title").textContent = consoleDevice
       ? consoleDevice.name + " - " + (consoleDevice.type === "host" ? "Host" : consoleDevice.type === "router" ? "Router" : isPan(consoleDevice) ? "PAN-OS Layer 2" : "Cisco IOS Layer 2")
       : "Terminal";
@@ -3541,7 +3541,7 @@
     doc.body.append(host);
     if (key === "events") NetworkExplorerCapture.bindScroll(host);
     bindHistoryEvents(doc);
-    if (key === "terminal") { installCliIpPicker(doc); bindTerminalPicker(doc); }
+    if (key === "terminal") { installCliIpPicker(doc); bindTerminalPicker(doc); bindTerminalFocus(doc); }
     const entry = { window: popup, host, content, onDock };
     externalPanels.set(key, entry);
     if (key === "terminal")
@@ -4133,7 +4133,7 @@
     if (!n) return false;
     $("watch").hidden = true;
     $("terminal-title").textContent = "Terminal";
-    $("prompt").textContent = "Select a device on the canvas to use the CLI";
+    $("prompt").textContent = "Select a device on the canvas or use the selector above to use the CLI";
     $("inspector-title").innerHTML = noteSymbol() + "<span>Note</span>";
     const targets = [
       ...net.devices.map((d) => ({ id: d.id, label: d.name })),
@@ -5913,6 +5913,17 @@
       button.title = label;
     };
   }
+  function bindTerminalFocus(doc) {
+    doc.addEventListener("click", (event) => {
+      const panel = event.target.closest("#terminal-panel");
+      if (!panel || event.target.closest('button, input, select, textarea, a, [role="button"], [contenteditable="true"]')) return;
+      const selection = doc.getSelection();
+      if (selection && !selection.isCollapsed && panel.contains(selection.anchorNode)) return;
+      const input = doc.getElementById("command");
+      input?.focus({ preventScroll: true });
+    });
+  }
+  bindTerminalFocus(document);
   const terminalPanel = $("terminal-panel");
   const terminalNotice = document.createElement("section");
   terminalNotice.hidden = true;
@@ -7590,7 +7601,7 @@
     const raw = $("command").value.trim();
     if (!raw) return;
     if (!cliDevice()) {
-      say("Type @ or select a device on the canvas first.");
+      say("Type @, select a device on the canvas, or use the selector above first.");
       return;
     }
     commandHistory.push(raw);
