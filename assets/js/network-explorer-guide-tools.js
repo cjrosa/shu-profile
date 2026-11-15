@@ -15,6 +15,12 @@ const trafficPreview=troubleshooting.querySelector('.guide-troubleshooting-previ
 trafficPreview.setAttribute('aria-label','Animated illustration: packets stream across a connection, then fade at a broken link before the connection recovers.');
 trafficPreview.innerHTML='<svg class="guide-fault-scene" viewBox="0 0 520 250" role="img" aria-label="Traffic stops at a broken connection"><defs><linearGradient id="fault-cable-depth" gradientUnits="userSpaceOnUse" x1="0" y1="122" x2="0" y2="166"><stop stop-color="#a5c3da"/><stop offset=".45" stop-color="#6089ae"/><stop offset="1" stop-color="#517796"/></linearGradient></defs><path class="fault-route" d="M100 128C160 128 170 158 240 158H280C350 158 350 128 420 128"/><g class="fault-cable"><path class="fault-left" d="M100 128C160 128 170 158 240 158"/><path d="M280 158C350 158 350 128 420 128"/><path class="fault-bridge" d="M240 158H280"/></g><g class="fault-cable-glint"><path d="M100 125C160 125 170 155 240 155M280 155C350 155 350 125 420 125"/><path class="fault-bridge" d="M240 155H280"/></g><g class="fault-gap"><ellipse cx="260" cy="158" rx="36" ry="29" fill="#f6ded5" stroke="none" opacity=".45"/><path class="fault-jacket" d="m233 151 8 1-3 4 5 3-5 3 2 3-7 1m54-15-8 1 3 4-5 3 5 3-2 3 7 1"/><path stroke="#d19355" d="m240 153 9-4 4 2m27 2-9-6-4 1"/><path stroke="#739ba1" d="m240 158 8 1 5 5m27-6-8 2-4-3"/><path stroke="#c57f68" d="m240 163 7 6 5-1m28-5-7 7-5 1"/><g class="fault-sparks"><path d="m258 137 5-9m12 12 8-5m-28 44-4 8m23-9 6 6"/></g></g><g class="fault-connectors" fill="#d8e5e9" stroke="#5f7c8a" stroke-width="1.3"><rect x="95" y="121" width="15" height="14" rx="3"/><rect x="410" y="121" width="15" height="14" rx="3"/><path d="M100 123v10m4-10v10m312-10v10m4-10v10"/></g><g class="fault-packets"></g><g transform="translate(61 128)" style="color:#52758c">'+window.NetworkExplorerIcons.device({type:'host',os:'windows'})+'</g><g transform="translate(459 128)" style="color:#52758c">'+window.NetworkExplorerIcons.device({type:'host',os:'linux'})+'</g><text x="61" y="187">Sender</text><text x="459" y="187">Receiver</text><g class="fault-state"><circle cx="180" cy="44" r="4"/><text x="194" y="49" text-anchor="start">Traffic flowing</text></g><g class="fault-alert-bell" transform="translate(118 210) scale(.75)" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4M2 8a10 10 0 0 1 3-6m17 6a10 10 0 0 0-3-6"/></g><text class="fault-caption" x="260" y="225">One connection. A steady stream of packets.</text></svg>';
 const faultScene=trafficPreview.querySelector('svg'), packetLayer=trafficPreview.querySelector('.fault-packets');
+const faultBanner=document.createElementNS('http://www.w3.org/2000/svg','g');
+faultBanner.setAttribute('class','fault-alert-banner');
+faultBanner.innerHTML='<rect class="fault-pill" x="58" y="199" width="404" height="36" rx="18"/><text class="fault-pill-label" x="260" y="222">NETWORK DOWN — THE NOC IS ON IT.</text>';
+faultScene.insertBefore(faultBanner,faultScene.querySelector('.fault-alert-bell'));
+faultScene.querySelector('.fault-alert-bell').remove();
+faultScene.querySelector('.fault-state circle').remove();
 const trafficRoute=faultScene.querySelector('.fault-route'), routeLength=trafficRoute.getTotalLength(), breakLength=faultScene.querySelector('.fault-left').getTotalLength()-12, breakAge=2.67*breakLength/routeLength;
 const packetNodes=Array.from({length:5},()=>{const packet=document.createElementNS('http://www.w3.org/2000/svg','g');packet.classList.add('fault-frame');packet.innerHTML='<rect class="frame-shell" x="-12" y="-7" width="24" height="14" rx="2.5"/><path class="frame-header" d="M-9-4h5v8h-5Z"/><path class="frame-payload" d="M-1-3h6M-1 0h9M-1 3h6"/><path class="frame-check" d="M9-4v8"/>';packetLayer.append(packet);return packet;});
 const reducedFaultMotion=matchMedia('(prefers-reduced-motion: reduce)');
@@ -24,14 +30,17 @@ function drawFaultTraffic(seconds){
   const phase=broken?'broken':cycle>=9?'restored':'flowing';
   if(phase!==faultPhase){
     faultPhase=phase; faultScene.dataset.phase=phase;
-    faultScene.querySelector('.fault-caption').setAttribute('x',broken?'274':'260');
-    faultScene.querySelector('.fault-state text').textContent=broken?'Connection lost':phase==='restored'?'Connection restored':'Traffic flowing';
+    const statusText=faultScene.querySelector('.fault-state text');
+    statusText.textContent='●  '+(broken?'Connection lost':phase==='restored'?'Connection restored':'Traffic flowing');
+    statusText.setAttribute('x','260');
     faultScene.querySelector('.fault-caption').textContent=broken?'Network down — the NOC is on it.':phase==='restored'?'Back online. The stream resumes.':'One connection. A steady stream of packets.';
-    if(broken){
-      const caption=faultScene.querySelector('.fault-caption');
-      faultScene.querySelector('.fault-alert-bell').setAttribute('transform',`translate(${274-caption.getComputedTextLength()/2-30} 208) scale(.9)`);
-    }
   }
+  // Fade up into the outage, then fade down before the connection recovers.
+  const ramp=broken?Math.max(0,Math.min(1,(cycle-4)/.65,(9-cycle)/.65)):0;
+  const visibility=ramp*ramp*(3-2*ramp);
+  faultBanner.setAttribute('opacity',String(visibility));
+  faultBanner.setAttribute('transform',`translate(0 ${reducedFaultMotion.matches?0:14*(1-visibility)})`);
+  faultBanner.setAttribute('aria-hidden',String(!broken));
   const latest=Math.floor(seconds/.8);
   packetNodes.forEach((packet,i)=>{
     const birth=(latest-i)*.8, age=seconds-birth, arrival=birth+breakAge;

@@ -6624,7 +6624,7 @@ body.welcome-open > header {
   font-size: 12px;
   text-anchor: middle;
 }
-.guide-fault-scene .fault-state text { text-anchor: start; font-weight: 600; }
+.guide-fault-scene .fault-state text { text-anchor: middle; font-weight: 600; }
 .guide-fault-scene .fault-state circle { fill: #439786; }
 .guide-fault-scene .fault-route { visibility: hidden; }
 .guide-fault-scene .fault-cable { stroke: url(#fault-cable-depth); stroke-width: 12; fill: none; }
@@ -6642,9 +6642,10 @@ body.welcome-open > header {
 .guide-fault-scene[data-phase="broken"] .fault-bridge { opacity: 0; }
 .guide-fault-scene[data-phase="broken"] .fault-state circle { fill: #bb6756; }
 .guide-fault-scene[data-phase="broken"] .fault-state text { fill: #a35446; }
-.guide-fault-scene .fault-alert-bell { display: none; fill: #fff0ef; stroke: #c13d3d; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.guide-fault-scene[data-phase="broken"] .fault-alert-bell { display: inline; }
-.guide-fault-scene[data-phase="broken"] .fault-caption { fill: #ac292e; font-size: 15px; font-weight: 750; letter-spacing: -.2px; }
+.guide-fault-scene .fault-alert-banner { pointer-events: none; }
+.guide-fault-scene .fault-pill { fill: #b72d38; stroke: #d65159; stroke-width: 1; }
+.guide-fault-scene .fault-pill-label { fill: #fff5f5; font-family: "Lucida Console", "Courier New", monospace; font-size: 15px; font-weight: 700; letter-spacing: .5px; text-anchor: middle; }
+.guide-fault-scene[data-phase="broken"] .fault-caption { visibility: hidden; }
 .guide-fault-scene[data-phase="restored"] .fault-state text { fill: #378273; }
 .guide-tool-copy h3 {
   font-size: 29px;
