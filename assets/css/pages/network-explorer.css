@@ -8896,3 +8896,7 @@ body:not(.external-panel-page) #left-panel > .unified-palette {
 #capture-reset svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; }
 #events-panel .capture-filter-field #capture-reset:hover { background:var(--pale); color:var(--teal); }
 @media(max-width:700px) { #events-panel .capture-filter-field { flex-basis:70%; } }
+/* Keep the connection action inside the compact canvas header. */
+.canvas-toolbar #cancel-connect { box-sizing:border-box; height:24px; min-height:24px; padding:2px 7px; margin:0; flex:0 0 auto; font-weight:500; font-family:inherit; font-size:11px; line-height:18px; border:1px solid var(--line); border-radius:4px; background:transparent; color:var(--ink); white-space:nowrap; }
+.canvas-toolbar #cancel-connect:hover { background:#e9f3f2; border-color:var(--teal); }
+.canvas-toolbar #cancel-connect[hidden] { display:none; }
