@@ -297,6 +297,30 @@ th {
   color: #a32d2d;
   margin-top: 12px;
 }
+button.destructive-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: #fff;
+  background: #a33d3d;
+  border-color: #a33d3d;
+}
+button.destructive-action:hover {
+  color: #fff;
+  background: #892f2f;
+  border-color: #892f2f;
+}
+button.destructive-action svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .task {
   display: flex;
   gap: 8px;
@@ -981,6 +1005,21 @@ main > aside[hidden] {
 #terminal-title {
   flex: 1;
 }
+.terminal-device-picker { position: relative; min-width: 0; flex: 1; }
+#terminal-panel #terminal-device-toggle { display: inline-flex; align-items: center; gap: 7px; max-width: 100%; min-height: 24px; padding: 2px 5px; border: 1px solid transparent; border-radius: 4px; background: transparent; color: inherit; font: inherit; text-align: left; }
+#terminal-panel #terminal-device-toggle:hover, #terminal-panel #terminal-device-toggle[aria-expanded="true"] { background: #26313d; border-color: #465362; }
+#terminal-device-toggle #terminal-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.terminal-picker-chevron, .terminal-choice-check { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+#terminal-device-menu { position: absolute; left: 0; top: calc(100% + 4px); z-index: 60; display: grid; min-width: 220px; max-width: min(320px, 80vw); max-height: 190px; overflow: auto; padding: 4px; border: 1px solid #465362; border-radius: 6px; background: #191e25; box-shadow: 0 8px 20px #0005; }
+#terminal-device-menu[hidden] { display: none; }
+#terminal-panel #terminal-device-menu button { display: flex; align-items: center; gap: 7px; width: 100%; min-height: 28px; padding: 4px 6px; border: 0; border-radius: 3px; background: transparent; color: #d5dce5; font: 11px Consolas, monospace; text-align: left; }
+#terminal-panel #terminal-device-menu button:hover, #terminal-panel #terminal-device-menu button:focus-visible { background: #2a3745; }
+#terminal-device-menu small { margin-left: auto; color: #a4b2c1; font-size: 10px; }
+.terminal-choice-icon { width: 22px; height: 20px; flex: none; }
+.terminal-choice-check { visibility: hidden; }
+[aria-checked="true"] > .terminal-choice-check { visibility: visible; }
+.terminal-picker-empty { padding: 8px; font-size: 11px; }
+.external-panel-page[data-panel="terminal"] .terminal-dots { display: none; }
 .terminal-dots {
   display: inline-flex;
   gap: 6px;
@@ -3144,6 +3183,28 @@ body[data-platform="paloalto"] .vlan-badge {
 .dns-record-form {
   padding: 10px;
 }
+.dns-record {
+  margin: 8px 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.dns-record > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  list-style: none;
+  cursor: pointer;
+}
+.dns-record > summary::-webkit-details-marker { display: none; }
+.dns-record-summary { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.dns-record-summary small { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; font-weight: 400; }
+.dns-record-type, .dns-record-chevron { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.dns-record-type { width: 26px; height: 26px; flex: 0 0 26px; color: var(--teal); }
+.dns-record-chevron { width: 14px; height: 14px; flex: 0 0 14px; }
+.dns-record[open] > summary { border-bottom: 1px solid var(--line); }
+.dns-record[open] .dns-record-chevron { transform: rotate(90deg); }
 .dns-record-form input {
   min-width: 0;
 }

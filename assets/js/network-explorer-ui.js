@@ -2716,7 +2716,7 @@
           : a.type === "dns"
             ? dnsPanel(d)
             : dhcpPanel(d)) +
-        '<button id="uninstall-app" class="danger">Uninstall application</button>'
+        '<button id="uninstall-app" class="danger destructive-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg>Uninstall application</button>'
       : '<p class="hint">Connect this application to a host, or drag it directly onto one.</p><button id="attach-app">Connect to host</button><button id="remove-app" class="danger">Remove application</button>';
     if (d) {
       $("application-host").onclick = () => {
@@ -2784,13 +2784,13 @@
       d.dnsServer.records
         .map(
           (r, i) =>
-            '<details class="dhcp-pool"><summary>' +
+            '<details class="dns-record"><summary><svg class="dns-record-type" viewBox="0 0 24 24" role="img" aria-label="A record"><rect x="2" y="2" width="20" height="20" rx="4"/><path d="m7 17 5-10 5 10M9 13h6"/></svg><span class="dns-record-summary">' +
             esc(r.name) +
             "<small>" +
             esc(r.address) +
             " &middot; TTL " +
             r.ttl +
-            "s</small></summary>" +
+            's</small></span><svg class="dns-record-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary>' +
             dnsEditor(r, i) +
             "</details>",
         )
@@ -3163,13 +3163,55 @@
             ) + "s"),
       );
   }
+  function setTerminalPickerOpen(open) {
+    $('terminal-device-menu').hidden = !open;
+    $('terminal-device-toggle').setAttribute('aria-expanded', String(open));
+    syncExternal();
+  }
+  function refreshTerminalPicker() {
+    const menu = $('terminal-device-menu');
+    const html = net.devices.map(d => '<button type="button" id="terminal-choice-'+esc(d.id)+'" data-terminal-device="'+esc(d.id)+'" role="menuitemradio" aria-checked="'+(d.id===terminalDevice)+'"><svg class="terminal-choice-icon" viewBox="-42 -35 84 72" aria-hidden="true">'+icon(d)+'</svg><span>'+esc(d.name)+'</span><small>'+esc(d.type)+'</small><svg class="terminal-choice-check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>').join('') || '<span class="terminal-picker-empty">Add a device to open a console.</span>';
+    if (menu.innerHTML !== html) {
+      menu.innerHTML = html;
+      menu.querySelectorAll('[data-terminal-device]').forEach(button => {
+        button.onclick = () => {
+          setTerminalPickerOpen(false);
+          select(button.dataset.terminalDevice);
+          const root = externalPanels.get('terminal')?.window.document || document;
+          root.getElementById('command')?.focus();
+        };
+      });
+    }
+  }
+  function bindTerminalPicker(doc) {
+    doc.addEventListener('pointerdown', e => {
+      if (!e.target.closest('.terminal-device-picker') && !$('terminal-device-menu').hidden)
+        setTerminalPickerOpen(false);
+    });
+    doc.addEventListener('keydown', e => {
+      if (!e.target.closest('.terminal-device-picker')) return;
+      if (e.key === 'Escape') {
+        e.preventDefault(); e.stopPropagation(); setTerminalPickerOpen(false);
+        doc.getElementById('terminal-device-toggle')?.focus();
+      } else if (['ArrowDown','ArrowUp','Home','End'].includes(e.key)) {
+        e.preventDefault(); e.stopPropagation();
+        if ($('terminal-device-menu').hidden) setTerminalPickerOpen(true);
+        const choices = [...doc.querySelectorAll('#terminal-device-menu [data-terminal-device]')];
+        const index = choices.indexOf(doc.activeElement);
+        const next = e.key==='Home'?0:e.key==='End'?choices.length-1:e.key==='ArrowUp'?(index-1+choices.length)%choices.length:(index+1)%choices.length;
+        choices[next]?.focus();
+      }
+    }, true);
+  }
+  $('terminal-device-toggle').onclick = () => setTerminalPickerOpen($('terminal-device-menu').hidden);
+  bindTerminalPicker(document);
   function refreshTerminalOS() {
     let badge = $("terminal-os");
     if (!badge) {
       badge = document.createElement("span");
       badge.id = "terminal-os";
       badge.className = "terminal-os";
-      $("terminal-title").after(badge);
+      $("terminal-device-toggle").closest('.terminal-device-picker').after(badge);
     }
     const d = cliDevice();
     badge.hidden = !d;
@@ -3231,6 +3273,7 @@
     $("terminal-title").textContent = consoleDevice
       ? consoleDevice.name + " - " + (consoleDevice.type === "host" ? "Host" : consoleDevice.type === "router" ? "Router" : isPan(consoleDevice) ? "PAN-OS Layer 2" : "Cisco IOS Layer 2")
       : "Terminal";
+    refreshTerminalPicker();
     if (noteInspector()) return;
     if (applicationInspector()) return;
     const d = net.device(selected),
@@ -3306,7 +3349,7 @@
         ) +
         "</div>" +
         (d.type === "host" ? hostApplications(d) : "") +
-        '<button class="danger" id="delete">Delete device</button>';
+        '<button class="danger destructive-action" id="delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg>Delete device</button>';
       $("float-table").onclick = () => {
         floatingDevice = d.id;
         refreshFloatingTable();
@@ -3498,7 +3541,7 @@
     doc.body.append(host);
     if (key === "events") NetworkExplorerCapture.bindScroll(host);
     bindHistoryEvents(doc);
-    if (key === "terminal") installCliIpPicker(doc);
+    if (key === "terminal") { installCliIpPicker(doc); bindTerminalPicker(doc); }
     const entry = { window: popup, host, content, onDock };
     externalPanels.set(key, entry);
     if (key === "terminal")
