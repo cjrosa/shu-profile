@@ -3633,7 +3633,7 @@ body:not(.external-panel-page) > .toolbar {
   min-width: 0;
   overflow: hidden;
 }
-#tool-overlay .dock-body > section {
+#tool-overlay .dock-group-content > section {
   flex: 1;
   min-width: 0;
   min-height: 0;
@@ -3642,7 +3642,7 @@ body:not(.external-panel-page) > .toolbar {
   border-radius: 0;
   overflow: auto;
 }
-#tool-overlay.split .dock-body > section + section {
+#tool-overlay.split .dock-group-content > section + section {
   border-left: 1px solid var(--line);
 }
 #tool-overlay .dock-body #terminal-panel {
@@ -3806,38 +3806,9 @@ body:not(.external-panel-page) > .toolbar {
 #tool-overlay .dock-header {
   position: relative;
 }
-#tool-overlay.split:not(.minimized) .dock-header [role="tablist"] {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0;
-  width: 100%;
-}
-#tool-overlay.split:not(.minimized) .dock-header {
-  padding-right: 0;
-}
-#tool-overlay.split:not(.minimized) .dock-tab-group {
-  padding-right: 8px;
-}
-#tool-overlay.split:not(.minimized) .dock-tab-group:last-child {
-  padding-right: 70px;
-}
-#tool-overlay.split:not(.minimized) .dock-tab-group .heading-popout {
-  margin-left: auto;
-}
-#tool-overlay.split:not(.minimized) #dock-split {
-  position: absolute;
-  right: 34px;
-}
-#tool-overlay.split:not(.minimized) #dock-close {
-  position: absolute;
-  right: 0;
-}
 #tool-overlay.split .dock-body {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-#tool-overlay.split .dock-body:has(> section[hidden]) {
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: repeat(var(--dock-columns, 2), minmax(0, 1fr));
 }
 #tool-overlay .dock-body #events-panel {
   padding-top: 8px;
@@ -9033,3 +9004,68 @@ body:not(.external-panel-page) #left-panel > .unified-palette {
 #examine-body > p,
 #examine-body li { font-size:11px; line-height:1.4; }
 #examine-body .decision p { margin:4px 0; }
+/* Troubleshooting shares the dock resize/minimize behavior. */
+#troubleshooting-panel { overflow:auto; padding:8px 12px; min-width:0; height:100%; box-sizing:border-box; }
+.trouble-actions { display:flex; flex-wrap:wrap; align-items:center; gap:4px; padding:0 0 6px; margin:0; border-bottom:1px solid var(--line); }
+.trouble-actions button { display:grid; place-items:center; width:26px; height:26px; min-width:26px; padding:3px; border:1px solid #b6c8d6; border-radius:7px; background:#fff; color:#40576b; }
+.trouble-actions button { min-height:26px; }
+.trouble-dropdown { position:relative; }
+.trouble-actions .trouble-menu-trigger { display:flex; gap:3px; width:42px; }
+.trouble-actions .trouble-chevron { width:10px; height:10px; }
+.trouble-menu { position:absolute; top:30px; left:0; z-index:50; width:218px; padding:4px; border:1px solid #b6c8d6; border-radius:7px; background:#fff; box-shadow:0 5px 16px #203f6626; }
+.trouble-menu[hidden] { display:none; }
+.trouble-actions .trouble-menu button { display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; height:auto; margin:0; padding:6px 8px; text-align:left; }
+.trouble-menu strong { font-size:12px; }
+.trouble-menu span { font-size:11px; color:#61758a; white-space:normal; }
+.trouble-actions .trouble-menu .trouble-generate-mode { border-bottom:1px solid #d8e2ec; border-radius:4px 4px 0 0; margin-bottom:4px; font-size:12px; }
+.trouble-actions .trouble-generate-mode[aria-pressed="true"] { background:#fff1dc; color:#855b17; }
+.trouble-actions button svg { width:18px; height:18px; }
+.trouble-actions button:hover:not(:disabled) { background:#edf4fa; border-color:#bdcddd; }
+.trouble-actions button:disabled { opacity:.38; }
+.trouble-actions button[data-lab="check"], .trouble-actions button[data-lab="hint"], .trouble-actions button[data-lab="reset"] { margin-left:4px; }
+.trouble-status { display:flex; align-items:flex-start; gap:8px; padding:9px 12px; background:#edf4fa; border-left:3px solid #478b87; border-radius:7px; margin:8px 0; }
+.trouble-status > svg { width:20px; height:20px; flex:none; margin-top:2px; color:inherit; }
+.trouble-status[data-severity="warning"] { background:#fff7da; border-color:#bf8b19; color:#76520b; }
+.trouble-status[data-severity="error"] { background:#fff0ef; border-color:#bd4545; color:#9c2929; }
+.trouble-status[data-severity="success"] { background:#edf8f0; border-color:#418556; color:#28653b; }
+.trouble-evidence p { margin:8px 0; font-size:13px; }
+.trouble-guidance { display:flex; align-items:flex-start; gap:6px; margin:6px 0; padding:6px 8px; border:1px solid #c5d7ec; border-radius:5px; background:#f1f6fd; color:#294c73; font-size:12px; line-height:1.45; max-height:110px; overflow:auto; }
+.trouble-guidance > svg { flex:none; width:16px; height:16px; margin-top:1px; }
+.trouble-guidance > div { min-width:0; overflow-wrap:anywhere; }
+.trouble-guidance[data-kind="look"] { background:#eef7f6; border-color:#bed9d5; color:#315f5a; }
+.trouble-guidance[data-kind="reveal"] { background:#fff7e8; border-color:#e4cda5; color:#79551f; }
+.trouble-reflection { display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center; margin-top:12px; font-size:13px; }
+.trouble-reflection input { flex:1; min-width:100px; }
+.trouble-reflection[hidden] { display:none; }
+#dock-tab-troubleshooting { white-space:nowrap; }
+
+
+/* Bottom-only dock groups: each tab bar belongs to the content directly below it. */
+#tool-overlay { position:relative; }
+#tool-overlay .dock-controls { display:flex; align-items:center; flex:none; gap:6px; margin-left:auto; padding-left:4px; }
+#tool-overlay .dock-controls > .dock-icon { flex:none; }
+#tool-overlay.canvas-tool-dock .dock-body { display:grid; align-items:stretch; overflow-x:auto; overflow-y:hidden; border:0; border-radius:0; gap:0; }
+#tool-overlay .dock-column { display:flex; flex-direction:column; min-width:0; min-height:0; position:relative; padding:0 4px; }
+#tool-overlay .dock-column:first-child { padding-left:0; }
+#tool-overlay .dock-column:last-child { padding-right:0; }
+#tool-overlay .dock-column-header { flex:none; min-width:0; border-bottom:1px solid var(--line); }
+#tool-overlay .dock-column-header [role="tablist"] { min-width:0; display:flex; overflow-x:auto; align-items:center; padding-top:3px; gap:3px; }
+#tool-overlay .dock-tab-group { flex:none; position:relative; }
+#tool-overlay .dock-header [role="tab"] { cursor:grab; touch-action:none; user-select:none; white-space:nowrap; }
+#tool-overlay.dragging-tab .dock-header [role="tab"] { cursor:grabbing; }
+#tool-overlay .dock-group-content { display:flex; flex:1; min-width:0; min-height:0; overflow:hidden; border:1px solid var(--line); border-top:0; border-radius:0 0 6px 6px; }
+#tool-overlay .dock-group-content > section { flex:1; min-width:0; min-height:0; height:auto; }
+#tool-overlay .dock-group-content > section[hidden] { display:none; }
+#tool-overlay.minimized .dock-body { display:grid; flex:none; }
+#tool-overlay.minimized .dock-group-content { display:none; }
+.dock-column-divider { position:absolute; right:-3px; top:3px; bottom:0; width:7px; cursor:col-resize; touch-action:none; z-index:4; }
+.dock-column-divider::after { content:""; position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); width:3px; height:3px; border-radius:50%; background:#a7afb8; box-shadow:0 -7px #a7afb8, 0 7px #a7afb8; }
+.dock-column-divider:hover, .dock-column-divider:focus-visible { background:transparent; outline:none; }
+.dock-column-divider:hover::after, .dock-column-divider:focus-visible::after { background:#7f929a; box-shadow:0 -7px #7f929a, 0 7px #7f929a; }
+.dock-drop-before { box-shadow:-3px 0 #315e94; }
+.dock-drop-after { box-shadow:3px 0 #315e94; }
+.dock-drop-hint { position:absolute; z-index:30; pointer-events:none; box-sizing:border-box; border:2px dashed #315e94; border-radius:6px; background:#dbeafecc; color:#234b7b; display:grid; place-items:center; font-weight:600; }
+.dock-drop-hint[hidden] { display:none; }
+.dock-drag-preview { position:fixed; z-index:10000; pointer-events:none; display:flex; align-items:center; gap:8px; padding:10px 14px; border:1px solid #668bb8; border-radius:8px; background:#f0f6ff; color:#234b7b; box-shadow:0 6px 18px #203f6638; font-size:14px; font-weight:600; white-space:nowrap; }
+.dock-drag-preview svg { width:20px; height:20px; flex:none; }
+.dock-drag-preview[hidden] { display:none; }

@@ -26,6 +26,17 @@
     examined = false,
     messageTimer;
   let candidateBase = null;
+  let refreshTroubleshooting = () => {};
+  const networkIdentities = new WeakMap();
+  function networkIdentity(network = net) {
+    if (!networkIdentities.has(network)) networkIdentities.set(network, {});
+    return networkIdentities.get(network);
+  }
+  function adoptTrafficNetwork(next) {
+    const identity = networkIdentity();
+    net = terminalSessions.adopt(net, next);
+    networkIdentities.set(net, identity);
+  }
   const editHistory = new NetworkExplorerHistory.History(100);
   let restoringHistory = false;
   const historySnapshot = () => ({
@@ -3484,7 +3495,7 @@
       "about:blank",
       "network-explorer-" + key,
       "popup=yes,width=" +
-        (key === "events" ? 1120 : key === "examine" ? 1100 : 430) +
+        (key === "events" ? 1120 : key === "examine" ? 1100 : key === "troubleshooting" ? 760 : 430) +
         ",height=650,resizable=yes,scrollbars=yes",
     );
     if (!popup) {
@@ -3562,7 +3573,7 @@
         return;
       }
       const control = e.target.closest("button");
-      if (control?.id) $(control.id)?.click();
+      if (control?.id) { $(control.id)?.click(); if (key === "troubleshooting") syncExternal(); }
     });
     host.addEventListener("keydown", (e) => {
       if (
@@ -4237,6 +4248,7 @@
     NetworkExplorerStatus.render($("sim-status"), { active, paused });
   }
   function render() {
+    refreshTroubleshooting();
     refreshDevicePickers();
     updatePauseControl();
     NetworkExplorerPlatform.normalize(net);
@@ -4464,7 +4476,7 @@
     );
     const report = trial.next();
     if (!report) {
-      net = terminalSessions.adopt(net, trial);
+      adoptTrafficNetwork(trial);
       arrivedFlights.clear();
       $("traffic").replaceChildren();
       stop();
@@ -4766,7 +4778,7 @@
     );
     const notes = net.notes,
       tags = new Map(net.devices.map((d) => [d.id, d.tags]));
-    net = terminalSessions.adopt(net, staged.trial);
+    adoptTrafficNetwork(staged.trial);
     net.notes = notes;
     net.devices.forEach((d) => {
       if (tags.has(d.id)) d.tags = tags.get(d.id);
@@ -6750,7 +6762,11 @@
   const eventsPanel = $("events-panel");
   toolOverlay.append(eventsPanel);
   eventsPanel.hidden = true;
+  const troubleshootingPanel = document.createElement("section");
+  troubleshootingPanel.id = "troubleshooting-panel";
+  troubleshootingPanel.hidden = true;
   const toolIcons = {
+    troubleshooting: '<path d="m14 6 4-4a6 6 0 0 0-7 7L3 17a3 3 0 0 0 4 4l8-8a6 6 0 0 0 7-7l-4 4Z"/>',
     events:
       '<path d="M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4"/><circle cx="4" cy="7" r="1"/><circle cx="20" cy="17" r="1"/>',
     terminal:
@@ -6759,8 +6775,10 @@
   let activeTool = "terminal",
     toolPinned = false,
     toolCloseTimer;
-  let dockSplit = false,
-    dockMinimized = true;
+  const dockKeys = ["terminal", "events", "troubleshooting"];
+  const dockPanels = {terminal: terminalPanel, events: eventsPanel, troubleshooting: troubleshootingPanel};
+  const dockLayout = new NetworkExplorerDock.Layout(dockKeys);
+  let dockManager = null, dockMinimized = true;
   function dockEvents() {
     eventsPanel.hidden = true;
   }
@@ -6768,33 +6786,24 @@
     toolOverlay.hidden = false;
     toolOverlay.classList.toggle("minimized", dockMinimized);
     const open = !dockMinimized;
-    terminalPanel.hidden =
-      !open ||
-      externalPanels.has("terminal") ||
-      (!dockSplit && activeTool !== "terminal");
-    eventsPanel.hidden =
-      !open ||
-      externalPanels.has("events") ||
-      (!dockSplit && activeTool !== "events");
+    dockManager?.render();
+    const visible = dockLayout.groups.map(g => externalPanels.has(g.active) ? g.tabs.find(k => !externalPanels.has(k)) : g.active).filter(Boolean);
+    refreshTroubleshooting();
     terminalNotice.hidden = true;
-    toolOverlay.classList.toggle("split", dockSplit);
-    for (const key of ["terminal", "events"]) {
-      const tab = $("dock-tab-" + key);
-      if (tab) {
-        tab.setAttribute("aria-selected", String(activeTool === key));
-        tab.tabIndex = activeTool === key ? 0 : -1;
-        tab.disabled = externalPanels.has(key);
-      }
-      const panel = key === "terminal" ? terminalPanel : eventsPanel;
-      panel.querySelector(".close-tool")?.toggleAttribute("hidden", true);
+    for (const panel of Object.values(dockPanels)) panel.querySelector(".close-tool")?.toggleAttribute("hidden", true);
+    const splitButton = $("dock-split");
+    if (splitButton) {
+      const label = dockLayout.groups.length > 1 ? "Combine tab groups" : "Show all tools side by side";
+      splitButton.setAttribute("aria-label", label);
+      splitButton.title = label;
+      splitButton.setAttribute("aria-pressed", String(dockLayout.groups.length > 1));
     }
-    $("dock-split")?.setAttribute("aria-pressed", String(dockSplit));
     document
       .querySelectorAll("[data-tool]")
       .forEach((b) =>
         b.setAttribute(
           "aria-expanded",
-          String(open && (dockSplit || activeTool === b.dataset.tool)),
+          String(open && visible.includes(b.dataset.tool)),
         ),
       );
   }
@@ -6810,11 +6819,12 @@
       if (pinned) externalPanels.get(key).window.focus();
       return;
     }
+    dockLayout.activate(key);
     activeTool = key;
     dockMinimized = false;
     toolPinned = true;
     toolOverlay.hidden = false;
-    toolOverlay.setAttribute("aria-label", "Terminal and Activity dock");
+    toolOverlay.setAttribute("aria-label", "Network tools dock");
     refreshDock();
   }
   function scheduleToolClose() {}
@@ -6901,8 +6911,8 @@
         },
       )
     ) {
-      closeTool();
       eventsPanel.hidden = true;
+      refreshDock();
     }
   };
   document.addEventListener("capture-updated", () => syncExternal());
@@ -6922,16 +6932,34 @@
       path +
       '"/></svg>';
   }
+  const troubleshootingPop = document.createElement("button");
+  troubleshootingPop.id = "float-troubleshooting";
+  troubleshootingPop.type = "button";
+  troubleshootingPop.className = "heading-popout dock-icon";
+  troubleshootingPop.setAttribute("aria-label", "Expand Troubleshooting");
+  troubleshootingPop.title = "Expand Troubleshooting";
+  troubleshootingPop.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7M21 3l-7 7M10 21H3v-7M3 21l7-7"/></svg>';
+  troubleshootingPanel.append(troubleshootingPop);
+  troubleshootingPop.onclick = () => {
+    openExternal("troubleshooting", "Troubleshooting - Network Explorer", () => {
+      refreshTroubleshooting();
+      const clone = troubleshootingPanel.cloneNode(true);
+      clone.hidden = false;
+      clone.querySelector("input")?.setAttribute("value", troubleshootingPanel.querySelector("input").value);
+      return clone.outerHTML;
+    }, () => openTool("troubleshooting", true));
+    refreshDock();
+  };
   const originalTerminalPop = $("float-terminal").onclick;
   $("float-terminal").onclick = () => {
     originalTerminalPop();
-    if (externalPanels.has("terminal")) closeTool();
+    refreshDock();
   };
   const dockHeader = document.createElement("div");
   dockHeader.className = "dock-header";
   dockHeader.innerHTML =
-    '<div role="tablist" aria-label="Canvas tools"><button id="dock-tab-terminal" role="tab" aria-controls="terminal-panel">Terminal</button><button id="dock-tab-events" role="tab" aria-controls="events-panel">Activity</button></div><button id="dock-split" class="dock-icon" aria-label="Show Terminal and Activity side by side" title="Show Terminal and Activity side by side" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg></button><button id="dock-close" class="dock-icon" aria-label="Minimize bottom dock" title="Minimize bottom dock"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17h14"/></svg></button>';
-  for (const key of ["terminal", "events"]) {
+    '<div role="tablist" aria-label="Canvas tools"><button id="dock-tab-terminal" role="tab" aria-controls="terminal-panel">Terminal</button><button id="dock-tab-events" role="tab" aria-controls="events-panel">Activity</button><button id="dock-tab-troubleshooting" role="tab" aria-controls="troubleshooting-panel">Troubleshooting</button></div><button id="dock-split" class="dock-icon" aria-label="Show two tools side by side" title="Show two tools side by side" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg></button><button id="dock-close" class="dock-icon" aria-label="Minimize bottom dock" title="Minimize bottom dock"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17h14"/></svg></button>';
+  for (const key of ["terminal", "events", "troubleshooting"]) {
     const tab = dockHeader.querySelector("#dock-tab-" + key);
     tab.innerHTML =
       '<svg viewBox="0 0 24 24" aria-hidden="true">' +
@@ -6940,22 +6968,23 @@
       tab.textContent +
       "</span>";
   }
-  for (const key of ["terminal", "events"]) {
+  for (const key of dockKeys) {
     const tab = dockHeader.querySelector("#dock-tab-" + key),
       group = document.createElement("div");
     group.className = "dock-tab-group";
     group.dataset.pane = key;
     tab.before(group);
-    const expand = $("float-" + key);
-    expand.classList.add("dock-icon");
+    const expand = key === "troubleshooting" ? troubleshootingPop : $("float-" + key);
+    expand?.classList.add("dock-icon");
     const shell = document.createElement("div");
     shell.className = "dock-tab-shell";
-    shell.append(tab, expand);
+    shell.append(tab);
+    if (expand) shell.append(expand);
     group.append(shell);
   }
   const dockBody = document.createElement("div");
   dockBody.className = "dock-body";
-  dockBody.append(terminalPanel, eventsPanel);
+  dockBody.append(terminalPanel, eventsPanel, troubleshootingPanel);
   const resize = document.createElement("div");
   resize.className = "dock-resize";
   resize.tabIndex = 0;
@@ -6994,41 +7023,48 @@
       resizeDock(toolOverlay.offsetHeight + (e.key === "ArrowUp" ? 20 : -20));
     }
   };
-  for (const key of ["terminal", "events"]) {
-    $("dock-tab-" + key).onclick = () => {
-      openTool(key, true);
-      if (key === "terminal" && cliDevice())
-        $("command").focus({ preventScroll: true });
-    };
-    $("dock-tab-" + key).onkeydown = (e) => {
-      if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) {
-        e.preventDefault();
-        const other = key === "terminal" ? "events" : "terminal";
-        if (!$("dock-tab-" + other).disabled) {
-          openTool(other, true);
-          $("dock-tab-" + other).focus();
-        }
-      }
-    };
-  }
+  const dockTabs = Object.fromEntries(dockKeys.map(key => [key, $("dock-tab-" + key)]));
+  for (const key of dockKeys) dockTabs[key].onclick = () => {
+    openTool(key, true);
+    if (key === "terminal" && cliDevice()) $("command").focus({preventScroll:true});
+  };
+  const dockControls = document.createElement("div");
+  dockControls.className = "dock-controls";
+  dockControls.append($("dock-split"), $("dock-close"));
+  dockManager = NetworkExplorerDock.mount({
+    overlay: toolOverlay, body: dockBody, tabs: dockTabs, panels: dockPanels, layout: dockLayout, controls: dockControls,
+    isExternal: key => externalPanels.has(key), isMinimized: () => dockMinimized,
+    open: key => openTool(key, true), refresh: refreshDock
+  });
+  dockManager.render();
+  dockHeader.remove();
   $("dock-split").onclick = () => {
-    dockSplit = !dockSplit;
+    if (dockLayout.groups.length > 1) dockLayout.combine(activeTool);
+    else dockLayout.separate();
     dockMinimized = false;
     refreshDock();
   };
   $("dock-close").onclick = closeTool;
-  // Expanded windows retain the other panel in the dock; Dock returns to the same tab group.
-  for (const key of ["terminal", "events"]) {
-    const button = $("float-" + key),
-      pop = button.onclick;
-    button.onclick = () => {
-      const other = key === "terminal" ? "events" : "terminal",
-        wasSplit = dockSplit;
-      pop();
-      if (externalPanels.has(key) && wasSplit && !externalPanels.has(other))
-        openTool(other, true);
-    };
+
+  function replaceTroubleshootingNetwork(data, label) {
+    if (net.devices.length && !confirm(label + "? This replaces the current network and clears learned state.")) return false;
+    const before = historySnapshot();
+    discard(); candidateBase = null;
+    net = new NetworkExplorer.Network(data);
+    NetworkExplorerExamples.arrange(net);
+    selected = null; examined = false; cancelConnect(); render();
+    fitOpenedNetwork(); recordHistory(before, label);
+    return true;
   }
+  refreshTroubleshooting = NetworkExplorerTroubleshooting.mount(troubleshootingPanel, {
+    Network: NetworkExplorer.Network, network: () => net, identity: () => networkIdentity(), editable,
+    change: fn => mutate(fn),
+    load: data => replaceTroubleshootingNetwork(data, "Generate troubleshooting practice network"),
+    restore: data => replaceTroubleshootingNetwork(data, "Restore the challenge starting network (discard challenge edits)"),
+    select: id => { cancelConnect(); select(id); },
+    command: (id, command) => { cancelConnect(); select(id); openTool("terminal", true); $("command").value = command; $("command").focus(); }
+  });
+
   terminalPanel.hidden = true;
   refreshDock();
   $("float-examine").onclick = () => {
