@@ -5793,11 +5793,6 @@ body[data-panel^="browser:"] .browser-tab {
     border-color 0.15s;
   color: #3f627f;
 }
-#network-welcome .welcome-start button:first-child {
-  background: #377c7b;
-  border-color: #377c7b;
-  color: #fff;
-}
 #network-welcome .welcome-start button:hover {
   background: #e9f3f4;
   border-color: #93b9bf;
@@ -5918,24 +5913,35 @@ body[data-panel^="browser:"] .browser-tab {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-#network-welcome .welcome-start button:first-child,
-#network-welcome .welcome-start button:first-child:hover {
+#network-welcome .welcome-start button,
+#network-welcome .welcome-start button:hover,
+#network-welcome .welcome-start .network-manual-link,
+#network-welcome .welcome-start .network-manual-link:hover {
   background: transparent;
   border: 0;
   box-shadow: none;
   color: #3f627f;
 }
 
-#network-welcome .welcome-start button:first-child:hover {
-  background: #e9f3f4;
+#network-welcome .welcome-start button:hover,
+#network-welcome .welcome-start .network-manual-link:hover {
+  color: #246d68;
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 #network-welcome .welcome-start {
   gap: 2px;
   margin-bottom: 20px;
 }
-#network-welcome .welcome-start button {
+#network-welcome .welcome-start button,
+#network-welcome .welcome-start .network-manual-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 7px 12px;
   margin: 0;
+  font-size: 13px;
+  font-weight: 400;
 }
 /* Link state is carried by the jack and LED; details remain in the tooltip. */
 .interface-port .port-state {
@@ -9333,3 +9339,10 @@ body:not(.external-panel-page) #left-panel > .unified-palette {
 .dock-drag-preview { position:fixed; z-index:10000; pointer-events:none; display:flex; align-items:center; gap:8px; padding:10px 14px; border:1px solid #668bb8; border-radius:8px; background:#f0f6ff; color:#234b7b; box-shadow:0 6px 18px #203f6638; font-size:14px; font-weight:600; white-space:nowrap; }
 .dock-drag-preview svg { width:20px; height:20px; flex:none; }
 .dock-drag-preview[hidden] { display:none; }
+/* Manual links stay visible in both the welcome screen and canvas toolbar. */
+.network-manual-link { display: inline-flex; align-items: center; gap: 8px; color: #285e65; text-decoration: none; border: 1px solid #cbdce3; border-radius: 7px; background: #fff; padding: 8px 12px; font: inherit; font-weight: 600; }
+.network-manual-link svg { width: 22px; height: 22px; flex: 0 0 auto; }
+.network-manual-link:hover { background: #e8f3f0; border-color: #719c99; }
+.network-manual-link:focus-visible { outline: 3px solid #bd7629; outline-offset: 3px; }
+.header-manual-link { margin-left: auto; align-self: flex-start; white-space: nowrap; font-size: 12px; padding: 5px 9px; gap: 6px; }
+.header-manual-link svg { width: 18px; height: 18px; }
