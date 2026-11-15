@@ -4081,8 +4081,10 @@ textarea::placeholder,
 
 /* Activity: neutral rows, compact protocol badges, and explicit live following. */
 .capture-monitor-picker { position: relative; flex: none; }
-#capture-monitor-toggle { display: grid; place-items: center; width: 30px; padding: 5px; }
-#capture-monitor-toggle svg, .monitor-device-list svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+#events-panel .capture-controls #capture-clear,
+#events-panel .capture-controls #capture-monitor-toggle { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 26px; width: 26px; height: 26px; min-height: 26px; padding: 0; border-radius: 7px; }
+#capture-clear svg, #capture-monitor-toggle svg, .monitor-device-list svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+#capture-clear svg, #capture-monitor-toggle svg { stroke-width: 1.7; }
 #capture-monitor-toggle.active, #capture-monitor-toggle[aria-expanded="true"] { color: var(--teal); background: #edf5f4; border-color: #9dbfbc; }
 .capture-monitor-menu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 50; width: 210px; max-width: calc(100vw - 32px); padding: 8px; background: #fff; color: #344454; border: 1px solid #d7e1e8; border-radius: 7px; box-shadow: 0 8px 24px #24374724; font-size: 11px; }
 .capture-monitor-menu[hidden] { display: none; }
