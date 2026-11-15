@@ -20,7 +20,9 @@
   welcome.innerHTML =
     '<header><h1 tabindex="-1">Network Explorer</h1><p>Build a network. Follow a packet. Explain each decision.</p></header><div class="welcome-columns"><section><h2>Start</h2><div class="welcome-start"><button data-action="new">' +
     svg("M14 3H5v18h14V8ZM14 3v6h5M8 15h8m-4-4v8") +
-    'New network</button><button data-action="load-network">' +
+    'New network</button><button data-action="surprise-network">' +
+    svg("m3 19 12-12 3 3L6 22ZM12 10l3 3M5 2v4M3 4h4m12-3v6m-3-3h6m-1 11v4m-2-2h4") +
+    'Surprise me</button><button data-action="load-network">' +
     svg("M3 7V4h7l2 3h9v13H3ZM12 10v8m-3-3 3 3 3-3") +
     'Open network...</button><button id="welcome-resume">' +
     svg("m9 5 7 7-7 7") +

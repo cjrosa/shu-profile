@@ -197,7 +197,14 @@
       values.forEach(([value, description]) => {
         const option = document.createElement('button'); option.id = 'trouble-' + action + '-' + value;
         option.dataset.lab = action; option.dataset.level = value;
-        option.innerHTML = '<strong></strong><span></span>';
+        const levelIcons = {
+          basic:'<rect x="8" y="3" width="8" height="5" rx="1"/><path d="M12 8v5M5 16v-3h14v3"/><rect x="2" y="16" width="6" height="5" rx="1"/><rect x="16" y="16" width="6" height="5" rx="1"/>',
+          intermediate:'<rect x="2" y="8" width="6" height="8" rx="1"/><rect x="16" y="8" width="6" height="8" rx="1"/><path d="M8 12h8M5 4v4m14-4v4M5 16v4m14-4v4"/>',
+          advanced:'<circle cx="12" cy="4" r="3"/><circle cx="4" cy="18" r="3"/><circle cx="20" cy="18" r="3"/><path d="m10 7-4 8m8-8 4 8M7 18h10"/>',
+          easy:'<path d="M5 19v-5h3v5zm6 0V9h3v10zm6 0V4h3v15"/>',
+          hard:'<path d="m13 2-9 12h7l-1 8 10-13h-7z"/>'
+        };
+        option.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + levelIcons[value] + '</svg><div><strong></strong><span></span></div>';
         option.querySelector('strong').textContent = value[0].toUpperCase() + value.slice(1);
         option.querySelector('span').textContent = description; menu.append(option);
       });
@@ -206,10 +213,11 @@
     dropdown('load', 'Generate practice network', [['basic','Random switched LAN'],['intermediate','2–3 routed LANs'],['advanced','3–5 LANs; chain or ring routing']]);
     let startBroken = false;
     const mode = document.createElement('button'); mode.id = 'trouble-generate-broken';
-    mode.className = 'trouble-generate-mode'; mode.setAttribute('aria-pressed','false');
-    mode.textContent = 'Start with a fault: Off';
+    mode.className = 'trouble-generate-mode'; mode.setAttribute('role','switch'); mode.setAttribute('aria-checked','false');
+    mode.setAttribute('aria-label','Start with a fault');
+    mode.innerHTML = '<span>Start with a fault</span><span class="trouble-switch-track" aria-hidden="true"></span>';
     panel.querySelector('#trouble-menu-load').prepend(mode);
-    mode.onclick = () => { startBroken = !startBroken; mode.setAttribute('aria-pressed',String(startBroken)); mode.textContent = 'Start with a fault: ' + (startBroken ? 'On' : 'Off'); };
+    mode.onclick = () => { startBroken = !startBroken; mode.setAttribute('aria-checked',String(startBroken)); };
     dropdown('break', 'Break something', [['easy','Host interface disabled'],['intermediate','Gateway or switch port fault'],['hard','Incorrect switch access VLAN']]);
     function closeMenus() {
       toolbar.querySelectorAll('.trouble-menu').forEach(menu => { menu.hidden = true; });

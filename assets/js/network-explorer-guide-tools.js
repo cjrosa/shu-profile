@@ -4,9 +4,59 @@ guide.querySelectorAll('.guide-features article').forEach(article=>{const headin
 const panels=document.createElement('div');panels.className='guide-tools';
 panels.innerHTML='<section class="guide-tool-section"><div class="guide-tool-copy"><span class="guide-kicker">INTEGRATED TERMINAL</span><h3>Use the CLI.<br>Master common commands.</h3><p>Build confidence at the prompt. Inspect addresses, test connectivity, resolve names, and trace a route with commands matched to the selected device OS.</p><p>Switch between Windows, Linux, macOS, Cisco IOS, and PAN-OS. Use command history, Tab completion, and <strong>@ device IP lookup</strong> to keep your attention on the network.</p><button type="button" data-action="example-complex">Practice in Campus network <span aria-hidden="true">&#8599;</span></button></div><div class="guide-cli-demo"><div class="guide-os-choices" role="group" aria-label="Preview commands by operating system"></div><div class="guide-terminal-preview"><div class="guide-terminal-caption">COMMAND PRACTICE / <span id="guide-cli-os"></span></div><div id="guide-cli-lines" aria-live="polite"></div><div class="guide-terminal-foot">Illustrative commands &middot; select a device in the lab to run them</div></div></div></section><section class="guide-tool-section guide-activity-section"><div class="guide-tool-copy"><span class="guide-kicker">INTEGRATED ACTIVITY MONITOR</span><h3>Inspect traffic<br>like a pro.</h3><p>A Wireshark-like view makes the exchange visible. Filter captured traffic, follow the latest events, and select a frame to inspect its protocol fields.</p><p>Connect what you typed to what crossed the wire: MAC addresses, IP addresses, protocols, and the details behind each step.</p><button type="button" data-action="example-http">Follow a web request <span aria-hidden="true">&#8599;</span></button></div><div class="guide-capture-demo"><div class="guide-capture-toolbar"><strong>Activity</strong><span>Illustrative capture</span></div><div class="guide-capture-scroll"><table><thead><tr><th>No.</th><th>Protocol</th><th>Info</th></tr></thead><tbody></tbody></table></div><div class="guide-packet-detail" aria-live="polite"></div><small>Select a row to inspect the example packet.</small></div></section>';
 guide.querySelector('.guide-features').after(panels);
+const troubleshooting=document.createElement('section');
+troubleshooting.className='guide-tool-section guide-troubleshooting-section';
+troubleshooting.innerHTML='<div class="guide-tool-copy"><span class="guide-kicker guide-tool-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 6a5 5 0 0 0-6 6L2 18a2.8 2.8 0 0 0 4 4l6-6a5 5 0 0 0 6-6l-3 3-4-4 3-3Z"/></svg>TROUBLESHOOTING</span><h3>When something goes wrong.<br>You’re hired!</h3><p>Generate a random network with a hidden fault, or break a working network of your own. Choose your difficulty, then track down what went wrong.</p><p>Investigate with the Terminal, Activity, and Inspector. Get a hint or a nudge with Look here, reveal the fault when you need it, and check your repair to confirm the connection works again.</p><button type="button" data-action="open-troubleshooting">Try troubleshooting <span aria-hidden="true">&#8599;</span></button></div><div class="guide-troubleshooting-preview" aria-label="Troubleshooting workflow"><div><span>01</span><p><strong>Take the call.</strong>A missing gateway, a disabled port, or a missing service. Something needs your attention.</p></div><div><span>02</span><p><strong>Follow the evidence.</strong>Test a connection, inspect the configuration, and use hints when you get stuck.</p></div><div><span>03</span><p><strong>Bring it back online.</strong>Repair the fault, check the result, and explain your fix.</p></div></div>';
+
 const toolGlyphs=['<rect x="2" y="3" width="20" height="18" rx="3"/><path d="M2 8h20M6 12l3 3-3 3m6 0h5"/>','<path d="M3 5h18M3 12h18M3 19h18"/><rect x="6" y="2" width="5" height="6" rx="1"/><rect x="14" y="9" width="5" height="6" rx="1"/><rect x="5" y="16" width="5" height="6" rx="1"/>'];
 panels.querySelectorAll('.guide-tool-copy>.guide-kicker').forEach((label,i)=>{label.classList.add('guide-tool-label');label.insertAdjacentHTML('afterbegin','<svg viewBox="0 0 24 24" aria-hidden="true">'+toolGlyphs[i]+'</svg>');});
 
+const trafficPreview=troubleshooting.querySelector('.guide-troubleshooting-preview');
+trafficPreview.setAttribute('aria-label','Animated illustration: packets stream across a connection, then fade at a broken link before the connection recovers.');
+trafficPreview.innerHTML='<svg class="guide-fault-scene" viewBox="0 0 520 250" role="img" aria-label="Traffic stops at a broken connection"><defs><linearGradient id="fault-cable-depth" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#a9c2cc"/><stop offset=".45" stop-color="#537e90"/><stop offset="1" stop-color="#355566"/></linearGradient></defs><path class="fault-route" d="M100 128C160 128 170 158 240 158H280C350 158 350 128 420 128"/><g class="fault-cable"><path class="fault-left" d="M100 128C160 128 170 158 240 158"/><path d="M280 158C350 158 350 128 420 128"/><path class="fault-bridge" d="M240 158H280"/></g><g class="fault-cable-glint"><path d="M100 125C160 125 170 155 240 155M280 155C350 155 350 125 420 125"/><path class="fault-bridge" d="M240 155H280"/></g><g class="fault-gap"><ellipse cx="260" cy="158" rx="36" ry="29" fill="#f6ded5" stroke="none" opacity=".45"/><path class="fault-jacket" d="m233 151 8 1-3 4 5 3-5 3 2 3-7 1m54-15-8 1 3 4-5 3 5 3-2 3 7 1"/><path stroke="#d19355" d="m240 153 9-4 4 2m27 2-9-6-4 1"/><path stroke="#739ba1" d="m240 158 8 1 5 5m27-6-8 2-4-3"/><path stroke="#c57f68" d="m240 163 7 6 5-1m28-5-7 7-5 1"/><g class="fault-sparks"><path d="m258 137 5-9m12 12 8-5m-28 44-4 8m23-9 6 6"/></g></g><g class="fault-connectors" fill="#d8e5e9" stroke="#5f7c8a" stroke-width="1.3"><rect x="95" y="121" width="15" height="14" rx="3"/><rect x="410" y="121" width="15" height="14" rx="3"/><path d="M100 123v10m4-10v10m312-10v10m4-10v10"/></g><g class="fault-packets"></g><g transform="translate(61 128)" style="color:#52758c">'+window.NetworkExplorerIcons.device({type:'host',os:'windows'})+'</g><g transform="translate(459 128)" style="color:#52758c">'+window.NetworkExplorerIcons.device({type:'host',os:'linux'})+'</g><text x="61" y="187">Sender</text><text x="459" y="187">Receiver</text><g class="fault-state"><circle cx="180" cy="44" r="4"/><text x="194" y="49" text-anchor="start">Traffic flowing</text></g><text class="fault-caption" x="260" y="225">One connection. A steady stream of packets.</text></svg>';
+const faultScene=trafficPreview.querySelector('svg'), packetLayer=trafficPreview.querySelector('.fault-packets');
+const trafficRoute=faultScene.querySelector('.fault-route'), routeLength=trafficRoute.getTotalLength(), breakLength=faultScene.querySelector('.fault-left').getTotalLength()-12, breakAge=2.67*breakLength/routeLength;
+const packetNodes=Array.from({length:14},()=>{const packet=document.createElementNS('http://www.w3.org/2000/svg','g');packet.classList.add('fault-frame');packet.innerHTML='<rect class="frame-shell" x="-12" y="-7" width="24" height="14" rx="2.5"/><path class="frame-header" d="M-9-4h5v8h-5Z"/><path class="frame-payload" d="M-1-3h6M-1 0h9M-1 3h6"/><path class="frame-check" d="M9-4v8"/>';packetLayer.append(packet);return packet;});
+const reducedFaultMotion=matchMedia('(prefers-reduced-motion: reduce)');
+let faultFrame=0, faultStart=0, faultVisible=false, faultPhase='';
+function drawFaultTraffic(seconds){
+  const cycle=seconds%12, broken=cycle>=4&&cycle<9;
+  const phase=broken?'broken':cycle>=9?'restored':'flowing';
+  if(phase!==faultPhase){
+    faultPhase=phase; faultScene.dataset.phase=phase;
+    faultScene.querySelector('.fault-state text').textContent=broken?'Connection lost':phase==='restored'?'Connection restored':'Traffic flowing';
+    faultScene.querySelector('.fault-caption').textContent=broken?'Packets reach the break… and fade away.':phase==='restored'?'Back online. The stream resumes.':'One connection. A steady stream of packets.';
+  }
+  const latest=Math.floor(seconds/.28);
+  packetNodes.forEach((packet,i)=>{
+    const birth=(latest-i)*.28, age=seconds-birth, arrival=birth+breakAge;
+    const blocked=arrival%12>=4&&arrival%12<9;
+    const fading=blocked&&age>=breakAge, fade=fading?Math.min(1,(age-breakAge)/.55):0;
+    const opacity=birth<0||age>2.67?0:1-fade;
+    const distance=Math.max(0,Math.min(age/2.67*routeLength,blocked?breakLength:routeLength));
+    const point=trafficRoute.getPointAtLength(distance), ahead=trafficRoute.getPointAtLength(Math.min(routeLength,distance+1));
+    const angle=Math.atan2(ahead.y-point.y,ahead.x-point.x)*180/Math.PI;
+    packet.setAttribute('transform',`translate(${point.x} ${point.y-fade*9}) rotate(${angle+fade*12}) scale(${1-fade*.25})`);
+    packet.setAttribute('opacity',String(opacity));
+    packet.classList.toggle('is-lost',fading);
+  });
+}
+function animateFaultTraffic(now){
+  if(!faultVisible||document.hidden)return;
+  if(!faultStart)faultStart=now;
+  drawFaultTraffic((now-faultStart)/1000);
+  faultFrame=requestAnimationFrame(animateFaultTraffic);
+}
+function syncFaultAnimation(){
+  cancelAnimationFrame(faultFrame);
+  if(reducedFaultMotion.matches){drawFaultTraffic(6);return;}
+  if(faultVisible&&!document.hidden)faultFrame=requestAnimationFrame(animateFaultTraffic);
+}
+new IntersectionObserver(entries=>{faultVisible=entries[0].isIntersecting;if(faultVisible)faultStart=0;syncFaultAnimation();},{threshold:.15}).observe(trafficPreview);
+reducedFaultMotion.addEventListener('change',syncFaultAnimation);
+document.addEventListener('visibilitychange',syncFaultAnimation);
+drawFaultTraffic(0);
+panels.append(troubleshooting);
 const supported=document.createElement('section');supported.className='guide-supported';supported.innerHTML='<div><span class="guide-kicker">THE NETWORK PALETTE</span><h3>Everything you need to build.</h3><p>Place devices, add network services, and annotate your topology.</p></div><div class="guide-palette-grid" aria-label="Supported devices and applications"></div>';
 for(const id of ['add-host','add-switch','add-router','add-dhcp-application','add-dns-application','add-web-application','add-browser-application','add-note']){const source=document.getElementById(id),item=document.createElement('div');item.className='guide-palette-item';const glyph=source.querySelector('svg').cloneNode(true);glyph.removeAttribute('id');glyph.setAttribute('aria-hidden','true');const label=document.createElement('span');label.textContent=source.textContent.trim();item.append(glyph,label);supported.querySelector('.guide-palette-grid').append(item);}panels.prepend(supported);
 

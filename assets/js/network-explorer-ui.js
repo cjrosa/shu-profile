@@ -7401,6 +7401,65 @@
   loadInput.hidden = true;
   NetworkExplorerActions.register("load-network", () => loadInput.click());
   networkActions.append(loadInput, $("save"), $("clear-state"));
+  const canvasGenerate = document.createElement("div");
+  canvasGenerate.id = "canvas-generate";
+  canvasGenerate.className = "trouble-actions trouble-dropdown";
+  const generateButton = $("trouble-load").cloneNode(true);
+  generateButton.id = "canvas-generate-button";
+  generateButton.setAttribute("aria-label", "Generate network");
+  generateButton.title = "Generate network";
+  generateButton.removeAttribute("data-tooltip");
+  generateButton.removeAttribute("data-lab");
+  generateButton.setAttribute("aria-controls", "canvas-generate-menu");
+  generateButton.setAttribute("aria-expanded", "false");
+  const generateMenu = $("trouble-menu-load").cloneNode(true);
+  generateMenu.id = "canvas-generate-menu";
+  generateMenu.setAttribute("aria-label", "Generate working network");
+  generateMenu.querySelector(".trouble-generate-mode").remove();
+  generateMenu.hidden = true;
+  function closeGenerateMenu() {
+    generateMenu.hidden = true;
+    generateButton.setAttribute("aria-expanded", "false");
+  }
+  for (const option of generateMenu.querySelectorAll("[data-level]")) {
+    option.id = "canvas-generate-" + option.dataset.level;
+    option.removeAttribute("data-lab");
+    option.onclick = () => {
+      closeGenerateMenu();
+      if (!editable()) return;
+      safely(() => replaceTroubleshootingNetwork(
+        NetworkExplorerTroubleshooting.generate(NetworkExplorer.Network, option.dataset.level).save(),
+        "Generate network",
+      ));
+      generateButton.focus();
+    };
+  }
+  generateButton.onclick = () => {
+    const open = generateMenu.hidden;
+    generateMenu.hidden = !open;
+    generateButton.setAttribute("aria-expanded", String(open));
+  };
+  canvasGenerate.addEventListener("keydown", e => {
+    if (e.key === "Escape") { closeGenerateMenu(); generateButton.focus(); }
+    if (e.key === "ArrowDown" && e.target === generateButton) {
+      e.preventDefault(); generateMenu.hidden = false;
+      generateButton.setAttribute("aria-expanded", "true");
+      generateMenu.querySelector("button").focus();
+    }
+  });
+  document.addEventListener("click", e => { if (!canvasGenerate.contains(e.target)) closeGenerateMenu(); });
+  canvasGenerate.append(generateButton, generateMenu);
+  networkActions.insertBefore(canvasGenerate, networkActions.querySelector("#save"));
+  NetworkExplorerActions.register("surprise-network", () => {
+    if (!editable()) return;
+    safely(() => {
+      const level = ["basic", "intermediate", "advanced"][Math.floor(Math.random() * 3)];
+      replaceTroubleshootingNetwork(NetworkExplorerTroubleshooting.generate(NetworkExplorer.Network, level).save(), "Generate surprise network");
+    });
+  });
+  NetworkExplorerActions.register("open-troubleshooting", () => {
+    openTool("troubleshooting", true);
+  });
   document.querySelector(".view-controls").prepend(networkActions);
   document.querySelector("body>.toolbar").remove();
   const canvasIcon = (id, label, paths) => {
