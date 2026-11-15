@@ -4290,7 +4290,6 @@
       ns = "http://www.w3.org/2000/svg",
       duration = Number($("speed").value) / 1000;
     for (const report of reports) {
-      if (!NetworkExplorerCapture.matchesEvent(report, net)) continue;
       flashPorts(report);
       if (!report.link) continue;
       const link = net.links.find((l) => l.id === report.link);
@@ -4337,7 +4336,6 @@
     );
   }
   function animateApplicationDelivery(report) {
-    if (!NetworkExplorerCapture.matchesEvent(report, net)) return;
     const d = net.device(report.device),
       a = applications().find(
         (a) => a.host === d.id && a.type === report.kind.split("-")[0],
@@ -4417,35 +4415,21 @@
   }
   function stage() {
     if (staged) return;
-    let trial,
-      report,
-      skipped = 0;
-    while (true) {
-      trial = Object.assign(
-        new NetworkExplorer.Network(),
-        JSON.parse(JSON.stringify(net)),
-      );
-      report = trial.next();
-      if (!report) {
-        net = terminalSessions.adopt(net, trial);
-        arrivedFlights.clear();
-        $("traffic").replaceChildren();
-        stop();
-        render();
-        return;
-      }
-      staged = { trial, report };
-      flashFilterTraffic(report);
-      if (NetworkExplorerCapture.matchesEvent(report, net)) break;
-      arrivedFlights.delete(report.order);
-      commit(true);
-      if (++skipped >= 200) {
-        $("traffic").replaceChildren();
-        render();
-        schedulePhase(stage, 0);
-        return;
-      }
+    const trial = Object.assign(
+      new NetworkExplorer.Network(),
+      JSON.parse(JSON.stringify(net)),
+    );
+    const report = trial.next();
+    if (!report) {
+      net = terminalSessions.adopt(net, trial);
+      arrivedFlights.clear();
+      $("traffic").replaceChildren();
+      stop();
+      render();
+      return;
     }
+    staged = { trial, report };
+    flashFilterTraffic(report);
     let duration = 100;
     if (report.link) {
       if (arrivedFlights.delete(report.order)) {
@@ -4470,7 +4454,6 @@
     schedulePhase(() => {
       if (!staged) return;
       if (
-        NetworkExplorerCapture.matchesEvent(report, net) &&
         ((!report.kind.endsWith("-application") &&
           net.device(report.device).watch) ||
           watchDhcpReport(report))
@@ -4877,11 +4860,14 @@
   function hostProfile(d) {
     return hostProfiles[d.os || "windows"];
   }
+  function clearScreenCommand(d) {
+    return d.type === "host" && (!d.os || d.os === "windows") ? "cls" : "clear";
+  }
   function cliCommands(d) {
     const c = cliContext(d);
-    const base = ["help", "close", "exit"];
+    const base = ["help", "close", "exit", clearScreenCommand(d)];
     if (d.type === "router")
-      return NetworkExplorerRouterCLI.commands(c.mode, devicePlatform(d));
+      return NetworkExplorerRouterCLI.commands(c.mode, devicePlatform(d)).concat(clearScreenCommand(d));
     if (d.type === "host")
       return base.concat(
         [
@@ -4901,6 +4887,7 @@
       );
     if (isPan(d))
       return NetworkExplorerPlatform.commands(c.mode).concat(
+        clearScreenCommand(d),
         c.mode === "exec" ? ["clear mac all"] : [],
       );
     const show = [
@@ -4943,6 +4930,15 @@
       return;
     }
     if (!d) throw Error("Select a device on the canvas first.");
+    if (cmd === clearScreenCommand(d)) {
+      const state = terminalState(d.id);
+      state.text = "";
+      state.scroll = 0;
+      $("terminal").textContent = "";
+      $("terminal").scrollTop = 0;
+      syncExternal();
+      return;
+    }
     if (
       /^(delete\s|no\s|clear\s|arp\s+-d\b|ip\s+neigh\s+flush\b)/i.test(cmd) &&
       !confirm(
@@ -6515,7 +6511,7 @@
     updateFilterExplanation();
   }
   function flashFilterTraffic(report) {
-    if (!NetworkExplorerCapture.getFilter() || !report.frame) return;
+    if ((!NetworkExplorerCapture.getFilter() && NetworkExplorerCapture.monitorSummary()==='All devices') || !report.frame) return;
     const included = NetworkExplorerCapture.matchesEvent(report, net);
     filterIncluded ||= included;
     filterExcluded ||= !included;
@@ -6531,13 +6527,40 @@
   filterPopup.setAttribute("aria-label", "Traffic filter");
   filterPopup.innerHTML = '<div class="filter-popup-heading"><strong>Traffic filter</strong><button type="button" class="filter-edit">Edit</button></div><div class="filter-popup-row"><code></code><button type="button" aria-labelledby="clear-traffic-filter-label"><span id="clear-traffic-filter-label" hidden>Clear traffic filter</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><p class="filter-popup-empty">No filter applied.</p><p class="filter-popup-help">Only matching traffic appears in Activity, on the canvas, and in Watch. All traffic still runs.</p><p class="filter-traffic-state"></p>';
   document.body.append(filterPopup);
+  filterPopup.querySelector('.filter-edit').hidden = true;
+  const popupFilterForm = document.createElement('form');
+  popupFilterForm.className = 'traffic-filter-form';
+  popupFilterForm.innerHTML = '<input id="traffic-filter-input" aria-label="Activity filter" aria-describedby="traffic-filter-error" placeholder="Filter: arp, tcp, ip.addr == …" autocomplete="off" spellcheck="false"><button type="button" id="traffic-filter-reset" aria-label="Clear activity filter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button><span id="traffic-filter-error" role="status" hidden></span>';
+  filterPopup.querySelector('.filter-popup-heading').after(popupFilterForm);
+  let popupFilterTimer;
+  function applyPopupFilter() {
+    clearTimeout(popupFilterTimer);
+    const value = $('traffic-filter-input').value;
+    try {
+      NetworkExplorerFilter.compile(value);
+      $('traffic-filter-input').setAttribute('aria-invalid','false');
+      $('traffic-filter-error').hidden = true;
+      NetworkExplorerCapture.setFilter(value);
+    } catch(error) {
+      $('traffic-filter-input').setAttribute('aria-invalid','true');
+      $('traffic-filter-error').textContent = error.message;
+      $('traffic-filter-error').hidden = false;
+    }
+    positionFilterPopup();
+  }
+  popupFilterForm.onsubmit = event => { event.preventDefault(); applyPopupFilter(); };
+  $('traffic-filter-input').oninput = () => { clearTimeout(popupFilterTimer); popupFilterTimer = setTimeout(applyPopupFilter,200); };
+  $('traffic-filter-reset').onclick = () => { $('traffic-filter-input').value=''; applyPopupFilter(); $('traffic-filter-input').focus(); };
+  const filterMonitor = document.createElement('section');
+  filterMonitor.className = 'filter-monitor-section';
+  filterMonitor.innerHTML = '<strong>Monitor devices in Activity</strong><div id="traffic-monitor-devices" role="group" aria-label="Devices to monitor in Activity"></div>';
+  filterPopup.append(filterMonitor);
+  NetworkExplorerCapture.mountMonitor(filterMonitor.lastElementChild, 'traffic-monitor', d => '<svg viewBox="-44 -36 88 72" aria-hidden="true">'+icon(d)+'</svg>');
   let filterAnchor = null;
   function updateFilterExplanation() {
-    const active = !!NetworkExplorerCapture.getFilter();
+    const active = !!NetworkExplorerCapture.getFilter() || NetworkExplorerCapture.monitorSummary()!=='All devices';
     const state = trafficFilter.dataset.traffic;
-    filterPopup.querySelector(".filter-popup-help").textContent = active
-      ? "Filters Activity, canvas, and Watch. Traffic still runs."
-      : "All traffic is visible. Edit to add a filter.";
+    filterPopup.querySelector(".filter-popup-help").textContent = 'Activity only · All traffic still animates';
     const explanation = filterPopup.querySelector(".filter-traffic-state");
     explanation.hidden = !active;
     explanation.textContent = ({ included: "Green: traffic is included.", excluded: "Red: traffic is hidden by the filter.", mixed: "Yellow: some traffic is included and some is hidden." })[state] || "Green: included. Red: hidden. Yellow: mixed.";
@@ -6546,16 +6569,16 @@
   function updateTrafficFilter() {
     const filter = NetworkExplorerCapture.getFilter();
     for (const button of filterButtons) {
-      button.classList.toggle("active", !!filter);
+      button.classList.toggle("active", !!filter || NetworkExplorerCapture.monitorSummary()!=='All devices');
 
-      filterLabel.textContent = "Traffic filter: " + (filter ? "active" : "off");
+      filterLabel.textContent = "Traffic filter: " + (filter ? "active" : "off") + ', monitor: ' + NetworkExplorerCapture.monitorSummary();
       button.setAttribute("aria-haspopup", "dialog");
       button.setAttribute("aria-controls", filterPopup.id);
       button.setAttribute("aria-expanded", String(filterPopup.matches(":popover-open") && filterAnchor === button));
     }
     filterPopup.querySelector("code").textContent = filter;
-    filterPopup.querySelector(".filter-popup-row").hidden = !filter;
-    filterPopup.querySelector(".filter-popup-empty").hidden = !!filter;
+    filterPopup.querySelector(".filter-popup-row").hidden = true;
+    filterPopup.querySelector(".filter-popup-empty").hidden = true;
     updateFilterExplanation();
   }
   function positionFilterPopup() {
@@ -6593,10 +6616,10 @@
   trafficFilter.addEventListener("keydown", event => {
     if (event.key === "ArrowDown") {
       event.preventDefault(); openFilterPopup();
-      filterPopup.querySelector(NetworkExplorerCapture.getFilter() ? '.filter-popup-row button' : '.filter-edit').focus();
+      $('traffic-filter-input').focus();
     } else if (event.key === "Escape") filterPopup.hidePopover();
   });
-  trafficFilter.onclick = editTrafficFilter;
+  trafficFilter.onclick = openFilterPopup;
   filterPopup.addEventListener("toggle", updateTrafficFilter);
   filterPopup.addEventListener("keydown", event => {
     if (event.key === "Escape") { event.preventDefault(); filterPopup.hidePopover(); filterAnchor?.focus(); }
@@ -6608,19 +6631,14 @@
   };
   filterPopup.querySelector('.filter-edit').onclick = editTrafficFilter;
   window.addEventListener("resize", positionFilterPopup);
+  document.addEventListener('capture-monitor-changed', () => { resetFilterFlash(); updateTrafficFilter(); });
   document.addEventListener("capture-filter-changed", () => {
+    clearTimeout(popupFilterTimer);
+    $('traffic-filter-input').value = NetworkExplorerCapture.getFilter();
+    $('traffic-filter-input').setAttribute('aria-invalid','false');
+    $('traffic-filter-error').hidden = true;
     resetFilterFlash();
     updateTrafficFilter();
-    for (const el of [...$("traffic").children])
-      if (
-        !el.flightReport ||
-        !NetworkExplorerCapture.matchesEvent(el.flightReport, net)
-      )
-        el.remove();
-    if (staged && !NetworkExplorerCapture.matchesEvent(staged.report, net)) {
-      if ($("examine").open) $("examine").close();
-      schedulePhase(() => commit(), 0);
-    }
   });
   updateTrafficFilter();
   const statusViewControls = document.createElement("div");

@@ -353,6 +353,14 @@ Welcome. Select a device and type help.</pre
             /><button id="capture-reset" type="button" aria-label="Clear filter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
             <span id="capture-count" role="status"></span
             ><button id="capture-clear" type="button">Clear capture</button>
+            <div class="capture-monitor-picker">
+              <button id="capture-monitor-toggle" type="button" aria-label="Select devices to monitor" title="Select devices to monitor" aria-expanded="false" aria-controls="capture-monitor-menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <div id="capture-monitor-menu" class="capture-monitor-menu" role="dialog" aria-label="Devices to monitor" hidden>
+                <strong>Monitor devices</strong>
+                <p>Select one or more devices for Activity.</p>
+                <div id="capture-devices" class="monitor-device-list" data-monitor-list="capture"></div>
+              </div>
+            </div>
           </form>
           <div class="capture-scroll">
             <table class="capture-table">
