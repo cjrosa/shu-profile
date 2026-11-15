@@ -506,8 +506,8 @@
     button.title = flightPaused ? "Resume animation" : "Pause animation";
     button.setAttribute("aria-label", button.title);
     button.innerHTML = flightPaused
-      ? '<svg class="playback-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5.5a1 1 0 0 1 1.55-.83l10 6.5a1 1 0 0 1 0 1.66l-10 6.5A1 1 0 0 1 7 18.5Z"/></svg>'
-      : '<svg class="playback-glyph" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.2"/><rect x="14" y="5" width="4" height="14" rx="1.2"/></svg>';
+      ? '<svg class="playback-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7Z"/></svg>'
+      : '<svg class="playback-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>';
     $("traffic").classList.toggle("flight-paused", flightPaused);
   }
   function schedulePhase(callback, delay) {
@@ -6634,7 +6634,9 @@
   document.addEventListener('capture-monitor-changed', () => { resetFilterFlash(); updateTrafficFilter(); });
   document.addEventListener("capture-filter-changed", () => {
     clearTimeout(popupFilterTimer);
-    $('traffic-filter-input').value = NetworkExplorerCapture.getFilter();
+    // Preserve spaces and caret position while the user builds a compound filter.
+    if ($('traffic-filter-input').value.trim() !== NetworkExplorerCapture.getFilter())
+      $('traffic-filter-input').value = NetworkExplorerCapture.getFilter();
     $('traffic-filter-input').setAttribute('aria-invalid','false');
     $('traffic-filter-error').hidden = true;
     resetFilterFlash();
@@ -7465,7 +7467,7 @@
     "Finish current exchange immediately",
   );
   fastForwardButton.innerHTML =
-    '<svg class="playback-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 5.5a.7.7 0 0 1 1.1-.57l7.3 6.5a.75.75 0 0 1 0 1.14l-7.3 6.5A.7.7 0 0 1 2 18.5Zm9 0a.7.7 0 0 1 1.1-.57l7.3 6.5a.75.75 0 0 1 0 1.14l-7.3 6.5a.7.7 0 0 1-1.1-.57Z"/><rect x="21" y="5" width="2" height="14" rx="1"/></svg>';
+    '<svg class="playback-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 6 7 6-7 6m7-12 7 6-7 6M21 6v12"/></svg>';
   fastForwardButton.onclick = fastForward;
   speedGroup.append(fastForwardButton, pauseAnimation);
   pauseAnimation.onclick = () => {

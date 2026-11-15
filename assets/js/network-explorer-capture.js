@@ -69,7 +69,7 @@
  function validateFilter(value){try{NetworkExplorerFilter.compile(value);$('capture-filter').setAttribute('aria-invalid','false');filterError.hidden=true;filterError.textContent='';return true;}catch(error){$('capture-filter').setAttribute('aria-invalid','true');filterError.textContent=error.message+' The applied filter is unchanged.';filterError.hidden=false;return false;}}
  let filterInputTimer;
  $('capture-filter').addEventListener('input',()=>{clearTimeout(filterInputTimer);if(validateFilter($('capture-filter').value))filterInputTimer=setTimeout(()=>setFilter($('capture-filter').value),200);});
- function setFilter(value){clearTimeout(filterInputTimer);const next=String(value).trim();if(!validateFilter(next))return false;filter=next;$('capture-filter').value=filter;if(network)render(network);document.dispatchEvent(new Event('capture-filter-changed'));return true;}
+ function setFilter(value){clearTimeout(filterInputTimer);const next=String(value).trim();if(!validateFilter(next))return false;filter=next;if($('capture-filter').value.trim()!==filter)$('capture-filter').value=filter;if(network)render(network);document.dispatchEvent(new Event('capture-filter-changed'));return true;}
  function matchesEvent(e,net=network){const d=net.device(e.device),port=d?.ports.find(p=>p.id===e.ingress);const event={...e,notes:e.notes||[],vlan:e.vlan??(d?.type==='switch'?port?.accessVlan:undefined)};return (monitored===null||monitored.has(e.device))&&match(record(event,0,net));}
  window.NetworkExplorerCapture={render,bindScroll,scrollLatest,mountMonitor,monitorSummary,isFollowing:()=>following,matchesEvent,getFilter:()=>filter,setFilter};
 })();
