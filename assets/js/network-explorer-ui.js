@@ -407,17 +407,17 @@
     );
     return new NetworkExplorer.Network(data);
   }
-  function finishCandidate(revert) {
+  function finishCandidate(revert, deviceId = selected) {
     if (!editable()) return false;
-    const old = candidateBase?.devices.find((d) => d.id === selected);
+    const old = candidateBase?.devices.find((d) => d.id === deviceId);
     if (old) {
       if (revert) {
-        const d = net.device(selected),
+        const d = net.device(deviceId),
           layout = { x: d.x, y: d.y, watch: d.watch };
         net.devices[net.devices.indexOf(d)] = { ...old, ...layout };
       }
       candidateBase.devices = candidateBase.devices.filter(
-        (d) => d.id !== selected,
+        (d) => d.id !== deviceId,
       );
       if (!candidateBase.devices.length) candidateBase = null;
       net.reset();
@@ -426,11 +426,11 @@
     }
     return true;
   }
-  function commitConfiguration() {
-    return finishCandidate(false);
+  function commitConfiguration(deviceId = selected) {
+    return finishCandidate(false, deviceId);
   }
-  function revertConfiguration() {
-    return finishCandidate(true);
+  function revertConfiguration(deviceId = selected) {
+    return finishCandidate(true, deviceId);
   }
   const say = (text) => {
     $("message").textContent = text;
@@ -446,8 +446,17 @@
   function terminalState(id) {
     return terminalSessions.get(net, id);
   }
+  function cliDevice() {
+    const device = net.device(selected);
+    if (device) return device;
+    // These applications have inspectors, but no consoles of their own.
+    if (applications().some(app => app.id === selected) &&
+        terminalSession === terminalState(terminalDevice))
+      return net.device(terminalDevice);
+    return null;
+  }
   function switchTerminal() {
-    const id = net.device(selected)?.id || null;
+    const id = cliDevice()?.id || null;
     if (terminalSession === terminalState(id) && terminalDevice === id) return;
     if (terminalSession) {
       Object.assign(terminalSession, {
@@ -471,7 +480,7 @@
     $("command").value = terminalSession.input;
     $("terminal").scrollTop = terminalSession.scroll;
   }
-  const output = (text, id = net.device(selected)?.id || null) => {
+  const output = (text, id = cliDevice()?.id || null) => {
     const state = terminalState(id);
     state.text += "\n" + text;
     state.scroll = Number.MAX_SAFE_INTEGER;
@@ -2696,8 +2705,6 @@
         render();
       }
     };
-    $("prompt").textContent = "Select a host on the canvas to use the CLI";
-    $("terminal-title").textContent = "Terminal";
     $("inspector").innerHTML = d
       ? '<p class="hint">Installed on <button id="application-host" class="application-host">' +
         noteTargetIcon(d.id) +
@@ -3164,7 +3171,7 @@
       badge.className = "terminal-os";
       $("terminal-title").after(badge);
     }
-    const d = net.device(selected);
+    const d = cliDevice();
     badge.hidden = !d;
     if (!d) {
       badge.replaceChildren();
@@ -3210,13 +3217,20 @@
   }
   function inspector() {
     switchTerminal();
-    const cliReady = !!net.device(selected);
+    const consoleDevice = cliDevice();
+    const cliReady = !!consoleDevice;
     $("command-form").classList.toggle("cli-needs-device", !cliReady);
     $("command").disabled = false;
     $("command").placeholder = cliReady
       ? "Type a command"
       : "Type @ or select a device on the canvas to use the CLI";
     refreshTerminalOS();
+    $("prompt").textContent = consoleDevice
+      ? cliPrompt(consoleDevice)
+      : "Select a device on the canvas to use the CLI";
+    $("terminal-title").textContent = consoleDevice
+      ? consoleDevice.name + " - " + (consoleDevice.type === "host" ? "Host" : consoleDevice.type === "router" ? "Router" : isPan(consoleDevice) ? "PAN-OS Layer 2" : "Cisco IOS Layer 2")
+      : "Terminal";
     if (noteInspector()) return;
     if (applicationInspector()) return;
     const d = net.device(selected),
@@ -3245,20 +3259,6 @@
       : "Watch this device";
     $("watch").setAttribute("aria-label", watchLabel);
     $("watch").title = watchLabel;
-    $("prompt").textContent = d
-      ? cliPrompt(d)
-      : "Select a device on the canvas to use the CLI";
-    $("terminal-title").textContent = d
-      ? d.name +
-        " - " +
-        (d.type === "host"
-          ? "Host"
-          : d.type === "router"
-            ? "Router"
-            : isPan(d)
-              ? "PAN-OS Layer 2"
-              : "Cisco IOS Layer 2")
-      : "Terminal";
     if (d) {
       $("inspector").innerHTML =
         '<label>Name<input id="device-name" maxlength="40" value="' +
@@ -4915,7 +4915,7 @@
   }
   function command(raw) {
     const cmd = raw.trim().toLowerCase(),
-      d = net.device(selected);
+      d = cliDevice();
     if (
       cmd === "close" ||
       (cmd === "exit" && (!d || cliContext(d).mode === "exec"))
@@ -4967,9 +4967,9 @@
     if (d.type === "router") {
       try {
         if (isPan(d) && cmd === "commit" && c.mode === "config") {
-          if (commitConfiguration()) output("Commit complete.");
+          if (commitConfiguration(d.id)) output("Commit complete.");
         } else if (isPan(d) && cmd === "revert config" && c.mode === "config") {
-          revertConfiguration();
+          revertConfiguration(d.id);
           output("Candidate changes reverted.");
         } else {
           const source =
@@ -5024,9 +5024,9 @@
     if (isPan(d) && d.type === "switch") {
       try {
         if (cmd === "commit" && c.mode === "config") {
-          if (commitConfiguration()) output("Commit complete.");
+          if (commitConfiguration(d.id)) output("Commit complete.");
         } else if (cmd === "revert config" && c.mode === "config") {
-          revertConfiguration();
+          revertConfiguration(d.id);
           output("Candidate changes reverted.");
         } else {
           const source =
@@ -6434,7 +6434,7 @@
   document.addEventListener("scroll", () => closeContext(), true);
   window.addEventListener("resize", () => closeContext());
   function completeCommand(input) {
-    const d = net.device(selected);
+    const d = cliDevice();
     if (!d) return false;
     const raw = input.value,
       prefix = raw.toLowerCase();
@@ -6937,7 +6937,7 @@
   for (const key of ["terminal", "events"]) {
     $("dock-tab-" + key).onclick = () => {
       openTool(key, true);
-      if (key === "terminal" && net.device(selected))
+      if (key === "terminal" && cliDevice())
         $("command").focus({ preventScroll: true });
     };
     $("dock-tab-" + key).onkeydown = (e) => {
@@ -7041,7 +7041,7 @@
     const choose = (index) => {
       const row = rows[index];
       if (!row || !input) return;
-      if (!net.device(selected)) {
+      if (!cliDevice()) {
         input.value = "";
         $("command").value = "";
         close();
@@ -7071,7 +7071,7 @@
       start = before.lastIndexOf("@");
       end = input.selectionStart;
       const query = match[1].trim().toLowerCase(),
-        selectingDevice = !net.device(selected);
+        selectingDevice = !cliDevice();
       list.setAttribute(
         "aria-label",
         selectingDevice ? "Select a device" : "Device IP addresses and DNS hostnames",
@@ -7540,7 +7540,7 @@
     e.preventDefault();
     const raw = $("command").value.trim();
     if (!raw) return;
-    if (!net.device(selected)) {
+    if (!cliDevice()) {
       say("Type @ or select a device on the canvas first.");
       return;
     }
