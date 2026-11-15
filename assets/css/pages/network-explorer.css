@@ -2431,7 +2431,17 @@ body[data-platform="paloalto"] .vlan-badge {
 }
 .speed-picker {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 3px 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
 }
+.speed-label { font-size: 11px; color: var(--muted); line-height: 1; }
+.view-controls .speed-picker #speed-toggle { border: 0; background: transparent; min-width: 0; gap: 7px; }
+#fast-forward[hidden], #pause-animation[hidden] { display: none; }
 .view-controls .canvas-icon-button {
   display: inline-flex;
   align-items: center;

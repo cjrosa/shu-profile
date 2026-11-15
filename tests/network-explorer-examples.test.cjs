@@ -1,7 +1,24 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {Network}=require('../assets/js/network-explorer-engine.js');
-const {complex}=require('../assets/js/network-explorer-examples.js');
+const {complex,arrange}=require('../assets/js/network-explorer-examples.js');
 function drain(n){let steps=0;while(n.queue.length){n.next();assert.ok(++steps<1500);}return n.results.at(-1);}
+test('arrange separates hosts on sibling access switches without changing their connections',()=>{
+ const n=new Network(),root=n.add('switch'),branches=[n.add('switch'),n.add('switch')];
+ branches.forEach((sw,i)=>{n.connect(root.id,'p'+i,sw.id,'p0');for(let j=0;j<2;j++){const h=n.add('host');h.name='LAN 4 Host '+(55+i*2+j);n.connect(sw.id,'p'+(j+1),h.id,'p0');}});
+ const links=structuredClone(n.links);arrange(n);
+ for(let i=0;i<n.devices.length;i++)for(const b of n.devices.slice(i+1)){const a=n.devices[i];assert.ok(Math.abs(a.x-b.x)>=170||Math.abs(a.y-b.y)>=130,a.name+' overlaps '+b.name);}
+ assert.deepEqual(n.links,links);
+ const positions=n.devices.map(d=>[d.x,d.y]);arrange(n);assert.deepEqual(n.devices.map(d=>[d.x,d.y]),positions);
+});
+test('generated routed networks have separated device footprints after arrangement',()=>{
+ const {generate}=require('../assets/js/network-explorer-troubleshooting.js');
+ for(const level of ['basic','intermediate','advanced'])for(const sample of [0,.45,.99]){
+  const n=generate(Network,level,()=>sample);const links=structuredClone(n.links);arrange(n);
+  for(let i=0;i<n.devices.length;i++)for(const b of n.devices.slice(i+1)){const a=n.devices[i];assert.ok(Math.abs(a.x-b.x)>=170||Math.abs(a.y-b.y)>=130,level+': '+a.name+' overlaps '+b.name);}
+  assert.deepEqual(n.links,links);
+  for(const host of n.devices.filter(d=>d.type==='host'))assert.equal(n.links.filter(l=>l.a===host.id||l.b===host.id).length,1);
+ }
+});
 test('campus triangle has three routers, three switches, independent LANs and working DHCP/DNS/HTTP',()=>{
  const {network:n,clientId}=complex(Network),routers=n.devices.filter(d=>d.type==='router');
  assert.equal(routers.length,3);assert.equal(n.devices.filter(d=>d.type==='switch').length,3);

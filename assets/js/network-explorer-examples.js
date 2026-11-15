@@ -43,6 +43,31 @@
   n.applicationDrafts.forEach((a,i)=>{a.x=250+i*200;a.y=2200;});
   // Uniform padding preserves branch spacing even when a branch extends left of the origin.
   if(n.devices.length){const dx=180-Math.min(...n.devices.map(d=>d.x)),dy=120-Math.min(...n.devices.map(d=>d.y));n.devices.forEach(d=>{d.x+=dx;d.y=(d.y+dy-120)*.65+120;});}
+  // Different switch branches can produce identical child coordinates. Reserve
+  // the final rendered footprint (after vertical compression), not just a point.
+  const occupied=[];
+  const footprint=d=>{
+   const label=Math.max(85,String(d.name||'').length*3.5);
+   const box={left:d.x-label,right:d.x+(d.type==='host'?label:Math.max(label,65+String(d.name||'').length*7)),top:d.y-45,bottom:d.y+85};
+   for(const type of ['dhcp','dns','web','browser'])if(d[type+'Server']){
+    const offset=d[type==='dhcp'?'applicationOffset':type+'Offset'];
+    box.left=Math.min(box.left,d.x+offset.x-75);box.right=Math.max(box.right,d.x+offset.x+75);
+    box.top=Math.min(box.top,d.y+offset.y-40);box.bottom=Math.max(box.bottom,d.y+offset.y+60);
+   }
+   return box;
+  };
+  const overlaps=box=>occupied.some(other=>box.left<other.right+20&&box.right+20>other.left&&box.top<other.bottom+20&&box.bottom+20>other.top);
+  for(const d of n.devices){
+   const origin={x:d.x,y:d.y};let box=footprint(d);
+   for(let ring=1;overlaps(box);ring++){
+    const candidates=[];
+    for(let x=-ring;x<=ring;x++)for(let y=-ring;y<=ring;y++)if(Math.max(Math.abs(x),Math.abs(y))===ring)candidates.push({x:x*220,y:y*160});
+    candidates.sort((a,b)=>a.x*a.x+a.y*a.y-b.x*b.x-b.y*b.y);
+    for(const offset of candidates){d.x=origin.x+offset.x;d.y=origin.y+offset.y;box=footprint(d);if(!overlaps(box))break;}
+   }
+   occupied.push(box);
+  }
+  if(n.devices.length){const dx=Math.max(0,180-Math.min(...n.devices.map(d=>d.x))),dy=Math.max(0,120-Math.min(...n.devices.map(d=>d.y)));n.devices.forEach(d=>{d.x+=dx;d.y+=dy;});}
   n.links.forEach(l=>{delete l.aAnchor;delete l.bAnchor;});
  }
  function internet(Network){

@@ -517,10 +517,15 @@
     simulationExamining = false;
   function updatePauseControl() {
     refreshHistoryButtons();
+    const immediate = $("speed").value === "0";
     const fast = $("fast-forward");
-    if (fast) fast.disabled = fastForwarding || !(staged || net.queue.length);
+    if (fast) {
+      fast.hidden = immediate;
+      fast.disabled = immediate || fastForwarding || !(staged || net.queue.length);
+    }
     const button = $("pause-animation");
     if (!button) return;
+    button.hidden = immediate;
     button.disabled = !phaseCallback;
     button.setAttribute("aria-pressed", String(flightPaused));
     button.title = flightPaused ? "Resume animation" : "Pause animation";
@@ -4469,6 +4474,10 @@
     );
   }
   function stage() {
+    if ($("speed").value === "0") {
+      fastForward();
+      return;
+    }
     if (staged) return;
     const trial = Object.assign(
       new NetworkExplorer.Network(),
@@ -7539,6 +7548,10 @@
       )
       .join("") +
     "</div>";
+  const speedLabel = document.createElement("span");
+  speedLabel.className = "speed-label";
+  speedLabel.textContent = "Speed";
+  speedPicker.prepend(speedLabel);
   speedSelect.parentElement.replaceWith(speedGroup);
   speedSelect.hidden = true;
   speedSelect.tabIndex = -1;
@@ -7575,6 +7588,11 @@
         String(o.dataset.speed === speedSelect.value),
       ),
     );
+    if (speedSelect.value === "0") {
+      document.querySelectorAll('.port-activity').forEach(port => port.classList.remove('port-activity'));
+      fastForward();
+    }
+    updatePauseControl();
   };
   speedChoices.forEach(
     (o) =>
