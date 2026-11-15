@@ -6008,11 +6008,16 @@
     cancelConnect();
     render();
   });
+  function fitOpenedNetwork() {
+    // Wait for the welcome screen to close and the canvas layout to settle.
+    requestAnimationFrame(() => window.NetworkExplorerViewport?.fit());
+  }
   function registerExample(id, load) {
     NetworkExplorerActions.register(id, () => {
       const previous = net;
       const result = load();
       if (net !== previous) {
+        fitOpenedNetwork();
         document.dispatchEvent(new CustomEvent("network-recent-record", {
           detail: { name: NetworkExplorerActions.examples[id].title, data: net.save() },
         }));
@@ -6054,7 +6059,7 @@
       "Acquire a lease using the renew icon or ipconfig /renew, then ping 192.168.1.2.",
     );
   });
-  NetworkExplorerActions.register("example-dhcp-relay", () => {
+  registerExample("example-dhcp-relay", () => {
     if (
       (net.devices.length || net.applicationDrafts.length) &&
       !confirm("Replace this network with the DHCP relay example?")
@@ -6262,6 +6267,7 @@
       examined = false;
       cancelConnect();
       render();
+      fitOpenedNetwork();
       recordHistory(beforeLoad, "Load network");
       document.dispatchEvent(
         new CustomEvent("network-recent-record", {
@@ -7941,6 +7947,7 @@
       examined = false;
       cancelConnect();
       render();
+      fitOpenedNetwork();
       recordHistory(before, "Open recent network");
       e.detail.opened = true;
       say("Recent network loaded. Learned tables start empty.");
