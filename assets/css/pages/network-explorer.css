@@ -8900,3 +8900,39 @@ body:not(.external-panel-page) #left-panel > .unified-palette {
 .canvas-toolbar #cancel-connect { box-sizing:border-box; height:24px; min-height:24px; padding:2px 7px; margin:0; flex:0 0 auto; font-weight:500; font-family:inherit; font-size:11px; line-height:18px; border:1px solid var(--line); border-radius:4px; background:transparent; color:var(--ink); white-space:nowrap; }
 .canvas-toolbar #cancel-connect:hover { background:#e9f3f2; border-color:var(--teal); }
 .canvas-toolbar #cancel-connect[hidden] { display:none; }
+/* Compact Watch evidence in both the dialog and detached window. */
+:is(#examine, .external-examine) > .dialog-header { padding:6px 10px; }
+:is(#examine, .external-examine) .dialog-header h2 { font-size:15px; margin:2px 0; }
+:is(#examine, .external-examine) .dialog-header p { font-size:11px; }
+:is(#examine, .external-examine) > #examine-body { padding:8px 10px; font-size:12px; line-height:1.4; }
+:is(#examine, .external-examine) > footer { padding:5px 10px; gap:8px; }
+:is(#examine, .external-examine) > footer button { min-height:26px; padding:3px 9px; font-size:12px; line-height:18px; border-radius:4px; }
+:is(#examine, .external-examine) .examine-watch-control { padding:3px 6px; min-height:26px; box-sizing:border-box; font-size:11px; }
+#examine-body .frame-comparison { gap:8px; margin-top:0; }
+#examine-body .frame-header-card { border-radius:5px; }
+#examine-body .frame-header-card h4 { padding:5px 7px; font-size:12px; }
+#examine-body .frame-layer-label { padding:4px 6px; }
+#examine-body .frame-field { padding:4px 6px; gap:2px; }
+#examine-body .frame-field code { line-height:1.35; }
+#examine-body .frame-payload { margin:6px; }
+#examine-body .frame-message { padding:4px 6px; }
+#examine-body .frame-schematic-note { margin:4px 0 7px; }
+#examine-body h3 { margin:8px 0 4px; padding:4px 6px; font-size:12px; line-height:1.4; background:var(--pale); border-block:1px solid var(--line); }
+#examine-body p { margin:5px 0; }
+#examine-body table { margin:4px 0; font-size:11px; border-collapse:collapse; }
+#examine-body th, #examine-body td { padding:3px 6px; line-height:1.4; }
+#examine-body .nat-evidence { margin:6px 0; overflow-x:auto; }
+#examine-body .nat-evidence h3 { margin-top:0; }
+#examine-body .nat-evidence table { width:auto; min-width:min(100%, 440px); }
+#examine-body .nat-evidence td { font-family:Consolas, monospace; }
+#examine-body .nat-evidence p { font-size:11px; color:var(--muted); }
+#examine-body .evidence { margin-top:6px; padding:7px; border-radius:5px; }
+#examine-body .decision { padding-left:8px; }
+#examine-body pre { margin:5px 0; padding:6px; font-size:11px; line-height:1.4; }
+#examine-body .nat-evidence { padding:0; border:0; border-radius:0; box-shadow:none; }
+#examine-body .decision,
+#examine-body .decision p,
+#examine-body .evidence p,
+#examine-body > p,
+#examine-body li { font-size:11px; line-height:1.4; }
+#examine-body .decision p { margin:4px 0; }
