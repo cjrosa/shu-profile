@@ -750,7 +750,7 @@
                 '<tr class="' +
                 (chosen ? "route-selected" : "") +
                 (!r.active ? " route-inactive" : "") +
-                '"><td>' +
+                '" data-route-port data-device-port="' + esc(d.id + ":" + (r.port || "")) + '" tabindex="0"><td>' +
                 esc(r.network + "/" + r.prefix) +
                 "<small>" +
                 esc(
@@ -1643,25 +1643,28 @@
         el.classList.toggle("port-highlight", el.dataset.link === link?.id),
       );
   }
-  for (const [enter, leave, focus] of [
-    ["pointerover", "pointerout", false],
-    ["focusin", "focusout", true],
-  ]) {
-    document.addEventListener(enter, (e) => {
-      const button = e.target.closest?.(".interface-port");
-      if (!button) return;
-      if (focus) focusedPort = button;
-      else hoveredPort = button;
-      refreshPortGlow();
-    });
-    document.addEventListener(leave, (e) => {
-      const button = e.target.closest?.(".interface-port");
-      if (!button || button.contains(e.relatedTarget)) return;
-      if (focus) focusedPort = null;
-      else hoveredPort = null;
-      refreshPortGlow();
-    });
+  function bindPortGlow(root) {
+    for (const [enter, leave, focus] of [
+      ["pointerover", "pointerout", false],
+      ["focusin", "focusout", true],
+    ]) {
+      root.addEventListener(enter, (e) => {
+        const button = e.target.closest?.(".interface-port, [data-route-port]");
+        if (!button) return;
+        if (focus) focusedPort = button;
+        else hoveredPort = button;
+        refreshPortGlow();
+      });
+      root.addEventListener(leave, (e) => {
+        const button = e.target.closest?.(".interface-port, [data-route-port]");
+        if (!button || button.contains(e.relatedTarget)) return;
+        if (focus) focusedPort = null;
+        else hoveredPort = null;
+        refreshPortGlow();
+      });
+    }
   }
+  bindPortGlow(document);
   const inspectorPorts = NetworkExplorerInspectorPorts.create({
     getNetwork: () => net,
     esc,
@@ -3638,6 +3641,7 @@
         original.dispatchEvent(new Event("change", { bubbles: true }));
       }
     });
+    bindPortGlow(host);
     host.addEventListener("pointerover", (e) =>
       highlightTableDevice(e.target.closest("[data-table-mac]")),
     );

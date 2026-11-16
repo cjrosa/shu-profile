@@ -9434,3 +9434,6 @@ body:not(.external-panel-page) #left-panel > .unified-palette {
 .watch-menu input:checked + .watch-option-track::after { transform: translateX(12px); }
 .watch-menu input:focus-visible + .watch-option-track { outline: 2px solid #287d78; outline-offset: 2px; }
 .watch-menu :focus-visible { outline: 2px solid #287d78; outline-offset: 2px; }
+.route-table tr[data-route-port]:hover,
+.route-table tr[data-route-port]:focus-visible { background: #e4f3f0; }
+.route-table tr[data-route-port]:focus-visible { outline: 2px solid #287d78; outline-offset: -2px; }
