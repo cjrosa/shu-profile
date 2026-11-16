@@ -24,7 +24,13 @@
 <div class="workspace">
 <aside class="panel controls" aria-labelledby="controls-heading">
 <h2 id="controls-heading">Explore the address</h2>
-<label for="ip-input">IPv4 address</label><input id="ip-input" type="text" value="192.168.1.57" placeholder="e.g. 192.168.1.57" spellcheck="false" aria-describedby="error" oninput="update()">
+<div class="address-entry">
+<label for="ip-input">IPv4 address</label>
+<div class="address-mode" role="group" aria-label="Address input format"><button id="ip-decimal" type="button" aria-label="Decimal" title="Decimal IPv4 address" aria-pressed="true" onclick="setAddressMode('decimal')">###.###.###.###</button><button id="ip-binary" type="button" aria-label="Binary" title="Binary IPv4 address" aria-pressed="false" onclick="setAddressMode('binary')">100010001…</button></div>
+<textarea id="ip-input" rows="1" placeholder="e.g. 192.168.1.57" spellcheck="false" aria-describedby="ip-format-hint ip-conversion error" oninput="update()">192.168.1.57</textarea>
+<p id="ip-format-hint" class="hint">Four decimal octets, separated by dots.</p>
+<p id="ip-conversion" aria-live="polite" hidden></p>
+</div>
 <label for="prefix">Prefix length <output id="prefix-val" for="prefix">/24</output></label><input id="prefix" type="range" min="0" max="32" value="24" oninput="update()">
 <div class="range-ends"><span>/0 · largest block</span><span>/32 · one address</span></div>
 <p id="prefix-summary" class="hint"></p><div id="error" class="error" role="alert"></div>

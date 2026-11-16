@@ -8,6 +8,40 @@ const C = require('../assets/js/cidr-explorer.js');
 const ip = value => C.ipToNum(C.parseIP(value));
 const root = path.join(__dirname, '..');
 
+test('binary IPv4 requires 32 bits and converts unsigned extremes and grouped octets', () => {
+  for (const separator of ['', '.', ' ', '\n'])
+    assert.deepEqual(C.parseBinaryIP(['11000000','10101000','00000001','00111001'].join(separator)), [192,168,1,57]);
+  assert.deepEqual(C.parseBinaryIP('0'.repeat(32)), [0,0,0,0]);
+  assert.deepEqual(C.parseBinaryIP('1'.repeat(32)), [255,255,255,255]);
+  for (const value of ['', '1'.repeat(31), '1'.repeat(33), '2'.repeat(32), '192.168.1.57', '1.0.0.1', '00000000..00000000.00000000.00000000'])
+    assert.equal(C.parseBinaryIP(value), null, value);
+});
+
+test('binary input updates calculations, validates edits, preserves examples and round trips', () => {
+  const dom=app(), w=dom.window, get=id=>w.document.getElementById(id);
+  get('ip-binary').click();
+  assert.equal(get('ip-input').value,'11000000 10101000 00000001 00111001');
+  assert.equal(get('ip-conversion').textContent,'Decimal IPv4: 192.168.1.57');
+  get('ip-input').value='10101100000100000010001100101010'; w.update();
+  assert.equal(get('cidr').textContent,'172.16.35.0/24');
+  assert.match(get('calculation-note').textContent,/172.16.35.42 AND/);
+  get('ip-decimal').click();
+  assert.equal(get('ip-input').value,'172.16.35.42');
+  get('ip-binary').click();
+  get('ip-input').value='101'; w.update();
+  assert.equal(get('results').hidden,true);
+  assert.equal(get('ip-conversion').hidden,true);
+  assert.match(get('error').textContent,/32 bits/);
+  w.setExample(4);
+  assert.equal(get('results').hidden,false);
+  assert.equal(get('ip-conversion').textContent,'Decimal IPv4: 10.0.0.10');
+  assert.equal(get('cidr').textContent,'10.0.0.10/31');
+  w.resetTool();
+  assert.equal(get('ip-input').value,'192.168.1.57');
+  assert.equal(get('ip-decimal').getAttribute('aria-pressed'),'true');
+  dom.window.close();
+});
+
 test('rejects malformed octets rather than silently coercing input', () => {
   for (const value of ['1..2.3', '1.2.3.', '1.2.3.256', '1.2.3.-1', '1.2.3.1e2', '0x10.0.0.1', '1.2.3.4.5', '<img>'])
     assert.equal(C.parseIP(value), null, value);

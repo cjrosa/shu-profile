@@ -64,6 +64,13 @@ button:hover:not(:disabled){border-color:var(--blue);background:var(--blue-fill)
 :focus-visible{outline:3px solid var(--blue);outline-offset:3px}input{border:1px solid var(--border2);border-radius:7px;padding:8px;background:white;color:var(--text);min-width:0}
 input[type=text]{font:13px ui-monospace,Consolas,monospace}input[type=range]{accent-color:var(--blue);padding:0}
 .controls label{display:flex;justify-content:space-between;font-size:12px;font-weight:650;margin:14px 0 6px}.controls input{width:100%}
+.address-entry{grid-column:1;grid-row:2 / span 3;min-width:0}
+.address-mode{display:flex;gap:4px;margin:4px 0 6px}
+.address-mode button{flex:0 0 auto;padding:3px 6px;border-radius:999px;font:10px/1.4 ui-monospace,Consolas,monospace;white-space:nowrap}
+.address-mode button[aria-pressed=true]{background:var(--blue-fill);border-color:var(--blue);color:var(--blue-text)}
+#ip-input{display:block;width:100%;resize:vertical;border:1px solid var(--border2);border-radius:7px;padding:8px;background:white;color:var(--text);font:13px/1.5 ui-monospace,Consolas,monospace;overflow-wrap:anywhere}
+.address-entry .hint{margin:6px 0;font-size:11px}
+#ip-conversion{margin:6px 0;color:var(--teal-text);font-size:12px;font-weight:650;overflow-wrap:anywhere}
 output{font-family:ui-monospace,Consolas,monospace;color:var(--blue-text)}.range-ends{display:flex;justify-content:space-between;font-size:9px;color:var(--text3)}
 .hint{font-size:11px;color:var(--text3)}.examples{border-top:1px solid var(--border);padding-top:14px;margin-top:18px}.examples h2{font-size:12px}
 .presets{display:flex;gap:6px;flex-wrap:wrap}.presets button{font-size:10px;padding:6px 8px}.presets [aria-pressed=true]{background:var(--blue-fill);border-color:var(--blue);color:var(--blue-text)}

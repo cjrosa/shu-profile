@@ -7,6 +7,28 @@ function parseIP(text) {
   return octets.every(o => o <= 255) ? octets : null;
 }
 function ipToNum(o) { return ((o[0] << 24) | (o[1] << 16) | (o[2] << 8) | o[3]) >>> 0; }
+function parseBinaryIP(text) {
+  const value = text.trim();
+  if (!/^[01]{32}$/.test(value) && !/^[01]{8}(?:[.\s]+[01]{8}){3}$/.test(value)) return null;
+  // Separators may be dots or whitespace, but never repeated dots.
+  if (/\.\s*\./.test(value)) return null;
+  return value.replace(/[.\s]/g, '').match(/.{8}/g).map(bits => parseInt(bits, 2));
+}
+function binaryIP(octets) { return octets.map(o => o.toString(2).padStart(8,'0')).join(' '); }
+let addressMode = 'decimal';
+function readAddress() { return (addressMode === 'binary' ? parseBinaryIP : parseIP)($('ip-input').value); }
+function setAddressMode(mode) {
+  const octets = readAddress();
+  addressMode = mode;
+  const input = $('ip-input');
+  if (octets) input.value = mode === 'binary' ? binaryIP(octets) : octets.join('.');
+  input.rows = mode === 'binary' ? 2 : 1;
+  input.placeholder = mode === 'binary' ? '11000000 10101000 00000001 00111001' : 'e.g. 192.168.1.57';
+  $('ip-decimal').setAttribute('aria-pressed', String(mode === 'decimal'));
+  $('ip-binary').setAttribute('aria-pressed', String(mode === 'binary'));
+  $('ip-format-hint').textContent = mode === 'binary' ? '32 bits: together, or four 8-bit groups separated by spaces or dots.' : 'Four decimal octets, separated by dots.';
+  update();
+}
 function numToIP(n) { return [n >>> 24, (n >>> 16) & 255, (n >>> 8) & 255, n & 255].join('.'); }
 function mkMask(p) { return p === 0 ? 0 : (0xffffffff << (32 - p)) >>> 0; }
 function subnet(ip, prefix) {
@@ -200,26 +222,30 @@ function comparisonDiagram(s, other) {
 }
 function setExample(index) {
   const [ip,prefix] = examples[index];
-  $('ip-input').value=ip; $('prefix').value=prefix;
+  $('ip-input').value=addressMode==='binary'?binaryIP(parseIP(ip)):ip; $('prefix').value=prefix;
   $('sub-prefix').value=Math.min(32,prefix+4);
   update(); setComparison(false);
 }
 function resetTool() {
+  setAddressMode('decimal');
   $('cmp-ip').value='192.168.1.100'; $('sub-prefix').value=28;
   $('ip-input').value=examples[0][0]; $('prefix').value=24; update();
 }
 function update() {
-  const prefix=Number($('prefix').value), octets=parseIP($('ip-input').value);
+  const prefix=Number($('prefix').value), octets=readAddress();
+  const decimalAddress=octets?octets.join('.'):'';
+  $('ip-conversion').hidden=addressMode!=='binary' || !octets;
+  $('ip-conversion').textContent=octets?'Decimal IPv4: '+decimalAddress:'';
   $('prefix-val').textContent='/'+prefix;
   $('prefix-summary').textContent=prefix+' network bits + '+(32-prefix)+' host bits = 32 bits.';
   $('ip-input').setAttribute('aria-invalid',String(!octets));
-  $('error').textContent=octets?'':'Enter four whole numbers from 0 to 255, separated by dots.';
+  $('error').textContent=octets?'':addressMode==='binary'?'Enter exactly 32 bits (0 or 1), together or in four 8-bit groups.':'Enter four whole numbers from 0 to 255, separated by dots.';
   $('results').hidden=!octets;
   document.querySelectorAll('[data-example]').forEach(button=>{
     const example=examples[Number(button.dataset.example)];
-    button.setAttribute('aria-pressed',String(example[0]===$('ip-input').value.trim() && example[1]===prefix));
+    button.setAttribute('aria-pressed',String(example[0]===decimalAddress && example[1]===prefix));
   });
-  const selectedExample=examples.findIndex(([ip,p])=>ip===$('ip-input').value.trim() && p===prefix);
+  const selectedExample=examples.findIndex(([ip,p])=>ip===decimalAddress && p===prefix);
   const guidance=selectedExample>=0 ? exampleLessons[selectedExample] : {
     purpose: 'Explore your own address and prefix.',
     why: 'Changing the prefix changes the network boundary and the number of available host addresses.',
@@ -397,7 +423,7 @@ function changeSubnetPage(direction) {
   selectedSubnet=subnetPage*pageSize;
   updateSubdivide(false);
 }
-if (typeof module !== 'undefined') module.exports={parseIP,ipToNum,numToIP,mkMask,subnet};
+if (typeof module !== 'undefined') module.exports={parseIP,parseBinaryIP,ipToNum,numToIP,mkMask,subnet};
 if (typeof document !== 'undefined') {
   const params=new URLSearchParams(location.search),incomingIP=parseIP(params.get('ip')||''),incomingMask=parseIP(params.get('mask')||'');
   if(incomingIP&&incomingMask){const mask=ipToNum(incomingMask),prefix=Array.from({length:33},(_,i)=>i).find(p=>mkMask(p)===mask);if(prefix!==undefined){$('ip-input').value=incomingIP.join('.');$('prefix').value=prefix;}}
