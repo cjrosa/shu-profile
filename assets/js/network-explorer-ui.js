@@ -3425,7 +3425,11 @@
         const saveAddress = () => {
           const address = $("host-ip").value.trim(),
             prefixText = $("host-prefix").value;
-          if (!address || !prefixText) return;
+          if (!address) {
+            if(d.ip) mutate(() => net.configure(d.id, "", null));
+            return;
+          }
+          if (!prefixText) return;
           const prefix = Number(prefixText);
           if (address === d.ip && prefix === d.prefix) return;
           if (!editable()) return;
@@ -4912,7 +4916,7 @@
     stage();
   }
   const hostProfiles = {
-    windows: { address: ["ipconfig"], arp: ["arp -a"], flush: ["arp -d *"] },
+    windows: { address: ["ipconfig", "ipconfig /all"], arp: ["arp -a"], flush: ["arp -d *"] },
     linux: {
       address: ["ip addr", "ip address"],
       arp: ["ip neigh", "ip neigh show"],
@@ -4941,7 +4945,7 @@
     const c = cliContext(d);
     const base = ["help", "close", "exit", clearScreenCommand(d)];
     if (d.type === "router")
-      return NetworkExplorerRouterCLI.commands(c.mode, devicePlatform(d)).concat(clearScreenCommand(d));
+      return NetworkExplorerRouterCLI.commands(c.mode, devicePlatform(d), d).concat(clearScreenCommand(d));
     if (d.type === "host")
       return base.concat(
         [
@@ -4958,6 +4962,7 @@
         hostProfile(d).address,
         hostProfile(d).arp,
         hostProfile(d).flush,
+        NetworkExplorerHostCLI.commands(d.os || "windows"),
       );
     if (isPan(d))
       return NetworkExplorerPlatform.commands(c.mode).concat(
@@ -5038,8 +5043,22 @@
       render();
       return;
     }
+    if(d.type === "host") {
+      try {const op=NetworkExplorerHostCLI.parse(d,raw);if(op){
+        if(candidateBase)throw Error("Commit or revert candidate changes before configuring host addresses.");
+        const result=NetworkExplorerHostCLI.run(net,d.id,op,fn=>change(()=>configurationChange(fn)));
+        output(result.message);if(result.dhcp)startDhcp(d.id);render();return;
+      }}catch(e){output(e.message);render();return;}
+    }
     if (d.type === "router") {
       try {
+        if (NetworkExplorerFirewallCLI.handles(raw,devicePlatform(d))) {
+          if(c.mode!=="exec") throw Error("Use operational/exec mode for firewall inspection. Exit configuration mode first.");
+          const source=isPan(d)&&candidateBase?committedNetwork():net;
+          source.firewallSessions=net.firewallSessions;source.firewallDecisions=net.firewallDecisions;
+          output(NetworkExplorerFirewallCLI.run(source,d.id,raw,devicePlatform(d),change));
+          render();return;
+        }
         if (isPan(d) && cmd === "commit" && c.mode === "config") {
           if (commitConfiguration(d.id)) output("Commit complete.");
         } else if (isPan(d) && cmd === "revert config" && c.mode === "config") {
