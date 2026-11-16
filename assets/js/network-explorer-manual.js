@@ -35,7 +35,7 @@
   const host = '<rect x="-30" y="-24" width="60" height="40" rx="4" fill="#edf4fa"/><path d="M0 16v12m-17 0h34"/><path d="M-23-17h46V8h-46z" fill="#c3dce9" stroke="none"/>';
   const sw = '<rect x="-37" y="-17" width="74" height="34" rx="5" fill="#e6f2ef"/><path d="M-27-5h10v10h-10zm15 0h10v10h-10zm15 0h10v10H3zm15 0h10v10H18z" fill="#7aaca9"/>';
   const router = '<path d="M-36-8v22c0 20 72 20 72 0V-8" fill="#b4cada"/><ellipse cy="-8" rx="36" ry="17" fill="#edf4fa"/><path d="M-26-8h18m-5-5 5 5-5 5M26-8H8m5-5-5 5 5 5M0-9v-13m-5 5 5-5 5 5M0-5V6m-5-5 5 5 5-5"/>';
-  const glyphs = {host, switch:sw, router};
+  const glyphs = {host, switch:sw, router, firewall: window.NetworkExplorerFirewallIcon()};
   const device = (type,x,y,label) => `<g transform="translate(${x} ${y})" fill="none" stroke="${type==='switch'?'#4e8080':'#3b5278'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${glyphs[type]}</g><text x="${x}" y="${y+57}" text-anchor="middle">${label}</text>`;
   const wire = '<path d="M110 100H590" fill="none" stroke="#89a9b8" stroke-width="3"/>';
   const tag = (x,y,label) => `<rect x="${x}" y="${y}" width="180" height="36" rx="8" fill="#e6f2ef"/><text x="${x+90}" y="${y+24}" text-anchor="middle">${label}</text>`;

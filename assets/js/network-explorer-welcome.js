@@ -75,6 +75,7 @@
         "example-static",
         "example-dhcp-relay",
         "example-internet",
+        "example-firewall",
         "example-complex",
       ],
     ],
@@ -95,6 +96,7 @@
       b.dataset.action = id;
 
       const paths = {
+        "example-firewall": "M12 2 21 6v6c0 5-5 8-9 10-4-2-9-5-9-10V6Zm-5 10 3 3 7-7",
         "example-internet":
           "M3 12h18M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 0c-5 5-5 13 0 18 5-5 5-13 0-18Z",
         "example-complex":

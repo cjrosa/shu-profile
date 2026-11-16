@@ -70,7 +70,7 @@ window.NetworkExplorerSearch = {
           const apps = applications()
             .filter((a) => a.host === d.id)
             .map((a) => appLabel(a.type));
-          const detail = [d.type, os, ...addresses, ...apps].join(" | ");
+          const detail = [d.role || d.type, ...(d.firewall?.enabled ? ["firewall enabled"] : []), os, ...addresses, ...apps].join(" | ");
           return {
             d,
             detail,

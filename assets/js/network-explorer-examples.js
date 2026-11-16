@@ -80,5 +80,20 @@
  n.configureDnsServer(web.id,{enabled:true,records:[{name:'www.internet.example',address:web.ip,ttl:120}]});n.configureWeb(web.id,{enabled:true,port:80,title:'Across the Internet',body:'Your private host reached this simulated Internet server through NAT/PAT. Inspect the gateway translation table to see the shared outside address and unique ports.'});web.webOffset={x:100,y:-90};web.dnsOffset={x:100,y:90};
  n.connect(a.id,'p0',sw.id,'p0');n.connect(b.id,'p0',sw.id,'p1');n.connect(sw.id,'p2',edge.id,'p0');n.connect(edge.id,'p1',isp.id,'p0');n.connect(isp.id,'p1',web.id,'p0');n.configureNat(edge.id,{enabled:true,inside:['p0'],outside:'p1'});return {network:n,clientId:a.id};
  }
- const api={complex,arrange,internet};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerExamples=api;
+ function firewall(Network){
+  const n=new Network(),client=n.add('host',170,180),peer=n.add('host',170,400),sw=n.add('switch',370,290),fw=n.add('firewall',600,290),server=n.add('host',1050,290),gateway=n.add('router',810,290);gateway.name='Gateway Router';
+  client.name='Inside Client';peer.name='Inside Server';sw.name='Inside Switch';fw.name='Edge Firewall';server.name='Outside Services';
+  n.configure(client.id,'192.168.10.10',24);n.configure(peer.id,'192.168.10.20',24);n.configure(server.id,'198.51.100.10',24);
+  n.configureInterface(gateway.id,'p0','192.168.10.1',24);n.configureInterface(gateway.id,'p1','198.51.100.1',24);
+  for(const h of [client,peer])n.configureGateway(h.id,'192.168.10.1');n.configureGateway(server.id,'198.51.100.1');n.configureDnsAddress(client.id,server.ip);
+  n.configureDnsServer(server.id,{enabled:true,records:[{name:'www.firewall.example',address:server.ip,ttl:120}]});
+  for(const h of [server,peer])n.configureWeb(h.id,{enabled:true,port:80,title:'A permitted web page',body:'Routing delivers the packet. The transparent firewall filters inline; the separate router chooses the route.'});
+  n.configureWeb(client.id,{enabled:true,url:'http://www.firewall.example/'},'browser');n.configureWeb(server.id,{enabled:true,url:'http://192.168.10.20/'},'browser');
+  n.connect(client.id,'p0',sw.id,'p0');n.connect(peer.id,'p0',sw.id,'p1');n.connect(sw.id,'p2',fw.id,'p0');n.connect(fw.id,'p1',gateway.id,'p0');n.connect(gateway.id,'p1',server.id,'p0');
+  const c=fw.firewall;c.rules=[{...c.rules[0],name:'Allow DNS',protocol:'UDP',destinationPort:53},{...c.rules[0],name:'Allow web',protocol:'TCP',destinationPort:80}];n.configureFirewall(fw.id,c);
+  client.browserOffset={x:0,y:-90};peer.webOffset={x:0,y:90};server.dnsOffset={x:130,y:-110};server.webOffset={x:130,y:0};server.browserOffset={x:130,y:110};
+  n.notes=[{id:'note1',title:'Predict, test, explain',text:'The firewall bridges Inside Switch to Gateway Router without IP addresses. Open the Inside Client Browser: DNS and HTTP succeed. Ping 198.51.100.10: default drop. Open the Outside Services Browser: a new inbound HTTP connection is blocked. Ping 192.168.10.20 from Inside Client: same-subnet traffic bypasses this firewall. Watch Edge Firewall to inspect each decision. In Troubleshooting choose Firewall policy, then Break something to block DNS and repair the rule.',x:470,y:110,width:300,height:160,color:'blue',tags:['firewall','walkthrough'],target:fw.id}];
+  return {network:n,clientId:client.id,firewallId:fw.id};
+ }
+ const api={complex,arrange,internet,firewall};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerExamples=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

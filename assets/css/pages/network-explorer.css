@@ -9357,3 +9357,59 @@ body:not(.external-panel-page) #left-panel > .unified-palette {
 .network-manual-link:focus-visible { outline: 3px solid #bd7629; outline-offset: 3px; }
 .header-manual-link { margin-left: auto; align-self: flex-start; white-space: nowrap; font-size: 12px; padding: 5px 9px; gap: 6px; }
 .header-manual-link svg { width: 18px; height: 18px; }
+/* Firewall controls reuse inspector headings, switches, pairs and table styling. */
+.firewall-panel { margin-top: 10px; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.firewall-zones { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; }
+.firewall-rule { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; column-gap: 5px; row-gap: 2px; padding: 6px 0; border-bottom: 1px solid #dce5e9; }
+.firewall-rule-toggle { display: flex !important; align-items: flex-start; gap: 5px; grid-column: 1; grid-row: 1 / 3; min-width: 0; margin: 0 !important; line-height: 1.35; }
+.firewall-rule-toggle input { width: auto !important; margin: 0; }
+.firewall-rule-toggle span { min-width: 0; overflow-wrap: anywhere; }
+.firewall-rule-toggle small { display: block; font-weight: normal; color: #61758a; }
+.firewall-rule-actions { display: flex; gap: 0; grid-column: 2; grid-row: 2; justify-self: end; }
+.firewall-rule > .firewall-action { grid-column: 2; justify-self: end; }
+.firewall-panel .vlan-icon-button { width: 24px; height: 24px; min-width: 24px; min-height: 24px; padding: 3px; }
+.firewall-panel .vlan-icon-button svg { width: 16px; height: 16px; }
+#inspector .firewall-panel .hint { margin: 4px 0; }
+#inspector .firewall-panel label { margin: 3px 0; min-width: 0; }
+#inspector .firewall-form .pair { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
+#inspector .firewall-panel input:not([type="checkbox"]),
+#inspector .firewall-panel select { min-width: 0; min-height: 28px; padding: 3px 5px; }
+.firewall-action { display: inline-flex; align-items: center; padding: 1px 6px; border-radius: 999px; font-size: 10px; line-height: 1.4; text-transform: uppercase; font-weight: 700; white-space: nowrap; }
+.firewall-action.allow { color: #246349; background: #e4f3e9; }
+.firewall-action.drop { color: #a34435; background: #fbe9e6; }
+.firewall-rule:has([data-fw-enable]:not(:checked)) .firewall-rule-toggle strong,
+.firewall-rule:has([data-fw-enable]:not(:checked)) .firewall-rule-toggle small { color: #7b8490; }
+.firewall-rule:has([data-fw-enable]:not(:checked)) .firewall-action { color: #68727e; background: #edf0f3; }
+.firewall-form { padding: 6px 0; }
+.firewall-panel details { margin-top: 8px; }
+.firewall-panel summary { cursor: pointer; font-weight: 600; }
+.firewall-decisions { padding: 0; margin: 4px 0 0; list-style: none; }
+.firewall-decision { padding: 3px 6px; border-left: 2px solid #287d78; margin: 4px 0; font-size: 11px; line-height: 1.3; overflow-wrap: anywhere; }
+.firewall-decision strong { font-size: 11px; font-weight: 600; }
+.firewall-decision small { font-size: 10px; color: #61758a; }
+.firewall-decision.drop, .firewall-examine.drop { border-left-color: #a34435; }
+.firewall-decision span, .firewall-decision small { display: block; }
+.firewall-examine { border-left: 3px solid #287d78; padding: 0 12px; }
+/* Dense policy editor, using the shared inspector listbox and switch patterns. */
+#inspector .firewall-form { padding: 4px 0; }
+.firewall-form-heading { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+#inspector .firewall-form-heading .small-heading { margin: 4px 0; }
+#inspector .firewall-form-heading .route-form-actions { display: flex; gap: 3px; margin: 0; padding: 0; }
+#inspector .firewall-form label,
+#inspector .firewall-panel .inspector-picker { font-size: 11px; line-height: 1.25; margin: 2px 0; gap: 2px; }
+#inspector .firewall-form input:not([type="checkbox"]),
+#inspector .firewall-panel .inspector-picker > button { min-height: 24px; height: 24px; padding: 2px 6px; font-size: 11px; border-radius: 4px; }
+#inspector .firewall-panel .inspector-picker > button { background: #fff; color: #285e65; }
+#inspector .firewall-panel .inspector-picker > button:hover { background: #e7f4f1; border-color: #719c99; }
+#inspector .firewall-panel .inspector-picker svg { width: 12px; height: 12px; }
+#inspector .firewall-panel .inspector-picker [role="option"] { min-height: 24px; padding: 4px 6px; font-size: 11px; }
+#inspector .firewall-form .pair { align-items: end; }
+#inspector :is(.firewall-panel,.nat-panel) .inspector-section-heading { padding: 3px 6px; min-height: 28px; }
+#inspector :is(.firewall-panel,.nat-panel) .examine-watch-control { padding: 0; margin: 0; border: 0; background: none; gap: 5px; font-size: 11px; min-height: 24px; }
+#inspector :is(.firewall-panel,.nat-panel) .watch-switch-track { width: 26px; height: 16px; flex: 0 0 26px; box-sizing: border-box; }
+#inspector :is(.firewall-panel,.nat-panel) .watch-switch-track:before { width: 10px; height: 10px; top: 2px; left: 2px; }
+#inspector :is(.firewall-panel,.nat-panel) input:checked + .watch-switch-track:before { transform: translateX(10px); }
+.firewall-rule-toggle { position: relative; cursor: pointer; }
+.firewall-rule-toggle input { position: absolute; opacity: 0; width: 1px !important; height: 1px; }
+.firewall-rule-toggle input:checked + .watch-switch-track { background: #287d78; border-color: #287d78; }
+.firewall-rule-toggle input:focus-visible + .watch-switch-track { outline: 2px solid #6a91c1; outline-offset: 2px; }

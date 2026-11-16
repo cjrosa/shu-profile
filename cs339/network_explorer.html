@@ -463,8 +463,7 @@ Welcome. Select a device and type help.</pre
           Access VLANs isolate broadcast domains on each switch. Click an
           interface to assign its VLAN or enable/disable it. VLAN 1 is the
           default; access frames are untagged. Routers connect subnets using
-          connected routes and host default gateways. Trunks, DHCP, DNS, and NAT
-          come later. Layer 2 loops are blocked until loop handling is
+          connected routes and host default gateways. DHCP, DNS, HTTP, NAT/PAT, and stateful IPv4 transit firewalls are supported. Trunks are not modeled. Layer 2 loops are blocked until loop handling is
           introduced. Timings are illustrative simulation ticks, not measured
           latency.
         </p>
@@ -476,6 +475,7 @@ Welcome. Select a device and type help.</pre
     <script src="../assets/js/network-explorer-dns.js"></script>
     <script src="../assets/js/network-explorer-http.js"></script>
     <script src="../assets/js/network-explorer-nat.js"></script>
+    <script src="../assets/js/network-explorer-firewall.js"></script>
     <script src="../assets/js/network-explorer-engine.js"></script>
     <script src="../assets/js/network-explorer-filter.js"></script>
     <script src="../assets/js/network-explorer-capture.js"></script>
@@ -493,6 +493,8 @@ Welcome. Select a device and type help.</pre
     <script src="../assets/js/network-explorer-actions.js"></script>
     <script src="../assets/js/network-explorer-troubleshooting.js"></script>
     <script src="../assets/js/network-explorer-dock.js"></script>
+    <script src="../assets/js/network-explorer-firewall-icon.js"></script>
+    <script src="../assets/js/network-explorer-firewall-ui.js"></script>
     <script src="../assets/js/network-explorer-ui.js"></script>
     <script src="../assets/js/network-explorer-viewport.js"></script>
     <script src="../assets/js/network-explorer-welcome.js"></script>

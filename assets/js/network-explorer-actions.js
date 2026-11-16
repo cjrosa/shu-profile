@@ -3,6 +3,7 @@
   "use strict";
   const handlers = new Map();
   const examples = {
+    "example-firewall": {title: "Firewall", description: "Allow DNS and web browsing, block ping, and inspect stateful replies."},
     "example-internet": {
       title: "Internet and NAT",
       description:

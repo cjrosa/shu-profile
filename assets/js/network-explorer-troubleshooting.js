@@ -11,7 +11,8 @@
     } catch (_) { return false; }
   }
   function apply(n, fault, restore = false) {
-    if (['dns','dhcp','web'].includes(fault.kind)) {
+    if (fault.kind === 'firewall') {const c=JSON.parse(JSON.stringify(fault.original));if(!restore)c.rules.unshift(fault.rule);n.configureFirewall(fault.device,c);}
+    else if (['dns','dhcp','web'].includes(fault.kind)) {
       if (restore) { Object.assign(n.device(fault.device), JSON.parse(JSON.stringify(fault.removed))); n.reset(); }
       else if (fault.kind === 'dns') n.uninstallDns(fault.device);
       else if (fault.kind === 'dhcp') n.uninstallDhcp(fault.device);
@@ -22,7 +23,7 @@
     else n.configurePort(fault.device || fault.source, fault.port || 'p0', {enabled: restore});
   }
   function verify(Network, data, fault) {
-    if (!['dns','dhcp','web'].includes(fault.kind)) return probe(Network, data, fault.source, fault.target);
+    if (!['dns','dhcp','web','firewall'].includes(fault.kind)) return probe(Network, data, fault.source, fault.target);
     try {
       const n = new Network(data);
       if (fault.kind === 'dns') n.lookupDns(fault.source, fault.hostname);
@@ -30,7 +31,7 @@
       else n.browse(fault.source, fault.url);
       let steps = 0; while (n.queue.length && ++steps < 3000) n.next();
       if (n.queue.length) return false;
-      if (fault.kind === 'web') return n.httpPages[fault.source]?.code === 200;
+      if (['web','firewall'].includes(fault.kind)) return n.httpPages[fault.source]?.code === 200;
       if (fault.kind === 'dns') return n.dnsCache[fault.source]?.[fault.hostname]?.address === fault.target;
       const client = n.device(fault.source);
       return !!client.lease && !!client.ip && client.prefix === fault.prefix && client.gateway === fault.gateway && client.dnsServerAddress === fault.dns;
@@ -128,6 +129,16 @@
     return n;
   }
   function create(Network, data, random = Math.random, difficulty = 'mixed') {
+    if(difficulty === 'firewall') {
+      for(const d of data.devices.filter(d=>d.firewall?.enabled))for(const h of data.devices.filter(d=>d.browserServer?.enabled&&d.ip&&d.dnsServerAddress)) {
+        const url=h.browserServer.url;if(new URL(url).hostname.split('.').every(x=>/^\d+$/.test(x)))continue;
+        let name='Block DNS';while(d.firewall.rules.some(r=>r.name===name))name+='!';
+        const fault={kind:'firewall',device:d.id,deviceName:d.name,source:h.id,sourceName:h.name,url,original:JSON.parse(JSON.stringify(d.firewall)),rule:{name,enabled:true,from:'*',to:'*',source:h.ip,destination:'*',protocol:'UDP',sourcePort:'*',destinationPort:53,action:'drop'},symptom:h.name+' cannot browse '+url,testLabel:'HTTP request with DNS',command:null,hints:['Compare browsing by IP with browsing by hostname.','Watch the DNS query at '+d.name+'. Which rule handles UDP port 53?','Rules run top to bottom. Inspect the first rule on '+d.name+'.'],reveal:'A new '+name+' rule on '+d.name+' drops DNS before the allow rules. Disable/delete it or move it below the matching DNS allow rule.'};
+        if(!verify(Network,data,fault))continue;
+        const broken=new Network(data);apply(broken,fault);if(!verify(Network,broken.save(),fault))return fault;
+      }
+      throw Error('Open the Firewall example, or provide a working Browser using remote DNS across an enabled firewall.');
+    }
     const hosts = data.devices.filter(d => d.type === 'host' && d.ip && d.addressMode !== 'dhcp');
     const candidates = [];
     for (const source of hosts) {
@@ -202,10 +213,11 @@
           intermediate:'<rect x="2" y="8" width="6" height="8" rx="1"/><rect x="16" y="8" width="6" height="8" rx="1"/><path d="M8 12h8M5 4v4m14-4v4M5 16v4m14-4v4"/>',
           advanced:'<circle cx="12" cy="4" r="3"/><circle cx="4" cy="18" r="3"/><circle cx="20" cy="18" r="3"/><path d="m10 7-4 8m8-8 4 8M7 18h10"/>',
           easy:'<path d="M5 19v-5h3v5zm6 0V9h3v10zm6 0V4h3v15"/>',
+          firewall:'<path d="M12 2 21 6v6c0 5-5 8-9 10-4-2-9-5-9-10V6Z"/><path d="m7 12 3 3 7-7"/>',
           hard:'<path d="m13 2-9 12h7l-1 8 10-13h-7z"/>'
         };
         option.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + levelIcons[value] + '</svg><div><strong></strong><span></span></div>';
-        option.querySelector('strong').textContent = value[0].toUpperCase() + value.slice(1);
+        option.querySelector('strong').textContent = value === 'firewall' ? 'Firewall policy' : value[0].toUpperCase() + value.slice(1);
         option.querySelector('span').textContent = description; menu.append(option);
       });
       wrapper.append(menu);
@@ -218,7 +230,7 @@
     mode.innerHTML = '<span>Start with a fault</span><span class="trouble-switch-track" aria-hidden="true"></span>';
     panel.querySelector('#trouble-menu-load').prepend(mode);
     mode.onclick = () => { startBroken = !startBroken; mode.setAttribute('aria-checked',String(startBroken)); };
-    dropdown('break', 'Break something', [['easy','Host interface disabled'],['intermediate','Gateway or switch port fault'],['hard','Incorrect switch access VLAN']]);
+    dropdown('break', 'Break something', [['easy','Host interface disabled'],['intermediate','Gateway or switch port fault'],['hard','Incorrect switch access VLAN'],['firewall','DNS denied by an ordered rule']]);
     function closeMenus() {
       toolbar.querySelectorAll('.trouble-menu').forEach(menu => { menu.hidden = true; });
       toolbar.querySelectorAll('.trouble-menu-trigger').forEach(trigger => trigger.setAttribute('aria-expanded', 'false'));

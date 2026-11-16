@@ -35,13 +35,14 @@ window.NetworkExplorerPickers = {
         "host",
         "switch",
         "router",
+        "firewall",
         "dhcp",
         "dns",
         "web",
         "browser",
         "note",
       ]) {
-        const isDevice = ["host", "switch", "router"].includes(type),
+        const isDevice = ["host", "switch", "router", "firewall"].includes(type),
           isNote = type === "note",
           label = isNote
             ? "Notes"
@@ -51,7 +52,7 @@ window.NetworkExplorerPickers = {
           items = isNote
             ? net.notes
             : isDevice
-              ? net.devices.filter((d) => d.type === type)
+              ? net.devices.filter((d) => (d.role === "firewall" ? "firewall" : d.type) === type)
               : applications().filter((a) => a.type === type),
           glyph = isNote
             ? noteSymbol()

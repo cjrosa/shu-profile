@@ -814,7 +814,7 @@
     );
   }
   function bindNat(d) {
-    if (d.type !== "router") return;
+    if (d.type !== "router" || d.firewallMode === "transparent") return;
     $("nat-enabled").onchange = () => {
       if (!editable()) {
         render();
@@ -869,7 +869,7 @@
     );
   }
   function bindRoutes(d) {
-    if (d.type !== "router") return;
+    if (d.type !== "router" || d.firewallMode === "transparent") return;
     let editing = null;
     const open = (r) => {
       editing = r?.name || null;
@@ -919,7 +919,8 @@
       );
   }
   function icon(d) {
-    if (d.type === "router") return routerIcon();
+    if (d.type === "firewall" || d.role === "firewall") return NetworkExplorerFirewallUI.glyph();
+    if (d.type === "router") return routerIcon() + (d.firewall?.enabled ? '<g transform="translate(25 -17) scale(.35)">' + NetworkExplorerFirewallUI.glyph() + "</g>" : "");
     return d.type === "host"
       ? '<rect x="-31" y="-24" width="46" height="34" rx="3" fill="#fff" stroke="currentColor" stroke-width="2"/><rect x="-27" y="-20" width="38" height="25" rx="1" fill="#cce4f5"/>' +
           hostOsLogo(d) +
@@ -1585,7 +1586,7 @@
                 ? d.ip + "/" + d.prefix
                 : "Not configured"
               : d.type === "router"
-                ? d.ports.length + " routed interfaces"
+                ? d.firewallMode === "transparent" ? "2 bridge ports" : d.ports.length + " routed interfaces"
                 : "8 Ethernet ports",
           ) +
           "</text>" +
@@ -1997,7 +1998,7 @@
             )
             .join("") +
           '</select></label><p class="hint">Access ports carry untagged frames.</p>'
-        : d.type === "router"
+        : d.type === "router" && d.firewallMode !== "transparent"
           ? '<div class="pair router-address"><label>IPv4 address<input id="router-ip" value="' +
             esc(p.ip) +
             '" placeholder="Not configured"></label><label>Prefix<input id="router-prefix" type="number" min="1" max="30" value="' +
@@ -2032,7 +2033,7 @@
           }),
         );
       };
-    if (d.type === "router") {
+    if (d.type === "router" && d.firewallMode !== "transparent") {
       const save = () => {
         if (!editable()) return;
         safely(() => {
@@ -2178,6 +2179,12 @@
     const toggle = $(id + "-toggle"),
       list = $(id + "-options"),
       choices = [...list.children];
+    const refreshChoice = () => {
+      $(id + "-value").innerHTML = choiceIcon(select.value) + esc(select.selectedOptions[0].text);
+      choices.forEach(o => o.setAttribute("aria-selected", String(o.dataset.value === select.value)));
+    };
+    select.addEventListener("change", refreshChoice);
+    select.addEventListener("pickerrefresh", refreshChoice);
     const close = (focus = false) => {
       list.hidden = true;
       toggle.setAttribute("aria-expanded", "false");
@@ -3186,7 +3193,7 @@
   }
   function refreshTerminalPicker() {
     const menu = $('terminal-device-menu');
-    const html = net.devices.map(d => '<button type="button" id="terminal-choice-'+esc(d.id)+'" data-terminal-device="'+esc(d.id)+'" role="menuitemradio" aria-checked="'+(d.id===terminalDevice)+'"><svg class="terminal-choice-icon" viewBox="-42 -35 84 72" aria-hidden="true">'+icon(d)+'</svg><span>'+esc(d.name)+'</span><small>'+esc(d.type)+'</small><svg class="terminal-choice-check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>').join('') || '<span class="terminal-picker-empty">Add a device to open a console.</span>';
+    const html = net.devices.map(d => '<button type="button" id="terminal-choice-'+esc(d.id)+'" data-terminal-device="'+esc(d.id)+'" role="menuitemradio" aria-checked="'+(d.id===terminalDevice)+'"><svg class="terminal-choice-icon" viewBox="-42 -35 84 72" aria-hidden="true">'+icon(d)+'</svg><span>'+esc(d.name)+'</span><small>'+esc(d.role || d.type)+'</small><svg class="terminal-choice-check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>').join('') || '<span class="terminal-picker-empty">Add a device to open a console.</span>';
     if (menu.innerHTML !== html) {
       menu.innerHTML = html;
       menu.querySelectorAll('[data-terminal-device]').forEach(button => {
@@ -3287,7 +3294,7 @@
       ? cliPrompt(consoleDevice)
       : "Select a device on the canvas or use the selector above to use the CLI";
     $("terminal-title").textContent = consoleDevice
-      ? consoleDevice.name + " - " + (consoleDevice.type === "host" ? "Host" : consoleDevice.type === "router" ? "Router" : isPan(consoleDevice) ? "PAN-OS Layer 2" : "Cisco IOS Layer 2")
+      ? consoleDevice.name + " - " + (consoleDevice.type === "host" ? "Host" : consoleDevice.type === "router" ? (consoleDevice.role === "firewall" ? "Firewall" : "Router") : isPan(consoleDevice) ? "PAN-OS Layer 2" : "Cisco IOS Layer 2")
       : "Terminal";
     refreshTerminalPicker();
     if (noteInspector()) return;
@@ -3302,7 +3309,7 @@
           d.type === "host"
             ? "Host"
             : d.type === "router"
-              ? "Router"
+              ? (d.role === "firewall" ? "Firewall" : "Router")
               : isPan(d)
                 ? "Layer 2 switch (PAN-OS)"
                 : "Ethernet switch",
@@ -3345,13 +3352,13 @@
             esc(d.gateway || "") +
             '" placeholder="Optional for this subnet"></label>'
           : d.type === "router"
-            ? '<p class="hint">Click an interface to set its IPv4 address and prefix. Connected routes are added automatically.</p>'
+            ? d.firewallMode === "transparent" ? '<p class="hint">Transparent bridge: two ports, no IP address or gateway. Frames keep their addresses and TTL.</p>' : '<p class="hint">Click an interface to set its IPv4 address and prefix. Connected routes are added automatically.</p>'
             : "") +
         interfacePanel(d) +
         (d.type === "switch"
           ? vlanPanel(d)
           : d.type === "router"
-            ? routePanel(d) + natPanel(d)
+            ? (d.firewallMode === "transparent" ? "" : routePanel(d)) + NetworkExplorerFirewallUI.panel(net,d,esc,expiryMarkup) + (d.firewallMode === "transparent" ? "" : natPanel(d))
             : "") +
         (d.type === "host"
           ? '<p class="hint">MAC ' + esc(d.ports[0].mac) + "</p>"
@@ -3385,6 +3392,7 @@
         )
           floatingTable.hidden = true;
       };
+      if (d.firewallMode === "transparent") {$("inspector-table").style.display="none";$("inspector-table").previousElementSibling.style.display="none";}
       $("device-name").onchange = (e) =>
         mutate(() => {
           d.name = e.target.value.trim() || d.name;
@@ -3456,6 +3464,7 @@
       }
       bindRoutes(d);
       bindNat(d);
+      if(d.type === "router") NetworkExplorerFirewallUI.bind(net,d,mutate,styleInspectorSelect);
       bindVlanPanel(d);
       $("inspector")
         .querySelectorAll("[data-port]")
@@ -4741,6 +4750,7 @@
               .join("") +
             "</tbody></table><p>The translated packet may wait for next-hop ARP resolution before transmission.</p></section>"
           : "") +
+        (r.firewall ? '<section class="firewall-examine ' + r.firewall.action + '"><h3>Firewall: ' + r.firewall.action.toUpperCase() + '</h3><p>' + esc(NetworkExplorerFirewall.describe(r.firewall)) + '</p><p>Rule: ' + esc(r.firewall.rule) + (r.firewall.state ? ' &middot; State: ' + esc(r.firewall.state) : '') + '</p></section>' : "") +
         (r.routingTable
           ? "<h3>Routing decision</h3>" +
             routeRows(d, r.routingTable, r.selectedRoute)
@@ -5308,6 +5318,10 @@
   $("add-host").onclick = () => addFromPalette("host");
   $("add-switch").onclick = () => addFromPalette("switch");
   $("add-router").onclick = () => addFromPalette("router");
+  const firewallButton = document.createElement("button");
+  firewallButton.id="add-firewall";firewallButton.type="button";firewallButton.title="Add firewall";firewallButton.setAttribute("aria-label","Add firewall");
+  firewallButton.innerHTML='<svg viewBox="-42 -35 84 72" aria-hidden="true">'+NetworkExplorerFirewallUI.glyph()+"</svg>";
+  $("add-router").after(firewallButton);firewallButton.onclick=()=>addFromPalette("firewall");
   $("connect").onclick = () => {
     if (!editable()) return;
     connecting = !connecting;
@@ -5881,7 +5895,7 @@
   compactPalette.id = "compact-palette";
   compactPalette.hidden = true;
   compactPalette.setAttribute("aria-label", "Devices");
-  compactPalette.innerHTML = ["host", "switch", "router"]
+  compactPalette.innerHTML = ["host", "switch", "router", "firewall"]
     .map(
       (type) =>
         '<button type="button" class="compact-device" data-add-type="' +
@@ -7691,6 +7705,8 @@
   $("traffic").addEventListener("keydown", inspectFlight);
   const cacheTimer = setInterval(() => {
     const changed = net.age();
+    const firewallDevice=net.device(selected);
+    if(changed && firewallDevice?.type === "router") NetworkExplorerFirewallUI.refresh(net,firewallDevice);
     if (staged) staged.trial.age();
     if (changed) {
       const d = net.device(selected);
@@ -7732,7 +7748,7 @@
     '<svg viewBox="-42 -35 84 72" aria-hidden="true">' +
     icon({ type: "switch" }) +
     "</svg>";
-  for (const type of ["host", "switch", "router"]) {
+  for (const type of ["host", "switch", "router", "firewall"]) {
     const label = document.createElement("span");
     label.className = "palette-label";
     label.textContent = type[0].toUpperCase() + type.slice(1);
@@ -7927,6 +7943,13 @@
     say(
       "Acquire a DHCP lease on Browser Client, then open its Browser and visit www.campus.example.",
     );
+  });
+  registerExample("example-firewall", () => {
+    if ((net.devices.length || net.applicationDrafts.length) && !confirm("Replace this network with the Firewall example?")) return;
+    discard(); candidateBase=null;
+    const example=NetworkExplorerExamples.firewall(NetworkExplorer.Network);
+    net=example.network;subnetMode="all";selected=example.firewallId;examined=false;cancelConnect();openInspector();render();window.NetworkExplorerViewport?.fit();
+    say("Open the Inside Client Browser. DNS and HTTP pass; ping to the outside server is blocked. Inspect the firewall rules and decisions.");
   });
   registerExample("example-internet", () => {
     if (
