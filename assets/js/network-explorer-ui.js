@@ -73,6 +73,7 @@
     "name",
     "tags",
     "watch",
+    "watchDecisions",
     "applicationWatch",
     "dnsWatch",
     "webWatch",
@@ -427,7 +428,7 @@
     if (old) {
       if (revert) {
         const d = net.device(deviceId),
-          layout = { x: d.x, y: d.y, watch: d.watch };
+          layout = { x: d.x, y: d.y, watch: d.watch, watchDecisions: d.watchDecisions };
         net.devices[net.devices.indexOf(d)] = { ...old, ...layout };
       }
       candidateBase.devices = candidateBase.devices.filter(
@@ -1598,8 +1599,8 @@
               esc(d.id) +
               '" role="button" tabindex="0" aria-label="Stop watching ' +
               esc(d.name) +
-              '" data-tooltip="Stop watching ' +
-              esc(d.name) +
+              '" data-tooltip="' +
+              esc(watchTooltip(d) + ". Click to turn off.") +
               '" fill="none" stroke="#287d78" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="-3" y="-4" width="26" height="24" fill="transparent" stroke="none"/><path d="M1 8s3.5-6 9-6 9 6 9 6-3.5 6-9 6S1 8 1 8Z"/><circle cx="10" cy="8" r="2.6"/></g>'
             : "") +
           "</g>",
@@ -2757,19 +2758,7 @@
       "</svg><span>" +
       appLabel(a.type) +
       "</span>";
-    $("watch").hidden = !d;
-    $("watch").setAttribute("aria-pressed", String(!!d?.[appWatchKey(a.type)]));
-    const watchLabel = d?.[appWatchKey(a.type)]
-      ? "Stop watching " + appLabel(a.type)
-      : "Watch " + appLabel(a.type);
-    $("watch").setAttribute("aria-label", watchLabel);
-    $("watch").title = watchLabel;
-    $("watch").onclick = () => {
-      if (d) {
-        d[appWatchKey(a.type)] = !d[appWatchKey(a.type)];
-        render();
-      }
-    };
+    bindWatch(d, a.type);
     $("inspector").innerHTML = d
       ? '<p class="hint">Installed on <button id="application-host" class="application-host">' +
         noteTargetIcon(d.id) +
@@ -3363,26 +3352,12 @@
       ? '<svg class="inspector-device-icon" viewBox="-42 -35 84 72" aria-hidden="true">' +
         icon(d) +
         "</svg><span>" +
-        esc(
-          d.type === "host"
-            ? "Host"
-            : d.type === "router"
-              ? (d.role === "firewall" ? "Firewall" : "Router")
-              : isPan(d)
-                ? "Layer 2 switch (PAN-OS)"
-                : "Ethernet switch",
-        ) +
+        esc(d.name) +
         "</span>"
       : l
         ? "Ethernet connection"
         : "Inspector";
-    $("watch").hidden = !d;
-    $("watch").setAttribute("aria-pressed", String(Boolean(d?.watch)));
-    const watchLabel = d?.watch
-      ? "Stop watching this device"
-      : "Watch this device";
-    $("watch").setAttribute("aria-label", watchLabel);
-    $("watch").title = watchLabel;
+    bindWatch(d);
     if (d) {
       $("inspector").innerHTML =
         '<label>Name<input id="device-name" maxlength="40" value="' +
@@ -3451,12 +3426,7 @@
         mutate(() => {
           d.name = e.target.value.trim() || d.name;
         });
-      $("watch").onclick = () => {
-        const current = net.device(selected);
-        if (!current) return;
-        current.watch = !current.watch;
-        render();
-      };
+
       if (d.type === "host") {
         $("host-gateway").onchange = (e) => {
           if (!editable()) {
@@ -4266,6 +4236,72 @@
     bindNoteMentions(n);
     return true;
   }
+
+  const watchMenu = document.createElement("div");
+  watchMenu.id = "watch-menu";
+  watchMenu.className = "watch-menu";
+  watchMenu.setAttribute("popover", "auto");
+  watchMenu.setAttribute("role", "dialog");
+  watchMenu.setAttribute("aria-label", "Watch decisions");
+  document.body.append(watchMenu);
+  const watchChevron = '<svg class="watch-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>';
+  $("watch").insertAdjacentHTML("beforeend", '<span class="watch-summary"></span>' + watchChevron);
+  $("watch").setAttribute("aria-haspopup", "dialog");
+  $("watch").setAttribute("aria-controls", "watch-menu");
+  $("watch").setAttribute("aria-expanded", "false");
+  watchMenu.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+      event.preventDefault(); event.stopPropagation();
+      watchMenu.hidePopover(); $("watch").focus();
+    }
+  });
+  watchMenu.addEventListener("toggle", () => $("watch").setAttribute("aria-expanded", String(watchMenu.matches(":popover-open"))));
+  function watchTooltip(d, appType) {
+    const enabled = d[appType ? appWatchKey(appType) : "watch"];
+    const settings = !enabled ? "Off" : appType || !Array.isArray(d.watchDecisions)
+      ? "All decisions"
+      : d.watchDecisions.map(k => NetworkExplorerWatch.labels[k]).join(", ");
+    return "Watch for: " + settings;
+  }
+  function bindWatch(d, appType) {
+    const button = $("watch"), key = appType ? appWatchKey(appType) : "watch";
+    button.hidden = !d;
+    if (!d) return;
+    const keys = appType ? [] : NetworkExplorerWatch.options(d);
+    const summary = !d[key] ? "Off" : !appType && Array.isArray(d.watchDecisions) ? d.watchDecisions.length + " selected" : "All";
+    button.querySelector(".watch-summary").textContent = summary;
+    button.setAttribute("aria-pressed", String(!!d[key]));
+    button.setAttribute("aria-label", watchTooltip(d, appType) + ". Choose decisions");
+    button.dataset.tooltip = watchTooltip(d, appType);
+    button.onclick = () => {
+      if (watchMenu.matches(":popover-open")) { watchMenu.hidePopover(); return; }
+      const drawMenu = () => {
+        const current = net.device(d.id);
+        watchMenu.innerHTML = '<strong>Watch for...</strong><div class="watch-presets"><button type="button" data-mode="off" aria-pressed="' + !current[key] + '">Off</button><button type="button" data-mode="all" aria-pressed="' + (!!current[key] && (appType || !Array.isArray(current.watchDecisions))) + '">All</button></div>' +
+          keys.map(k => '<label><input type="checkbox" role="switch" value="' + k + '" ' + (current[key] && (!Array.isArray(current.watchDecisions) || current.watchDecisions.includes(k)) ? 'checked' : '') + '><span class="watch-option-track" aria-hidden="true"></span><span>' + esc(NetworkExplorerWatch.labels[k]) + '</span></label>').join('');
+        watchMenu.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => {
+          const current = net.device(d.id);
+          current[key] = b.dataset.mode === "all";
+          if (!appType && current[key]) delete current.watchDecisions;
+          render(); drawMenu(); watchMenu.querySelector('[data-mode="' + b.dataset.mode + '"]').focus();
+        });
+        watchMenu.querySelectorAll('input').forEach(input => input.onchange = () => {
+          const current = net.device(d.id);
+          const chosen = [...watchMenu.querySelectorAll('input:checked')].map(el => el.value);
+          current.watch = chosen.length > 0;
+          current.watchDecisions = chosen.length ? chosen : undefined;
+          if (chosen.length === keys.length) delete current.watchDecisions;
+          render(); drawMenu(); watchMenu.querySelector('input[value="' + input.value + '"]').focus();
+        });
+      };
+      drawMenu(); watchMenu.showPopover();
+      const rect = button.getBoundingClientRect();
+      watchMenu.style.left = Math.max(8, Math.min(rect.right - watchMenu.offsetWidth, innerWidth - watchMenu.offsetWidth - 8)) + "px";
+      watchMenu.style.top = Math.max(8, Math.min(rect.bottom + 6, innerHeight - watchMenu.offsetHeight - 8)) + "px";
+      watchMenu.querySelector('button').focus();
+    };
+  }
+
   function watchList() {
     if (!$("watch-list")) return;
     $("watch-list").innerHTML =
@@ -4552,8 +4588,7 @@
     schedulePhase(() => {
       if (!staged) return;
       if (
-        ((!report.kind.endsWith("-application") &&
-          net.device(report.device).watch) ||
+        (NetworkExplorerWatch.matches(net.device(report.device), report) ||
           watchDhcpReport(report))
       )
         examine();
@@ -4813,6 +4848,7 @@
           x: d.x,
           y: d.y,
           watch: d.watch,
+          watchDecisions: d.watchDecisions,
           dhcpWatch: d.dhcpWatch,
           dnsWatch: d.dnsWatch,
           webWatch: d.webWatch,

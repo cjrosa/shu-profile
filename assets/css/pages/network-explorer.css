@@ -9417,3 +9417,20 @@ body:not(.external-panel-page) #left-panel > .unified-palette {
 #port-config > .addressing-picker, #port-config > .dhcp-client { margin: 12px 16px; }
 #port-config .address-field, #port-config .prefix-field { min-width: 0; }
 #port-config .addressing-picker > button { min-height: 32px; font-size: 12px; padding: 6px 9px; }
+.watch-toggle { display: inline-flex; align-items: center; gap: 5px; width: auto !important; min-width: 32px; padding: 5px 7px !important; }
+.watch-toggle .watch-summary { font-size: 11px; white-space: nowrap; }
+.watch-toggle .watch-chevron { width: 12px; height: 12px; }
+.watch-menu { position: fixed; margin: 0; width: 270px; max-width: calc(100vw - 16px); max-height: calc(100vh - 16px); overflow: auto; box-sizing: border-box; padding: 14px; border: 1px solid #cbd9e5; border-radius: 12px; background: #fff; color: #253d52; box-shadow: 0 12px 36px #233b5226; font: 13px/1.4 system-ui, sans-serif; }
+.watch-menu > strong { font-size: 14px; }
+.watch-presets { display: flex; gap: 6px; padding: 8px 0; margin-bottom: 4px; border-bottom: 1px solid #e4ebf1; }
+.watch-presets button { min-height: 24px; padding: 2px 12px; border: 1px solid #ccd9e3; border-radius: 6px; background: #f5f8fb; color: inherit; cursor: pointer; font: 12px/1.4 system-ui, sans-serif; }
+.watch-presets button[aria-pressed="true"] { background: #e4f3f0; border-color: #65a89c; color: #206a60; }
+.watch-menu label { position: relative; display: flex; align-items: center; gap: 9px; padding: 6px 3px; border-radius: 6px; cursor: pointer; }
+.watch-menu label:hover { background: #f0f5f8; }
+.watch-menu input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.watch-option-track { flex: 0 0 28px; width: 28px; height: 16px; box-sizing: border-box; border: 1px solid #b7c6d3; border-radius: 10px; background: #e3eaf0; transition: background .15s; }
+.watch-option-track::after { content: ""; display: block; width: 12px; height: 12px; margin: 1px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px #263e5233; transition: transform .15s; }
+.watch-menu input:checked + .watch-option-track { background: #287d78; border-color: #287d78; }
+.watch-menu input:checked + .watch-option-track::after { transform: translateX(12px); }
+.watch-menu input:focus-visible + .watch-option-track { outline: 2px solid #287d78; outline-offset: 2px; }
+.watch-menu :focus-visible { outline: 2px solid #287d78; outline-offset: 2px; }
