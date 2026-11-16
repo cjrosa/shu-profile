@@ -129,7 +129,7 @@
   if(e.kind==='echo-application'){
    const t=thread(s,e.thread);if(!t||t.status!=='ready')return {title:'Python paused',notes:[]};
    const rows=program(c,t.id!=='main'),row=rows[t.pc];
-   if(!row){t.status='finished';return {title:'Python finished',notes:[]};}
+   if(!row){t.status='finished';t.finishedAt=Date.now();return {title:'Python finished',notes:[]};}
    if(t.auto&&t.breakpoints.includes(t.pc)&&t.skipBreakpoint!==t.pc){t.auto=false;return {title:'Python breakpoint',notes:['Paused before line '+(t.pc+1)]};}
    delete t.skipBreakpoint;t.last=t.pc;title='Python · '+t.id+' · line '+(t.pc+1);notes=[row.text];
    let next=t.pc+1,so=socket(s,t.socket);
@@ -167,7 +167,7 @@
      case 'eof':next=t.vars.data.length?line('echo'):line('close');break;
      case 'echo':transmit(so,t.vars.data);s.output.push('Echoed '+t.vars.data.length+' bytes: '+decode(t.vars.data));next=line('recv');break;
      case 'print':s.output.push('Echo received: '+decode(t.vars.reply));break;
-     case 'close':if(so.protocol==='TCP'){segment(so,'FIN ACK');so.state=so.eof?'LAST-ACK':'FIN-WAIT-1';}else so.state='CLOSED';t.status='finished';break;
+     case 'close':if(so.protocol==='TCP'){segment(so,'FIN ACK');so.state=so.eof?'LAST-ACK':'FIN-WAIT-1';}else so.state='CLOSED';t.status='finished';t.finishedAt=Date.now();break;
     }
     t.pc=next;if(t.status==='ready')schedule(n,d.id,t);
    }catch(error){fail(n,d.id,t,error.message);}
@@ -196,6 +196,17 @@
   if(f.flags==='ACK'&&f.ack===so.snd){if(so.state==='LAST-ACK')so.state='CLOSED';else if(so.state==='FIN-WAIT-1')so.state='FIN-WAIT-2';}
   return {title:'Echo TCP acknowledgment',notes:['ACK '+f.ack]};
  }
- const api={defaults,validate,program,state,control,handle,decode};
+ function expireThreads(n,now=Date.now()){
+  let changed=false;
+  for(const s of Object.values(n.echo||{})){
+   const expired=s.threads.filter(t=>t.id!=='main'&&t.status==='finished'&&Number.isFinite(t.finishedAt)&&now-t.finishedAt>=300000);
+   if(!expired.length)continue;
+   const ids=new Set(expired.map(t=>t.id));s.threads=s.threads.filter(t=>!ids.has(t.id));
+   if(ids.has(s.selected)){s.selected='main';if(s.ui)s.ui.file='main';}
+   changed=true;
+  }
+  return changed;
+ }
+ const api={expireThreads,defaults,validate,program,state,control,handle,decode};
  if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerEcho=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

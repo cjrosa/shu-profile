@@ -9,7 +9,11 @@
   return s.threads.map(x=>{
    const queued=n.queue.some(e=>e.kind==='echo-application'&&e.device===d.id&&e.thread===x.id);
    const status=x.status==='ready'?(x.auto||queued?'running':'paused'):x.status;
-   return '<button type="button" class="echo-thread-pill" data-echo-thread="'+esc(x.id)+'" aria-pressed="'+(x.id===t.id)+'" aria-label="'+esc(x.id+': '+status)+'" title="'+esc(x.id+': '+status+(x.wait?' - '+x.wait:''))+'"><svg class="echo-thread-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 6v12M17 6v12M7 9c0 4 10 2 10 6"/><circle cx="7" cy="4" r="2"/><circle cx="17" cy="4" r="2"/><circle cx="7" cy="20" r="2"/><circle cx="17" cy="20" r="2"/></svg><span>'+esc(x.id)+'</span><svg class="echo-thread-status '+status+'" viewBox="0 0 24 24" aria-hidden="true">'+(glyphs[status]||glyphs.paused)+'</svg></button>';
+   const expires=status==='finished'&&x.id!=='main'&&Number.isFinite(x.finishedAt)?x.finishedAt+300000:0;
+   const remaining=Math.max(0,(expires-Date.now())/300000);
+   const seconds=Math.max(0,Math.ceil((expires-Date.now())/1000)),countdown=expires?' - removes in '+Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0'):'';
+   const statusGlyph=expires?'<circle cx="12" cy="12" r="10" opacity=".2"/><circle class="echo-thread-countdown" data-thread-expires="'+expires+'" cx="12" cy="12" r="10" pathLength="100" stroke-dasharray="100" stroke-dashoffset="'+(100-remaining*100)+'" transform="rotate(-90 12 12)"/><path d="m7 12 3 3 7-7"/>':(glyphs[status]||glyphs.paused);
+   return '<button type="button" class="echo-thread-pill" data-echo-thread="'+esc(x.id)+'" aria-pressed="'+(x.id===t.id)+'" aria-label="'+esc(x.id+': '+status)+'" title="'+esc(x.id+': '+status+(x.wait?' - '+x.wait:'')+countdown)+'"><svg class="echo-thread-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 6v12M17 6v12M7 9c0 4 10 2 10 6"/><circle cx="7" cy="4" r="2"/><circle cx="17" cy="4" r="2"/><circle cx="7" cy="20" r="2"/><circle cx="17" cy="20" r="2"/></svg><span>'+esc(x.id)+'</span><svg class="echo-thread-status '+status+'" viewBox="0 0 24 24" aria-hidden="true">'+statusGlyph+'</svg></button>';
   }).join('');
  }
  function markup(n,d,esc){

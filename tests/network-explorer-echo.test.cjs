@@ -92,3 +92,14 @@ test('TCP server imports the separate handler and new workers inherit handler br
  assert.equal(worker.pc,2);assert.equal(worker.auto,false);assert.deepEqual(worker.breakpoints,[2]);
  run(n,s);assert.equal(n.echo[a.id].output.at(-1),'Echo received: '+a.echoServer.message);
 });
+
+test('completed client threads expire after five wall-clock minutes and selection returns to main',()=>{
+ const {n,a,s}=setup();run(n,s);run(n,a);
+ const state=n.echo[s.id],worker=state.threads.find(t=>t.id!=='main');
+ assert.ok(Number.isFinite(worker.finishedAt));state.selected=worker.id;state.ui={file:'handler',handlerBreakpoints:[2]};
+ assert.equal(Echo.expireThreads(n,worker.finishedAt+299999),false);
+ assert.equal(Echo.expireThreads(n,worker.finishedAt+300000),true);
+ assert.equal(state.threads.length,1);assert.equal(state.selected,'main');assert.equal(state.ui.file,'main');
+ assert.deepEqual(state.ui.handlerBreakpoints,[2]);assert.equal(state.threads[0].status,'waiting');
+ assert.equal(n.echo[a.id].threads[0].status,'finished');
+});

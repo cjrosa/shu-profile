@@ -7753,6 +7753,20 @@
   $("traffic").addEventListener("click", inspectFlight);
   $("traffic").addEventListener("keydown", inspectFlight);
   const cacheTimer = setInterval(() => {
+    const expiredThreads=NetworkExplorerEcho.expireThreads(net);
+    if(staged)NetworkExplorerEcho.expireThreads(staged.trial);
+    if(expiredThreads&&String(selected).startsWith('echo:'))inspector();
+    document.querySelectorAll('[data-thread-expires]').forEach(ring=>{
+      const remaining=Math.max(0,(Number(ring.dataset.threadExpires)-Date.now())/300000);
+      ring.setAttribute('stroke-dashoffset',String(100-remaining*100));
+      const pill=ring.closest('[data-echo-thread]'),seconds=Math.ceil(remaining*300);
+      if(pill){
+        const text=pill.dataset.echoThread+': finished - removes in '+Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');
+        pill.dataset.tooltip=text;pill.setAttribute('aria-label',text);
+        const tip=document.getElementById('network-tooltip');
+        if(tip&&!tip.hidden&&(pill.getAttribute('aria-describedby')||'').split(' ').includes(tip.id))tip.textContent=text;
+      }
+    });
     const changed = net.age();
     const firewallDevice=net.device(selected);
     if(changed && firewallDevice?.type === "router") NetworkExplorerFirewallUI.refresh(net,firewallDevice);

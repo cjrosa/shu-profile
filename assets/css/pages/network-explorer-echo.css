@@ -54,3 +54,5 @@ main.left-collapsed:has(.echo-debugger):not(.right-collapsed){grid-template-colu
 .echo-filetabs::-webkit-scrollbar-button{display:none}
 
 .echo-status{padding:3px 8px;min-height:20px;box-sizing:border-box;font:11px/1.4 system-ui,sans-serif;border-top:1px solid #305675}
+
+.echo-toolbar .echo-thread-pill .echo-thread-status.finished{width:18px;height:18px}.echo-thread-countdown{transition:stroke-dashoffset 1s linear}
