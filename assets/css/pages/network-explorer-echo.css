@@ -46,3 +46,11 @@ main.left-collapsed:has(.echo-debugger):not(.right-collapsed){grid-template-colu
 .echo-thread-status.error{color:#f07878}
 
 .echo-filetabs{overflow-x:auto;gap:3px}.echo-debugger .echo-filetab{flex-shrink:0}.echo-debugger .echo-filetab[aria-selected=false]{border-color:#34343c;background:#202024;color:#999}
+
+.echo-filetabs{overflow-y:hidden;scrollbar-width:thin;scrollbar-color:#50505a transparent}
+.echo-filetabs::-webkit-scrollbar{height:4px;width:4px}
+.echo-filetabs::-webkit-scrollbar-thumb{background:#50505a;border-radius:4px}
+.echo-filetabs::-webkit-scrollbar-track{background:transparent}
+.echo-filetabs::-webkit-scrollbar-button{display:none}
+
+.echo-status{padding:3px 8px;min-height:20px;box-sizing:border-box;font:11px/1.4 system-ui,sans-serif;border-top:1px solid #305675}

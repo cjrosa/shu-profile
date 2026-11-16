@@ -31,9 +31,9 @@
    <div id="echo-source-panel" role="tabpanel" aria-labelledby="echo-source-tab-${file}">
    <div class="echo-code" aria-label="Python source code">${rows.map((r,i)=>`<div class="echo-line${activeFile&&i===t.pc?' current':''}${activeFile&&i===t.last?' executed':''}"${activeFile&&i===t.pc?' aria-current="step"':''}><button type="button" class="echo-gutter${breaks.includes(i)?' breakpoint':''}" data-echo-break="${i}" aria-label="Toggle breakpoint on line ${i+1}" aria-pressed="${breaks.includes(i)}"><span class="echo-breakpoint-dot" aria-hidden="true"></span><span class="echo-current-marker" aria-hidden="true">${activeFile&&i===t.pc?'<svg viewBox="0 0 20 20"><path d="M2 7h8V3l8 7-8 7v-4H2z"/></svg>':''}</span></button><span class="echo-line-number" aria-hidden="true">${i+1}</span><code>${highlight(r.text,esc)}</code></div>`).join('')}</div>
    </div>
-   <div class="echo-status" role="status">${esc(t.status==='ready'?(t.auto||busy?'Executing line ':'Paused before line ')+(t.pc+1):t.status)}${t.wait?' · '+esc(t.wait):''}</div>
    <details class="echo-variables" open><summary>VARIABLES</summary><dl>${Object.entries(t.vars).map(([k,v])=>'<dt>'+esc(k)+'</dt><dd>'+esc(value(v))+'</dd>').join('')||'<dd>No variables yet.</dd>'}</dl></details>
-   <details class="echo-console" open><summary>DEBUG CONSOLE</summary><pre>${esc(s.output.join('\n')||'Run the server first, then a client. Click the gutter left of a line number for a breakpoint.')}</pre></details>
+   <details class="echo-console" open><summary>DEBUG CONSOLE</summary><pre>${esc(s.output.join('\n'))}</pre></details>
+   <div class="echo-status" role="status">${esc(t.status==='ready'?(t.auto||busy?'Executing line ':'Paused before line ')+(t.pc+1):t.status)}${t.wait?' · '+esc(t.wait):''}</div>
   </section>`;
  }
  function bind(el,id,ctx){
