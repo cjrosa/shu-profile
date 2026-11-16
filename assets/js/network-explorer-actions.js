@@ -3,6 +3,7 @@
   "use strict";
   const handlers = new Map();
   const examples = {
+    "example-direct": {title: "Direct connection", description: "Two hosts on one Ethernet cable. Explore ARP and ping without a switch."},
     "example-firewall": {title: "Firewall", description: "Allow DNS and web browsing, block ping, and inspect stateful replies."},
     "example-internet": {
       title: "Internet and NAT",

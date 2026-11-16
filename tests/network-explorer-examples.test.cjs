@@ -36,3 +36,11 @@ test('routed triangles are allowed but Ethernet loops remain blocked',()=>{
  const n=new Network(),a=n.add('switch'),b=n.add('switch'),c=n.add('switch');n.connect(a.id,'p0',b.id,'p0');n.connect(b.id,'p1',c.id,'p0');assert.throws(()=>n.connect(c.id,'p1',a.id,'p1'),/Layer 2 loop/);
  const {network:campus}=complex(Network),saved=campus.save(),router=saved.devices.find(d=>d.type==='router');router.ports[2].ip=router.ports[0].ip;router.ports[2].prefix=24;assert.throws(()=>new Network(saved),/Overlapping/);
 });
+
+test('direct connection has two static Windows hosts and bidirectional reachability without a gateway',()=>{
+ const {network:n,clientId}=require('../assets/js/network-explorer-examples.js').direct(Network);
+ assert.equal(n.devices.length,2);assert.equal(n.links.length,1);assert.equal(clientId,n.devices[0].id);
+ assert.deepEqual(n.devices.map(d=>[d.name,d.os,d.ip,d.prefix,d.gateway]),[['Host 1','windows','192.168.1.1',24,''],['Host 2','windows','192.168.1.2',24,'']]);
+ for(const [a,b]of [[0,1],[1,0]]){n.ping(n.devices[a].id,n.devices[b].ip);assert.equal(drain(n).ok,true);}
+ assert.deepEqual(new Network(n.save()).save(),n.save());
+});

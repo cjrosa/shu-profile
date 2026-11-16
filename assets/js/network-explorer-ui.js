@@ -1856,6 +1856,7 @@
   const portConfig = document.createElement("dialog");
   portConfig.id = "port-config";
   document.body.append(portConfig);
+  portConfig.addEventListener("close", () => { if (!portConfig.open) portConfig.innerHTML = ""; });
   function styleVlanDropdown(d) {
     const select = $("port-vlan"),
       label = select.parentElement,
@@ -1959,9 +1960,19 @@
       if (!wrap.contains(e.target)) close();
     };
   }
+  function hostAddressFields(d) {
+    return '<div class="pair router-address"><div class="address-field"><div class="address-heading"><label for="host-ip">IPv4 address</label><a class="cidr-tool-link" href="../viewer.html?tool=cs339/cidr_viz.html&amp;course=CS339&amp;label=Computer%20Networks&amp;name=CIDR%20Teaching%20Tool&amp;back=cs339/index.html" target="_blank" rel="noopener" title="Open CIDR Teaching Tool in a new tab" aria-label="Open CIDR Teaching Tool in a new tab"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2h5v5M14 2 7 9M6 3H2v11h11v-4"/></svg></a></div><input id="host-ip" value="' +
+            esc(d.ip) +
+            '" placeholder="Not configured"></div><div class="prefix-field"><div class="prefix-heading"><label for="host-prefix">Prefix</label></div><input id="host-prefix" type="number" min="1" max="30" value="' +
+            esc(d.prefix) +
+            '"></div></div>';
+  }
   function openPortConfig(deviceId, portId) {
+    portConfig.dataset.device = deviceId;
+    portConfig.dataset.port = portId;
     const d = net.device(deviceId),
       p = d.ports.find((p) => p.id === portId);
+    portConfig.dataset.host = String(d.type === "host");
     const l = net.links.find(
       (l) => (l.a === d.id && l.ap === p.id) || (l.b === d.id && l.bp === p.id),
     );
@@ -1979,7 +1990,7 @@
       '><span class="watch-switch-track" aria-hidden="true"></span><span>Enabled</span></label></div><p>Connected to: ' +
       esc(peer ? peer.name + " / " + peerPort.name : "Not connected") +
       "</p>" +
-      (d.type === "switch"
+      (d.type === "host" ? hostAddressFields(d) : d.type === "switch"
         ? "<p>" +
           (isPan(d)
             ? "Interface type: <strong>Layer 2</strong>"
@@ -2081,6 +2092,31 @@
           render();
         });
       };
+    }
+    if (d.type === "host") {
+      const saveAddress = () => {
+        const address = $("host-ip").value.trim(),
+          prefixText = $("host-prefix").value;
+        if (!address) {
+          if(d.ip) mutate(() => net.configure(d.id, "", null));
+          return;
+        }
+        if (!prefixText) return;
+        const prefix = Number(prefixText);
+        if (address === d.ip && prefix === d.prefix) return;
+        if (!editable()) return;
+        mutate(() => net.configure(d.id, address, prefix));
+      };
+      for (const id of ["host-ip", "host-prefix"]) {
+        $(id).onchange = saveAddress;
+        $(id).onkeydown = (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            saveAddress();
+          }
+        };
+      }
+      bindHostAddressing(d);
     }
     if (d.type === "switch") styleVlanDropdown(d);
     if (!portConfig.open) portConfig.showModal();
@@ -3107,19 +3143,18 @@
     running = true;
     stage();
   }
-  function bindDhcp(d) {
-    if (d.type !== "host") return;
+  function bindHostAddressing(d) {
     const mode = document.createElement("label");
     mode.innerHTML =
-      'Addressing<select id="host-address-mode"><option value="manual">Manual</option><option value="dhcp">Automatic (DHCP)</option></select>';
-    $("host-os").parentElement.after(mode);
+      'Addressing<select id="host-address-mode"><option value="manual">Static</option><option value="dhcp">Automatic (DHCP)</option></select>';
+    $("host-ip").closest(".pair").before(mode);
     $("host-address-mode").value = d.addressMode || "manual";
     $("host-address-mode").onchange = (e) => {
       const value = e.target.value;
       mutate(() => net.configureAddressMode(d.id, value));
     };
     const automatic = d.addressMode === "dhcp";
-    for (const id of ["host-ip", "host-prefix", "host-gateway"])
+    for (const id of ["host-ip", "host-prefix"])
       $(id).readOnly = automatic;
     {
       const client = document.createElement("div");
@@ -3140,6 +3175,14 @@
       $("dhcp-acquire").disabled = !automatic;
       $("dhcp-acquire").onclick = () => safely(() => startDhcp(d.id));
     }
+    styleInspectorSelect("host-address-mode", "Addressing");
+    const picker = $("host-address-mode-toggle").parentElement;
+    picker.classList.add("addressing-picker");
+    picker.append($("dhcp-acquire"));
+  }
+  function bindDhcp(d) {
+    if (d.type !== "host") return;
+    $("host-gateway").readOnly = d.addressMode === "dhcp";
     for (const type of ["dhcp", "dns", "web", "browser"]) {
       const installed = $("host-" + type + "-app");
       if (installed)
@@ -3344,11 +3387,7 @@
                   "</option>",
               )
               .join("") +
-            '</select></label><div class="pair"><div class="address-field"><div class="address-heading"><label for="host-ip">IPv4 address</label><a class="cidr-tool-link" href="../viewer.html?tool=cs339/cidr_viz.html&amp;course=CS339&amp;label=Computer%20Networks&amp;name=CIDR%20Teaching%20Tool&amp;back=cs339/index.html" target="_blank" rel="noopener" title="Open CIDR Teaching Tool in a new tab" aria-label="Open CIDR Teaching Tool in a new tab"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2h5v5M14 2 7 9M6 3H2v11h11v-4"/></svg></a></div><input id="host-ip" value="' +
-            esc(d.ip) +
-            '" placeholder="Not configured"></div><div class="prefix-field"><div class="prefix-heading"><label for="host-prefix">Prefix</label></div><input id="host-prefix" type="number" min="1" max="30" value="' +
-            esc(d.prefix) +
-            '"></div></div><label>Default gateway<input id="host-gateway" value="' +
+            '</select></label><label>Default gateway<input id="host-gateway" value="' +
             esc(d.gateway || "") +
             '" placeholder="Optional for this subnet"></label>'
           : d.type === "router"
@@ -3422,49 +3461,12 @@
           d.os = e.target.value;
           render();
         };
-        const saveAddress = () => {
-          const address = $("host-ip").value.trim(),
-            prefixText = $("host-prefix").value;
-          if (!address) {
-            if(d.ip) mutate(() => net.configure(d.id, "", null));
-            return;
-          }
-          if (!prefixText) return;
-          const prefix = Number(prefixText);
-          if (address === d.ip && prefix === d.prefix) return;
-          if (!editable()) return;
-          safely(() => {
-            net.configure(d.id, address, prefix);
-            examined = false;
-            draw();
-            $("inspector-table").innerHTML = table(
-              visibleTable(net.arp[d.id], d),
-              d.type,
-            );
-            refreshFloatingTable();
-            NetworkExplorerCapture.render(net);
-            syncExternal();
-          });
-        };
-        for (const id of ["host-ip", "host-prefix"]) {
-          $(id).onchange = saveAddress;
-          $(id).onkeydown = (e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              saveAddress();
-            }
-          };
-        }
       }
       bindDeviceTags(d);
       bindDevicePlatform(d);
       bindDhcp(d);
       if (d.type === "host") {
         styleInspectorSelect("host-os", "Operating system");
-        styleInspectorSelect("host-address-mode", "Addressing");
-        const picker = $("host-address-mode-toggle").parentElement;
-        picker.classList.add("addressing-picker");
-        picker.append($("dhcp-acquire"));
       }
       bindRoutes(d);
       bindNat(d);
@@ -4274,6 +4276,10 @@
     refreshPlatform();
     draw();
     inspector();
+    if (portConfig.open && portConfig.dataset.host === "true") {
+      if (selected === portConfig.dataset.device && net.device(selected)?.type === "host") openPortConfig(portConfig.dataset.device, portConfig.dataset.port);
+      else portConfig.close();
+    }
     refreshFloatingTable();
     syncExternal();
     watchList();
@@ -6265,6 +6271,14 @@
     examined = false;
     cancelConnect();
     render();
+  });
+  registerExample("example-direct", () => {
+    if ((net.devices.length || net.applicationDrafts.length) && !confirm("Replace this network with the direct connection example?")) return;
+    discard(); candidateBase = null;
+    const example = NetworkExplorerExamples.direct(NetworkExplorer.Network);
+    net = example.network; selected = example.clientId; examined = false;
+    cancelConnect(); openInspector(); render();
+    say("From Host 1, ping 192.168.1.2. The hosts share a subnet, so no gateway is needed.");
   });
   registerExample("example", () => {
     if (

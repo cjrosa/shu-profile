@@ -67,7 +67,7 @@
   welcome.querySelector("header").prepend(eyebrow);
 
   const exampleGroups = [
-    ["Basic", ["example", "example-dhcp", "example-dns"]],
+    ["Basic", ["example-direct", "example", "example-dhcp", "example-dns"]],
     ["Intermediate", ["example-vlans", "example-routed", "example-http"]],
     [
       "Advanced",

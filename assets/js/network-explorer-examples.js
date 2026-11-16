@@ -1,4 +1,11 @@
 (function(root){'use strict';
+ function direct(Network){
+  const n=new Network(),a=n.add('host',240,220),b=n.add('host',660,220);
+  a.name='Host 1';b.name='Host 2';a.os=b.os='windows';a.watch=b.watch=false;
+  n.configure(a.id,'192.168.1.1',24);n.configure(b.id,'192.168.1.2',24);
+  n.connect(a.id,'p0',b.id,'p0');
+  return {network:n,clientId:a.id};
+ }
  function complex(Network){
   const n=new Network(),add=(type,name,x,y)=>Object.assign(n.add(type,x,y,type==='router'?3:2),{name});
   const r1=add('router','Client Router',300,240),r2=add('router','Services Router',580,240),r3=add('router','Web Router',450,430);
@@ -95,5 +102,5 @@
   n.notes=[{id:'note1',title:'Predict, test, explain',text:'The firewall bridges Inside Switch to Gateway Router without IP addresses. Open the Inside Client Browser: DNS and HTTP succeed. Ping 198.51.100.10: default drop. Open the Outside Services Browser: a new inbound HTTP connection is blocked. Ping 192.168.10.20 from Inside Client: same-subnet traffic bypasses this firewall. Watch Edge Firewall to inspect each decision. In Troubleshooting choose Firewall policy, then Break something to block DNS and repair the rule.',x:470,y:110,width:300,height:160,color:'blue',tags:['firewall','walkthrough'],target:fw.id}];
   return {network:n,clientId:client.id,firewallId:fw.id};
  }
- const api={complex,arrange,internet,firewall};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerExamples=api;
+ const api={direct,complex,arrange,internet,firewall};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerExamples=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
