@@ -3,3 +3,15 @@ const cases={windows:['netsh interface ipv4 set address name="Ethernet" source=s
 for(const [os,cmd]of Object.entries(cases))test(os+' set/remove/DHCP, display state and save/load',()=>{const n=new Network(),d=n.add('host');d.os=os;const run=s=>C.run(n,d.id,C.parse(d,s),fn=>fn());run(cmd[0]);assert.equal(d.ip,'192.168.1.10');assert.equal(d.prefix,24);assert.equal(new Network(n.save()).device(d.id).ip,d.ip);run(cmd[1]);assert.equal(d.ip,'');assert.equal(d.prefix,null);assert.equal(run(cmd[2]).dhcp,true);assert.equal(d.addressMode,'dhcp');n.acquireDhcp(d.id);assert.equal(n.queue[0].kind,'dhcp-start');n.reset();run(cmd[0]);assert.equal(d.addressMode,'manual');assert.equal(d.ip,'192.168.1.10');});
 test('invalid gateway, mask, wrong removal and interface leave existing host untouched',()=>{const n=new Network(),d=n.add('host');n.configure(d.id,'10.0.0.10',24);n.configureGateway(d.id,'10.0.0.1');const before=n.save();for(const s of ['netsh interface ipv4 set address name=eth0 source=static address=192.168.1.10 mask=255.255.255.0 gateway=10.0.0.1','netsh interface ipv4 set address name=eth0 source=static address=192.168.1.10 mask=255.0.255.0','netsh interface ipv4 delete address name=eth0 address=10.0.0.20','netsh interface ipv4 set address name=wrong source=dhcp']){assert.throws(()=>C.run(n,d.id,C.parse(d,s),fn=>fn()));assert.deepEqual(n.save(),before);}});
 test('Linux add cannot replace an existing address; flush clears it; commands are OS-specific',()=>{const n=new Network(),d=n.add('host');d.os='linux';n.configure(d.id,'10.0.0.1',24);assert.throws(()=>C.run(n,d.id,C.parse(d,'ip addr add 10.0.0.2/24 dev eth0'),fn=>fn()),/one IPv4/);C.run(n,d.id,C.parse(d,'ip addr flush dev eth0'),fn=>fn());assert.equal(d.ip,'');assert.throws(()=>C.parse(d,cases.windows[0]));assert.equal(C.parse(d,'ip addr'),null);});
+
+for(const os of ['windows','linux','macos'])test(os+' netstat reads live sockets without changing network state',()=>{
+ const n=new Network(),d=n.add('host');d.os=os;n.configure(d.id,'10.0.0.1',24);
+ n.echo[d.id]={sockets:[{protocol:'TCP',port:5000,state:'LISTEN',buffer:[]},{protocol:'TCP',port:5000,state:'ESTABLISHED',peer:'10.0.0.2',peerPort:49000,buffer:[1,2]},{protocol:'UDP',port:6000,state:'BOUND',datagrams:[]},{protocol:'TCP',port:7000,state:'CLOSED',buffer:[]}]};
+ const before=JSON.stringify(n),run=cmd=>C.run(n,d.id,C.parse(d,cmd),()=>{throw Error('read-only');}).message;
+ const all=run('netstat -an');assert.match(all,/5000/);assert.match(all,/6000/);assert.doesNotMatch(all,/7000/);
+ assert.match(all,os==='windows'?/LISTENING/:/LISTEN/);assert.match(all,os==='macos'?/tcp4/:os==='linux'?/tcp/:/TCP/);
+ assert.doesNotMatch(run('netstat'),/LISTEN|6000/);
+ if(os==='linux'){assert.match(run('netstat -tuln'),/6000/);assert.doesNotMatch(run('netstat -tuln'),/ESTABLISHED/);}
+ assert.throws(()=>C.parse(d,'netstat --bad'));
+ assert.equal(JSON.stringify(n),before);
+});

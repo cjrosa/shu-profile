@@ -34,6 +34,7 @@
   }
   function adoptTrafficNetwork(next) {
     const identity = networkIdentity();
+    for(const [id,state] of Object.entries(net.echo||{})){if(next.echo?.[id]){next.echo[id].selected=state.selected;next.echo[id].ui=state.ui;for(const t of state.threads){const other=next.echo[id].threads.find(x=>x.id===t.id);if(other)other.breakpoints=t.breakpoints;}}}
     net = terminalSessions.adopt(net, next);
     networkIdentities.set(net, identity);
   }
@@ -80,6 +81,8 @@
     "dnsOffset",
     "webOffset",
     "browserOffset",
+    "echoOffset",
+    "echoWatch",
   ];
   function configSignature(data) {
     const value = JSON.parse(JSON.stringify(data));
@@ -2349,9 +2352,10 @@
       dns: { x: -110, y: -85 },
       web: { x: 110, y: 85 },
       browser: { x: -110, y: 85 },
+      echo: { x: 0, y: -100 },
     })[type];
   const appLabel = (type) =>
-      type === "web"
+      type === "echo" ? "Echo" : type === "web"
         ? "Web Server"
         : type === "browser"
           ? "Browser"
@@ -2361,6 +2365,8 @@
     appOffsetKey = (type) =>
       type === "dhcp" ? "applicationOffset" : type + "Offset";
   function appGlyph(type) {
+    if (type === "echo")
+      return '<rect x="-24" y="-18" width="8" height="36" rx="3"/><rect x="16" y="-18" width="8" height="36" rx="3"/><path d="M-11-8h22m-6-6 6 6-6 6M11 8h-22m6-6-6 6 6 6" fill="none"/>';
     if (type === "web")
       return '<rect x="-22" y="-20" width="44" height="40" rx="5"/><path d="M-22-7h44M-22 7h44M-15-14h2m4 0h2M-15 0h2m4 0h2M-15 14h2m4 0h2M10-14h6M10 0h6M10 14h6"/>';
     if (type === "browser")
@@ -2375,7 +2381,7 @@
       ...net.devices
         .filter((d) => d.type === "host")
         .flatMap((d) =>
-          ["dhcp", "dns", "web", "browser"]
+          ["dhcp", "dns", "web", "browser", "echo"]
             .filter((t) => d[appKey(t)])
             .map((type) => {
               const offset = d[appOffsetKey(type)];
@@ -2397,7 +2403,7 @@
     render();
   }
   function hostApplications(d) {
-    const types = ["dhcp", "dns", "web", "browser"].filter((t) => d[appKey(t)]);
+    const types = ["dhcp", "dns", "web", "browser", "echo"].filter((t) => d[appKey(t)]);
     return (
       '<div class="small-heading inspector-section-heading">Applications</div>' +
       (types.length
@@ -2770,7 +2776,7 @@
         "<span>" +
         esc(d.name) +
         "</span></button></p>" +
-        (["web", "browser"].includes(a.type)
+        (a.type === "echo" ? NetworkExplorerEchoUI.markup(net,d,esc) : ["web", "browser"].includes(a.type)
           ? webPanel(d, a.type)
           : a.type === "dns"
             ? dnsPanel(d)
@@ -2782,7 +2788,15 @@
         selected = d.id;
         render();
       };
-      if (["web", "browser"].includes(a.type)) bindWebPanel(d, a.type);
+      if (a.type === "echo") NetworkExplorerEchoUI.bind(document.getElementById('inspector'),d.id,{
+        get:()=>net, refresh:()=>render(), configure:c=>mutate(()=>net.configureEcho(d.id,c)),
+        styleSelect:(id,label)=>styleInspectorSelect(id,label,()=>''),
+        control:(action,thread)=>safely(()=>{if(candidateBase)throw Error('Commit or revert candidate changes first.');
+          net.echoControl(d.id,action,thread);if(staged)staged.trial.echoControl(d.id,action,thread);
+          if(action!=='pause'){running=true;stage();}render();}),
+        reset:()=>safely(()=>{if(candidateBase)throw Error('Commit or revert candidate changes first.');net.echoControl(d.id,'reset');if(staged)staged.trial.echoControl(d.id,'reset');if(net.queue.length){running=true;stage();}render();})
+      });
+      else if (["web", "browser"].includes(a.type)) bindWebPanel(d, a.type);
       else if (a.type === "dns") bindDnsPanel(d);
       else {
         const panel = $("inspector").querySelector(".dhcp-application");
@@ -2799,7 +2813,8 @@
             d.name +
             " and remove its configuration?",
           () => {
-            if (["web", "browser"].includes(a.type))
+            if(a.type === "echo"){delete d.echoServer;delete d.echoWatch;delete d.echoOffset;net.reset();}
+            else if (["web", "browser"].includes(a.type))
               net.uninstallWeb(d.id, a.type);
             else if (a.type === "dns") net.uninstallDns(d.id);
             else net.uninstallDhcp(d.id);
@@ -3183,7 +3198,7 @@
   function bindDhcp(d) {
     if (d.type !== "host") return;
     $("host-gateway").readOnly = d.addressMode === "dhcp";
-    for (const type of ["dhcp", "dns", "web", "browser"]) {
+    for (const type of ["dhcp", "dns", "web", "browser", "echo"]) {
       const installed = $("host-" + type + "-app");
       if (installed)
         installed.onclick = () => selectApplication(type + ":" + d.id);
@@ -4445,7 +4460,7 @@
     motion.beginElement();
   }
   function applicationEvidence(r) {
-    if (["web-application", "browser-application"].includes(r.kind))
+    if (["web-application", "browser-application", "echo-application"].includes(r.kind))
       return (
         '<div class="evidence"><strong>' +
         esc(r.title) +
@@ -4529,7 +4544,7 @@
         animateFlights(flights);
         duration = Number($("speed").value);
       }
-    } else if (report.kind.endsWith("-application")) {
+    } else if (report.kind.endsWith("-application") && (report.kind!=="echo-application" || report.echoDelivery)) {
       animateApplicationDelivery(report);
       duration = Number($("speed").value);
     } else $("traffic").replaceChildren();
@@ -4802,6 +4817,7 @@
           dnsWatch: d.dnsWatch,
           webWatch: d.webWatch,
           browserWatch: d.browserWatch,
+          echoWatch: d.echoWatch,
         },
       ]),
     );
@@ -5051,7 +5067,7 @@
     }
     if(d.type === "host") {
       try {const op=NetworkExplorerHostCLI.parse(d,raw);if(op){
-        if(candidateBase)throw Error("Commit or revert candidate changes before configuring host addresses.");
+        if(candidateBase&&op.kind!=='netstat')throw Error("Commit or revert candidate changes before configuring host addresses.");
         const result=NetworkExplorerHostCLI.run(net,d.id,op,fn=>change(()=>configurationChange(fn)));
         output(result.message);if(result.dhcp)startDhcp(d.id);render();return;
       }}catch(e){output(e.message);render();return;}
@@ -5380,7 +5396,7 @@
     appGlyph("dns") +
     "</svg><span>DNS server</span>";
   appPalette.querySelector(".palette").append(dnsButton);
-  for (const type of ["web", "browser"]) {
+  for (const type of ["web", "browser", "echo"]) {
     const button = document.createElement("button");
     button.id = "add-" + type + "-application";
     button.innerHTML =
@@ -5405,7 +5421,7 @@
     };
     button.onclick = () => beginPlacement("application", type);
   }
-  for (const type of ["dhcp", "dns", "web", "browser"])
+  for (const type of ["dhcp", "dns", "web", "browser", "echo"])
     bindApplicationButton($("add-" + type + "-application"), type);
   svg.addEventListener("dragover", (e) => {
     if (
@@ -5417,7 +5433,7 @@
   });
   svg.addEventListener("drop", (e) => {
     const type = e.dataTransfer.getData("application/x-network-app");
-    if (!["dhcp", "dns", "web", "browser"].includes(type)) return;
+    if (!["dhcp", "dns", "web", "browser", "echo"].includes(type)) return;
     e.preventDefault();
     const p = point(e),
       host = e.target.closest("[data-device]")?.dataset.device;
@@ -5945,7 +5961,7 @@
   appDivider.className = "compact-palette-divider";
   appDivider.setAttribute("role", "separator");
   compactPalette.append(appDivider);
-  for (const type of ["dhcp", "dns", "web", "browser"]) {
+  for (const type of ["dhcp", "dns", "web", "browser", "echo"]) {
     const button = document.createElement("button");
     button.className = "compact-device compact-application";
     button.innerHTML =
@@ -6033,7 +6049,7 @@
     if (!staged) return;
     const d = net.device(staged.report.device);
     if (
-      ["dhcp", "dns", "web", "browser"].includes(
+      ["dhcp", "dns", "web", "browser", "echo"].includes(
         $("examine-watch").dataset.scope,
       )
     )
@@ -7983,6 +7999,17 @@
     const example=NetworkExplorerExamples.firewall(NetworkExplorer.Network);
     net=example.network;subnetMode="all";selected=example.firewallId;examined=false;cancelConnect();openInspector();render();window.NetworkExplorerViewport?.fit();
     say("Open the Inside Client Browser. DNS and HTTP pass; ping to the outside server is blocked. Inspect the firewall rules and decisions.");
+  });
+  for(const protocol of ['TCP','UDP']) registerExample('example-echo-'+protocol.toLowerCase(),()=>{
+    if((net.devices.length||net.applicationDrafts.length)&&!confirm('Replace this network with the '+protocol+' Echo example?'))return;
+    discard();candidateBase=null;net=new NetworkExplorer.Network();
+    const sw=net.add('switch',440,300),server=net.add('host',700,300),dns=net.add('host',440,110),a=net.add('host',170,220),b=net.add('host',170,440);
+    server.name='Echo Server';dns.name='DNS';a.name='Echo Client 1';b.name='Echo Client 2';
+    [server,dns,a,b].forEach((d,i)=>{net.configure(d.id,'192.168.1.'+(10+i),24);net.connect(d.id,'p0',sw.id,'p'+i);});
+    net.configureDnsServer(dns.id,{enabled:true,records:[{name:'echo.example',address:server.ip,ttl:120}]});
+    [server,a,b].forEach(d=>{net.configureDnsAddress(d.id,dns.ip);net.configureEcho(d.id,{...NetworkExplorerEcho.defaults(),role:d===server?'server':'client',transport:protocol,message:'Hello from '+d.name});d.echoOffset={x:0,y:-85};});
+    dns.dnsOffset={x:120,y:0};selected='echo:'+server.id;examined=false;cancelConnect();openInspector();render();
+    say('Run the Echo Server first. Select a client Echo application and Run or Step its Python code.');
   });
   registerExample("example-internet", () => {
     if (

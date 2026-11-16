@@ -40,6 +40,7 @@ window.NetworkExplorerPickers = {
         "dns",
         "web",
         "browser",
+        "echo",
         "note",
       ]) {
         const isDevice = ["host", "switch", "router", "firewall"].includes(type),
