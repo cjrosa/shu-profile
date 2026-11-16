@@ -86,6 +86,8 @@
 
 <main class="main">
 
+
+
   <div class="search-bar-wrap">
     <div class="search-bar-inner">
       <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.5" cy="6.5" r="4.5"/><line x1="10.5" y1="10.5" x2="14" y2="14"/></svg>
@@ -103,6 +105,19 @@
       </button>
     </div>
   </div>
+
+  <a class="featured-app" href="../viewer.html?tool=cs339/network_explorer.html&amp;course=CS339&amp;label=Computer%20Networks&amp;name=Network%20Explorer&amp;back=cs339/index.html" aria-labelledby="featured-network-title">
+    <div>
+      <div class="featured-app-heading">
+        <div class="tool-icon teal"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.5" aria-hidden="true"><rect x="7" y="8" width="10" height="6" rx="1"/><path d="M9 11h2m2 0h2M12 8V4M7 11H4v7m13-7h3v7"/><rect x="9" y="1" width="6" height="3" rx="1"/><rect x="1" y="18" width="6" height="4" rx="1"/><rect x="17" y="18" width="6" height="4" rx="1"/></svg></div>
+        <div><div class="featured-app-label">Featured app &middot; Explore the whole stack</div><h2 id="featured-network-title">Network Explorer</h2></div>
+      </div>
+      <p>Build a network. Follow the traffic. Connect the layers.</p>
+      <p>Connect hosts, switches, and routers, then watch DNS lookups, web requests, and ping travel through your network. Examine packets, ARP, forwarding tables, and NAT/PAT to see how the pieces work together.</p>
+      <span class="featured-app-cta">Launch Network Explorer <span aria-hidden="true">&rarr;</span></span>
+    </div>
+    <img class="featured-app-art" src="../assets/img/network-explorer-feature.svg" alt="Two computers connected through a router and switch, with packets moving between them." width="360" height="150">
+  </a>
 
   <div class="section-label">General Interactive Tools</div>
   <div class="layer-accordion general" id="acc-general">
@@ -340,21 +355,6 @@
             </div>
           </a>
 
-          <!-- Network Explorer -->
-          <a class="tool-card" href="../viewer.html?tool=cs339/network_explorer.html&amp;course=CS339&amp;label=Computer%20Networks&amp;name=Network%20Explorer&amp;back=cs339/index.html">
-            <div class="tool-card-header">
-              <div class="tool-icon teal"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.5" aria-hidden="true"><rect x="7" y="8" width="10" height="6" rx="1"/><path d="M9 11h2m2 0h2M12 8V4M7 11H4v7m13-7h3v7"/><rect x="9" y="1" width="6" height="3" rx="1"/><rect x="1" y="18" width="6" height="4" rx="1"/><rect x="17" y="18" width="6" height="4" rx="1"/></svg></div>
-              <div><div class="tool-subtitle teal">Build &amp; Examine a LAN</div><div class="tool-title">Network Explorer</div></div>
-            </div>
-            <div class="tool-body"><p class="tool-desc">Build a network with hosts, switches, and Ethernet connections. Configure addresses, run ping, and watch each device explain ARP and frame forwarding.</p>
-              <div class="tool-features">
-                <div class="tool-feature"><div class="tool-feature-dot teal"></div>Device palette and explicit port connections</div>
-                <div class="tool-feature"><div class="tool-feature-dot teal"></div>Watch &amp; Examine ARP and MAC learning</div>
-                <div class="tool-feature"><div class="tool-feature-dot teal"></div>Guided LAN build, commands, and save/load</div>
-              </div>
-            </div>
-            <div class="tool-footer"><span class="tool-cta teal">Open tool →</span><span class="tool-tag teal">Interactive</span></div>
-          </a>
 
           <!-- Subnet Topology Builder -->
           <a class="tool-card" href="../viewer.html?tool=cs339/subnet_topology_builder.html&course=CS339&label=Computer%20Networks&name=Subnet%20Topology%20Builder&back=cs339/index.html">
@@ -659,6 +659,9 @@ const PROXY_URL = 'https://red-union-6b9e.crosa.workers.dev';
 
 // -- Tool registry for recommendations ------------------------
 const TOOLS = [
+  { name:'Network Explorer', file:'network_explorer.html', layer:'Featured &mdash; Across the Network Stack',
+    desc:'Build networks with hosts, switches and routers; examine DNS, HTTP, TCP/UDP, IP routing, NAT/PAT, Ethernet and ARP',
+    keywords:['network explorer','build network','lan','switch','host','ethernet','arp','ping','mac learning','watch','examine','topology','connections','router','routing','dns','http','dhcp','nat','pat','udp','tcp','packet capture','firewall','vlan','troubleshoot'] },
   { name:'Internet Checksum Explorer', file:'checksum_explorer.html', layer:'Transport &mdash; Layer 4',
     desc:'Transport header-only checksum demonstration: editable UDP/TCP fields, aligned binary addition, carry propagation, end-around carry, bit inversion, and receiver checks.',
     keywords:['checksum','internet checksum','ones complement','carry','error detection','binary','hexadecimal','udp','tcp checksum','header','bit flip','carry propagation'] },
@@ -686,9 +689,6 @@ const TOOLS = [
   { name:'CIDR Teaching Tool', file:'cidr_viz.html', layer:'Network &mdash; Layer 3',
     desc:'IP addressing, subnet masks, CIDR notation, block sizes, route aggregation, same-subnet check',
     keywords:['cidr','subnet','subnetting','ip address','mask','prefix','block','network address','broadcast','aggregation','route summarization','/24','/16','/8','classless','addressing'] },
-  { name:'Network Explorer', file:'network_explorer.html', layer:'Network &amp; Link Layers',
-    desc:'Build a switched LAN with explicit ports, configure hosts, run ping, and examine ARP and MAC learning',
-    keywords:['network explorer','build network','lan','switch','host','ethernet','arp','ping','mac learning','watch','examine','topology','connections'] },
   { name:'Subnet Topology Builder', file:'subnet_topology_builder.html', layer:'Network &mdash; Layer 3',
     desc:'NAT, PAT, DHCP, routing between subnets, host-to-host packet simulation, translation table',
     keywords:['nat','pat','dhcp','topology','subnet topology','network design','translation','private address','public address','port mapping','packet routing'] },
@@ -801,8 +801,9 @@ Rules:
 - Use clear, student-friendly language. Define acronyms on first use.
 - If the question is outside networking/CS339 scope, politely redirect.
 - You may use markdown when helpful: headings, bold, italics, links, inline code, fenced code blocks, and simple lists.
+- Consider Network Explorer first: it is the featured app for building and troubleshooting networks, following traffic across layers, and exploring DNS, HTTP, DHCP, TCP/UDP, IP routing, NAT/PAT, Ethernet, ARP, VLANs, and firewalls. Prefer it when it can demonstrate the requested concept; choose a specialized tool when its focused lesson is a better fit (for example, congestion control, checksum arithmetic, CIDR calculations, routing algorithms, or email).
 - End your answer with a single line starting with "TOOL:" naming the single most relevant tool from this list if applicable, or "TOOL:none" if no tool applies:
-  Email Explorer, DNS Explorer, Network Performance Explorer, Internet Checksum Explorer, TCP Flow & Congestion Control, CIDR Teaching Tool, Subnet Topology Builder, Router Visualizer, Routing Algorithm Visualizer, Graph Algorithm Visualizer, Link Layer Visualizer`;
+  ${TOOLS.map(tool => tool.name).join(', ')}`;
 
   const response = await fetch(PROXY_URL, {
     method: 'POST',
