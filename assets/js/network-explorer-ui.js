@@ -2403,6 +2403,22 @@
     openInspector();
     render();
   }
+  function openCanvasTerminal(id, applicationId) {
+    select(id);
+    if (applicationId) selectApplication(applicationId);
+    openTool("terminal", true);
+    const external = externalPanels.get("terminal");
+    if (external) { syncExternal(); external.window.focus(); }
+    (external?.window.document || document).getElementById("command")?.focus();
+  }
+  function enableCanvasWatch(id, appType) {
+    const d = net.device(id);
+    if (!d) return;
+    d[appType ? appWatchKey(appType) : "watch"] = true;
+    if (appType) selectApplication(appType + ":" + id);
+    else select(id);
+    if (!watchMenu.matches(":popover-open")) $("watch").click();
+  }
   function hostApplications(d) {
     const types = ["dhcp", "dns", "web", "browser", "echo"].filter((t) => d[appKey(t)]);
     return (
@@ -5516,6 +5532,7 @@
         const p = point(e);
         appGesture = {
           id: a.id,
+          ctrl: e.ctrlKey,
           x: p.x,
           y: p.y,
           dx: p.x - a.x,
@@ -5594,6 +5611,11 @@
       appGesture = null;
       $("cable-preview").replaceChildren();
       const a = applications().find((a) => a.id === g.id);
+      if (a?.host && g.ctrl && !g.moved && !g.anchor) {
+        lastApplicationClick = null;
+        enableCanvasWatch(a.host, a.type);
+        return;
+      }
       if (a?.host && !g.moved && !g.anchor) {
         const now = performance.now();
         if (
@@ -5604,9 +5626,9 @@
             e.clientY - lastApplicationClick.y,
           ) < 5
         ) {
-          const host = net.device(a.host);
-          host[appWatchKey(a.type)] = !host[appWatchKey(a.type)];
           lastApplicationClick = null;
+          openCanvasTerminal(a.host, a.id);
+          return;
         } else
           lastApplicationClick = {
             id: a.id,
@@ -5725,7 +5747,7 @@
       }
       const node = e.target.closest("[data-device]");
       if (node)
-        devicePress = { id: node.dataset.device, x: e.clientX, y: e.clientY };
+        devicePress = { id: node.dataset.device, x: e.clientX, y: e.clientY, ctrl: e.ctrlKey };
       else lastDeviceClick = null;
     },
     true,
@@ -5741,6 +5763,14 @@
         return;
       }
       const now = performance.now();
+      if (press.ctrl) {
+        lastDeviceClick = null;
+        drag = null;
+        if (svg.hasPointerCapture(e.pointerId)) svg.releasePointerCapture(e.pointerId);
+        e.stopImmediatePropagation();
+        enableCanvasWatch(press.id);
+        return;
+      }
       if (
         lastDeviceClick &&
         lastDeviceClick.id === press.id &&
@@ -5753,8 +5783,10 @@
         lastDeviceClick = null;
         const d = net.device(press.id);
         if (d) {
-          d.watch = !d.watch;
-          render();
+          drag = null;
+          if (svg.hasPointerCapture(e.pointerId)) svg.releasePointerCapture(e.pointerId);
+          e.stopImmediatePropagation();
+          openCanvasTerminal(d.id);
         }
       } else lastDeviceClick = { ...press, time: now };
     },
