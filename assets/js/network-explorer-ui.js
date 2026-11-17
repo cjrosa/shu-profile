@@ -2350,7 +2350,22 @@
       : '<p class="hint">No leases assigned.</p>';
   }
   const applicationGlyph =
-    '<rect x="-23" y="-20" width="46" height="38" rx="7"/><path d="M-23-8h46M-14-14h2m5 0h2M-12 2h24M-12 9h17"/>';
+    richApplicationGlyph('dhcp');
+  function richApplicationGlyph(type) {
+    const shell='<path d="M-24-15l5-6h38l5 6v32h-48Z" fill="#a9c0d2"/><rect x="-24" y="-15" width="48" height="34" rx="4" fill="#edf4fa"/><path d="M-20-10h40" stroke="#fff"/>';
+    const windowFrame='<rect x="-25" y="-21" width="50" height="42" rx="5" fill="#edf4fa"/><path d="M-25-10h50"/><path d="M-19-16h2m5 0h2" stroke="#7295b0" stroke-width="2.5"/><rect x="-5" y="-18" width="23" height="4" rx="2" fill="#c6d9e7" stroke="none"/>';
+    const art={
+      dhcp:shell+'<rect x="-17" y="-5" width="18" height="10" rx="2" fill="#c5deef"/><path d="M-12-1h8m-8 3h5" stroke="#6386a0" stroke-width="1"/><path d="M8-2h10m-4-3 4 3-4 3M18 10H8m4-3-4 3 4 3"/><path d="M-16 11h3m4 0h3m4 0h3" stroke="#7899af" stroke-width="3"/>',
+      dns:'<ellipse cx="0" cy="21" rx="23" ry="3" fill="#d5e1e9" stroke="none"/><circle cy="-2" r="21" fill="#dcecf6"/><ellipse cy="-2" rx="10" ry="21" fill="#f2f8fc"/><path d="M-21-2h42M-17-13h34M-17 9h34M0-23v42" stroke="#779bb4"/><rect x="3" y="8" width="24" height="13" rx="3" fill="#f7fafc"/><path d="M8 13h13m-13 4h8" stroke="#567b98" stroke-width="1.5"/>',
+      web:shell+'<path d="M-24-4h48M-24 8h48" stroke="#9bb5c8"/><g fill="#6f94b0" stroke="none"><circle cx="-16" cy="-9" r="2"/><circle cx="-16" cy="2" r="2"/><circle cx="-16" cy="14" r="2"/></g><path d="M-9-9H5M-9 2H5M-9 14H5" stroke="#a9c2d4" stroke-width="2"/><path d="M13-9h5M13 2h5M13 14h5" stroke="#527590" stroke-width="2.5"/>',
+      browser:windowFrame+'<rect x="-19" y="-4" width="12" height="18" rx="2" fill="#c6dfee" stroke="#96b6cc"/><path d="M-2-2h20M-2 3h16M-2 8h19M-2 13h11" stroke="#7799b1" stroke-width="1.6"/>',
+      echo:windowFrame+'<path d="M-17-1h30m-5-5 5 5-5 5M17 12h-30m5-5-5 5 5 5" stroke="#547c9b" stroke-width="2.5"/><circle cx="-18" cy="-1" r="2" fill="#a1bfd3" stroke="none"/>',
+      nmap:'<circle cx="-3" cy="-3" r="20" fill="#e6f1f8"/><circle cx="-3" cy="-3" r="13" stroke="#a3bed1"/><circle cx="-3" cy="-3" r="6" stroke="#a3bed1"/><path d="M-3-23v40M-23-3h40" stroke="#b7cedd"/><path d="M-3-3 10-17" stroke="#527c9c" stroke-width="2.5"/><circle cx="5" cy="-11" r="3" fill="#638caa" stroke="#fff"/><path d="m12 13 12 12" stroke="#4e708a" stroke-width="6"/>',
+      generator:windowFrame+'<path d="M-19 5h38M-12-5v21M0-5v21M12-5v21" stroke="#d0e1ed"/><path d="M-20 8h7l4-10 7 17 6-12 5 5h11" stroke="#527c9c" stroke-width="2.5"/>',
+      ids:'<path d="M0-23 21-15v15c0 13-12 20-21 25C-9 20-21 13-21 0v-15Z" fill="#dbe9f3"/><path d="M0-17 15-11v12c0 9-8 15-15 19-7-4-15-10-15-19v-12Z" fill="#f3f8fc" stroke="#a4bfd1"/><path d="M-14 0h8l4-8 5 16 4-8h7" stroke="#577e9b" stroke-width="2"/>'
+    };
+    return '<g class="application-art" fill="none" stroke="#4b6983" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+art[type]+'</g>';
+  }
   const appDefaultOffset = (type) =>
     ({
       firewall: { x: -100, y: 90 },
@@ -2451,21 +2466,8 @@
     input?.focus();input?.setSelectionRange(raw.length,raw.length);
   }
   function appGlyph(type) {
-    if(type==='generator')return '<g fill="none" stroke="currentColor" stroke-width="2"><rect x="-23" y="-19" width="46" height="38" rx="5"/><path d="M-17 0h7l5-11 9 22 5-11h9M14-5l5 5-5 5"/></g>';
-
     if(type === "firewall") return '<g transform="scale(.65)">'+NetworkExplorerFirewallUI.glyph()+"</g>";
-    if(type === "ids") return '<g fill="none" stroke="currentColor" stroke-width="2"><path d="M0-23 21-15v15c0 13-12 20-21 25C-9 20-21 13-21 0v-15Z"/><path d="M-14 0h8l4-8 5 16 4-8h7"/></g>';
-
-    if(type === "nmap") return '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="-3" cy="-3" r="17"/><circle cx="-3" cy="-3" r="9"/><path d="M9 9l14 14M-3-20v34M-20-3h34"/></g>';
-    if (type === "echo")
-      return '<rect x="-24" y="-18" width="8" height="36" rx="3"/><rect x="16" y="-18" width="8" height="36" rx="3"/><path d="M-11-8h22m-6-6 6 6-6 6M11 8h-22m6-6-6 6 6 6" fill="none"/>';
-    if (type === "web")
-      return '<rect x="-22" y="-20" width="44" height="40" rx="5"/><path d="M-22-7h44M-22 7h44M-15-14h2m4 0h2M-15 0h2m4 0h2M-15 14h2m4 0h2M10-14h6M10 0h6M10 14h6"/>';
-    if (type === "browser")
-      return '<rect x="-24" y="-20" width="48" height="38" rx="5"/><path d="M-24-9h48M-17-15h2m4 0h2M-9-2l-6 6 6 6M9-2l6 6-6 6M3-3l-6 14"/>';
-    return type === "dns"
-      ? '<circle cx="0" cy="-1" r="20" fill="none" stroke="currentColor" stroke-width="2"/><path d="M-20-1h40M0-21c-14 12-14 28 0 40M0-21c14 12 14 28 0 40M-16-12h32M-16 10h32"/>'
-      : applicationGlyph;
+    return ['dhcp','dns','web','browser','echo','nmap','generator','ids'].includes(type) ? richApplicationGlyph(type) : applicationGlyph;
   }
   function applications() {
     return [
@@ -3992,7 +3994,10 @@
     $("note-text").focus();
   }
   function noteSymbol() {
-    return '<svg class="inspector-device-icon note-symbol" viewBox="0 0 32 36" aria-hidden="true"><path d="M4 2h17l7 7v25H4Z"/><path d="M21 2v8h7M9 16h14M9 22h14M9 28h8"/></svg>';
+    return '<svg class="inspector-device-icon note-symbol" viewBox="0 0 32 36" aria-hidden="true">'+noteArtwork()+'</svg>';
+  }
+  function noteArtwork() {
+    return '<g class="note-art" stroke="#58748e" stroke-width="1.4" stroke-linejoin="round"><path d="M6 4h16l8 8v23H6Z" fill="#b5cbdc" stroke="none"/><path class="note-paper" d="M3 1h17l7 7v25H3Z" fill="#edf4fa"/><path d="M20 1v7h7" fill="#c2d8e8"/><path d="M7 13h16M7 18h16M7 23h11" fill="none" stroke="#87a6bd"/><rect x="7" y="27" width="7" height="2" rx="1" fill="#adc8db" stroke="none"/></g>';
   }
   function noteTargetIcon(id) {
     const d = net.device(id),
@@ -4055,7 +4060,7 @@
           n.y +
           ')" tabindex="0" role="button" aria-label="' +
           esc(noteName(n)) +
-          '"><path class="note-paper" d="M4 2h17l7 7v25H4Z"/><path class="note-lines" d="M21 2v8h7M9 16h14M9 22h14M9 28h8"/>' +
+          '">' + noteArtwork() + '' +
           (n.title?.trim()
             ? '<text class="note-canvas-title" x="16" y="49" text-anchor="middle">' +
               esc(
@@ -8055,6 +8060,7 @@
   noteTool.innerHTML =
     '<h2>Notes</h2><button id="add-note" class="wide" type="button" title="Place a note on the canvas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3.5h14a1.5 1.5 0 0 1 1.5 1.5v10L15 20.5H5A1.5 1.5 0 0 1 3.5 19V5A1.5 1.5 0 0 1 5 3.5ZM15 20.5V15h5.5M7.5 8h9M7.5 11.5h6"/></svg><span>Note</span></button>';
   $("left-panel").append(noteTool);
+  $("add-note").querySelector('svg').outerHTML=noteSymbol();
   $("add-note").onclick = () => {
     finishPlacement();
     placingNote = true;

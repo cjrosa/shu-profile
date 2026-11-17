@@ -124,7 +124,74 @@ security.querySelectorAll('.guide-security-topics article').forEach((card,i)=>{
   art.innerHTML=securityArt[i];
   card.prepend(art);
 });
+const magnifier=document.createElement('div');
+magnifier.className='guide-security-magnifier';
+magnifier.setAttribute('aria-hidden','true');
+magnifier.innerHTML='<svg viewBox="0 0 120 120" focusable="false"><path d="m77 77 29 29" stroke="#344e61" stroke-width="16" stroke-linecap="round"/><path d="m80 79 25 25" stroke="#7297ad" stroke-width="8" stroke-linecap="round"/><circle cx="47" cy="47" r="35" fill="#d9f0fa" fill-opacity=".12" stroke="#365c74" stroke-width="7"/><circle cx="47" cy="47" r="30" fill="none" stroke="#a9cadb" stroke-width="2"/><path d="M25 43a23 23 0 0 1 19-19" fill="none" stroke="#fff" stroke-opacity=".9" stroke-width="4" stroke-linecap="round"/><path d="M34 67a23 23 0 0 0 31-18" fill="none" stroke="#84b1c7" stroke-opacity=".5" stroke-width="2" stroke-linecap="round"/></svg>';
+const actor=document.createElementNS('http://www.w3.org/2000/svg','g');
+actor.classList.add('guide-security-actor');
+actor.innerHTML='<circle cx="47" cy="47" r="27" fill="#fff" fill-opacity=".96"/><g transform="translate(47 47) scale(.78) translate(-47 -47)"><path d="M27 64v-9c0-18 8-28 20-28s20 10 20 28v9c-11 9-29 9-40 0Z" fill="#91b6ca" stroke="#4d728b" stroke-width="1.5"/><path d="M35 44c1-10 6-15 12-15s11 5 12 15l-4 16H39Z" fill="#f6e5cd"/><path d="m33 43 14 3 14-3-3 12H36Z" fill="#496b85"/><path d="m38 48 6 1m6 0 6-1" stroke="#fff4d5" stroke-width="3" stroke-linecap="round"/><path d="m39 60 8 5 8-5" fill="none" stroke="#d8eaf3" stroke-width="2"/></g>';
+magnifier.querySelector('svg').append(actor);
+security.querySelector('.guide-security-topics').append(magnifier);
 panels.prepend(security);
+const inspectionArea=security.querySelector('.guide-security-topics');
+const inspectionMotion=matchMedia('(prefers-reduced-motion: reduce)');
+let inspectionAnimation=null,inspectionVisible=false,inspectionPosition={x:0,y:0,angle:0},inspectionLastCard=-1;
+const inspectionTransform=p=>`translate(${p.x}px, ${p.y}px) rotate(${p.angle}deg)`;
+function moveInspection(){
+  if(inspectionMotion.matches||!inspectionVisible||document.hidden)return;
+  const cards=[...inspectionArea.querySelectorAll('article')];
+  const choices=cards.map((card,index)=>({card,index})).filter(item=>item.index!==inspectionLastCard);
+  const {card,index}=choices[Math.floor(Math.random()*choices.length)];
+  inspectionLastCard=index;
+  // Keep the lens in the card's interior; travel may cross gaps, stops never do.
+  const lensCenter=magnifier.clientWidth*47/120;
+  const safeInset=magnifier.clientWidth*42/120+20;
+  const jitterX=Math.max(0,card.clientWidth/2-safeInset);
+  const jitterY=Math.max(0,card.clientHeight/2-safeInset);
+  const target={
+    x:card.offsetLeft+card.clientWidth/2+(Math.random()*2-1)*jitterX-lensCenter,
+    y:card.offsetTop+card.clientHeight/2+(Math.random()*2-1)*jitterY-lensCenter,
+    angle:Math.random()*16-8
+  };
+  magnifier.dataset.inspectionCard=String(index);
+  const duration=900+Math.hypot(target.x-inspectionPosition.x,target.y-inspectionPosition.y)*4;
+  inspectionAnimation=magnifier.animate([
+    {transform:inspectionTransform(inspectionPosition)},
+    {transform:inspectionTransform(target)}
+  ],{duration,easing:'ease-in-out',fill:'forwards'});
+  inspectionAnimation.onfinish=()=>{
+    magnifier.style.transform=inspectionTransform(target);
+    inspectionPosition=target;
+    inspectionAnimation.cancel();
+    inspectionAnimation=null;
+    revealInspection();
+  };
+}
+function revealInspection(){
+  inspectionAnimation=actor.animate([
+    {opacity:0,offset:0},
+    {opacity:.5,offset:.25},
+    {opacity:.5,offset:.7},
+    {opacity:0,offset:1}
+  ],{duration:1500,easing:'ease-in-out',fill:'forwards'});
+  inspectionAnimation.onfinish=()=>{
+    inspectionAnimation.cancel();inspectionAnimation=null;
+    moveInspection();
+  };
+  updateInspection();
+}
+function updateInspection(){
+  if(inspectionMotion.matches){
+    inspectionAnimation?.cancel();inspectionAnimation=null;
+    magnifier.style.transform='none';inspectionPosition={x:0,y:0,angle:0};
+  }else if(!inspectionVisible||document.hidden){inspectionAnimation?.pause();}
+  else if(inspectionAnimation){inspectionAnimation.play();}
+  else{moveInspection();}
+}
+new IntersectionObserver(entries=>{inspectionVisible=entries[0].isIntersecting;updateInspection();}).observe(inspectionArea);
+inspectionMotion.addEventListener('change',updateInspection);
+document.addEventListener('visibilitychange',updateInspection);
 // Reuse the Home divider only at main section boundaries, outside the labs.
 const sectionDivider=guide.querySelector('.guide-section-divider');
 guide.querySelector('.guide-finish').classList.add('guide-separated-section');
