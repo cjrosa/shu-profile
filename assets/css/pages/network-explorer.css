@@ -3976,7 +3976,8 @@ body:not(.external-panel-page) .center {
 /* Compact network search and OS identities. */
 .network-search {
   position: fixed;
-  z-index: 1000;
+  /* Search results must remain clickable above pinned notes and connectors. */
+  z-index: 10010;
   width: min(340px, calc(100vw - 16px));
   box-sizing: border-box;
   padding: 12px;
@@ -5704,6 +5705,9 @@ body[data-panel^="browser:"] .browser-tab {
 }
 .welcome-open #left-panel,
 .welcome-open #right-panel,
+.welcome-open .pinned-note,
+.welcome-open .pinned-note-connectors,
+.welcome-open #network-tooltip.note-tooltip,
 .welcome-open #inspector-divider {
   display: none !important;
 }

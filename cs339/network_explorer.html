@@ -4,6 +4,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Network Explorer</title>
+    <style>
+      html.network-loading body { visibility: hidden; }
+    </style>
+    <script>
+      document.documentElement.classList.add("network-loading");
+      document.addEventListener("DOMContentLoaded", () => {
+        document.documentElement.classList.remove("network-loading");
+      }, { once: true });
+    </script>
     <link rel="stylesheet" href="../assets/css/pages/network-explorer.css" />
     <link rel="stylesheet" href="../assets/css/pages/network-explorer-echo.css" />
   </head>
