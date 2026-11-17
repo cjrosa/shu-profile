@@ -115,5 +115,32 @@
   n.notes=[{id:'note1',title:'HTTPS and certificates',text:"1. Open Browser on HTTPS Client and load https://secure.example/. The certificate is already attached and trusted.\n2. In Activity, filter tls and select Application Data. The page is readable in Browser, but its HTTP headers and body are hidden in captured packets.\n3. Open Web Server on HTTPS Server. Change the certificate hostname to wrong.example and reload Browser. Explain why the certificate is rejected. Restore secure.example and retry.\n4. To compare HTTP, select HTTP in Web Server settings and browse http://secure.example/. Filter http to read the payload. This model simulates TLS rather than performing real cryptography.",x:300,y:410,width:360,height:200,color:'blue',tags:['security','https','certificate'],target:server.id}];
   return {network:n,clientId:client.id,serverId:server.id};
  }
- const api={direct,complex,arrange,internet,firewall,https};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerExamples=api;
+
+ function securityLab(Network,kind){
+  if(kind==='encrypt'){
+   const e=https(Network),n=e.network,server=n.device(e.serverId),client=n.device(e.clientId);
+   n.configureWeb(server.id,{...server.webServer,tls:false,port:80,certificateName:'',title:'Readable HTTP',body:'Training message: HTTP exposes this text to a network observer.'});
+   n.configureWeb(client.id,{enabled:true,url:'http://secure.example/'},'browser');
+   n.notes[0].title='Secure a readable page';n.notes[0].text='1. Load http://secure.example/ in Browser. In Activity, filter http and read the response payload.\n2. Apply Certificate from the palette to the Web Server. Set its hostname to secure.example, with trust and validity enabled. Select HTTPS and port 443 in Web Server settings.\n3. Browse https://secure.example/. Verify the green lock and the same page text. Filter tls in Activity: application content should be hidden.\nSuccess: the page works over HTTPS and its captured payload is encrypted. Reload this example to reset.';
+   return e;
+  }
+  const n=new Network(),client=n.add('host',160,260),fw=n.add('firewall',420,260),sw=n.add('switch',680,260),server=n.add('host',940,180),admin=n.add('host',940,450);
+  client.name='Security Client';fw.name='Security Firewall';sw.name='Services Switch';server.name='HTTPS Server';admin.name='Internal HTTP Server';
+  for(const [d,ip] of [[client,'192.168.1.10'],[server,'192.168.1.2'],[admin,'192.168.1.3']])n.configure(d.id,ip,24);
+  n.connect(client.id,'p0',fw.id,'p0');n.connect(fw.id,'p1',sw.id,'p0');n.connect(server.id,'p0',sw.id,'p1');n.connect(admin.id,'p0',sw.id,'p2');
+  n.configureDnsAddress(client.id,server.ip);n.configureDnsServer(server.id,{enabled:true,records:[{name:'secure.example',address:server.ip,ttl:120}]});
+  n.configureWeb(server.id,{enabled:true,tls:true,port:443,certificateName:'secure.example',certificateTrusted:true,certificateValid:true,title:'Required HTTPS service',body:'Keep this legitimate HTTPS page working while improving security.'});
+  n.configureWeb(admin.id,{enabled:true,port:80,title:'Internal service',body:'This HTTP service should not be reachable from Security Client.'});
+  n.configureWeb(client.id,{enabled:true,url:'https://secure.example/'},'browser');n.installApplication(n.addApplication(0,0,'nmap').id,client.id);
+  n.configureFirewall(fw.id,{...fw.firewall,enabled:true,defaultAction:'drop',rules:[{...fw.firewall.rules[0],name:'Broad client access',protocol:'ANY',destinationPort:'*'}],intrusion:{mode:kind==='prevent'?'detect':'off',threshold:3,windowTicks:100}});
+  client.browserOffset={x:-50,y:-110};client.nmapOffset={x:60,y:110};server.webOffset={x:100,y:-80};server.dnsOffset={x:-50,y:-100};admin.webOffset={x:100,y:0};
+  const instructions={
+   harden:['Reduce exposed services','1. Load https://secure.example/ in Browser, then http://192.168.1.3/. Both currently work. Scan the internal server: nmap -sS -p 80 192.168.1.3.\n2. In Security Firewall, replace Broad client access with Inside-to-Outside ALLOW rules for UDP destination port 53 to 192.168.1.2 and TCP destination port 443 to 192.168.1.2. Keep default drop.\n3. Rescan port 80 on 192.168.1.3: it should be filtered. Reload HTTPS: it must still work. Inspect Firewall decisions and their Activity evidence.'],
+   detect:['Detect a port scan','1. Run nmap -sS -p 22,80,443 192.168.1.2 from Security Client Terminal. Expect closed, closed, open. IDS/IPS is off; no alert is generated.\n2. On Security Firewall, choose Detect (3 distinct ports / 100 ticks). Repeat the same scan.\n3. Open its IDS/IPS attachment and inspect the warning and eye-linked Activity packet. The scan results should be unchanged.\nSuccess: detection adds evidence while normal firewall policy and HTTPS still work.'],
+   prevent:['Compare detection and prevention','1. IDS/IPS starts in Detect. Run nmap -sS -p 22,80,443 192.168.1.2. Expect closed, closed, open and an alert.\n2. On Security Firewall, switch to Prevent and repeat the scan. The third probe (443) reaches the threshold and becomes filtered. Inspect the blocked alert and Activity evidence.\n3. Switch intrusion mode Off, then back to Prevent to clear the observation window. Load https://secure.example/ without scanning first: ordinary HTTPS should work.\nSuccess: explain why a threshold-reaching scan is blocked while a fresh, single-service connection is permitted.']
+  }[kind];
+  n.notes=[{id:'note1',title:instructions[0],text:instructions[1]+'\nReload this example to reset. This network starts functional; your task is security hardening.',x:330,y:470,width:380,height:230,color:'yellow',tags:['security','walkthrough',kind],target:fw.id}];
+  return {network:n,clientId:client.id,serverId:server.id,firewallId:fw.id,adminId:admin.id};
+ }
+ const api={direct,complex,arrange,internet,firewall,https,securityLab};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerExamples=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

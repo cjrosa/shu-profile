@@ -8191,6 +8191,13 @@
       "Acquire a DHCP lease on Browser Client, then open its Browser and visit www.campus.example.",
     );
   });
+  for(const kind of ['encrypt','harden','detect','prevent']) registerExample('example-security-'+kind,()=>{
+    if((net.devices.length||net.applicationDrafts.length)&&!confirm('Replace this network with the security exercise?'))return;
+    discard();candidateBase=null;
+    const example=NetworkExplorerExamples.securityLab(NetworkExplorer.Network,kind);
+    net=example.network;selected='browser:'+example.clientId;examined=false;cancelConnect();openInspector();render();
+    say('Start with the canvas walkthrough note. Observe the working network, apply the defense, and verify the result. Reload the example to reset.');
+  });
   registerExample("example-https", () => {
     if ((net.devices.length || net.applicationDrafts.length) && !confirm("Replace this network with the HTTPS and certificates example?")) return;
     discard(); candidateBase=null;

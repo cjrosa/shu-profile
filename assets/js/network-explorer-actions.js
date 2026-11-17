@@ -3,6 +3,10 @@
   "use strict";
   const handlers = new Map();
   const examples = {
+    "example-security-encrypt": {title:"Secure HTTP with HTTPS",description:"Start with readable HTTP and protect the page with a certificate and TLS."},
+    "example-security-harden": {title:"Reduce exposed services",description:"Restrict an overly permissive firewall while keeping HTTPS available."},
+    "example-security-detect": {title:"Detect a port scan",description:"Enable IDS and investigate a scan without changing its results."},
+    "example-security-prevent": {title:"Detect versus Prevent",description:"Compare alerts with blocked scan probes, then verify legitimate HTTPS."},
     "example-https": {title: "HTTPS and certificates", description: "Verify a server certificate, load an encrypted page, and inspect TLS traffic."},
     "example-echo-tcp": {title: "TCP Echo - Python debugger", description: "Step through a threaded Echo server and two clients, from DNS to TCP close."},
     "example-echo-udp": {title: "UDP Echo - Python debugger", description: "Follow recvfrom() and sendto() through the network, one datagram at a time."},
