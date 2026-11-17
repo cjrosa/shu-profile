@@ -104,8 +104,6 @@
   const exampleGroups = [
     ["Basic", ["example-direct", "example", "example-dhcp", "example-dns"]],
     ["Intermediate", ["example-vlans", "example-routed", "example-http"]],
-    ["Special Applications", ["example-echo-tcp", "example-echo-udp"]],
-    ["Security", ["example-https", "example-firewall", "example-security-encrypt", "example-security-harden", "example-security-detect", "example-security-prevent", "example-dos"]],
     [
       "Advanced",
       [
@@ -115,8 +113,15 @@
         "example-complex",
       ],
     ],
+    ["Special Applications", ["example-echo-tcp", "example-echo-udp"]],
+    ["Security", ["example-https", "example-firewall", "example-security-encrypt", "example-security-harden", "example-security-detect", "example-security-prevent", "example-dos"]],
   ];
   for (const [name, ids] of exampleGroups) {
+    if (name === "Special Applications") {
+      const separator = document.createElement("hr");
+      separator.className = "welcome-example-divider";
+      $("welcome-examples").append(separator);
+    }
     const group = document.createElement("details");
     group.className = "welcome-example-group";
     group.open = name === "Basic";

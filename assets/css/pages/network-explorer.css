@@ -9262,7 +9262,8 @@ body:not(.external-panel-page) #left-panel > .unified-palette {
 
 
 
-.welcome-example-group { border-bottom: 1px solid #dce4eb; padding: 4px 0; }
+.welcome-example-group { border: 0; padding: 4px 0; }
+.welcome-example-divider { border: 0; border-top: 1px solid #dce4eb; margin: 4px 0; }
 .welcome-example-group > summary { cursor: pointer; padding: 12px 4px; font-weight: 650; color: #40566d; }
 .welcome-example-group > summary:focus-visible { outline: 2px solid #6488b4; outline-offset: 2px; border-radius: 4px; }
 .canvas-filter-group { display:flex; align-items:center; padding-right:10px; margin-right:4px; border-right:1px solid #d5dfe8; }
