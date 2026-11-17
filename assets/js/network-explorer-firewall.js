@@ -19,12 +19,14 @@
   function rule(name = 'Allow outbound', protocol = 'ANY', port = '*') {
     return {name, enabled: true, from: 'Inside', to: 'Outside', source: '*', destination: '*', protocol, sourcePort: '*', destinationPort: port, action: 'allow'};
   }
+  const intrusionDefaults=()=>({mode:'off',threshold:3,windowTicks:100});
   function defaults(d, enabled = false) {
-    return {enabled, defaultAction: 'drop', zones: Object.fromEntries(d.ports.map((p, i) => [p.id, zones[i] || 'DMZ'])), rules: [rule()]};
+    return {intrusion:intrusionDefaults(), enabled, defaultAction: 'drop', zones: Object.fromEntries(d.ports.map((p, i) => [p.id, zones[i] || 'DMZ'])), rules: [rule()]};
   }
   function validate(d, c) {
     if (d?.type !== 'router' || !c || typeof c.enabled !== 'boolean' || !['allow','drop'].includes(c.defaultAction) || !c.zones || Array.isArray(c.zones) || typeof c.zones !== 'object' || !Array.isArray(c.rules) || c.rules.length > 64) throw Error('Invalid firewall configuration (maximum 64 rules).');
     if (Object.keys(c.zones).length !== d.ports.length || !d.ports.every(p => zones.includes(c.zones[p.id]))) throw Error('Assign a security zone to every interface.');
+    if(c.intrusion){const i=c.intrusion;if(!['off','detect','prevent'].includes(i.mode)||!Number.isInteger(i.threshold)||i.threshold<2||i.threshold>16||!Number.isInteger(i.windowTicks)||i.windowTicks<10||i.windowTicks>1000)throw Error('Intrusion detection needs 2-16 distinct ports within 10-1000 simulation ticks.');}
     const names = new Set();
     for (const r of c.rules) {
       if (!r || typeof r.name !== 'string' || !r.name.trim() || r.name.length > 60 || names.has(r.name) || typeof r.enabled !== 'boolean' || !['*',...zones].includes(r.from) || !['*',...zones].includes(r.to) || !['ANY','TCP','UDP','ICMP'].includes(r.protocol) || !['allow','drop'].includes(r.action)) throw Error('Use unique rule names and valid zones, protocols and actions.');
@@ -40,15 +42,34 @@
     }
     return changed;
   }
-  function evaluate(n, d, input, output, f) {
+  function inspectIntrusion(n,d,input,f,eventOrder){
+    const c=d.firewall.intrusion||intrusionDefaults();
+    if(c.mode==='off'||f.protocol!=='TCP'||f.flags!=='SYN')return null;
+    const all=n.intrusionTracking||(n.intrusionTracking={}),rows=all[d.id]||(all[d.id]={}),key=[input.id,f.sip,f.dip].join('|');
+    for(const k of Object.keys(rows))if(n.clock-rows[k].last>c.windowTicks)delete rows[k];
+    let r=rows[key];if(!r){if(Object.keys(rows).length>=256)delete rows[Object.keys(rows)[0]];r=rows[key]={samples:[],last:n.clock,alertId:null};}
+    r.last=n.clock;r.samples=r.samples.filter(x=>n.clock-x.clock<=c.windowTicks);
+    if(new Set(r.samples.map(x=>x.port)).size<c.threshold)r.alertId=null;
+    r.samples=r.samples.filter(x=>x.port!==f.dport);r.samples.push({port:f.dport,clock:n.clock,order:eventOrder});
+    const ports=r.samples.map(x=>x.port);if(ports.length<c.threshold)return null;
+    const alerts=n.intrusionAlerts||(n.intrusionAlerts={}),list=alerts[d.id]||(alerts[d.id]=[]);
+    let alert=list.find(a=>a.id===r.alertId);
+    if(!alert){alert={id:++n.intrusionSerial,source:f.sip,destination:f.dip,mode:c.mode,threshold:c.threshold,windowTicks:c.windowTicks,clock:n.clock};list.push(alert);if(list.length>100)list.shift();r.alertId=alert.id;}
+    Object.assign(alert,{last:n.clock,ports,orders:r.samples.map(x=>x.order),eventOrder});
+    return {alertId:alert.id,mode:c.mode,ports:[...ports],threshold:c.threshold,windowTicks:c.windowTicks,eventOrder};
+  }
+  function evaluate(n, d, input, output, f, eventOrder) {
     if (!d.firewall?.enabled) return null;
     age(n);
+    const intrusion=inspectIntrusion(n,d,input,f,eventOrder);
     const c = d.firewall, from = c.zones[input.id], to = c.zones[output.id], protocol = f.protocol || 'ICMP';
     const sessions = n.firewallSessions[d.id] || (n.firewallSessions[d.id] = []);
     const counts = n.firewallHits[d.id] || (n.firewallHits[d.id] = {});
     const log = n.firewallDecisions[d.id] || (n.firewallDecisions[d.id] = []);
     const finish = (action, reason, name, state) => {
-      const decision = {action, reason, rule: name, state, from, to, protocol, source: f.sip, destination: f.dip, sourcePort: f.sport, destinationPort: f.dport, clock: n.clock};
+      const policyAction=action;
+      if(intrusion){const prevention=intrusion.mode==='prevent';if(prevention)action='drop';reason+=' Possible port scan: '+intrusion.ports.length+' distinct ports within '+intrusion.windowTicks+' simulation ticks. '+(prevention?'IPS blocks this SYN.':'Detection only; firewall policy still applies.');const alert=n.intrusionAlerts[d.id].find(a=>a.id===intrusion.alertId);if(alert)alert.action=action;}
+      const decision = {eventOrder,intrusion,policyAction,action, reason, rule: name, state, from, to, protocol, source: f.sip, destination: f.dip, sourcePort: f.sport, destinationPort: f.dport, clock: n.clock};
       log.push(decision); if (log.length > 100) log.shift();
       return decision;
     };
@@ -61,6 +82,7 @@
       if (protocol === 'TCP') {
         const own = back ? 'serverNext' : 'clientNext', peer = back ? 'clientNext' : 'serverNext';
         if (flags === 'RST ACK' && back && s.state === 'SYN-SENT' && f.ack === s.clientNext) closed = true;
+        else if(flags==='RST'&&!back&&s.state==='SYN-RECEIVED'&&f.seq===s.clientNext)closed=true;
         else if (s.state === 'SYN-SENT') {
           valid = back && flags === 'SYN ACK' && f.ack === s.clientNext && Number.isInteger(f.seq);
           if (valid) { s.serverNext = f.seq + 1; s.state = 'SYN-RECEIVED'; }
@@ -89,7 +111,7 @@
     const r = c.rules.find(r => r.enabled && (r.from === '*' || r.from === from) && (r.to === '*' || r.to === to) && (r.protocol === 'ANY' || r.protocol === protocol) && matches(r.source, f.sip) && matches(r.destination, f.dip) && (r.sourcePort === '*' || r.sourcePort === f.sport) && (r.destinationPort === '*' || r.destinationPort === f.dport));
     const name = r?.name || 'Default policy', action = r?.action || c.defaultAction;
     Object.defineProperty(counts, name, {value: (Object.hasOwn(counts, name) ? counts[name] : 0) + 1, enumerable: true, writable: true, configurable: true});
-    if (action === 'allow') {
+    if (action === 'allow' && intrusion?.mode!=='prevent') {
       s = {protocol, source: f.sip, destination: f.dip, sourcePort: f.sport, destinationPort: f.dport, probe: f.probe, ingress: input.id, egress: output.id, rule: name, state: protocol === 'TCP' ? 'SYN-SENT' : 'REQUEST/REPLY', clientNext: protocol === 'TCP' ? f.seq + 1 : undefined, expiresAt: Date.now() + 120000};
       sessions.push(s);
     }
@@ -98,6 +120,6 @@
   function describe(d) {
     return 'Firewall ' + (d.action === 'drop' ? 'DROP' : 'ALLOW') + ': ' + d.from + ' → ' + d.to + ', ' + d.protocol + (d.destinationPort ? ' destination port ' + d.destinationPort : '') + '. ' + d.reason;
   }
-  const api = {zones, rule, defaults, validate, evaluate, age, describe};
+  const api = {zones, rule, defaults, intrusionDefaults, validate, evaluate, age, describe};
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.NetworkExplorerFirewall = api;
 })(globalThis);

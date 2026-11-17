@@ -70,14 +70,13 @@
     ["Basic", ["example-direct", "example", "example-dhcp", "example-dns"]],
     ["Intermediate", ["example-vlans", "example-routed", "example-http"]],
     ["Special Applications", ["example-echo-tcp", "example-echo-udp"]],
-    ["Security", ["example-https"]],
+    ["Security", ["example-https", "example-firewall"]],
     [
       "Advanced",
       [
         "example-static",
         "example-dhcp-relay",
         "example-internet",
-        "example-firewall",
         "example-complex",
       ],
     ],

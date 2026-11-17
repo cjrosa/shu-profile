@@ -2352,6 +2352,8 @@
     '<rect x="-23" y="-20" width="46" height="38" rx="7"/><path d="M-23-8h46M-14-14h2m5 0h2M-12 2h24M-12 9h17"/>';
   const appDefaultOffset = (type) =>
     ({
+      firewall: { x: -100, y: 90 },
+      ids: { x: 100, y: 90 },
       dhcp: { x: 110, y: -85 },
       dns: { x: -110, y: -85 },
       web: { x: 110, y: 85 },
@@ -2360,7 +2362,7 @@
       nmap: { x: 0, y: 120 },
     })[type];
   const appLabel = (type) =>
-      type === "nmap" ? "Nmap" : type === "echo" ? "Echo" : type === "web"
+      type === "firewall" ? "Firewall" : type === "ids" ? "IDS/IPS" : type === "nmap" ? "Nmap" : type === "echo" ? "Echo" : type === "web"
         ? "Web Server"
         : type === "browser"
           ? "Browser"
@@ -2380,6 +2382,9 @@
     input?.focus();input?.setSelectionRange(raw.length,raw.length);
   }
   function appGlyph(type) {
+    if(type === "firewall") return '<g transform="scale(.65)">'+NetworkExplorerFirewallUI.glyph()+"</g>";
+    if(type === "ids") return '<g fill="none" stroke="currentColor" stroke-width="2"><path d="M0-23 21-15v15c0 13-12 20-21 25C-9 20-21 13-21 0v-15Z"/><path d="M-14 0h8l4-8 5 16 4-8h7"/></g>';
+
     if(type === "nmap") return '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="-3" cy="-3" r="17"/><circle cx="-3" cy="-3" r="9"/><path d="M9 9l14 14M-3-20v34M-20-3h34"/></g>';
     if (type === "echo")
       return '<rect x="-24" y="-18" width="8" height="36" rx="3"/><rect x="16" y="-18" width="8" height="36" rx="3"/><path d="M-11-8h22m-6-6 6 6-6 6M11 8h-22m6-6-6 6 6 6" fill="none"/>';
@@ -2394,6 +2399,7 @@
   function applications() {
     return [
       ...net.applicationDrafts,
+      ...net.devices.filter(d=>d.type === "router" && (d.role === "firewall" || d.firewall?.enabled)).flatMap(d=>["firewall","ids"].map(type=>{const offset=d[appOffsetKey(type)]||appDefaultOffset(type);return {id:type+":"+d.id,type,host:d.id,x:d.x+offset.x,y:d.y+offset.y};})),
       ...net.devices
         .filter((d) => d.type === "host")
         .flatMap((d) =>
@@ -2821,6 +2827,13 @@
       "</svg><span>" +
       appLabel(a.type) +
       "</span>";
+    if(d && ["firewall","ids"].includes(a.type)) {
+      bindWatch(d);
+      $("inspector").innerHTML='<p class="hint">Built into <button id="application-host" class="application-host">'+noteTargetIcon(d.id)+'<span>'+esc(d.name)+'</span></button></p><p class="hint">Enable and configure in the device Inspector.</p>'+NetworkExplorerFirewallUI.panel(net,d,esc,expiryMarkup,a.type);
+      $("application-host").onclick=()=>select(d.id);
+      NetworkExplorerFirewallUI.bindEvidence(d,(id,order)=>{openTool('events',true);if(!NetworkExplorerCapture.revealEvent(id,order))say('This packet is no longer in Activity. Run a fresh scan.');syncExternal();});
+      return true;
+    }
     bindWatch(d, a.type);
     $("inspector").innerHTML = d
       ? '<p class="hint">Installed on <button id="application-host" class="application-host">' +
@@ -3520,7 +3533,7 @@
       }
       bindRoutes(d);
       bindNat(d);
-      if(d.type === "router") NetworkExplorerFirewallUI.bind(net,d,mutate,styleInspectorSelect);
+      if(d.type === "router") NetworkExplorerFirewallUI.bind(net,d,mutate,styleInspectorSelect,(id,order)=>{openTool('events',true);if(!NetworkExplorerCapture.revealEvent(id,order))say('This packet is no longer in Activity. Run a fresh scan.');syncExternal();});
       bindVlanPanel(d);
       $("inspector")
         .querySelectorAll("[data-port]")
@@ -5682,7 +5695,7 @@
       const a = applications().find((a) => a.id === g.id);
       if (a?.host && g.ctrl && !g.moved && !g.anchor) {
         lastApplicationClick = null;
-        enableCanvasWatch(a.host, a.type);
+        enableCanvasWatch(a.host, ["firewall","ids"].includes(a.type)?undefined:a.type);
         return;
       }
       if (a?.host && !g.moved && !g.anchor) {
@@ -7907,7 +7920,7 @@
       }
     });
     const changed = net.age();
-    const firewallDevice=net.device(selected);
+    const firewallDevice=net.device(selected)||net.device(applications().find(a=>a.id===selected&&a.type==='firewall')?.host);
     if(changed && firewallDevice?.type === "router") NetworkExplorerFirewallUI.refresh(net,firewallDevice);
     if (staged) staged.trial.age();
     if (changed) {
