@@ -7,3 +7,21 @@ test('Off and disabled firewall do not alert; Detect never overrides a policy dr
 test('distinct ports, rolling window, destination separation and normal traffic',()=>{const {n,a,b,fw}=setup();function probe(port,tick,dip=b.ip,flags='SYN'){n.clock=tick;return F.evaluate(n,fw,fw.ports[0],fw.ports[1],{protocol:'TCP',sip:a.ip,dip,sport:48000+tick,dport:port,flags,seq:1000},tick);}probe(80,1);probe(80,2);probe(443,3,'192.168.1.30');probe(443,4,b.ip,'ACK');assert.equal(n.intrusionAlerts[fw.id],undefined);probe(22,200);probe(80,201);assert.equal(n.intrusionAlerts[fw.id],undefined);assert.ok(probe(443,202).intrusion);assert.equal(probe(8080,400).intrusion,null);});
 test('configuration persists, runtime resets, malformed imports are atomic',()=>{const {n,a,fw}=setup('prevent');n.scan(a.id,'nmap -sS -p 22,80,443 192.168.1.20');drain(n);const data=n.save(),restored=new Network(data);assert.equal(restored.device(fw.id).firewall.intrusion.mode,'prevent');assert.deepEqual(restored.intrusionAlerts,{});const bad=JSON.parse(JSON.stringify(data));bad.devices.find(d=>d.id===fw.id).firewall.intrusion.threshold=1;assert.throws(()=>n.load(bad));assert.equal(n.intrusionAlerts[fw.id].length,1);n.reset();assert.deepEqual(n.intrusionAlerts,{});delete data.devices.find(d=>d.id===fw.id).firewall.intrusion;assert.doesNotThrow(()=>new Network(data));});
 test('animated snapshots retain detector state',()=>{let {n,a,fw}=setup('prevent');n.scan(a.id,'nmap -sS -p 22,80,443 192.168.1.20');while(n.queue.length){const next=Object.assign(new Network(),JSON.parse(JSON.stringify(n)));next.copyRuntimeFrom(n);next.next();n=next;}assert.equal(n.intrusionAlerts[fw.id].length,1);assert.equal(n.scans[a.id].rows[2].state,'filtered');});
+test('ordinary routers ignore legacy IDS/IPS settings while retaining firewall policy, including after load',()=>{
+  for(const mode of ['detect','prevent']){
+    const n=new Network(),r=n.add('router');
+    n.configureFirewall(r.id,{...F.defaults(r),enabled:true,defaultAction:'allow',intrusion:{mode,threshold:3,windowTicks:100}});
+    for(const net of [n,new Network(n.save())]){
+      const router=net.device(r.id);
+      for(const [i,port] of [22,80,443].entries()){
+        net.clock=i+1;
+        const decision=F.evaluate(net,router,router.ports[0],router.ports[1],{protocol:'TCP',sip:'192.168.1.10',dip:'192.168.2.20',sport:48000+i,dport:port,flags:'SYN',seq:1000},i+1);
+        assert.equal(decision.action,'allow');assert.equal(decision.intrusion,null);
+      }
+      assert.equal(net.intrusionAlerts[r.id],undefined);assert.equal(net.intrusionTracking[r.id],undefined);
+      net.configureFirewall(r.id,{...router.firewall,rules:[],defaultAction:'drop'});
+      const denied=F.evaluate(net,router,router.ports[0],router.ports[1],{protocol:'TCP',sip:'192.168.1.10',dip:'192.168.2.20',sport:49000,dport:8080,flags:'SYN',seq:1000},4);
+      assert.equal(denied.action,'drop');assert.equal(denied.intrusion,null);
+    }
+  }
+});

@@ -43,6 +43,8 @@
     return changed;
   }
   function inspectIntrusion(n,d,input,f,eventOrder){
+    // Saved router configurations may contain legacy intrusion settings; never run them.
+    if(d.role!=='firewall')return null;
     const c=d.firewall.intrusion||intrusionDefaults();
     if(c.mode==='off'||f.protocol!=='TCP'||f.flags!=='SYN')return null;
     const all=n.intrusionTracking||(n.intrusionTracking={}),rows=all[d.id]||(all[d.id]={}),key=[input.id,f.sip,f.dip].join('|');

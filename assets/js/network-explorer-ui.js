@@ -2399,7 +2399,7 @@
   function applications() {
     return [
       ...net.applicationDrafts,
-      ...net.devices.filter(d=>d.type === "router" && (d.role === "firewall" || d.firewall?.enabled)).flatMap(d=>["firewall","ids"].map(type=>{const offset=d[appOffsetKey(type)]||appDefaultOffset(type);return {id:type+":"+d.id,type,host:d.id,x:d.x+offset.x,y:d.y+offset.y};})),
+      ...net.devices.filter(d=>d.type === "router" && (d.role === "firewall" || d.firewall?.enabled)).flatMap(d=>(d.role === "firewall" ? ["firewall","ids"] : ["firewall"]).map(type=>{const offset=d[appOffsetKey(type)]||appDefaultOffset(type);return {id:type+":"+d.id,type,host:d.id,x:d.x+offset.x,y:d.y+offset.y};})),
       ...net.devices
         .filter((d) => d.type === "host")
         .flatMap((d) =>
