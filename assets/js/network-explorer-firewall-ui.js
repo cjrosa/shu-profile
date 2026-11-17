@@ -51,6 +51,11 @@
   }
   function bind(n, d, mutate, styleSelect, revealEvidence) {
     const $ = id => document.getElementById(id), root = $('inspector');
+    for (const id of ['fw-source','fw-destination']) {
+      $(id).placeholder = 'Type @ to choose an IP';
+      $(id).title = 'IP address, CIDR, or * for any. Type @ to choose an address.';
+      $(id).autocomplete = 'off';
+    }
     const config = () => JSON.parse(JSON.stringify(d.firewall || F.defaults(d)));
     const change = fn => mutate(() => {const c=config();fn(c);n.configureFirewall(d.id,c);});
     if(d.role==='firewall'){

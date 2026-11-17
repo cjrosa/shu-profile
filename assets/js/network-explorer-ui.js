@@ -7413,6 +7413,8 @@
 
   function installCliIpPicker(doc) {
     if (doc.getElementById("cli-ip-picker")) return;
+    const addressFields = new Set(["generator-target", "fw-source", "fw-destination"]);
+    const supportsPicker = target => target.id === "command" || addressFields.has(target.id);
     const win = doc.defaultView,
       list = doc.createElement("div");
     list.id = "cli-ip-picker";
@@ -7452,8 +7454,8 @@
         next.focus();
         return;
       }
-      input.setRangeText(input.id === "generator-target" ? row.ip : row.hostname || row.ip, start, end, "end");
-      if(input.id === "generator-target"){close();input.focus();input.dispatchEvent(new Event("change",{bubbles:true}));return;}
+      input.setRangeText(addressFields.has(input.id) ? row.ip : row.hostname || row.ip, start, end, "end");
+      if(addressFields.has(input.id)){close();input.focus();input.dispatchEvent(new win.Event("change",{bubbles:true}));return;}
       $("command").value = input.value;
       commandDraft = input.value;
       close();
@@ -7527,7 +7529,7 @@
       heading.className = "mention-list-title";
       heading.textContent = selectingDevice
         ? "Select a device for the CLI"
-        : input.id === "generator-target" ? "Insert target IP" : "Insert IP or DNS hostname";
+        : addressFields.has(input.id) ? "Insert IP address" : "Insert IP or DNS hostname";
       list.append(heading);
       rows.forEach((row, i) => {
         const b = doc.createElement("button");
@@ -7569,15 +7571,15 @@
       mark();
     };
     doc.addEventListener("input", (e) => {
-      if (["command","generator-target"].includes(e.target.id)) update(e.target);
+      if (supportsPicker(e.target)) update(e.target);
     });
     doc.addEventListener("click", (e) => {
-      if (["command","generator-target"].includes(e.target.id)) update(e.target);
+      if (supportsPicker(e.target)) update(e.target);
     });
     doc.addEventListener(
       "keydown",
       (e) => {
-        if (!["command","generator-target"].includes(e.target.id) || list.hidden) return;
+        if (!supportsPicker(e.target) || list.hidden) return;
         if (["ArrowDown", "ArrowUp"].includes(e.key) && rows.length) {
           e.preventDefault();
           e.stopImmediatePropagation();
