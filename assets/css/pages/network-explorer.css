@@ -5822,9 +5822,12 @@ body[data-panel^="browser:"] .browser-tab {
 }
 #network-welcome .welcome-example > svg {
   color: var(--example-accent);
-  width: 23px;
-  height: 23px;
-  padding: 9px;
+  width: 68px;
+  height: 48px;
+  padding: 4px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: none;
   box-sizing: content-box;
   border-radius: 10px;
   background: color-mix(in srgb, var(--example-accent) 10%, white);
@@ -6011,9 +6014,28 @@ body[data-panel^="browser:"] .browser-tab {
   color: #294b59;
 }
 
-#network-welcome .welcome-example,
-#network-welcome .welcome-example:hover {
-  box-shadow: none;
+#network-welcome .welcome-example {
+  transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+#network-welcome .welcome-example > svg {
+  transition: background .18s ease, transform .18s ease;
+}
+#network-welcome .welcome-example:hover,
+#network-welcome .welcome-example:focus-visible {
+  background: linear-gradient(100deg, #fff, color-mix(in srgb, var(--example-accent) 9%, white));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--example-accent) 50%, white);
+  transform: translateY(-2px);
+}
+#network-welcome .welcome-example:hover > svg,
+#network-welcome .welcome-example:focus-visible > svg {
+  background: color-mix(in srgb, var(--example-accent) 18%, white);
+  transform: scale(1.04);
+}
+#network-welcome .welcome-example:focus-visible { outline: 2px solid var(--example-accent); outline-offset: -2px; }
+#network-welcome .welcome-example:active { transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  #network-welcome .welcome-example,
+  #network-welcome .welcome-example > svg { transition: none; transform: none; }
 }
 /* Consistent welcome typography. */
 #network-welcome,

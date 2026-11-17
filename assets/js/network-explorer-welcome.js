@@ -66,6 +66,41 @@
   eyebrow.textContent = "INTERACTIVE NETWORK LAB";
   welcome.querySelector("header").prepend(eyebrow);
 
+  // Miniature scenes share the same device artwork as the live canvas.
+  const miniDevice = (type, x, y, scale = .42) =>
+    `<g transform="translate(${x} ${y}) scale(${scale})" style="color:${type === 'switch' ? '#4d8283' : '#3b5278'}">${window.NetworkExplorerIcons.device({type, os:'windows'})}</g>`;
+  const wire = (path, color = '#8daabc') => `<path d="${path}" fill="none" stroke="${color}" stroke-width="2"/>`;
+  const packet = (x, y, color = '#bd9455') => `<rect x="${x}" y="${y}" width="7" height="5" rx="1" fill="${color}" stroke="#fff" stroke-width=".8"/>`;
+  const server = (x, y) => `<g transform="translate(${x} ${y})"><rect width="22" height="33" rx="3" fill="#edf4fa" stroke="#3b5278" stroke-width="1.5"/><path d="M0 11h22M0 22h22M4 5h8m-8 11h8m-8 11h8" stroke="#7b96ac"/><g fill="#4d9482"><circle cx="17" cy="6" r="1.5"/><circle cx="17" cy="17" r="1.5"/><circle cx="17" cy="28" r="1.5"/></g></g>`;
+  const lock = (x, y) => `<g transform="translate(${x} ${y})" stroke="#287d78" stroke-width="1.8"><rect y="8" width="16" height="14" rx="3" fill="#e7f4f1"/><path d="M3 8V5a5 5 0 0 1 10 0v3M8 13v4" fill="none"/></g>`;
+  const browserArt = '<rect x="10" y="10" width="76" height="45" rx="5" fill="#fff" stroke="#52718b" stroke-width="1.7"/><path d="M10 21h76" stroke="#a4bacb"/><circle cx="17" cy="16" r="2" fill="#6c9f97"/><rect x="24" y="14" width="52" height="4" rx="2" fill="#e0ebf3"/><rect x="18" y="28" width="20" height="18" rx="2" fill="#cee4ed"/><path d="M44 30h31m-31 7h24m-24 7h28" stroke="#98b3c6" stroke-width="2"/>';
+  const lanArt = wire('M19 19 48 40 78 19') + miniDevice('host',19,19,.36) + miniDevice('switch',48,40,.4) + miniDevice('host',78,19,.36);
+  const routedArt = '<rect x="2" y="15" width="30" height="44" rx="10" fill="#e0f0ec"/><rect x="64" y="15" width="30" height="44" rx="10" fill="#e4eaf5"/>' + wire('M17 36H79') + miniDevice('host',17,36,.33) + miniDevice('router',48,36,.4) + miniDevice('host',79,36,.33);
+  const firewallArt = wire('M13 32H82') + packet(10,29) + miniDevice('firewall',49,32,.65) + server(73,16);
+  const scanArt = wire('M8 18 42 28M8 32H42M8 46 42 36') + [15,29,43].map(y=>packet(13,y,'#6f9dbb')).join('') + miniDevice('firewall',57,33,.65);
+  const echoArt = '<rect x="25" y="8" width="58" height="39" rx="4" fill="#edf4fa" stroke="#52718b" stroke-width="1.5"/><path d="M25 17h58" stroke="#a4bacb"/><path d="m32 24 5 4-5 4m12 0h16M44 38h28" fill="none" stroke="#4c8986" stroke-width="2"/>' + miniDevice('host',16,42,.33);
+  const exampleArt = {
+    'example-direct': wire('M24 32H73') + miniDevice('host',22,32,.47) + miniDevice('host',74,32,.47) + packet(46,29),
+    'example': lanArt + packet(33,26),
+    'example-dhcp': wire('M20 38H75') + miniDevice('host',20,38,.42) + server(64,15) + '<path d="M32 24h23m-5-4 5 4-5 4M55 49H32m5-4-5 4 5 4" fill="none" stroke="#4c8986" stroke-width="2"/>' + packet(42,35),
+    'example-dns': server(66,17) + '<rect x="5" y="13" width="53" height="19" rx="4" fill="#fff" stroke="#91adbf"/><text x="31" y="26" text-anchor="middle" fill="#42657f" stroke="none" font-size="10" font-family="sans-serif">www.</text><path d="M20 34v16h39m-5-4 5 4-5 4" fill="none" stroke="#4c8986" stroke-width="2"/>' + packet(41,47),
+    'example-vlans': '<rect x="2" y="4" width="44" height="55" rx="8" fill="#dceee9"/><rect x="50" y="4" width="44" height="55" rx="8" fill="#e2e8f5"/>' + wire('M20 18 48 40 76 18M20 49 48 40 76 49') + [20,76].map(x=>miniDevice('host',x,18,.3)+miniDevice('host',x,49,.3)).join('') + miniDevice('switch',48,36,.35),
+    'example-routed': routedArt,
+    'example-static': wire('M9 42 32 24H66L87 42') + miniDevice('host',11,44,.3) + miniDevice('router',32,24,.4) + miniDevice('router',66,24,.4) + miniDevice('host',86,44,.3) + packet(45,21),
+    'example-dhcp-relay': wire('M12 45 34 25H64L83 43') + miniDevice('host',12,45,.3) + miniDevice('router',34,25,.34) + miniDevice('router',64,25,.34) + server(73,34) + '<path d="M25 9h45m-5-4 5 4-5 4" fill="none" stroke="#4c8986" stroke-width="2"/>',
+    'example-http': browserArt,
+    'example-https': browserArt + lock(64,35),
+    'example-firewall': firewallArt,
+    'example-security-encrypt': browserArt + '<path d="M19 38h32m-5-4 5 4-5 4" stroke="#4c8986" stroke-width="2"/>' + lock(62,34),
+    'example-security-harden': firewallArt + '<circle cx="16" cy="17" r="8" fill="#faeceb" stroke="#ab6a65"/><path d="m12 13 8 8m0-8-8 8" stroke="#ab6a65" stroke-width="2"/>',
+    'example-security-detect': scanArt + '<path d="M65 12q12-14 24 0-12 14-24 0Z" fill="#fff" stroke="#52718b"/><circle cx="77" cy="12" r="3" fill="#6e9cb4"/>',
+    'example-security-prevent': scanArt + '<path d="m76 5 10 4v10l-10 5-10-5V9Z" fill="#e4efeb" stroke="#287d78"/><path d="M71 14h10" stroke="#287d78" stroke-width="2"/>',
+    'example-dos': wire('M7 12 65 24M7 25 65 29M7 38 65 34M7 51 65 39') + [10,23,36,49].map((y,i)=>packet(12+i*7,y,'#bd9455')).join('') + server(68,15) + '<path d="M57 14v37" stroke="#287d78" stroke-width="3"/>',
+    'example-echo-tcp': echoArt + '<path d="M35 54h41m-5-4 5 4-5 4M76 61H35m5-3-5 3 5 3" fill="none" stroke="#4c8986" stroke-width="1.8"/>',
+    'example-echo-udp': echoArt + packet(36,52,'#6e9cb4') + packet(52,56,'#6e9cb4') + packet(69,51,'#6e9cb4'),
+    'example-internet': wire('M17 16 46 34 17 53M46 34H77') + miniDevice('host',17,16,.3) + miniDevice('host',17,53,.3) + miniDevice('router',46,34,.4) + '<g stroke="#688fa8" fill="#edf4fa" stroke-width="1.5"><circle cx="79" cy="33" r="13"/><ellipse cx="79" cy="33" rx="6" ry="13" fill="none"/><path d="M66 33h26M69 26h20m-20 14h20"/></g>',
+    'example-complex': wire('M23 20H73L48 49ZM23 20 8 44M73 20 88 44') + miniDevice('router',23,20,.36) + miniDevice('router',73,20,.36) + miniDevice('router',48,49,.36) + miniDevice('switch',9,45,.25) + miniDevice('switch',87,45,.25) + packet(44,17)
+  };
   const exampleGroups = [
     ["Basic", ["example-direct", "example", "example-dhcp", "example-dns"]],
     ["Intermediate", ["example-vlans", "example-routed", "example-http"]],
@@ -96,23 +131,8 @@
       b.className = "welcome-example";
       b.dataset.action = id;
 
-      const paths = {
-        "example-https": "M6 10h12v11H6ZM8 10V6a4 4 0 0 1 8 0v4M12 14v3",
-        "example-firewall": "M12 2 21 6v6c0 5-5 8-9 10-4-2-9-5-9-10V6Zm-5 10 3 3 7-7",
-        "example-internet":
-          "M3 12h18M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 0c-5 5-5 13 0 18 5-5 5-13 0-18Z",
-        "example-complex":
-          "M9 3h6v5H9ZM2 16h6v5H2ZM16 16h6v5h-6ZM12 8v4M5 16v-4h14v4",
-        "example-routed": "M2 8h6v8H2ZM16 8h6v8h-6ZM8 12h8m-5-3 3 3-3 3",
-        "example-http":
-          "M3 4h18v16H3ZM3 9h18M6 6h2m3 0h2M10 12l-3 3 3 3m4-6 3 3-3 3",
-        "example-dns":
-          "M3 12h18M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 0c-5 5-5 13 0 18 5-5 5-13 0-18Z",
-        "example-vlans":
-          "M2 4h8v6H2ZM14 14h8v6h-8ZM6 10v7h8M14 4h8v6h-8ZM2 14h8v6H2Z",
-      };
       b.innerHTML =
-        svg(paths[id] || "M2 8h6v8H2ZM16 8h6v8h-6ZM8 12h8") +
+        '<svg class="welcome-example-art" viewBox="0 0 96 68" aria-hidden="true">' + exampleArt[id] + '</svg>' +
         "<span>" +
         "<strong>" +
         source.title +
