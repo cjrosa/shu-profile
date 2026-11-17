@@ -5,7 +5,7 @@
   let mode = 'll', operation = 'delete', initial, steps, index = 0, timer = null, frame = null, displayed = null, width = 820, treeHeight = 330;
   let treeMode='avl';
   const examples = () => treeMode==='bst'?(operation==='insert'?E.bstInsertPresets:E.bstPresets):(operation==='insert'?E.insertPresets:E.presets);
-  const speeds={slow:{interval:3200,animation:1.6},medium:{interval:1900,animation:1},fast:{interval:600,animation:0.3}};
+  const speeds={slow:{interval:3200,animation:1.6},medium:{interval:1900,animation:1},fast:{interval:600,animation:0.3},instant:{interval:0,animation:0}};
   let stepFilter='all';
   const actionType=s=>s.label==='Check balance'||s.label==='Rotation plan'||s.label.endsWith(' case')||s.kind==='rotation'?'avl':'bst';
   const combinedRemoval=i=>stepFilter!=='bst'&&steps[i].kind==='removed'&&steps[i+1]?.label==='Check balance';
@@ -15,6 +15,7 @@
     return Math.max(0,Math.min(steps.length-1,next));
   }
   const autoSpeed=()=>speeds[$('auto-speed').value] || speeds.medium;
+  const instant=()=>$('auto-speed').value==='instant';
   const traversalStyles={
     'Pre-order':{color:'#185FA5',x:-36,y:0},
     'In-order':{color:'#087F6D',x:0,y:56},
@@ -75,7 +76,7 @@
       route.style.strokeDasharray=length+' '+length;
       route.style.strokeDashoffset='0';
       if(length>before&&duration)route.animate([{strokeDashoffset:length-before},{strokeDashoffset:0}],{duration,easing:'linear'});
-      traversalTimer=setTimeout(()=>{
+      const visit=()=>{
         if(p.visit) {
           const marker=document.createElementNS(ns,'g');
           marker.setAttribute('class','traversal-visit');
@@ -83,8 +84,9 @@
           marker.innerHTML='<circle cx="'+p.x+'" cy="'+p.y+'" r="10" fill="'+style.color+'" stroke="white" stroke-width="2"/><text x="'+p.x+'" y="'+(p.y+4)+'" text-anchor="middle" font-size="10" font-weight="bold" fill="white">'+visited+'</text>';
           $('tree').append(marker);
         }
-        if(++position<points.length)traversalTimer=setTimeout(advance,p.visit?250*autoSpeed().animation:0);
-      },duration);
+        if(++position<points.length){if(instant())advance();else traversalTimer=setTimeout(advance,p.visit?250*autoSpeed().animation:0);}
+      };
+      if(instant())visit();else traversalTimer=setTimeout(visit,duration);
     }
     advance();
   }
@@ -111,7 +113,7 @@
     if(chip)queue.scrollLeft=Math.max(0,chip.offsetLeft-queue.offsetLeft-queue.clientWidth/2+chip.offsetWidth/2);
   }
   function flyFromQueue() {
-    if(operation!=='insert'||steps[index].label!=='Before'||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    if(instant()||operation!=='insert'||steps[index].label!=='Before'||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
     const chip=$('insert-queue').querySelector('.current'), matrix=$('tree').getScreenCTM();
     if(!chip||!matrix)return;
     const source=chip.getBoundingClientRect(), destination=new DOMPoint(110,35).matrixTransform(matrix);
@@ -334,6 +336,7 @@
   }
   function stop() { if(timer) clearInterval(timer);timer=null;$('auto').textContent='Auto'; }
   function show(animate=false) {
+    animate=animate&&!instant();
     clearTraversal();
     cancelEntryFlight();
     if(frame) cancelAnimationFrame(frame);
@@ -474,6 +477,7 @@
   $('replay').onclick=()=>{stop();index=0;show();};
   $('new-values').onclick=()=>load(mode,true);
   function startAuto() {
+    if(instant()){stop();index=steps.length-1;show();return;}
     $('auto').textContent='Pause';
     timer=setInterval(()=>{if(index<steps.length-1){index=destination(1);show(true);}else stop();},autoSpeed().interval);
   }
@@ -486,6 +490,7 @@
     $('speed-current').textContent=$('auto-speed').selectedOptions[0].textContent;
     document.querySelectorAll('[data-speed]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.speed===$('auto-speed').value)));
     if(timer){stop();show();if(index<steps.length-1)startAuto();}
+    else if(instant())show();
   });
   const speedOptions=Array.from(document.querySelectorAll('[data-speed]'));
   const stepOptions=Array.from(document.querySelectorAll('[data-step]'));
@@ -511,7 +516,7 @@
     else if(event.key==='Tab')closeSteps();
     else if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){
       event.preventDefault();const i=stepOptions.indexOf(document.activeElement);
-      stepOptions[event.key==='Home'?0:event.key==='End'?2:(i+(event.key==='ArrowDown'?1:2))%3].focus();
+      stepOptions[event.key==='Home'?0:event.key==='End'?speedOptions.length-1:(i+(event.key==='ArrowDown'?1:speedOptions.length-1))%speedOptions.length].focus();
     }
   });
   document.addEventListener('pointerdown',event=>{if(!$('next-picker').contains(event.target))closeSteps();});
