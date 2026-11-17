@@ -173,7 +173,7 @@
     emptyCanvasClick=false;
     if(!canvas.contains(event.target)||![0,1].includes(event.button))return;
     if(canvas.classList.contains('placing')||!get('cancel-connect').hidden)return;
-    const object=event.target.closest('[data-device],[data-application],[data-note],[data-link],[data-anchor-device],.in-flight-frame');
+    const object=event.target.closest('[data-device],[data-application],[data-note],[data-capacity-monitor],[data-link],[data-anchor-device],.in-flight-frame');
     if(event.button!==1&&!spaceHeld&&object)return;
     emptyCanvasClick=!object&&event.button===0&&!spaceHeld;
     event.preventDefault();event.stopImmediatePropagation();

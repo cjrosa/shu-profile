@@ -1498,6 +1498,7 @@
   function draw() {
     drawSubnetClouds();
     drawNotes();
+    drawCapacityMonitors();
     $("links").innerHTML = net.links
       .map((l) => {
         const route = cablePath(l),
@@ -2360,9 +2361,10 @@
       browser: { x: -110, y: 85 },
       echo: { x: 0, y: -100 },
       nmap: { x: 0, y: 120 },
+      generator: { x: 0, y: -110 },
     })[type];
   const appLabel = (type) =>
-      type === "firewall" ? "Firewall" : type === "ids" ? "IDS/IPS" : type === "nmap" ? "Nmap" : type === "echo" ? "Echo" : type === "web"
+      type === "firewall" ? "Firewall" : type === "ids" ? "IDS/IPS" : type === "generator" ? "Traffic Generator" : type === "nmap" ? "Nmap" : type === "echo" ? "Echo" : type === "web"
         ? "Web Server"
         : type === "browser"
           ? "Browser"
@@ -2371,6 +2373,73 @@
     appWatchKey = (type) => type + "Watch",
     appOffsetKey = (type) =>
       type === "dhcp" ? "applicationOffset" : type + "Offset";
+  function generatorPanel(d){
+    const c=d.generatorServer,r=net.generators[d.id],busy=!!(staged||net.queue.length);
+    const status=r?(r.status[0].toUpperCase()+r.status.slice(1)+' - '+r.sent+'/'+r.total+' sent'):'Ready';
+    return '<form id="generator-settings"><div class="generator-toolbar"><button type="submit" aria-label="Run burst" title="Run burst" '+(busy?'disabled':'')+'><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 4 12 8-12 8Z"/></svg></button><button id="generator-stop" type="button" aria-label="Stop burst" title="Stop burst" '+(r?.status==='running'?'':'disabled')+'><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h12v12H6Z"/></svg></button><span role="status">'+esc(status)+'</span></div><p class="hint">Fills pending connections with SYNs. Use canvas Pause/Step to inspect.</p><label>Target IPv4<input id="generator-target" placeholder="Type @ to choose a host" autocomplete="off" value="'+esc(c.target)+'" required></label><div class="generator-fields"><label>TCP port<input id="generator-port" type="number" min="1" max="65535" value="'+c.port+'"></label><label>SYN count<input id="generator-count" type="number" min="1" max="100" value="'+c.count+'"></label><label>Speed<select id="generator-interval"><option value="10" '+(c.interval>=6?'selected':'')+'>Slow</option><option value="4" '+(c.interval>2&&c.interval<6?'selected':'')+'>Medium</option><option value="2" '+(c.interval<=2?'selected':'')+'>Fast</option></select></label></div><label>Availability check<select id="generator-probe"><option value="">No check</option>'+net.devices.filter(h=>h.id!==d.id&&h.browserServer?.enabled&&h.ip).map(h=>'<option value="'+h.id+'" '+(r?.probeId===h.id?'selected':'')+'>'+esc(h.name)+'</option>').join('')+'</select></label></form>'+(r?.probeId?'<p class="hint" role="status">Check: '+esc(net.httpPages[r.probeId]?.status||'Waiting')+'</p>':'');
+  }
+  function bindGenerator(d){
+    styleInspectorSelect('generator-interval','Speed',()=> '');
+    styleInspectorSelect('generator-probe','Check',()=> '');
+    $('generator-probe-label').insertAdjacentHTML('beforeend',' <button type="button" class="generator-info" aria-label="About availability check" data-tooltip="Optional Browser request midway through the burst. Use an IP-based URL."><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v1"/></svg></button>');
+    $('generator-settings').onsubmit=e=>{e.preventDefault();safely(()=>{if(candidateBase||staged||net.queue.length)throw Error('Finish the current exchange first.');const config={enabled:true,target:$('generator-target').value.trim(),port:Number($('generator-port').value),count:Number($('generator-count').value),interval:Number($('generator-interval').value)},probe=$('generator-probe').value;NetworkExplorerDos.validate(config);d.generatorServer=config;net.generatorControl(d.id,'start',probe);running=true;stage();render();});};
+    $('generator-stop').onclick=()=>safely(()=>{net.generatorControl(d.id,'stop');if(staged)staged.trial.generatorControl(d.id,'stop');render();});
+  }
+  const capacityMonitors = new Map();
+  let capacityDrag = null;
+  function drawCapacityMonitors() {
+    if(capacityDrag)return;
+    let layer=$('capacity-monitors');
+    if(!layer){layer=document.createElementNS('http://www.w3.org/2000/svg','g');layer.id='capacity-monitors';$('devices').after(layer);}
+    const now=Date.now(),visible=[];
+    for(const [id,l] of Object.entries(net.serverLoad||{})){
+      const d=net.device(id);if(!d?.webServer||!(l.accepted||l.dropped))continue;
+      const pending=Object.keys(l.pending).length,signature=[l.accepted,l.dropped,l.expired,pending].join(':');
+      let m=capacityMonitors.get(id);
+      if(!m){m={signature,changed:now,expanded:false,dx:-125,dy:40};capacityMonitors.set(id,m);}
+      if(m.signature!==signature){m.signature=signature;m.changed=now;}
+      if(pending)m.changed=now;
+      if(now-m.changed>=60000)continue;
+      const limit=d.webServer.synCapacity??32,expanded=m.expanded;
+      const ratio=Math.min(1,pending/limit),state=ratio>=1?'full':ratio>=.75?'busy':'available',status=state==='full'?'Full':state==='busy'?'Near capacity':pending?'Available':'Idle';
+      visible.push('<g><path class="note-connector" d="M'+d.x+' '+d.y+'L'+(d.x+m.dx)+' '+(d.y+m.dy+20)+'"/><foreignObject x="'+(d.x+m.dx)+'" y="'+(d.y+m.dy)+'" width="250" height="'+(expanded?200:80)+'"><div xmlns="http://www.w3.org/1999/xhtml" class="capacity-monitor capacity-'+state+'" data-capacity-monitor="'+id+'"><div class="capacity-monitor-bar"><button type="button" data-capacity-drag="'+id+'" aria-label="Move capacity monitor" title="Drag to move; arrow keys to nudge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01" stroke-width="3" stroke-linecap="round"/></svg></button><button type="button" data-capacity-expand="'+id+'" aria-expanded="'+expanded+'" title="Connection capacity for '+esc(d.name)+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20V4M3 20h18M7 16v-4M12 16V8M17 16V5"/></svg><span>'+pending+' / '+limit+' slots</span></button><small class="capacity-countdown" data-capacity-countdown="'+id+'" role="timer" aria-live="off"><svg viewBox="0 0 24 24" aria-hidden="true"><circle class="countdown-track" cx="12" cy="12" r="9"/><circle class="countdown-progress" cx="12" cy="12" r="9" pathLength="100" stroke-dasharray="100" transform="rotate(-90 12 12)"/></svg><span></span></small></div><div class="capacity-status"><span>'+status+'</span><span>'+Math.round(ratio*100)+'%</span></div><div class="capacity-meter" role="meter" aria-label="Pending connection capacity" aria-valuemin="0" aria-valuemax="'+limit+'" aria-valuenow="'+pending+'" aria-valuetext="'+pending+' of '+limit+' slots occupied; '+status+'"><span style="width:'+ratio*100+'%"></span></div>'+(expanded?'<div class="capacity-monitor-details"><strong>'+esc(d.name)+'</strong><div>'+l.dropped+' SYNs dropped &middot; '+l.expired+' expired</div><div>'+l.accepted+' accepted</div></div>':'')+'</div></foreignObject></g>');
+    }
+    for(const id of capacityMonitors.keys())if(!net.serverLoad?.[id])capacityMonitors.delete(id);
+    const updateCountdowns=()=>layer.querySelectorAll('[data-capacity-countdown]').forEach(el=>{
+      const id=el.dataset.capacityCountdown,m=capacityMonitors.get(id),active=Object.keys(net.serverLoad[id]?.pending||{}).length>0;
+      const seconds=Math.max(0,Math.ceil((60000-(now-m.changed))/1000));
+      const label=active?'Countdown starts when idle':'Closes in '+seconds+'s';
+      el.querySelector('span').textContent=active?'—':seconds;el.setAttribute('aria-label',label);el.setAttribute('data-tooltip',label);
+      el.querySelector('.countdown-progress').setAttribute('stroke-dashoffset',String(100-seconds/60*100));
+    });
+    const markup=visible.join('');if(layer.capacityMarkup===markup){updateCountdowns();return;}layer.capacityMarkup=markup;
+    layer.innerHTML=markup;
+    updateCountdowns();
+    layer.onpointerdown=e=>{
+      e.stopPropagation();const handle=e.target.closest('[data-capacity-drag]');if(!handle||e.button!==0)return;
+      e.preventDefault();handle.focus();const id=handle.dataset.capacityDrag,m=capacityMonitors.get(id);
+      capacityDrag={id,start:point(e),dx:m.dx,dy:m.dy,pointer:e.pointerId};layer.setPointerCapture(e.pointerId);
+    };
+    layer.onpointermove=e=>{
+      if(!capacityDrag||e.pointerId!==capacityDrag.pointer)return;e.stopPropagation();
+      const drag=capacityDrag,m=capacityMonitors.get(drag.id),d=net.device(drag.id),p=point(e);if(!m||!d)return;
+      m.dx=drag.dx+p.x-drag.start.x;m.dy=drag.dy+p.y-drag.start.y;
+      const card=layer.querySelector('[data-capacity-monitor="'+drag.id+'"]').closest('foreignObject');card.setAttribute('x',d.x+m.dx);card.setAttribute('y',d.y+m.dy);
+      card.previousElementSibling.setAttribute('d','M'+d.x+' '+d.y+'L'+(d.x+m.dx)+' '+(d.y+m.dy+20));
+    };
+    layer.onpointerup=layer.onpointercancel=e=>{
+      if(!capacityDrag||e.pointerId!==capacityDrag.pointer)return;e.stopPropagation();const id=capacityDrag.id;capacityDrag=null;
+      if(layer.hasPointerCapture(e.pointerId))layer.releasePointerCapture(e.pointerId);layer.capacityMarkup=null;drawCapacityMonitors();layer.querySelector('[data-capacity-drag="'+id+'"]')?.focus();
+    };
+    layer.onclick=e=>{e.stopPropagation();const expand=e.target.closest('[data-capacity-expand]'),m=capacityMonitors.get(expand?.dataset.capacityExpand);if(!m)return;m.expanded=!m.expanded;drawCapacityMonitors();};
+    layer.onkeydown=e=>{
+      e.stopPropagation();const handle=e.target.closest('[data-capacity-drag]');if(!handle||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;
+      e.preventDefault();const id=handle.dataset.capacityDrag,m=capacityMonitors.get(id),step=e.shiftKey?25:5;
+      m.dx+=(e.key==='ArrowRight'?step:e.key==='ArrowLeft'?-step:0);m.dy+=(e.key==='ArrowDown'?step:e.key==='ArrowUp'?-step:0);
+      drawCapacityMonitors();layer.querySelector('[data-capacity-drag="'+id+'"]')?.focus();
+    };
+  }
+  function serverLoadMarkup(d){return '<section><h3 class="security-monitor-heading">Connection capacity</h3><div class="pair"><label>Pending slots<input id="web-capacity" type="number" min="1" max="128" value="'+(d.webServer.synCapacity??32)+'"></label><label>Timeout (ticks)<input id="web-timeout" type="number" min="20" max="1000" value="'+(d.webServer.synTimeout??120)+'"></label></div><p class="hint">Incomplete handshakes hold a slot until timeout. Live usage appears on the canvas.</p></section>';}
   function nmapPanel(){
     return '<p class="hint">Nmap is a command-line (CLI) tool for discovering open network ports. Run it in the host Terminal.</p><button id="nmap-terminal" class="nmap-terminal-pill" type="button" title="Open Terminal with a scan command"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 6 6 6-6 6M13 18h7"/></svg>Terminal</button><p class="hint">Type <code>@</code> in Terminal to choose a target IP, then press Enter to scan.</p>';
   }
@@ -2382,6 +2451,8 @@
     input?.focus();input?.setSelectionRange(raw.length,raw.length);
   }
   function appGlyph(type) {
+    if(type==='generator')return '<g fill="none" stroke="currentColor" stroke-width="2"><rect x="-23" y="-19" width="46" height="38" rx="5"/><path d="M-17 0h7l5-11 9 22 5-11h9M14-5l5 5-5 5"/></g>';
+
     if(type === "firewall") return '<g transform="scale(.65)">'+NetworkExplorerFirewallUI.glyph()+"</g>";
     if(type === "ids") return '<g fill="none" stroke="currentColor" stroke-width="2"><path d="M0-23 21-15v15c0 13-12 20-21 25C-9 20-21 13-21 0v-15Z"/><path d="M-14 0h8l4-8 5 16 4-8h7"/></g>';
 
@@ -2403,7 +2474,7 @@
       ...net.devices
         .filter((d) => d.type === "host")
         .flatMap((d) =>
-          ["dhcp", "dns", "web", "browser", "echo", "nmap"]
+          ["dhcp", "dns", "web", "browser", "echo", "nmap", "generator"]
             .filter((t) => d[appKey(t)])
             .map((type) => {
               const offset = d[appOffsetKey(type)];
@@ -2441,7 +2512,7 @@
     if (!watchMenu.matches(":popover-open")) $("watch").click();
   }
   function hostApplications(d) {
-    const types = ["dhcp", "dns", "web", "browser", "echo", "nmap"].filter((t) => d[appKey(t)]);
+    const types = ["dhcp", "dns", "web", "browser", "echo", "nmap", "generator"].filter((t) => d[appKey(t)]);
     return (
       '<div class="small-heading inspector-section-heading">Applications</div>' +
       (types.length
@@ -2674,9 +2745,9 @@
       page = net.httpPages[d.id];
     if (type === "browser") return browserMarkup(d);
     return (
-      '<form id="web-settings"><label class="check"><input id="web-enabled" type="checkbox" ' +
+      '<form id="web-settings">'+serverLoadMarkup(d)+'<label class="certificate-toggle"><span>Enable Web Server</span><input id="web-enabled" role="switch" type="checkbox" ' +
       (c.enabled ? "checked" : "") +
-      '>Enable Web Server</label>' +
+      '><span class="certificate-switch" aria-hidden="true"></span></label>' +
       '<label>Transport<select id="web-tls"><option value="http"' + (!c.tls?' selected':'') + '>HTTP</option><option value="https"' + (c.tls?' selected':'') + '>HTTPS (TLS)</option></select></label>' +
       (c.certificateName ? certificatePanel(c) : '<p class="hint">For HTTPS, choose Certificate in the palette, then click this server.</p>') +
       '<label>TCP port<input id="web-port" type="number" min="1" max="65535" required value="' +
@@ -2724,11 +2795,13 @@
         throw Error(
           "Commit or revert candidate changes before starting traffic.",
         );
-      if (staged || net.queue.length)
+      const target=staged?.trial||net;
+      if ((staged || net.queue.length) && !target.isDosActive())
         throw Error("Finish or clear the current exchange first.");
       finishPlacement();
       cancelConnect();
-      net.browse(id, url.trim());
+      target.browse(id, url.trim());
+      if(target!==net){net.httpPages[id]={...target.httpPages[id]};net.device(id).browserServer.url=target.device(id).browserServer.url;}
       browserDrafts.delete(id);
       running = true;
       stage();
@@ -2795,6 +2868,7 @@
       };
       $("expand-browser").onclick = () => expandBrowser(d);
     } else {
+      styleInspectorSelect('web-tls','Transport',value=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+(value==='https'?'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4M12 14v3"/>':'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-6 5-6 13 0 18M12 3c6 5 6 13 0 18"/>')+'</svg>');
       const form=$('web-settings'),origin=net;let timer;
       const save=()=>{
         clearTimeout(timer);
@@ -2802,7 +2876,7 @@
         const status=form.querySelector('#web-settings-status');
         if(!form.checkValidity()){status.textContent='Complete the highlighted fields to apply changes.';return;}
         const read=id=>form.querySelector('#'+id);
-        const config={enabled:read('web-enabled').checked,tls:read('web-tls').value==='https',port:Number(read('web-port').value),title:read('web-title').value,body:read('web-body').value,
+        const config={synCapacity:Number(read('web-capacity').value),synTimeout:Number(read('web-timeout').value),enabled:read('web-enabled').checked,tls:read('web-tls').value==='https',port:Number(read('web-port').value),title:read('web-title').value,body:read('web-body').value,
           ...(read('certificate-name')?{certificateName:read('certificate-name').value.trim().toLowerCase(),certificateTrusted:read('certificate-trusted').checked,certificateValid:read('certificate-valid').checked}:{})};
         try{NetworkExplorerHTTP.create({}).validate(config);}catch(error){status.textContent=error.message;return;}
         if(JSON.stringify(config)===JSON.stringify(d.webServer))return;
@@ -2841,7 +2915,7 @@
         "<span>" +
         esc(d.name) +
         "</span></button></p>" +
-        (a.type === "nmap" ? nmapPanel(d) : a.type === "echo" ? NetworkExplorerEchoUI.markup(net,d,esc) : ["web", "browser"].includes(a.type)
+        (a.type === "generator" ? generatorPanel(d) : a.type === "nmap" ? nmapPanel(d) : a.type === "echo" ? NetworkExplorerEchoUI.markup(net,d,esc) : ["web", "browser"].includes(a.type)
           ? webPanel(d, a.type)
           : a.type === "dns"
             ? dnsPanel(d)
@@ -2853,7 +2927,8 @@
         selected = d.id;
         render();
       };
-      if(a.type === "nmap") $("nmap-terminal").onclick=()=>nmapTerminal(d.id);
+      if(a.type === "generator") bindGenerator(d);
+      else if(a.type === "nmap") $("nmap-terminal").onclick=()=>nmapTerminal(d.id);
       else if (a.type === "echo") NetworkExplorerEchoUI.bind(document.getElementById('inspector'),d.id,{
         get:()=>net, refresh:()=>render(), configure:c=>mutate(()=>net.configureEcho(d.id,c)),
         styleSelect:(id,label)=>styleInspectorSelect(id,label,()=>''),
@@ -2879,7 +2954,8 @@
             d.name +
             " and remove its configuration?",
           () => {
-            if(a.type === "nmap"){delete d.nmapServer;delete d.nmapWatch;delete d.nmapOffset;net.reset();}
+            if(a.type === "generator"){delete d.generatorServer;delete d.generatorOffset;net.reset();}
+            else if(a.type === "nmap"){delete d.nmapServer;delete d.nmapWatch;delete d.nmapOffset;net.reset();}
             else if(a.type === "echo"){delete d.echoServer;delete d.echoWatch;delete d.echoOffset;net.reset();}
             else if (["web", "browser"].includes(a.type))
               net.uninstallWeb(d.id, a.type);
@@ -3265,7 +3341,7 @@
   function bindDhcp(d) {
     if (d.type !== "host") return;
     $("host-gateway").readOnly = d.addressMode === "dhcp";
-    for (const type of ["dhcp", "dns", "web", "browser", "echo", "nmap"]) {
+    for (const type of ["dhcp", "dns", "web", "browser", "echo", "nmap", "generator"]) {
       const installed = $("host-" + type + "-app");
       if (installed)
         installed.onclick = () => selectApplication(type + ":" + d.id);
@@ -5526,6 +5602,7 @@
   }
   const toolsPalette=document.createElement('section');
   toolsPalette.innerHTML='<h2 class="palette-heading" tabindex="0"><svg class="palette-heading-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg><span>Tools</span></h2><div class="palette"><button id="add-nmap-application" type="button"><svg viewBox="-30 -26 60 52">'+appGlyph('nmap')+'</svg><span>Nmap</span></button></div>';
+  const generatorButton=document.createElement('button');generatorButton.id='add-generator-application';generatorButton.type='button';generatorButton.innerHTML='<svg viewBox="-30 -26 60 52">'+appGlyph('generator')+'</svg><span>Traffic Generator</span>';toolsPalette.querySelector('.palette').append(generatorButton);
   $('left-panel').append(toolsPalette);
   const certificateGlyph='<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M9 4h24l6 6v25H9ZM15 13h16M15 19h12"/><circle cx="29" cy="30" r="7"/><path d="m24 36-2 9 7-4 7 4-2-9"/></svg>';
   const certificateButton=document.createElement('button');certificateButton.id='add-certificate';certificateButton.type='button';certificateButton.title='Attach certificate to a Web Server';certificateButton.setAttribute('aria-label','Add certificate');certificateButton.innerHTML=certificateGlyph+'<span>Certificate</span>';appPalette.querySelector('.palette').append(certificateButton);
@@ -5547,7 +5624,7 @@
     };
     button.onclick = () => beginPlacement("application", type);
   }
-  for (const type of ["dhcp", "dns", "web", "browser", "echo", "nmap"])
+  for (const type of ["dhcp", "dns", "web", "browser", "echo", "nmap", "generator"])
     bindApplicationButton($("add-" + type + "-application"), type);
   let paletteDrag=null, paletteDragImage=null;
   function clearPaletteDrag(){paletteDrag=null;paletteDragImage?.remove();paletteDragImage=null;}
@@ -6112,7 +6189,7 @@
   appDivider.className = "compact-palette-divider";
   appDivider.setAttribute("role", "separator");
   compactPalette.append(appDivider);
-  for (const type of ["dhcp", "dns", "web", "browser", "echo", "nmap"]) {
+  for (const type of ["dhcp", "dns", "web", "browser", "echo", "nmap", "generator"]) {
     const button = document.createElement("button");
     button.className = "compact-device compact-application";
     button.innerHTML =
@@ -6201,7 +6278,7 @@
     if (!staged) return;
     const d = net.device(staged.report.device);
     if (
-      ["dhcp", "dns", "web", "browser", "echo", "nmap"].includes(
+      ["dhcp", "dns", "web", "browser", "echo", "nmap", "generator"].includes(
         $("examine-watch").dataset.scope,
       )
     )
@@ -7361,7 +7438,7 @@
     const choose = (index) => {
       const row = rows[index];
       if (!row || !input) return;
-      if (!cliDevice()) {
+      if (input.id === "command" && !cliDevice()) {
         input.value = "";
         $("command").value = "";
         close();
@@ -7370,7 +7447,8 @@
         next.focus();
         return;
       }
-      input.setRangeText(row.hostname || row.ip, start, end, "end");
+      input.setRangeText(input.id === "generator-target" ? row.ip : row.hostname || row.ip, start, end, "end");
+      if(input.id === "generator-target"){close();input.focus();input.dispatchEvent(new Event("change",{bubbles:true}));return;}
       $("command").value = input.value;
       commandDraft = input.value;
       close();
@@ -7391,7 +7469,7 @@
       start = before.lastIndexOf("@");
       end = input.selectionStart;
       const query = match[1].trim().toLowerCase(),
-        selectingDevice = !cliDevice();
+        selectingDevice = input.id === "command" && !cliDevice();
       list.setAttribute(
         "aria-label",
         selectingDevice ? "Select a device" : "Device IP addresses and DNS hostnames",
@@ -7444,7 +7522,7 @@
       heading.className = "mention-list-title";
       heading.textContent = selectingDevice
         ? "Select a device for the CLI"
-        : "Insert IP or DNS hostname";
+        : input.id === "generator-target" ? "Insert target IP" : "Insert IP or DNS hostname";
       list.append(heading);
       rows.forEach((row, i) => {
         const b = doc.createElement("button");
@@ -7486,15 +7564,15 @@
       mark();
     };
     doc.addEventListener("input", (e) => {
-      if (e.target.id === "command") update(e.target);
+      if (["command","generator-target"].includes(e.target.id)) update(e.target);
     });
     doc.addEventListener("click", (e) => {
-      if (e.target.id === "command") update(e.target);
+      if (["command","generator-target"].includes(e.target.id)) update(e.target);
     });
     doc.addEventListener(
       "keydown",
       (e) => {
-        if (e.target.id !== "command" || list.hidden) return;
+        if (!["command","generator-target"].includes(e.target.id) || list.hidden) return;
         if (["ArrowDown", "ArrowUp"].includes(e.key) && rows.length) {
           e.preventDefault();
           e.stopImmediatePropagation();
@@ -7905,6 +7983,7 @@
   $("traffic").addEventListener("click", inspectFlight);
   $("traffic").addEventListener("keydown", inspectFlight);
   const cacheTimer = setInterval(() => {
+    drawCapacityMonitors();
     const expiredThreads=NetworkExplorerEcho.expireThreads(net);
     if(staged)NetworkExplorerEcho.expireThreads(staged.trial);
     if(expiredThreads&&String(selected).startsWith('echo:'))inspector();
@@ -8197,6 +8276,10 @@
     const example=NetworkExplorerExamples.securityLab(NetworkExplorer.Network,kind);
     net=example.network;selected='browser:'+example.clientId;examined=false;cancelConnect();openInspector();render();
     say('Start with the canvas walkthrough note. Observe the working network, apply the defense, and verify the result. Reload the example to reset.');
+  });
+  registerExample('example-dos',()=>{
+    if((net.devices.length||net.applicationDrafts.length)&&!confirm('Replace this network with the DoS example?'))return;
+    discard();candidateBase=null;const e=NetworkExplorerExamples.dos(NetworkExplorer.Network);net=e.network;selected='generator:'+e.sourceId;examined=false;cancelConnect();openInspector();render();say('Read the DoS walkthrough note. Test the Browser baseline, then run a burst with Legitimate Client selected for the availability check.');
   });
   registerExample("example-https", () => {
     if ((net.devices.length || net.applicationDrafts.length) && !confirm("Replace this network with the HTTPS and certificates example?")) return;

@@ -70,7 +70,7 @@
     ["Basic", ["example-direct", "example", "example-dhcp", "example-dns"]],
     ["Intermediate", ["example-vlans", "example-routed", "example-http"]],
     ["Special Applications", ["example-echo-tcp", "example-echo-udp"]],
-    ["Security", ["example-https", "example-firewall", "example-security-encrypt", "example-security-harden", "example-security-detect", "example-security-prevent"]],
+    ["Security", ["example-https", "example-firewall", "example-security-encrypt", "example-security-harden", "example-security-detect", "example-security-prevent", "example-dos"]],
     [
       "Advanced",
       [

@@ -46,7 +46,7 @@
   const neighbors=d=>n.links.flatMap(l=>l.a===d.id?[n.device(l.b)]:l.b===d.id?[n.device(l.a)]:[]).filter(Boolean);
   for(const {root,v} of groups){const queue=[root];for(let i=0;i<queue.length;i++){const parent=queue[i],children=neighbors(parent).filter(d=>!placed.has(d.id));children.forEach((d,j)=>{placed.add(d.id);const spread=(j-(children.length-1)/2)*330;d.x=parent.x+300*v.x-spread*v.y;d.y=parent.y+300*v.y+spread*v.x;queue.push(d);});}}
   let isolated=0;for(const d of n.devices)if(!placed.has(d.id)){d.x=250+(isolated%4)*380;d.y=1900+Math.floor(isolated++/4)*300;}
-  for(const d of n.devices){const types=['dhcp','dns','web','browser','echo','nmap'].filter(t=>d[t+'Server']);types.forEach((type,i)=>{d[type==='dhcp'?'applicationOffset':type+'Offset']={x:160,y:(i-(types.length-1)/2)*150};});}
+  for(const d of n.devices){const types=['dhcp','dns','web','browser','echo','nmap','generator'].filter(t=>d[t+'Server']);types.forEach((type,i)=>{d[type==='dhcp'?'applicationOffset':type+'Offset']={x:160,y:(i-(types.length-1)/2)*150};});}
   n.applicationDrafts.forEach((a,i)=>{a.x=250+i*200;a.y=2200;});
   // Uniform padding preserves branch spacing even when a branch extends left of the origin.
   if(n.devices.length){const dx=180-Math.min(...n.devices.map(d=>d.x)),dy=120-Math.min(...n.devices.map(d=>d.y));n.devices.forEach(d=>{d.x+=dx;d.y=(d.y+dy-120)*.65+120;});}
@@ -56,7 +56,7 @@
   const footprint=d=>{
    const label=Math.max(85,String(d.name||'').length*3.5);
    const box={left:d.x-label,right:d.x+(d.type==='host'?label:Math.max(label,65+String(d.name||'').length*7)),top:d.y-45,bottom:d.y+85};
-   for(const type of ['dhcp','dns','web','browser','echo','nmap'])if(d[type+'Server']){
+   for(const type of ['dhcp','dns','web','browser','echo','nmap','generator'])if(d[type+'Server']){
     const offset=d[type==='dhcp'?'applicationOffset':type+'Offset'];
     box.left=Math.min(box.left,d.x+offset.x-75);box.right=Math.max(box.right,d.x+offset.x+75);
     box.top=Math.min(box.top,d.y+offset.y-40);box.bottom=Math.max(box.bottom,d.y+offset.y+60);
@@ -142,5 +142,18 @@
   n.notes=[{id:'note1',title:instructions[0],text:instructions[1]+'\nReload this example to reset. This network starts functional; your task is security hardening.',x:330,y:470,width:380,height:230,color:'yellow',tags:['security','walkthrough',kind],target:fw.id}];
   return {network:n,clientId:client.id,serverId:server.id,firewallId:fw.id,adminId:admin.id};
  }
- const api={direct,complex,arrange,internet,firewall,https,securityLab};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerExamples=api;
+
+ function dos(Network){
+  const n=new Network(),source=n.add('host',160,150),client=n.add('host',160,460),sw=n.add('switch',430,300),fw=n.add('firewall',690,300),server=n.add('host',980,300);
+  source.name='External Load Source';client.name='Legitimate Client';sw.name='External Switch';fw.name='Service Firewall';server.name='Protected HTTPS Server';
+  for(const [d,ip] of [[source,'192.168.1.50'],[client,'192.168.1.10'],[server,'192.168.1.2']])n.configure(d.id,ip,24);
+  n.connect(source.id,'p0',sw.id,'p0');n.connect(client.id,'p0',sw.id,'p1');n.connect(sw.id,'p2',fw.id,'p0');n.connect(fw.id,'p1',server.id,'p0');
+  n.configureFirewall(fw.id,{...fw.firewall,zones:{p0:'Outside',p1:'Inside'},rules:[{...fw.firewall.rules[0],name:'Public HTTPS',from:'Outside',to:'Inside',protocol:'TCP',destinationPort:443}],defaultAction:'drop'});
+  n.configureWeb(server.id,{enabled:true,tls:true,port:443,certificateName:server.ip,certificateTrusted:true,certificateValid:true,title:'Available service',body:'A legitimate HTTPS response. Compare availability before, during, and after the SYN burst.',synCapacity:8,synTimeout:120});
+  n.configureWeb(client.id,{enabled:true,url:'https://192.168.1.2/'},'browser');n.installApplication(n.addApplication(source.x,source.y-100,'generator').id,source.id);n.configureGenerator(source.id,{enabled:true,target:server.ip,port:443,count:40,interval:2});
+  client.browserOffset={x:0,y:110};server.webOffset={x:0,y:-110};
+  n.notes=[{id:'note1',title:'DoS: keep HTTPS available',text:'1. Open Legitimate Client Browser and load its HTTPS URL: the page works.\n2. Open Traffic Generator on External Load Source. Choose Legitimate Client for the availability check, then Run burst. The check runs midway through 40 SYN attempts. Use Pause/Step or inspect Web Server connection capacity. Pending handshakes fill eight slots; the check times out.\n3. Finish the exchange: pending slots expire. Reload the Browser and verify recovery.\n4. On Service Firewall add a DROP rule for source 192.168.1.50, Outside to Inside, TCP port 443. Move it above Public HTTPS. Repeat the burst with the same check: legitimate HTTPS should work.\nExternal and protected segments are separated by a transparent firewall; they share an IP subnet. This models connection exhaustion, not bandwidth saturation. Stop cancels future SYNs; in-flight traffic and pending-slot expiry continue. Reload the example to reset.',x:430,y:510,width:390,height:250,color:'yellow',tags:['security','dos','availability'],target:fw.id}];
+  return {network:n,clientId:client.id,sourceId:source.id,serverId:server.id,firewallId:fw.id};
+ }
+ const api={dos,direct,complex,arrange,internet,firewall,https,securityLab};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerExamples=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
