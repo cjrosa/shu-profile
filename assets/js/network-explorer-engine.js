@@ -15,7 +15,8 @@
  const ECHO=typeof module!=='undefined'&&module.exports?require('./network-explorer-echo.js'):root.NetworkExplorerEcho;
  class Network {
   constructor(data){this.notes=[];this.applicationDrafts=[];this.devices=[];this.links=[];this.serial=1;this.reset();if(data)this.load(data);}
-  reset(){this.echo={};this.firewallSessions={};this.firewallHits={};this.firewallDecisions={};this.natTable={};this.tcp={};this.httpPages={};this.dnsPending={};this.dnsCache={};this.clock=0;this.queue=[];this.sequence=0;this.arp={};this.mac={};this.pending={};this.traces={};this.waitingFrames={};this.pendingPackets={};this.results=[];this.history=[];DHCP.reset(this);}
+  copyRuntimeFrom(source){HTTP.copyRuntime(source,this);}
+  reset(){HTTP.reset(this);this.echo={};this.firewallSessions={};this.firewallHits={};this.firewallDecisions={};this.natTable={};this.tcp={};this.httpPages={};this.dnsPending={};this.dnsCache={};this.clock=0;this.queue=[];this.sequence=0;this.arp={};this.mac={};this.pending={};this.traces={};this.waitingFrames={};this.pendingPackets={};this.results=[];this.history=[];DHCP.reset(this);}
   configureEcho(id,c){const d=this.device(id);if(d?.type!=='host')throw Error('Select a host.');ECHO.validate(c);d.echoServer=copy(c);this.reset();}
   echoControl(id,action,thread='main'){ECHO.control(this,id,action,thread);}
   configureFirewall(id,c){const d=this.device(id);FIREWALL.validate(d,c);d.firewall=copy(c);this.reset();}

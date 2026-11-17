@@ -3,6 +3,7 @@
   "use strict";
   const handlers = new Map();
   const examples = {
+    "example-https": {title: "HTTPS and certificates", description: "Verify a server certificate, load an encrypted page, and inspect TLS traffic."},
     "example-echo-tcp": {title: "TCP Echo - Python debugger", description: "Step through a threaded Echo server and two clients, from DNS to TCP close."},
     "example-echo-udp": {title: "UDP Echo - Python debugger", description: "Follow recvfrom() and sendto() through the network, one datagram at a time."},
     "example-direct": {title: "Direct connection", description: "Two hosts on one Ethernet cable. Explore ARP and ping without a switch."},

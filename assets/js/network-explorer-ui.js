@@ -2624,6 +2624,7 @@
           (d ? " on " + esc(d.name) : ", not installed") +
           '"><rect class="application-hit" x="-48" y="-29" width="96" height="70" rx="9"/>' +
           appGlyph(a.type) +
+          (a.type==='web'&&d?.webServer?.certificateName?'<g class="certificate-badge" transform="translate(29,-26)" fill="#f4c95d" stroke="#986b16" stroke-width="1.8" stroke-linejoin="round"><title>Certificate attached: '+esc(d.webServer.certificateName)+'</title><path d="M10 0 20 4v8c0 7-5 11-10 14C5 23 0 19 0 12V4Z"/><path d="m3 6 7-3 7 3v6c0 5-3 8-7 11-4-3-7-6-7-11Z" fill="#ffe39a" stroke="none"/><path d="m5 12 3.5 3.5L15 8" fill="none" stroke="#795414" stroke-width="2.5" stroke-linecap="round"/></g>':'') +
           '<text y="34" text-anchor="middle">' +
           appLabel(a.type) +
           "</text>" +
@@ -2641,6 +2642,15 @@
       .join("");
     avoidConnectionLabels();
   }
+  function certificatePanel(c) {
+    const toggle=(id,label,checked)=>'<label class="certificate-toggle"><span>'+label+'</span><input id="'+id+'" type="checkbox" role="switch" '+(checked?'checked':'')+'><span class="certificate-switch" aria-hidden="true"></span></label>';
+    return '<section class="certificate-card" aria-label="Certificate information">'+
+      '<div class="certificate-card-heading"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M5 4h34v29H5Z" fill="#fffdf5" stroke="#b1a17c" stroke-width="2"/><path d="M9 8h26v21H9Z" fill="none" stroke="#ddd4bd"/><path d="M13 13h18M13 18h14M13 23h9" stroke="#9caebf" stroke-width="2"/><path d="m26 32-3 12 7-4 6 4-2-12" fill="#6387c4"/><circle cx="30" cy="29" r="8" fill="#e3b747" stroke="#a77b1e"/><path d="m26 29 3 3 5-6" fill="none" stroke="#fff9df" stroke-width="2"/></svg><strong>Certificate</strong><button id="remove-certificate" type="button" aria-label="Remove certificate" title="Remove certificate"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button></div>'+
+      '<div class="certificate-purpose">Authenticates this web server.</div>'+
+      '<div class="certificate-properties"><label for="certificate-name">Issued to</label><input id="certificate-name" aria-label="Issued to (hostname or IP)" required maxlength="253" value="'+esc(c.certificateName)+'"><div class="certificate-issuer"><strong>Issued by</strong><span>Teaching CA <small>(simulated)</small></span></div></div>'+
+      '<div class="certificate-controls">'+toggle('certificate-trusted','Trust this issuer',c.certificateTrusted)+toggle('certificate-valid','Within validity period',c.certificateValid)+'</div>'+
+      '</section>';
+  }
   function webPanel(d, type) {
     const c = d[appKey(type)],
       page = net.httpPages[d.id];
@@ -2648,16 +2658,27 @@
     return (
       '<form id="web-settings"><label class="check"><input id="web-enabled" type="checkbox" ' +
       (c.enabled ? "checked" : "") +
-      '>Enable Web Server</label><label>TCP port<input id="web-port" type="number" min="1" max="65535" required value="' +
+      '>Enable Web Server</label>' +
+      '<label>Transport<select id="web-tls"><option value="http"' + (!c.tls?' selected':'') + '>HTTP</option><option value="https"' + (c.tls?' selected':'') + '>HTTPS (TLS)</option></select></label>' +
+      (c.certificateName ? certificatePanel(c) : '<p class="hint">For HTTPS, choose Certificate in the palette, then click this server.</p>') +
+      '<label>TCP port<input id="web-port" type="number" min="1" max="65535" required value="' +
       c.port +
       '"></label><label>Page title<input id="web-title" maxlength="80" value="' +
       esc(c.title) +
       '"></label><label>Page text<textarea id="web-body" rows="6" maxlength="800">' +
       esc(c.body) +
-      '</textarea></label><p class="hint">Served at / and /index.html. One small page, up to 800 UTF-8 bytes.</p><button type="submit" class="section-expand" aria-label="Save Web Server settings" title="Save settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h12l4 4v14H3V3h2Zm2 0v6h10V3M7 21v-8h10v8"/></svg></button></form>'
+      '</textarea></label><p id="web-settings-status" class="hint" role="status" aria-live="polite"></p></form>'
     );
   }
   const browserDrafts = new Map();
+  function browserSecurityMarkup(url,page) {
+    const https=/^https:/i.test(url),same=page?.url===url,verified=https&&same&&page?.secure,
+      failed=https&&same&&/rejected|failed|mismatch|refused|timed out/i.test(page?.status||'');
+    const state=failed?'failed':https?(verified?'secure':'pending'):'insecure';
+    const label=failed?'HTTPS connection failed':https?(verified?'HTTPS - certificate verified; connection encrypted':'HTTPS - certificate not yet verified'):'HTTP - not secure; messages are readable on the network';
+    const shape=https&&!failed?'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4M12 14v3"/>':'<path d="M12 3 2 21h20ZM12 9v5M12 17v1"/>';
+    return '<span class="browser-security '+state+'" role="img" aria-label="'+label+'" title="'+label+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+shape+'</svg></span>';
+  }
   function browserMarkup(d, expanded = false) {
     const page = net.httpPages[d.id],
       url = browserDrafts.get(d.id) ?? d.browserServer.url;
@@ -2668,9 +2689,9 @@
       (!expanded
         ? '<button id="expand-browser" type="button" aria-label="Expand browser" title="Expand"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7M21 3l-7 7M10 21H3v-7M3 21l7-7"/></svg></button>'
         : "") +
-      '</div><form id="browser-form" class="browser-navigation"><button id="browser-reload" type="submit" aria-label="Reload page" title="Reload page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M20 12a8 8 0 1 0-2 6M20 7l-3-3"/></svg></button><input id="browser-url" aria-label="Web address" type="url" required value="' +
+      '</div><form id="browser-form" class="browser-navigation"><button id="browser-reload" type="submit" aria-label="Reload page" title="Reload page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 5v6h-6M20 11a8 8 0 1 0-2.34 6.66"/></svg></button><div class="browser-address">' + browserSecurityMarkup(url,page) + '<input id="browser-url" aria-label="Web address" type="url" required value="' +
       esc(url) +
-      '" placeholder="http://server.example/"><button type="submit" aria-label="Go to address" title="Go"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button></form><article class="browser-page">' +
+      '" placeholder="http://server.example/"></div><button type="submit" aria-label="Go to address" title="Go"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button></form><article class="browser-page">' +
       (page?.body !== undefined
         ? "<h3>" + esc(page.title) + "</h3><p>" + esc(page.body) + "</p>"
         : '<div class="browser-empty"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-6 5-6 13 0 18M12 3c6 5 6 13 0 18"/></svg><p>Enter an address to explore your network.</p></div>') +
@@ -2721,6 +2742,7 @@
       (e) => {
         if (e.target.id === "browser-url") {
           browserDrafts.set(d.id, e.target.value);
+          e.target.previousElementSibling.outerHTML=browserSecurityMarkup(e.target.value,net.httpPages[d.id]);
           e.stopImmediatePropagation();
         }
       },
@@ -2748,25 +2770,35 @@
   }
   function bindWebPanel(d, type) {
     if (type === "browser") {
-      $("browser-url").oninput = (e) => browserDrafts.set(d.id, e.target.value);
+      $("browser-url").oninput = (e) => {browserDrafts.set(d.id, e.target.value);e.target.previousElementSibling.outerHTML=browserSecurityMarkup(e.target.value,net.httpPages[d.id]);};
       $("browser-form").onsubmit = (e) => {
         e.preventDefault();
         browseFrom(d.id, $("browser-url").value);
       };
       $("expand-browser").onclick = () => expandBrowser(d);
-    } else
-      $("web-settings").onsubmit = (e) => {
-        e.preventDefault();
-        mutate(() =>
-          net.configureWeb(d.id, {
-            enabled: $("web-enabled").checked,
-            port: Number($("web-port").value),
-            title: $("web-title").value,
-            body: $("web-body").value,
-          }),
-        );
+    } else {
+      const form=$('web-settings'),origin=net;let timer;
+      const save=()=>{
+        clearTimeout(timer);
+        if(!form.isConnected||net!==origin)return;
+        const status=form.querySelector('#web-settings-status');
+        if(!form.checkValidity()){status.textContent='Complete the highlighted fields to apply changes.';return;}
+        const read=id=>form.querySelector('#'+id);
+        const config={enabled:read('web-enabled').checked,tls:read('web-tls').value==='https',port:Number(read('web-port').value),title:read('web-title').value,body:read('web-body').value,
+          ...(read('certificate-name')?{certificateName:read('certificate-name').value.trim().toLowerCase(),certificateTrusted:read('certificate-trusted').checked,certificateValid:read('certificate-valid').checked}:{})};
+        try{NetworkExplorerHTTP.create({}).validate(config);}catch(error){status.textContent=error.message;return;}
+        if(JSON.stringify(config)===JSON.stringify(d.webServer))return;
+        const active=document.activeElement,focusId=form.contains(active)?active.id:null,start=active?.selectionStart,end=active?.selectionEnd;
+        mutate(()=>net.configureWeb(d.id,config));
+        const field=focusId&&$(focusId);if(field){field.focus({preventScroll:true});if(typeof start==='number'&&['text','textarea'].includes(field.type))field.setSelectionRange(start,end);}
       };
+      form.oninput=e=>{if(e.target.type==='checkbox'||e.target.tagName==='SELECT')return;clearTimeout(timer);timer=setTimeout(save,350);};
+      form.onchange=e=>{if(e.target.id==='web-tls'){const port=form.querySelector('#web-port');if(port.value==='80'||port.value==='443')port.value=e.target.value==='https'?'443':'80';}save();};
+      form.onsubmit=e=>{e.preventDefault();save();};
+      if($('remove-certificate'))$('remove-certificate').onclick=()=>{clearTimeout(timer);mutate(()=>{const config={...d.webServer,tls:false,port:d.webServer.port===443?80:d.webServer.port};delete config.certificateName;delete config.certificateTrusted;delete config.certificateValid;net.configureWeb(d.id,config);});};
+    }
   }
+
   function applicationInspector() {
     const a = applications().find((a) => a.id === selected);
     if (!a) return false;
@@ -4573,6 +4605,7 @@
       new NetworkExplorer.Network(),
       JSON.parse(JSON.stringify(net)),
     );
+    trial.copyRuntimeFrom(net);
     const report = trial.next();
     if (!report) {
       adoptTrafficNetwork(trial);
@@ -5463,8 +5496,14 @@
       "</span>";
     appPalette.querySelector(".palette").append(button);
   }
+  const certificateGlyph='<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M9 4h24l6 6v25H9ZM15 13h16M15 19h12"/><circle cx="29" cy="30" r="7"/><path d="m24 36-2 9 7-4 7 4-2-9"/></svg>';
+  const certificateButton=document.createElement('button');certificateButton.id='add-certificate';certificateButton.type='button';certificateButton.title='Attach certificate to a Web Server';certificateButton.setAttribute('aria-label','Add certificate');certificateButton.innerHTML=certificateGlyph+'<span>Certificate</span>';appPalette.querySelector('.palette').append(certificateButton);
+  certificateButton.onclick=()=>{beginPlacement('certificate','certificate');say('Click a Web Server application or its host to attach a simulated certificate. Escape cancels.');};
+  certificateButton.draggable=true;certificateButton.ondragstart=e=>{if(!editable()){e.preventDefault();return;}e.dataTransfer.setData('application/x-network-certificate','certificate');};
+  function attachCertificate(host){const d=net.device(host);if(!d?.webServer)throw Error('Choose a host with a Web Server installed.');if(d.webServer.certificateName)throw Error('This server already has a certificate. Edit it in Web Server settings.');const name=net.devices.flatMap(x=>x.dnsServer?.records||[]).find(r=>r.address===d.ip)?.name||d.ip||'server.example';net.configureWeb(d.id,{...d.webServer,tls:true,port:d.webServer.port===80?443:d.webServer.port,certificateName:name,certificateTrusted:true,certificateValid:true});selected='web:'+host;}
   function bindApplicationButton(button, type) {
     button.draggable = true;
+    button.dataset.paletteApplication = type;
     button.setAttribute("aria-label", "Add " + appLabel(type) + " application");
     button.title = "Add " + appLabel(type) + " application";
     button.ondragstart = (e) => {
@@ -5479,32 +5518,40 @@
   }
   for (const type of ["dhcp", "dns", "web", "browser", "echo"])
     bindApplicationButton($("add-" + type + "-application"), type);
-  svg.addEventListener("dragover", (e) => {
-    if (
-      Array.from(e.dataTransfer.types).includes("application/x-network-app")
-    ) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = "copy";
-    }
+  let paletteDrag=null, paletteDragImage=null;
+  function clearPaletteDrag(){paletteDrag=null;paletteDragImage?.remove();paletteDragImage=null;}
+  function paletteDropTarget(target){
+    const node=target.closest('[data-device],[data-anchor-device]');
+    const app=applications().find(a=>a.id===target.closest('[data-application]')?.dataset.application);
+    const host=node?.dataset.device||node?.dataset.anchorDevice||app?.host;
+    const device=net.device(host);
+    const occupied=!!target.closest('[data-device],[data-anchor-device],[data-application],[data-note],[data-link]');
+    if(!paletteDrag)return {valid:false};
+    if(paletteDrag.kind==='certificate')return {host,valid:!!device?.webServer&&!device.webServer.certificateName&&(!app||app.type==='web')};
+    if(paletteDrag.kind==='application')return {host,valid:host?device?.type==='host'&&!device[appKey(paletteDrag.type)]:!occupied};
+    return {valid:!occupied};
+  }
+  svg.addEventListener('dragover',e=>{
+    if(!paletteDrag)return;
+    const valid=paletteDropTarget(e.target).valid;
+    e.dataTransfer.dropEffect=valid?'copy':'none';
+    if(valid)e.preventDefault();
   });
-  svg.addEventListener("drop", (e) => {
-    const type = e.dataTransfer.getData("application/x-network-app");
-    if (!["dhcp", "dns", "web", "browser", "echo"].includes(type)) return;
+  svg.addEventListener('drop',e=>{
+    if(!paletteDrag)return;
     e.preventDefault();
-    const p = point(e),
-      host = e.target.closest("[data-device]")?.dataset.device;
-    mutate(() => {
-      const d = net.device(host);
-      if (host && (d?.type !== "host" || d[appKey(type)]))
-        throw Error("Choose a host without this application installed.");
-      const a = net.addApplication(p.x, p.y, type);
-      selected = a.id;
-      if (host) {
-        net.installApplication(a.id, host);
-        d[appOffsetKey(type)] = { ...appDefaultOffset(type) };
-        selected = type + ":" + host;
+    const target=paletteDropTarget(e.target),pending=paletteDrag,p=point(e);
+    clearPaletteDrag();
+    if(!target.valid)return;
+    mutate(()=>{
+      if(pending.kind==='certificate')attachCertificate(target.host);
+      else if(pending.kind==='device')selected=net.add(pending.type,p.x,p.y).id;
+      else if(pending.kind==='note'){createNote(p.x,p.y);return;}
+      else {
+        const a=net.addApplication(p.x,p.y,pending.type);selected=a.id;
+        if(target.host){net.installApplication(a.id,target.host);net.device(target.host)[appOffsetKey(pending.type)]={...appDefaultOffset(pending.type)};selected=pending.type+':'+target.host;}
       }
-      openInspector();
+      finishPlacement();openInspector();
     });
   });
 
@@ -5657,6 +5704,7 @@
     },
     true,
   );
+  svg.addEventListener('keydown',e=>{if(placing?.kind!=='certificate'||!['Enter',' '].includes(e.key))return;e.preventDefault();e.stopImmediatePropagation();const app=applications().find(a=>a.id===e.target.closest('[data-application]')?.dataset.application);mutate(()=>{attachCertificate(e.target.closest('[data-device]')?.dataset.device||app?.host);finishPlacement();openInspector();});},true);
   svg.addEventListener("keydown", (e) => {
     const a = e.target.closest("[data-application]");
     if (a && ["Enter", " "].includes(e.key)) {
@@ -6045,6 +6093,7 @@
     bindApplicationButton(button, type);
     compactPalette.append(button);
   }
+  const compactCertificate=certificateButton.cloneNode(true);compactCertificate.id='compact-certificate';compactCertificate.className='compact-device compact-application';compactCertificate.onclick=certificateButton.onclick;compactCertificate.ondragstart=certificateButton.ondragstart;compactPalette.append(compactCertificate);
   for (const side of ["left", "right"]) {
     $("toggle-" + side).onclick = () => {
       const panel = $(side + "-panel"),
@@ -7902,6 +7951,35 @@
     svg.classList.add("placing");
     say("Click empty canvas to place a note. Escape cancels.");
   };
+  function paletteItem(button){
+    if(button.dataset.paletteApplication)return {kind:'application',type:button.dataset.paletteApplication};
+    if(['add-certificate','compact-certificate'].includes(button.id))return {kind:'certificate',type:'certificate'};
+    if(button.id==='add-note')return {kind:'note',type:'note'};
+    const type=button.dataset.addType||button.id.replace(/^add-/,'');
+    if(['host','switch','router','firewall'].includes(type))return {kind:'device',type};
+    return null;
+  }
+  for(const root of [$('left-panel'),compactPalette]){
+    root.querySelectorAll('button').forEach(button=>{if(paletteItem(button))button.draggable=true;});
+    root.addEventListener('dragstart',e=>{
+      const button=e.target.closest('button'),item=button&&paletteItem(button);
+      if(!item)return;
+      e.stopImmediatePropagation();
+      if(!editable()){e.preventDefault();return;}
+      finishPlacement();clearPaletteDrag();paletteDrag=item;
+      e.dataTransfer.setData('application/x-network-palette',JSON.stringify(item));e.dataTransfer.effectAllowed='copy';
+      const source=button.querySelector('svg');
+      if(source){
+        const preview=source.cloneNode(true),originals=[source,...source.querySelectorAll('*')],copies=[preview,...preview.querySelectorAll('*')];
+        copies.forEach((el,i)=>{const style=getComputedStyle(originals[i]);for(const prop of ['fill','stroke','stroke-width','stroke-linecap','stroke-linejoin'])el.style.setProperty(prop,style.getPropertyValue(prop));});
+        preview.style.width='44px';preview.style.height='44px';
+        paletteDragImage=document.createElement('div');paletteDragImage.setAttribute('aria-hidden','true');paletteDragImage.style.cssText='position:fixed;left:-100px;top:0;width:48px;height:48px;padding:2px;pointer-events:none;';paletteDragImage.append(preview);document.body.append(paletteDragImage);
+        e.dataTransfer.setDragImage(paletteDragImage,24,24);
+      }
+    },true);
+  }
+  document.addEventListener('dragend',clearPaletteDrag);
+  document.addEventListener('drop',clearPaletteDrag);
   $("canvas-stage").addEventListener(
     "pointerdown",
     (e) => {
@@ -7914,7 +7992,10 @@
           p = point(e),
           host = e.target.closest("[data-device]")?.dataset.device;
         mutate(() => {
-          if (pending.kind === "application") {
+          if(pending.kind==='certificate'){
+            const app=applications().find(a=>a.id===e.target.closest('[data-application]')?.dataset.application);
+            attachCertificate(host||app?.host);
+          } else if (pending.kind === "application") {
             const d = net.device(host);
             if (host && (d?.type !== "host" || d[appKey(pending.type)]))
               throw Error("Choose a host without this application installed.");
@@ -8078,6 +8159,13 @@
     say(
       "Acquire a DHCP lease on Browser Client, then open its Browser and visit www.campus.example.",
     );
+  });
+  registerExample("example-https", () => {
+    if ((net.devices.length || net.applicationDrafts.length) && !confirm("Replace this network with the HTTPS and certificates example?")) return;
+    discard(); candidateBase=null;
+    const example=NetworkExplorerExamples.https(NetworkExplorer.Network);
+    net=example.network;selected='browser:'+example.clientId;examined=false;cancelConnect();openInspector();render();
+    say('Load https://secure.example/ in Browser. Inspect TLS in Activity, then try the certificate challenge in the canvas note.');
   });
   registerExample("example-firewall", () => {
     if ((net.devices.length || net.applicationDrafts.length) && !confirm("Replace this network with the Firewall example?")) return;

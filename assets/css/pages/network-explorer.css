@@ -3282,7 +3282,7 @@ body[data-platform="paloalto"] .vlan-badge {
 }
 #browser-form button {
   flex: none;
-  margin-bottom: 10px;
+  margin: 0;
 }
 .browser-page {
   border: 1px solid #d6e1e8;
@@ -9437,3 +9437,64 @@ body:not(.external-panel-page) #left-panel > .unified-palette {
 .route-table tr[data-route-port]:hover,
 .route-table tr[data-route-port]:focus-visible { background: #e4f3f0; }
 .route-table tr[data-route-port]:focus-visible { outline: 2px solid #287d78; outline-offset: -2px; }
+
+/* Certificate viewer, with compact editable teaching controls. */
+#web-settings .certificate-card { margin: 12px 0; padding: 0; min-width: 0; overflow: hidden; border: 1px solid #c9ced5; border-radius: 5px; background: #fff; color: #28313d; font-family: "Segoe UI", sans-serif; box-shadow: 0 1px 3px #24384b0b; }
+#web-settings .certificate-card-heading { display: flex; align-items: center; gap: 10px; padding: 13px 12px 11px; border-bottom: 1px solid #dce0e5; background: #fafbfc; }
+#web-settings .certificate-card-heading svg { width: 38px; height: 38px; flex: 0 0 38px; }
+#web-settings .certificate-card-heading strong { font-size: 14px; line-height: 1.3; }
+#web-settings .certificate-purpose { padding: 12px; font-size: 12px; }
+#web-settings .certificate-purpose strong { font-weight: 600; }
+#web-settings .certificate-purpose p { margin: 5px 0 0; line-height: 1.5; color: #536170; }
+#web-settings .certificate-properties { padding: 12px; border-top: 1px solid #e4e7eb; }
+#web-settings .certificate-properties > label { margin: 0 0 5px; font-size: 12px; font-weight: 600; }
+#web-settings #certificate-name { box-sizing: border-box; width: 100%; min-width: 0; padding: 7px 9px; border: 1px solid #b9c4d0; border-radius: 3px; font: 13px "Segoe UI", sans-serif; background: #fff; }
+#web-settings .certificate-issuer { display: grid; gap: 5px; margin-top: 12px; font-size: 12px; }
+#web-settings .certificate-issuer strong { font-weight: 600; }
+#web-settings .certificate-issuer small { display: block; margin-top: 3px; color: #697786; font-size: 11px; }
+#web-settings .certificate-controls { border-top: 1px solid #e4e7eb; padding: 5px 12px; }
+#web-settings .certificate-toggle { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0; padding: 8px 0; font-size: 12px; cursor: pointer; }
+#web-settings .certificate-toggle input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+#web-settings .certificate-switch { box-sizing: border-box; flex: 0 0 32px; width: 32px; height: 18px; border: 1px solid #8c99a7; border-radius: 10px; background: #e4e8ec; transition: background .15s; }
+#web-settings .certificate-switch::after { content: ""; display: block; width: 12px; height: 12px; margin: 2px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px #0003; transition: transform .15s; }
+#web-settings .certificate-toggle input:checked + .certificate-switch { background: #287d78; border-color: #287d78; }
+#web-settings .certificate-toggle input:checked + .certificate-switch::after { transform: translateX(14px); }
+#web-settings .certificate-toggle input:focus-visible + .certificate-switch { outline: 2px solid #326bb2; outline-offset: 3px; }
+#web-settings .certificate-card-footer { padding: 8px 12px; border-top: 1px solid #e4e7eb; background: #fafbfc; text-align: right; }
+#web-settings #remove-certificate { width: auto; min-height: 28px; padding: 4px 9px; border: 1px solid #c3cbd4; border-radius: 3px; background: #fff; color: #536170; font: 12px "Segoe UI", sans-serif; }
+#web-settings #remove-certificate:hover { border-color: #a55050; color: #923e3e; background: #fff7f7; }
+.browser-navigation .browser-security { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 24px; width: 24px; align-self: center; color: #6e7c8c; }
+.browser-navigation .browser-security svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.capture-payload { padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--line); }
+.capture-payload > strong { color: var(--ink); }
+#capture-bytes .capture-payload-text { white-space: pre-wrap; overflow-wrap: anywhere; font-style: normal; }
+.browser-navigation .browser-security.secure { color: #237a3b; }
+.browser-navigation .browser-security.insecure,
+.browser-navigation .browser-security.pending,
+.browser-navigation .browser-security.failed { color: #b3443d; }
+.browser-navigation .browser-address { display: flex; align-items: center; flex: 1; min-width: 0; padding-left: 5px; border: 1px solid #bdcadb; border-radius: 18px; background: #f6f8fa; }
+.browser-navigation .browser-address:focus-within { outline: 2px solid #6889bc; outline-offset: 2px; }
+#inspector .browser-address #browser-url,
+.sim-browser .browser-address #browser-url { border: 0; outline: none; box-shadow: none; background: transparent; padding-left: 2px; }
+
+.sim-browser #browser-form > button { display: inline-flex; align-items: center; justify-content: center; align-self: center; width: 28px; height: 28px; min-height: 28px; padding: 5px; margin: 0; }
+.sim-browser #browser-form > button svg { display: block; flex: none; width: 17px; height: 17px; }
+
+/* Compact certificate summary and header removal action. */
+#web-settings .certificate-card { margin: 8px 0; }
+#web-settings .certificate-card-heading { gap: 8px; padding: 8px 10px; }
+#web-settings .certificate-card-heading > svg { width: 28px; height: 28px; flex-basis: 28px; }
+#web-settings .certificate-card-heading strong { flex: 1; font-size: 13px; }
+#web-settings .certificate-purpose { padding: 7px 10px; font-size: 11px; color: #647182; }
+#web-settings .certificate-properties { padding: 8px 10px; }
+#web-settings .certificate-properties > label { font-size: 11px; margin-bottom: 3px; }
+#web-settings #certificate-name { padding: 5px 7px; font-size: 12px; }
+#web-settings .certificate-issuer { grid-template-columns: auto minmax(0,1fr); gap: 8px; margin-top: 8px; font-size: 11px; }
+#web-settings .certificate-issuer small { display: inline; font-size: 10px; }
+#web-settings .certificate-controls { padding: 3px 10px; }
+#web-settings .certificate-toggle { padding: 5px 0; font-size: 11px; }
+#web-settings #remove-certificate { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 26px; width: 26px; height: 26px; min-height: 26px; margin: 0; padding: 5px; border: 1px solid transparent; border-radius: 5px; color: #95615d; background: transparent; }
+#web-settings #remove-certificate svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+#web-settings #remove-certificate:hover { color: #a3352d; background: #fbece9; border-color: #ebc4bf; }
+#web-settings #remove-certificate:focus-visible { outline: 2px solid #326bb2; outline-offset: 2px; }
+#web-settings-status:empty { display: none; }

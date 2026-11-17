@@ -70,6 +70,7 @@
     ["Basic", ["example-direct", "example", "example-dhcp", "example-dns"]],
     ["Intermediate", ["example-vlans", "example-routed", "example-http"]],
     ["Special Applications", ["example-echo-tcp", "example-echo-udp"]],
+    ["Security", ["example-https"]],
     [
       "Advanced",
       [
@@ -97,6 +98,7 @@
       b.dataset.action = id;
 
       const paths = {
+        "example-https": "M6 10h12v11H6ZM8 10V6a4 4 0 0 1 8 0v4M12 14v3",
         "example-firewall": "M12 2 21 6v6c0 5-5 8-9 10-4-2-9-5-9-10V6Zm-5 10 3 3 7-7",
         "example-internet":
           "M3 12h18M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 0c-5 5-5 13 0 18 5-5 5-13 0-18Z",

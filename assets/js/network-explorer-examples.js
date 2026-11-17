@@ -102,5 +102,18 @@
   n.notes=[{id:'note1',title:'Predict, test, explain',text:'The firewall bridges Inside Switch to Gateway Router without IP addresses. Open the Inside Client Browser: DNS and HTTP succeed. Ping 198.51.100.10: default drop. Open the Outside Services Browser: a new inbound HTTP connection is blocked. Ping 192.168.10.20 from Inside Client: same-subnet traffic bypasses this firewall. Watch Edge Firewall to inspect each decision. In Troubleshooting choose Firewall policy, then Break something to block DNS and repair the rule.',x:470,y:110,width:300,height:160,color:'blue',tags:['firewall','walkthrough'],target:fw.id}];
   return {network:n,clientId:client.id,firewallId:fw.id};
  }
- const api={direct,complex,arrange,internet,firewall};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerExamples=api;
+ function https(Network){
+  const n=new Network(),client=n.add('host',180,300),sw=n.add('switch',450,300),server=n.add('host',720,300);
+  client.name='HTTPS Client';server.name='HTTPS Server';
+  n.configure(client.id,'192.168.1.10',24);n.configure(server.id,'192.168.1.2',24);
+  n.configureDnsAddress(client.id,server.ip);
+  n.configureDnsServer(server.id,{enabled:true,records:[{name:'secure.example',address:server.ip,ttl:120}]});
+  n.configureWeb(server.id,{enabled:true,port:443,tls:true,certificateName:'secure.example',certificateTrusted:true,certificateValid:true,title:'A private page',body:'You can read this message in Browser. A network observer sees encrypted TLS application data.'});
+  n.configureWeb(client.id,{enabled:true,url:'https://secure.example/'},'browser');
+  client.browserOffset={x:0,y:-110};server.webOffset={x:65,y:-110};server.dnsOffset={x:-75,y:-110};
+  n.connect(client.id,'p0',sw.id,'p0');n.connect(server.id,'p0',sw.id,'p1');
+  n.notes=[{id:'note1',title:'HTTPS and certificates',text:"1. Open Browser on HTTPS Client and load https://secure.example/. The certificate is already attached and trusted.\n2. In Activity, filter tls and select Application Data. The page is readable in Browser, but its HTTP headers and body are hidden in captured packets.\n3. Open Web Server on HTTPS Server. Change the certificate hostname to wrong.example and reload Browser. Explain why the certificate is rejected. Restore secure.example and retry.\n4. To compare HTTP, select HTTP in Web Server settings and browse http://secure.example/. Filter http to read the payload. This model simulates TLS rather than performing real cryptography.",x:300,y:410,width:360,height:200,color:'blue',tags:['security','https','certificate'],target:server.id}];
+  return {network:n,clientId:client.id,serverId:server.id};
+ }
+ const api={direct,complex,arrange,internet,firewall,https};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerExamples=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
