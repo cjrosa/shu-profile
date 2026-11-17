@@ -4,6 +4,7 @@
  function commands(os){return ['netstat','netstat -an',...(os==='linux'?['netstat -tuln']:[])].concat(addressCommands(os));}
  function addressCommands(os){return os==='linux'?['ip addr add IP/PREFIX dev eth0','ip addr del IP/PREFIX dev eth0','ip addr flush dev eth0','dhclient eth0']:os==='macos'?['ifconfig eth0 inet IP netmask MASK','ifconfig eth0 inet IP delete','ipconfig set eth0 DHCP']:['netsh interface ipv4 set address name="eth0" source=static address=IP mask=MASK gateway=none','netsh interface ipv4 delete address name="eth0" address=IP','netsh interface ipv4 set address name="eth0" source=dhcp'];}
  function parse(d,raw){const os=d.os||'windows',s=raw.trim().replace(/^sudo\s+/i,''),low=s.toLowerCase();let m,op;
+  if(/^nmap\b/i.test(s))return {kind:'nmap',command:s};
   if(/^netstat\b/i.test(s)){
    const flags=s.split(/\s+/).slice(1);const allowed=os==='linux'?/^-[antul]+$/:/^-[an]+$/;
    if(flags.some(f=>!allowed.test(f)))throw Error('Supported: netstat, netstat -an'+(os==='linux'?', netstat -tuln':'')+'.');
@@ -28,6 +29,11 @@
   return op||null;
  }
  function run(n,id,op,apply){const d=n.device(id);if(!d||d.type!=='host')throw Error('Select a host.');
+  if(op.kind==='nmap'){
+   if(!d.nmapServer)throw Error('Nmap is not installed on this host. Drag Nmap from Tools onto the host first.');
+   if(/^nmap(?:\s+(?:--help|-h))?$/i.test(op.command))return {message:'Nmap (simulated)\nUsage: nmap -sS -p 22,80,443 192.168.1.20\n-sS: TCP SYN scan. One IPv4 target; up to 16 comma-separated ports.\nOne probe per port; no host discovery, retries, or service detection.\nOpen: SYN-ACK. Closed: RST. Filtered: no response (may also be a host or path failure).'};
+   n.scan(id,op.command);return {scan:true,message:'Starting Nmap scan of '+n.scans[id].target+'...'};
+  }
   if(op.kind==='netstat')return {message:netstat(n,d,op.flags)};
   if(op.kind==='add'&&d.ip)throw Error('This simulator supports one IPv4 address per host. Remove the current address first.');
   if(op.kind==='delete'&&(d.ip!==op.ip||(op.prefix!==undefined&&d.prefix!==op.prefix)))throw Error('That address/prefix is not assigned to this host.');

@@ -2357,9 +2357,10 @@
       web: { x: 110, y: 85 },
       browser: { x: -110, y: 85 },
       echo: { x: 0, y: -100 },
+      nmap: { x: 0, y: 120 },
     })[type];
   const appLabel = (type) =>
-      type === "echo" ? "Echo" : type === "web"
+      type === "nmap" ? "Nmap" : type === "echo" ? "Echo" : type === "web"
         ? "Web Server"
         : type === "browser"
           ? "Browser"
@@ -2368,7 +2369,18 @@
     appWatchKey = (type) => type + "Watch",
     appOffsetKey = (type) =>
       type === "dhcp" ? "applicationOffset" : type + "Offset";
+  function nmapPanel(){
+    return '<p class="hint">Nmap is a command-line (CLI) tool for discovering open network ports. Run it in the host Terminal.</p><button id="nmap-terminal" class="nmap-terminal-pill" type="button" title="Open Terminal with a scan command"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 6 6 6-6 6M13 18h7"/></svg>Terminal</button><p class="hint">Type <code>@</code> in Terminal to choose a target IP, then press Enter to scan.</p>';
+  }
+  function nmapTerminal(id){
+    const raw='nmap -sS -p 22,80,443 ';
+    finishPlacement();cancelConnect();openCanvasTerminal(id,'nmap:'+id);
+    $('command').value=raw;terminalState(id).input=raw;syncExternal();
+    const entry=externalPanels.get('terminal'),input=(entry?.window.document||document).getElementById('command');
+    input?.focus();input?.setSelectionRange(raw.length,raw.length);
+  }
   function appGlyph(type) {
+    if(type === "nmap") return '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="-3" cy="-3" r="17"/><circle cx="-3" cy="-3" r="9"/><path d="M9 9l14 14M-3-20v34M-20-3h34"/></g>';
     if (type === "echo")
       return '<rect x="-24" y="-18" width="8" height="36" rx="3"/><rect x="16" y="-18" width="8" height="36" rx="3"/><path d="M-11-8h22m-6-6 6 6-6 6M11 8h-22m6-6-6 6 6 6" fill="none"/>';
     if (type === "web")
@@ -2385,7 +2397,7 @@
       ...net.devices
         .filter((d) => d.type === "host")
         .flatMap((d) =>
-          ["dhcp", "dns", "web", "browser", "echo"]
+          ["dhcp", "dns", "web", "browser", "echo", "nmap"]
             .filter((t) => d[appKey(t)])
             .map((type) => {
               const offset = d[appOffsetKey(type)];
@@ -2423,7 +2435,7 @@
     if (!watchMenu.matches(":popover-open")) $("watch").click();
   }
   function hostApplications(d) {
-    const types = ["dhcp", "dns", "web", "browser", "echo"].filter((t) => d[appKey(t)]);
+    const types = ["dhcp", "dns", "web", "browser", "echo", "nmap"].filter((t) => d[appKey(t)]);
     return (
       '<div class="small-heading inspector-section-heading">Applications</div>' +
       (types.length
@@ -2816,7 +2828,7 @@
         "<span>" +
         esc(d.name) +
         "</span></button></p>" +
-        (a.type === "echo" ? NetworkExplorerEchoUI.markup(net,d,esc) : ["web", "browser"].includes(a.type)
+        (a.type === "nmap" ? nmapPanel(d) : a.type === "echo" ? NetworkExplorerEchoUI.markup(net,d,esc) : ["web", "browser"].includes(a.type)
           ? webPanel(d, a.type)
           : a.type === "dns"
             ? dnsPanel(d)
@@ -2828,7 +2840,8 @@
         selected = d.id;
         render();
       };
-      if (a.type === "echo") NetworkExplorerEchoUI.bind(document.getElementById('inspector'),d.id,{
+      if(a.type === "nmap") $("nmap-terminal").onclick=()=>nmapTerminal(d.id);
+      else if (a.type === "echo") NetworkExplorerEchoUI.bind(document.getElementById('inspector'),d.id,{
         get:()=>net, refresh:()=>render(), configure:c=>mutate(()=>net.configureEcho(d.id,c)),
         styleSelect:(id,label)=>styleInspectorSelect(id,label,()=>''),
         control:(action,thread)=>safely(()=>{if(candidateBase)throw Error('Commit or revert candidate changes first.');
@@ -2853,7 +2866,8 @@
             d.name +
             " and remove its configuration?",
           () => {
-            if(a.type === "echo"){delete d.echoServer;delete d.echoWatch;delete d.echoOffset;net.reset();}
+            if(a.type === "nmap"){delete d.nmapServer;delete d.nmapWatch;delete d.nmapOffset;net.reset();}
+            else if(a.type === "echo"){delete d.echoServer;delete d.echoWatch;delete d.echoOffset;net.reset();}
             else if (["web", "browser"].includes(a.type))
               net.uninstallWeb(d.id, a.type);
             else if (a.type === "dns") net.uninstallDns(d.id);
@@ -3238,7 +3252,7 @@
   function bindDhcp(d) {
     if (d.type !== "host") return;
     $("host-gateway").readOnly = d.addressMode === "dhcp";
-    for (const type of ["dhcp", "dns", "web", "browser", "echo"]) {
+    for (const type of ["dhcp", "dns", "web", "browser", "echo", "nmap"]) {
       const installed = $("host-" + type + "-app");
       if (installed)
         installed.onclick = () => selectApplication(type + ":" + d.id);
@@ -4934,7 +4948,7 @@
   function publishResults(oldCount) {
     for (const r of net.results.slice(oldCount))
       output(
-        r.dhcp || r.dns || r.http
+        r.dhcp || r.dns || r.http || r.nmap
           ? net.device(r.device).name + ": " + r.message
           : r.trace
             ? r.hop +
@@ -5060,6 +5074,7 @@
     if (d.type === "host")
       return base.concat(
         [
+          ...(d.nmapServer?["nmap", "nmap -sS -p 22,80,443 IP"]:[]),
           "nslookup",
           dnsFlushCommand(d),
           "ping",
@@ -5156,9 +5171,9 @@
     }
     if(d.type === "host") {
       try {const op=NetworkExplorerHostCLI.parse(d,raw);if(op){
-        if(candidateBase&&op.kind!=='netstat')throw Error("Commit or revert candidate changes before configuring host addresses.");
+        if((candidateBase&&op.kind!=='netstat')||(op.kind==='nmap'&&staged))throw Error("Commit or revert candidate changes before configuring host addresses.");
         const result=NetworkExplorerHostCLI.run(net,d.id,op,fn=>change(()=>configurationChange(fn)));
-        output(result.message);if(result.dhcp)startDhcp(d.id);render();return;
+        output(result.message);if(result.dhcp)startDhcp(d.id);if(result.scan){running=true;stage();}render();return;
       }}catch(e){output(e.message);render();return;}
     }
     if (d.type === "router") {
@@ -5496,6 +5511,9 @@
       "</span>";
     appPalette.querySelector(".palette").append(button);
   }
+  const toolsPalette=document.createElement('section');
+  toolsPalette.innerHTML='<h2 class="palette-heading" tabindex="0"><svg class="palette-heading-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg><span>Tools</span></h2><div class="palette"><button id="add-nmap-application" type="button"><svg viewBox="-30 -26 60 52">'+appGlyph('nmap')+'</svg><span>Nmap</span></button></div>';
+  $('left-panel').append(toolsPalette);
   const certificateGlyph='<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M9 4h24l6 6v25H9ZM15 13h16M15 19h12"/><circle cx="29" cy="30" r="7"/><path d="m24 36-2 9 7-4 7 4-2-9"/></svg>';
   const certificateButton=document.createElement('button');certificateButton.id='add-certificate';certificateButton.type='button';certificateButton.title='Attach certificate to a Web Server';certificateButton.setAttribute('aria-label','Add certificate');certificateButton.innerHTML=certificateGlyph+'<span>Certificate</span>';appPalette.querySelector('.palette').append(certificateButton);
   certificateButton.onclick=()=>{beginPlacement('certificate','certificate');say('Click a Web Server application or its host to attach a simulated certificate. Escape cancels.');};
@@ -5516,7 +5534,7 @@
     };
     button.onclick = () => beginPlacement("application", type);
   }
-  for (const type of ["dhcp", "dns", "web", "browser", "echo"])
+  for (const type of ["dhcp", "dns", "web", "browser", "echo", "nmap"])
     bindApplicationButton($("add-" + type + "-application"), type);
   let paletteDrag=null, paletteDragImage=null;
   function clearPaletteDrag(){paletteDrag=null;paletteDragImage?.remove();paletteDragImage=null;}
@@ -6081,7 +6099,7 @@
   appDivider.className = "compact-palette-divider";
   appDivider.setAttribute("role", "separator");
   compactPalette.append(appDivider);
-  for (const type of ["dhcp", "dns", "web", "browser", "echo"]) {
+  for (const type of ["dhcp", "dns", "web", "browser", "echo", "nmap"]) {
     const button = document.createElement("button");
     button.className = "compact-device compact-application";
     button.innerHTML =
@@ -6170,7 +6188,7 @@
     if (!staged) return;
     const d = net.device(staged.report.device);
     if (
-      ["dhcp", "dns", "web", "browser", "echo"].includes(
+      ["dhcp", "dns", "web", "browser", "echo", "nmap"].includes(
         $("examine-watch").dataset.scope,
       )
     )

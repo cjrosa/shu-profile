@@ -9498,3 +9498,7 @@ body:not(.external-panel-page) #left-panel > .unified-palette {
 #web-settings #remove-certificate:hover { color: #a3352d; background: #fbece9; border-color: #ebc4bf; }
 #web-settings #remove-certificate:focus-visible { outline: 2px solid #326bb2; outline-offset: 2px; }
 #web-settings-status:empty { display: none; }
+
+.nmap-actions { display:flex; align-items:center; gap:8px; margin-top:8px; }
+#inspector .nmap-terminal-pill { display:inline-flex; align-items:center; gap:5px; border-radius:999px; padding:3px 9px; min-height:26px; background:#edf1fa; color:#4b6088; font-size:12px; }
+.nmap-terminal-pill svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.8; }
