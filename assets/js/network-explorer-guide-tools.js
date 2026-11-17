@@ -127,7 +127,8 @@ security.querySelectorAll('.guide-security-topics article').forEach((card,i)=>{
 panels.prepend(security);
 // Reuse the Home divider only at main section boundaries, outside the labs.
 const sectionDivider=guide.querySelector('.guide-section-divider');
-for(const section of [...panels.children,guide.querySelector('.guide-labs'),guide.querySelector('.guide-finish')]){
+guide.querySelector('.guide-finish').classList.add('guide-separated-section');
+for(const section of [...panels.children,guide.querySelector('.guide-labs')]){
   section.classList.add('guide-separated-section');
   section.before(sectionDivider.cloneNode(true));
 }
