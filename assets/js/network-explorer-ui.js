@@ -2000,6 +2000,7 @@
       '><span class="watch-switch-track" aria-hidden="true"></span><span>Enabled</span></label></div><p>Connected to: ' +
       esc(peer ? peer.name + " / " + peerPort.name : "Not connected") +
       "</p>" +
+      ('<p class="port-mac-address">MAC address: <code>' + esc(p.mac) + '</code><button type="button" id="copy-port-mac" class="vlan-icon-button" aria-label="Copy MAC address" title="Copy MAC address"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg></button></p>') +
       (d.type === "host" ? hostAddressFields(d) : d.type === "switch"
         ? "<p>" +
           (isPan(d)
@@ -2031,6 +2032,10 @@
           : "") +
       '<footer><button id="close-port-config">Close</button></footer>';
     $("close-port-config").onclick = () => portConfig.close();
+    if ($("copy-port-mac")) $("copy-port-mac").onclick = async () => {
+      try { await navigator.clipboard.writeText(p.mac); say("MAC address copied."); }
+      catch { say("Could not copy. Select the MAC address to copy it manually."); }
+    };
     $("port-admin").onchange = () => {
       if (!editable()) {
         openPortConfig(deviceId, portId);
@@ -2255,9 +2260,8 @@
         Math.max(80, Math.min(300, up ? above : below)) + "px";
       list.style.overflowY = "auto";
       toggle.setAttribute("aria-expanded", "true");
-      choices
-        .find((o) => o.dataset.value === select.value)
-        .focus({ preventScroll: true });
+      (choices.find(o=>o.dataset.value===select.value&&!o.disabled)||choices.find(o=>!o.disabled))
+        ?.focus({ preventScroll: true });
     };
     toggle.onclick = () => (list.hidden ? open() : close());
     toggle.onkeydown = (e) => {
@@ -2277,13 +2281,15 @@
         }),
     );
     list.onkeydown = (e) => {
-      const i = choices.indexOf(document.activeElement);
+      const enabledChoices = choices.filter(o=>!o.disabled);
+      if(!enabledChoices.length)return;
+      const i = enabledChoices.indexOf(document.activeElement);
       let next;
-      if (e.key === "ArrowDown") next = (i + 1) % choices.length;
+      if (e.key === "ArrowDown") next = (i + 1) % enabledChoices.length;
       else if (e.key === "ArrowUp")
-        next = (i + choices.length - 1) % choices.length;
+        next = (i + enabledChoices.length - 1) % enabledChoices.length;
       else if (e.key === "Home") next = 0;
-      else if (e.key === "End") next = choices.length - 1;
+      else if (e.key === "End") next = enabledChoices.length - 1;
       else if (e.key === "Escape") {
         e.preventDefault();
         e.stopPropagation();
@@ -2292,7 +2298,7 @@
       }
       if (next !== undefined) {
         e.preventDefault();
-        choices[next].focus();
+        enabledChoices[next].focus();
       }
     };
     wrap.addEventListener("focusout", (e) => {
@@ -2371,6 +2377,7 @@
   }
   const appDefaultOffset = (type) =>
     ({
+      arpInspection: { x: 100, y: -90 },
       firewall: { x: -100, y: 90 },
       ids: { x: 100, y: 90 },
       dhcp: { x: 110, y: -85 },
@@ -2383,7 +2390,7 @@
       spoofer: { x: 0, y: -110 },
     })[type];
   const appLabel = (type) =>
-      type === "spoofer" ? "ARP Spoofer" : type === "firewall" ? "Firewall" : type === "ids" ? "IDS/IPS" : type === "generator" ? "Traffic Generator" : type === "nmap" ? "Nmap" : type === "echo" ? "Echo" : type === "web"
+      type === "arpInspection" ? "ARP Inspection" : type === "spoofer" ? "ARP Spoofer" : type === "firewall" ? "Firewall" : type === "ids" ? "IDS/IPS" : type === "generator" ? "Traffic Generator" : type === "nmap" ? "Nmap" : type === "echo" ? "Echo" : type === "web"
         ? "Web Server"
         : type === "browser"
           ? "Browser"
@@ -2469,12 +2476,14 @@
     input?.focus();input?.setSelectionRange(raw.length,raw.length);
   }
   function appGlyph(type) {
+    if(type === "arpInspection")return '<g fill="none" stroke="#4e8880" stroke-width="2.5" stroke-linejoin="round"><path fill="#edf7f4" d="M0-24 22-15v16C22 15 10 23 0 27-10 23-22 15-22 1v-16Z"/><path d="m-12 0 8 8L13-10"/></g>';
     if(type === "firewall") return '<g transform="scale(.65)">'+NetworkExplorerFirewallUI.glyph()+"</g>";
     return ['dhcp','dns','web','browser','echo','nmap','generator','spoofer','ids'].includes(type) ? richApplicationGlyph(type) : applicationGlyph;
   }
   function applications() {
     return [
       ...net.applicationDrafts,
+      ...net.devices.filter(d=>d.type==="switch"&&d.arpInspection?.vlans.length).map(d=>{const offset=d.arpInspectionOffset||appDefaultOffset("arpInspection");return {id:"arpInspection:"+d.id,type:"arpInspection",host:d.id,x:d.x+offset.x,y:d.y+offset.y};}),
       ...net.devices.filter(d=>d.type === "router" && (d.role === "firewall" || d.firewall?.enabled)).flatMap(d=>(d.role === "firewall" ? ["firewall","ids"] : ["firewall"]).map(type=>{const offset=d[appOffsetKey(type)]||appDefaultOffset(type);return {id:type+":"+d.id,type,host:d.id,x:d.x+offset.x,y:d.y+offset.y};})),
       ...net.devices
         .filter((d) => d.type === "host")
@@ -2907,6 +2916,9 @@
     }
   }
 
+  function bindArpPolicy(d){
+    NetworkExplorerArpSecurityUI.bindPolicy($('inspector'),net,d,{styleSelect:styleInspectorSelect,configure:c=>{if(!editable())return;safely(()=>{if(candidateBase)throw Error('Commit or revert candidate changes first.');net.configureArpInspection(d.id,c);if(!c.vlans.length&&selected==='arpInspection:'+d.id)selected=d.id;render();});}});
+  }
   function applicationInspector() {
     const a = applications().find((a) => a.id === selected);
     if (!a) return false;
@@ -2917,6 +2929,13 @@
       "</svg><span>" +
       appLabel(a.type) +
       "</span>";
+    if(d && a.type==='arpInspection'){
+      bindWatch(d);
+      $('inspector').innerHTML='<p class="hint">Built into <button id="application-host" class="application-host">'+noteTargetIcon(d.id)+'<span>'+esc(d.name)+'</span></button></p>'+NetworkExplorerArpSecurityUI.policyPanel(net,d,esc,inspectorPorts.interfacePanel(d,true));
+      $('application-host').onclick=()=>select(d.id);
+      bindArpPolicy(d);
+      return true;
+    }
     if(d && ["firewall","ids"].includes(a.type)) {
       bindWatch(d);
       $("inspector").innerHTML='<p class="hint">Built into <button id="application-host" class="application-host">'+noteTargetIcon(d.id)+'<span>'+esc(d.name)+'</span></button></p><p class="hint">Enable and configure in the device Inspector.</p>'+NetworkExplorerFirewallUI.panel(net,d,esc,expiryMarkup,a.type);
@@ -3536,7 +3555,7 @@
     bindWatch(d);
     if (d) {
       $("inspector").innerHTML =
-        '<label>Name<input id="device-name" maxlength="40" value="' +
+        '<div class="application-inspector-content"><label>Name<input id="device-name" maxlength="40" value="' +
         esc(d.name) +
         '"></label>' +
         (d.type === "host"
@@ -3557,17 +3576,14 @@
             esc(d.gateway || "") +
             '" placeholder="Optional for this subnet"></label>'
           : d.type === "router"
-            ? d.firewallMode === "transparent" ? '<p class="hint">Transparent bridge: two ports, no IP address or gateway. Frames keep their addresses and TTL.</p>' : '<p class="hint">Click an interface to set its IPv4 address and prefix. Connected routes are added automatically.</p>'
+            ? d.firewallMode === "transparent" ? '<p class="hint">Transparent bridge: two ports, no IP address or gateway. Frames keep their addresses and TTL.</p>' : ''
             : "") +
         interfacePanel(d) +
         (d.type === "switch"
-          ? vlanPanel(d) + NetworkExplorerArpSecurityUI.policyPanel(net,d,esc)
+          ? vlanPanel(d)
           : d.type === "router"
-            ? (d.firewallMode === "transparent" ? "" : routePanel(d)) + NetworkExplorerFirewallUI.panel(net,d,esc,expiryMarkup) + (d.firewallMode === "transparent" ? "" : natPanel(d))
+            ? NetworkExplorerFirewallUI.panel(net,d,esc,expiryMarkup) + (d.firewallMode === "transparent" ? "" : natPanel(d) + routePanel(d))
             : "") +
-        (d.type === "host"
-          ? '<p class="hint">MAC ' + esc(d.ports[0].mac) + "</p>"
-          : "") +
         '<div class="small-heading inspector-section-heading">' +
         (d.type === "switch" ? "MAC forwarding table" : "ARP cache") +
         ' <button id="float-table" class="section-expand" type="button" title="Expand table" aria-label="Expand table"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7M21 3l-7 7M10 21H3v-7M3 21l7-7"/></svg></button></div><div id="inspector-table">' +
@@ -3577,7 +3593,7 @@
         ) +
         "</div>" +
         (d.type === "host" ? hostApplications(d) : "") +
-        '<button class="danger destructive-action" id="delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg>Delete device</button>';
+        '</div><div class="application-inspector-footer"><button class="danger destructive-action" id="delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg>Delete device</button></div>';
       $("float-table").onclick = () => {
         floatingDevice = d.id;
         refreshFloatingTable();
@@ -3633,7 +3649,7 @@
       bindNat(d);
       if(d.type === "router") NetworkExplorerFirewallUI.bind(net,d,mutate,styleInspectorSelect,(id,order)=>{openTool('events',true);if(!NetworkExplorerCapture.revealEvent(id,order))say('This packet is no longer in Activity. Run a fresh scan.');syncExternal();});
       bindVlanPanel(d);
-      if(d.type==='switch')NetworkExplorerArpSecurityUI.bindPolicy($('inspector'),net,d,{configure:c=>{if(!editable())return;safely(()=>{if(candidateBase)throw Error('Commit or revert candidate changes first.');net.configureArpInspection(d.id,c);render();});}});
+      if(d.type==='switch'){bindArpPolicy(d);if($('open-arp-inspection'))$('open-arp-inspection').onclick=()=>selectApplication('arpInspection:'+d.id);}
       if(d.type!=='switch'&&d.firewallMode!=='transparent'){
         const clear=document.createElement('button');clear.id='clear-device-arp';clear.textContent='Clear this ARP cache';$('inspector-table').after(clear);
         clear.onclick=()=>{if(!editable())return;safely(()=>{net.clearArpCache(d.id);render();});};
@@ -5816,7 +5832,7 @@
       const a = applications().find((a) => a.id === g.id);
       if (a?.host && g.ctrl && !g.moved && !g.anchor) {
         lastApplicationClick = null;
-        enableCanvasWatch(a.host, ["firewall","ids"].includes(a.type)?undefined:a.type);
+        enableCanvasWatch(a.host, ["firewall","ids","arpInspection"].includes(a.type)?undefined:a.type);
         return;
       }
       if (a?.host && !g.moved && !g.anchor) {

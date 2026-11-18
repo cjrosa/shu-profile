@@ -55,7 +55,7 @@
   const next=f.sip===c.victim?c.peer:f.src===cache[c.peer]?.mac?c.victim:null;
   if(!next)return null;
   const loop=(f.arpRelays||[]).includes(d.id),forward=c.traffic==='forward'&&!loop;
-  const row={order:e.order,source:f.sip,destination:f.dip,protocol:f.protocol||f.icmp||'IPv4',action:forward?'forward':'drop',encrypted:!!f.tls,content:f.tls?'TLS: encrypted content':f.raw||'',nextHop:next};
+  const row={order:e.order,source:f.sip,destination:f.dip,protocol:f.tls?'HTTPS / TLS '+f.tls:f.http?'HTTP '+f.http.toLowerCase():f.protocol==='TCP'?'TCP '+(f.flags||'segment'):f.protocol||f.icmp||'IPv4',action:forward?'forward':'drop',encrypted:!!f.tls,content:f.tls?'TLS: encrypted content':f.raw||'',nextHop:next};
   r.intercepted++;r.captures.push(row);if(r.captures.length>100)r.captures.shift();
   if(forward){const packet={...f,arpRelays:[...(f.arpRelays||[]),d.id]};delete packet.src;delete packet.dst;emitIp(p,next,packet);}
   return {title:forward?'Attacker intercepts and forwards':'Attacker drops intercepted traffic',notes:[f.sip+' → '+f.dip+'. '+(forward?'Preserve IP endpoints, TTL and transport data; replace Ethernet addresses for '+next+'.':'No outgoing IPv4 frame.'),loop?'Relay loop prevented.':row.encrypted?'TLS content remains encrypted.':row.content||'Connection metadata is visible.', 'Interception is simulated Ethernet relaying, not an IP router hop.']};

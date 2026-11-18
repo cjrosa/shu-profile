@@ -1,10 +1,10 @@
 /* Inspector port and VLAN markup. Event binding remains with the controller. */
 window.NetworkExplorerInspectorPorts = {
   create({ getNetwork, esc, vlanLabel, isPan }) {
-    function interfacePanel(d) {
+    function interfacePanel(d, trustMode = false) {
       const net = getNetwork();
       return (
-        '<div class="small-heading inspector-section-heading">Interfaces</div><p class="hint">Click a port to configure it. Right-click to enable or disable.</p><div class="interface-chassis"><div class="interface-ports">' +
+        (trustMode ? '<div class="interface-chassis arp-trust-chassis"><div class="interface-ports">' : '<div class="small-heading inspector-section-heading">Interfaces</div><p class="hint">Click a port to configure it. Right-click to enable or disable.</p><div class="interface-chassis"><div class="interface-ports">') +
         d.ports
           .map((p) => {
             const link = net.links.find(
@@ -38,15 +38,16 @@ window.NetworkExplorerInspectorPorts = {
               (p.enabled ? "Enabled" : "Disabled") +
               " - " +
               peer;
+            const inspected=d.arpInspection?.vlans.includes(p.accessVlan);
             return (
-              '<button type="button" class="interface-port ' +
+              (trustMode?'<div class="interface-port arp-trust-tile '+(inspected?'':'not-inspected '):'<button type="button" class="interface-port ') +
               (p.enabled ? "enabled" : "disabled") +
               (active ? " link-up" : link && p.enabled ? " link-down" : "") +
               '" data-device-port="' +
               esc(d.id + ":" + p.id) +
               '" data-port="' +
               esc(p.id) +
-              '" aria-pressed="' +
+              '" '+(trustMode?'data-port-enabled':'aria-pressed')+'="' +
               p.enabled +
               '" aria-label="' +
               esc(description) +
@@ -62,7 +63,7 @@ window.NetworkExplorerInspectorPorts = {
                   esc(vlanLabel(d, p.accessVlan)) +
                   "</span>"
                 : "") +
-              "</button>"
+              (trustMode?'<label class="certificate-toggle arp-port-trust-toggle" title="'+(inspected?'Trust '+esc(p.name):'No inspected VLAN')+'"><input type="checkbox" role="switch" aria-label="Trust '+esc(p.name)+'" data-arp-trust="'+p.id+'" '+(d.arpInspection?.trustedPorts.includes(p.id)?'checked ':'')+(inspected?'':'disabled ')+'><span class="certificate-switch" aria-hidden="true"></span></label><span class="arp-port-trust-caption">'+(inspected?(d.arpInspection?.trustedPorts.includes(p.id)?'Trusted':'Untrusted'):'Not inspected')+'</span></div>':"</button>")
             );
           })
           .join("") +
@@ -99,7 +100,7 @@ window.NetworkExplorerInspectorPorts = {
               esc(v.color) +
               '" aria-label="VLAN ' +
               v.id +
-              ' color"></div>',
+              ' color"><label class="certificate-toggle vlan-arp-toggle"><span>ARP Inspection</span><input type="checkbox" role="switch" aria-label="Inspect VLAN '+v.id+'" data-arp-vlan="'+v.id+'" '+(d.arpInspection?.vlans.includes(v.id)?'checked':'')+'><span class="certificate-switch" aria-hidden="true"></span></label></div>',
           )
           .join("") +
         '</div><form id="add-vlan-form" class="vlan-add" hidden><input id="new-vlan-id" type="number" min="2" max="4094" placeholder="ID" aria-label="New VLAN ID" required><input id="new-vlan-name" placeholder="Name" maxlength="40" aria-label="New VLAN name"><button class="vlan-icon-button" type="submit" aria-label="Save VLAN" title="Save VLAN"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h12l4 4v14H3V3h2ZM7 3v6h10V3M7 21v-8h10v8"/></svg></button><button id="cancel-add-vlan" class="vlan-icon-button" type="button" aria-label="Cancel new VLAN" title="Cancel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></form>'

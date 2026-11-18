@@ -15,12 +15,12 @@ for(const technique of ['reply','request'])test('two-sided '+technique+' poisoni
  const e=E.arpSecurity(Network);let n=e.network;n.configureSpoofer(e.sourceId,{...n.device(e.sourceId).spooferServer,technique});n.spooferControl(e.sourceId,'start');n=drain(n,true);
  assert.equal(n.arp[e.gatewayId]['p0:192.168.1.10'].mac,n.device(e.sourceId).ports[0].mac);
  n.browse(e.clientId,'http://192.168.2.20/');n=drain(n,true);assert.equal(n.httpPages[e.clientId].code,200);
- const captures=n.spoofers[e.sourceId].captures;assert.ok(captures.some(x=>x.content.includes('GET /')));assert.ok(captures.some(x=>x.content.includes('This HTTP page')));assert.ok(captures.every(x=>x.action==='forward'));
+ const captures=n.spoofers[e.sourceId].captures;assert.ok(captures.some(x=>x.protocol==='HTTP request'&&x.content.includes('GET /')));assert.ok(captures.some(x=>x.protocol==='HTTP response'&&x.content.includes('HTTP/1.1 200')));assert.ok(captures.some(x=>x.protocol.startsWith('TCP ')));assert.ok(captures.some(x=>x.content.includes('This HTTP page')));assert.ok(captures.every(x=>x.action==='forward'));
 });
 test('HTTPS interception retains opaque records while endpoints decrypt successfully',()=>{
  const e=E.arpSecurity(Network),n=e.network,server=n.device(e.serverId);n.configureWeb(server.id,{...server.webServer,tls:true,port:443,certificateName:server.ip,certificateTrusted:true,certificateValid:true});n.configureWeb(e.clientId,{enabled:true,url:'https://192.168.2.20/'},'browser');
  n.spooferControl(e.sourceId,'start');drain(n);browse(n,e);assert.equal(n.httpPages[e.clientId].code,200);assert.equal(n.httpPages[e.clientId].secure,true);
- const captures=n.spoofers[e.sourceId].captures;assert.ok(captures.some(x=>x.encrypted));assert.ok(captures.every(x=>!x.content.includes('This HTTP page')&&!x.content.includes('GET /')));
+ const captures=n.spoofers[e.sourceId].captures;assert.ok(captures.some(x=>x.encrypted&&x.protocol==='HTTPS / TLS Application Data'));assert.ok(captures.every(x=>!x.content.includes('This HTTP page')&&!x.content.includes('GET /')));
 });
 test('DAI validates requests and replies before learning; trust bypass demonstrates a repairable fault',()=>{
  const e=E.arpSecurity(Network,'protected'),n=e.network,sw=n.device(e.switchId),source=n.device(e.sourceId);
