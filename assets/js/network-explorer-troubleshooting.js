@@ -10,7 +10,32 @@
       return !n.queue.length && n.results.some(r => r.device === source && r.ok);
     } catch (_) { return false; }
   }
+  function reportReferences(text, devices) {
+    const names=devices.filter(d=>d.name&&devices.filter(x=>x.name===d.name).length===1).sort((a,b)=>b.name.length-a.name.length);
+    const parts=[];let plain='',i=0;
+    while(i<text.length){
+      const device=names.find(d=>text.startsWith(d.name,i)&&!/[\w]/.test(text[i-1]||'')&&!/[\w]/.test(text[i+d.name.length]||''));
+      if(device){if(plain){parts.push({text:plain});plain='';}parts.push({text:device.name,device:device.id});i+=device.name.length;}
+      else plain+=text[i++];
+    }
+    if(plain)parts.push({text:plain});return parts;
+  }
+  function incidentReport(fault, random = Math.random) {
+    const client=fault.sourceName||'The client', target=fault.targetName||fault.target||'the destination';
+    const reports={
+      web:['Website unavailable',client+' cannot open '+fault.url+'.','The page loaded successfully before this incident. A new request now fails. Restore access to the site and verify that the Browser receives a successful response.'],
+      firewall:['Website unavailable',client+' cannot load '+fault.url+'.','The same browsing test previously succeeded. It now fails somewhere in the DNS and web exchange. Follow the request and responses, then restore the intended access.'],
+      dns:['Name lookup failed',client+' cannot resolve '+fault.hostname+'.','This name previously resolved to an address. A fresh lookup now fails. Check how the client reaches its configured DNS service and restore name resolution.'],
+      dhcp:['Client needs an address',client+' cannot obtain a DHCP lease.','The client previously received a valid lease. A new DHCP request now fails to obtain the expected network settings. Follow the address-assignment exchange and restore service.'],
+      wireless:['Wi-Fi connection failed',client+' cannot complete its wireless connection.','The laptop previously associated, acquired an address, and reached '+target+'. That end-to-end test now fails. Investigate association and address configuration, then verify access to the wired network.'],
+      arp:['ARP protection incident',client+' is no longer protected against the ARP attack test.','The earlier test rejected forged claims while keeping the website available. That security check now fails. Traffic may still work, so inspect endpoint mappings and interception evidence as well as page access.']
+    };
+    const [title,complaint,context]=reports[fault.kind]||['Connection lost',client+' cannot reach '+target+'.','A ping to '+target+' succeeded before the incident. The same test now fails. Trace the path from the client, inspect the relevant configuration, and restore connectivity.'];
+    const detail=Math.min(2,Math.floor(random()*3));
+    return {title,body:detail===0?complaint:detail===1?complaint+' '+context: 'Reported by '+client+': '+complaint+' '+context+' Record the evidence that explains the failure and confirm your repair with a fresh test.'};
+  }
   function apply(n, fault, restore = false) {
+    if (fault.policy) { n[fault.method](fault.device, JSON.parse(JSON.stringify(restore ? fault.original : fault.policy))); return; }
     if(fault.kind==='wireless'){const d=n.device(fault.source);d.wifi.password=restore?fault.original:'incorrect-password';n.reset();}
     else if (fault.kind === 'firewall') {const c=JSON.parse(JSON.stringify(fault.original));if(!restore)c.rules.unshift(fault.rule);n.configureFirewall(fault.device,c);}
     else if (['dns','dhcp','web'].includes(fault.kind)) {
@@ -24,6 +49,17 @@
     else n.configurePort(fault.device || fault.source, fault.port || 'p0', {enabled: restore});
   }
   function verify(Network, data, fault) {
+    if (fault.kind === 'arp') {
+      try {
+        const n = new Network(data), drain = () => { let i=0; while(n.queue.length && ++i<3000)n.next(); return !n.queue.length; };
+        n.browse(fault.source,fault.url); if(!drain() || n.httpPages[fault.source]?.code!==200)return false;
+        n.spooferControl(fault.attacker,'start'); if(!drain() || !n.spoofers[fault.attacker]?.sent)return false;
+        const attackerMac=n.device(fault.attacker).ports[0].mac;
+        if(Object.values(n.arp).some(cache=>Object.entries(cache).some(([ip,row])=>[fault.victim,fault.peer].includes(ip)&&row.mac===attackerMac)))return false;
+        n.browse(fault.source,fault.url);
+        return drain() && n.httpPages[fault.source]?.code===200 && !n.spoofers[fault.attacker].intercepted;
+      } catch (_) { return false; }
+    }
     if(fault.kind==='wireless'){try{const n=new Network(data);if(n.wifiStatus(fault.source)!=='Associated')return false;n.acquireDhcp(fault.source);let steps=0;while(n.queue.length&&++steps<3000)n.next();n.ping(fault.source,fault.target);while(n.queue.length&&++steps<3000)n.next();return n.results.some(r=>r.device===fault.source&&r.target===fault.target&&r.ok);}catch(_){return false;}}
     if (!['dns','dhcp','web','firewall'].includes(fault.kind)) return probe(Network, data, fault.source, fault.target);
     try {
@@ -181,9 +217,9 @@
   function mount(panel, api) {
     let challenge = null, owner = null, baseline = null, hint = 0;
     const identity = () => api.identity ? api.identity() : api.network();
-    panel.innerHTML = '<div class="trouble-actions"><button data-lab="load">Load practice network</button><button data-lab="break">Break something</button><button data-lab="security">Security</button><button data-lab="check" disabled>Check repair</button><button data-lab="hint" disabled>Hint</button><button data-lab="look" disabled>Look here</button><button data-lab="reveal" disabled>Reveal fault</button><button data-lab="reset" disabled>Reset network</button></div><p class="trouble-status" role="status">Generate a practice network, or open/build a working network, then choose Break something.</p><div class="trouble-evidence"></div><label class="trouble-reflection">Explain your fix <input placeholder="What failed? What evidence led you to the fix?" aria-label="Explain your fix"></label>';
+    panel.innerHTML = '<div class="trouble-actions"><button data-lab="new">New incident</button><button data-lab="check" disabled>Check repair</button><button data-lab="hint" disabled>Hint</button><button data-lab="look" disabled>Look here</button><button data-lab="reveal" disabled>Reveal fault</button><button data-lab="reset" disabled>Reset network</button></div><p class="trouble-status" role="status">Choose New incident to select a practice area and start investigating.</p><div class="trouble-evidence"></div><label class="trouble-reflection">Explain your fix <input placeholder="What failed? What evidence led you to the fix?" aria-label="Explain your fix"></label>';
     const icons = {
-      load: '<path d="m3 21 12-12 3 3L6 24z" transform="translate(0 -2)"/><path d="m12 10 3 3M5 2v4M3 4h4m12-3v6m-3-3h6m-1 11v4m-2-2h4"/>',
+      new: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4M12 2V1"/>',
       security: '<path d="M12 2 21 6v6c0 5-5 8-9 10-4-2-9-5-9-10V6Z"/><path d="M12 7v6m0 4h.01"/>',
       break: '<path d="m13 2-9 12h7l-1 8 10-13h-7z"/>',
       check: '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
@@ -200,56 +236,9 @@
       button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + icons[button.dataset.lab] + '</svg>';
     });
     const toolbar = panel.querySelector('.trouble-actions');
-    function dropdown(action, label, values) {
-      const trigger = panel.querySelector('[data-lab="' + action + '"]'), wrapper = document.createElement('div');
-      wrapper.className = 'trouble-dropdown'; trigger.before(wrapper); wrapper.append(trigger);
-      trigger.classList.add('trouble-menu-trigger');
-      trigger.insertAdjacentHTML('beforeend', '<svg class="trouble-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" aria-hidden="true"><path d="m3 4 3 3 3-3"/></svg>');
-      trigger.setAttribute('aria-expanded', 'false');
-      const menu = document.createElement('div'); menu.id = 'trouble-menu-' + action;
-      menu.className = 'trouble-menu'; menu.hidden = true; menu.setAttribute('aria-label', label);
-      trigger.setAttribute('aria-controls', menu.id);
-      values.forEach(([value, description]) => {
-        const option = document.createElement('button'); option.id = 'trouble-' + action + '-' + value;
-        option.dataset.lab = action; option.dataset.level = value;
-        const levelIcons = {
-          'arp-drop':'<path d="M3 5h7v7H3ZM14 5h7v7h-7ZM6 12v5h12v-5m-9 3 6 6m0-6-6 6"/>',
-          'arp-intercept':'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
-          basic:'<rect x="8" y="3" width="8" height="5" rx="1"/><path d="M12 8v5M5 16v-3h14v3"/><rect x="2" y="16" width="6" height="5" rx="1"/><rect x="16" y="16" width="6" height="5" rx="1"/>',
-          intermediate:'<rect x="2" y="8" width="6" height="8" rx="1"/><rect x="16" y="8" width="6" height="8" rx="1"/><path d="M8 12h8M5 4v4m14-4v4M5 16v4m14-4v4"/>',
-          advanced:'<circle cx="12" cy="4" r="3"/><circle cx="4" cy="18" r="3"/><circle cx="20" cy="18" r="3"/><path d="m10 7-4 8m8-8 4 8M7 18h10"/>',
-          easy:'<path d="M5 19v-5h3v5zm6 0V9h3v10zm6 0V4h3v15"/>',
-          wireless:'<path d="M3 8q9-9 18 0M6 12q6-6 12 0M9 16q3-3 6 0"/><circle cx="12" cy="20" r="1"/>',
-          firewall:'<path d="M12 2 21 6v6c0 5-5 8-9 10-4-2-9-5-9-10V6Z"/><path d="m7 12 3 3 7-7"/>',
-          hard:'<path d="m13 2-9 12h7l-1 8 10-13h-7z"/>'
-        };
-        option.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + levelIcons[value] + '</svg><div><strong></strong><span></span></div>';
-        option.querySelector('strong').textContent = value === 'arp-drop' ? 'ARP: gateway impersonation' : value === 'arp-intercept' ? 'ARP: hidden interception' : value === 'firewall' ? 'Firewall policy' : value[0].toUpperCase() + value.slice(1);
-        option.querySelector('span').textContent = description; menu.append(option);
-      });
-      wrapper.append(menu);
-    }
-    dropdown('load', 'Generate practice network', [['basic','Random switched LAN'],['intermediate','2–3 routed LANs'],['advanced','3–5 LANs; chain or ring routing']]);
-    dropdown('security', 'Security exercises', [['arp-drop','Investigate disrupted traffic and restore ARP protection'],['arp-intercept','Find hidden interception and protect the LAN']]);
-    let startBroken = false;
-    const mode = document.createElement('button'); mode.id = 'trouble-generate-broken';
-    mode.className = 'trouble-generate-mode'; mode.setAttribute('role','switch'); mode.setAttribute('aria-checked','false');
-    mode.setAttribute('aria-label','Start with a fault');
-    mode.innerHTML = '<span>Start with a fault</span><span class="trouble-switch-track" aria-hidden="true"></span>';
-    panel.querySelector('#trouble-menu-load').prepend(mode);
-    mode.onclick = () => { startBroken = !startBroken; mode.setAttribute('aria-checked',String(startBroken)); };
-    dropdown('break', 'Break something', [['easy','Host interface disabled'],['intermediate','Gateway or switch port fault'],['hard','Incorrect switch access VLAN'],['firewall','DNS denied by an ordered rule'],['wireless','Wrong Wi-Fi password']]);
-    function closeMenus() {
-      toolbar.querySelectorAll('.trouble-menu').forEach(menu => { menu.hidden = true; });
-      toolbar.querySelectorAll('.trouble-menu-trigger').forEach(trigger => trigger.setAttribute('aria-expanded', 'false'));
-    }
-    document.addEventListener('click', e => { if (!toolbar.contains(e.target)) closeMenus(); });
-    toolbar.addEventListener('keydown', e => {
-      if (e.key === 'Escape') { const trigger = e.target.closest('.trouble-dropdown')?.querySelector('.trouble-menu-trigger'); closeMenus(); trigger?.focus(); }
-      if (e.key === 'ArrowDown' && e.target.matches('.trouble-menu-trigger')) { e.preventDefault(); closeMenus(); e.target.setAttribute('aria-expanded', 'true'); const menu = e.target.nextElementSibling; menu.hidden = false; menu.querySelector('button').focus(); }
-    });
+    function closeMenus() {}
     toolbar.setAttribute('role', 'group');
-    toolbar.setAttribute('aria-label', 'Troubleshooting actions');
+    toolbar.setAttribute('aria-label', 'Incidents actions');
     panel.prepend(toolbar);
 
     panel.querySelector("input").id = "trouble-reflection";
@@ -258,6 +247,14 @@
     statusBox.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 2.1 18a2 2 0 0 0 1.7 3h16.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 4h.01"/></svg>';
     statusBox.append(status);
     const statusIcon = statusBox.querySelector('svg'), alertIcon = statusIcon.innerHTML;
+    const report = document.createElement('details'); report.className='incident-report'; report.open=true;
+    const summary=document.createElement('summary'); summary.textContent='Incident report';
+    const reportBody=document.createElement('div'); reportBody.className='incident-report-body';
+    statusBox.before(report); report.append(summary,statusBox,reportBody);
+    const empty=document.createElement('div');empty.className='incident-empty';
+    empty.innerHTML='<button type="button" aria-label="Choose an incident"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M35 19a11 11 0 0 0-22 0c0 12-5 12-5 16h32c0-4-5-4-5-16M20 41h8M24 8V5"/><path d="m5 12 3-3m32 0 3 3" opacity=".5"/></svg><span>Your next case awaits.</span></button>';
+    report.before(empty);report.hidden=true;
+    empty.querySelector('button').onclick=()=>button('new').click();
     statusBox.dataset.severity = 'warning';
     function message(text, severity = 'warning') {
       status.textContent = text;
@@ -273,24 +270,42 @@
       closeMenus();
       challenge = null; owner = null; baseline = null; hint = 0;
       currentIdentity = identity(); enabled(false); evidence.replaceChildren();
+      reportBody.replaceChildren(); summary.textContent='Incident report'; report.open=true;
       panel.querySelector('input').value = '';
     }
     function enabled(active) {
+      empty.hidden=active;report.hidden=!active;
       reflection.hidden = true;
       for (const action of ['check','hint','look','reveal','reset']) button(action).disabled = !active;
-      button('break').disabled = active;
+      button('new').disabled = active;
+      button('new').title = active ? 'Reset the current incident before starting another' : 'New incident';
     }
     function line(text) { const p = document.createElement('p'); p.textContent = text; evidence.append(p); }
-    function startChallenge(next, saved) {
+    function startChallenge(next, saved, starter = false, links = false) {
       baseline = saved; challenge = next; owner = identity(); currentIdentity = owner; hint = 0;
       enabled(true); evidence.replaceChildren(); panel.querySelector('input').value = '';
-      message(next.symptom || 'Connection lost: ' + next.sourceName + ' cannot ping ' + next.targetName + ' (' + next.target + '). Find and repair the fault.', 'error');
-      line('Baseline ' + (next.testLabel || 'ping') + ' passed; the same test failed after one fault was introduced.');
+      const description=incidentReport(next);
+      summary.textContent='Incident report · '+description.title;
+      report.open=true; reportBody.replaceChildren();
+      message(description.body, 'error');
+      if(links){
+        status.replaceChildren();
+        for(const part of reportReferences(description.body,saved.devices)){
+          if(!part.device){status.append(document.createTextNode(part.text));continue;}
+          const link=document.createElement('button');link.type='button';link.className='note-mention-link';link.dataset.deviceId=part.device;
+          const glyph=document.createElement('span');glyph.className='mention-glyph';glyph.innerHTML=api.mentionIcon(part.device);
+          const label=document.createElement('span');label.textContent=part.text;link.append(glyph,label);
+          link.title='Select '+part.text;link.setAttribute('aria-label','Select '+part.text);
+          link.onclick=()=>{try{valid();api.navigateMention(part.device);}catch(e){message(e.message,'error');}};
+          status.append(link);
+        }
+      }
       const command = document.createElement('button'); command.id = 'trouble-command';
-      const text = next.command || (next.kind === 'web' ? null : 'ping ' + next.target);
-      command.textContent = text ? 'Try: ' + text : 'Open client Browser';
+      const text = next.command || (['web','firewall','arp'].includes(next.kind) ? null : 'ping ' + next.target);
+      command.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">'+(text?'<path d="m5 6 5 6-5 6m8 0h6"/>':'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 8h18m-14-3h1m2 0h1"/>')+'</svg>';
+      const commandLabel=document.createElement('span');commandLabel.textContent=text?'Try: '+text:'Open client Browser';command.append(commandLabel);
       command.onclick = () => { try { valid(); if (text) api.command(next.source, text); else api.select(next.source); } catch (e) { message(e.message, 'error'); } };
-      evidence.append(command);
+      if(starter)reportBody.append(command);
     }
     function guidance(kind, heading, text) {
       let card = evidence.querySelector('.trouble-guidance');
@@ -308,12 +323,12 @@
     function valid() {
       if (!challenge || owner !== identity()) {
         challenge = null; enabled(false); evidence.replaceChildren();
-        throw Error('The network has changed. Choose Break something to start a new challenge.');
+        throw Error('The network has changed. Choose New incident to start a new challenge.');
       }
     }
     panel.addEventListener('click', event => {
       const control = event.target.closest('[data-lab]'), action = control?.dataset.lab;
-      if (!action) return;
+      if (!action || action === 'new') return;
       if (control.disabled) return;
       if (control.classList.contains('trouble-menu-trigger')) {
         const wasOpen = control.getAttribute('aria-expanded') === 'true'; closeMenus();
@@ -321,25 +336,14 @@
       }
       closeMenus();
       try {
-        if (['load','break','reset','security'].includes(action) && !api.editable()) return;
-        if(action==='security'){if(!api.security(control.dataset.level))return;clearChallenge();message('Security exercise loaded. Follow the canvas walkthrough to investigate, apply ARP protection, and verify the victim Browser.');}
-        else if (action === 'load') {
-          const generated = startBroken ? generateBroken(api.Network, control.dataset.level) : null;
-          if (!api.load(generated ? generated.network.save() : generate(api.Network, control.dataset.level).save())) return;
-          clearChallenge();
-          if (generated) startChallenge(generated.fault, generated.baseline);
-          else message('Practice network ready. Try ping between the hosts, then choose Break something.');
-        } else if (action === 'break') {
-          baseline = api.network().save();
-          const next = create(api.Network, baseline, Math.random, control.dataset.level);
-          api.change(() => apply(api.network(), next));
-          startChallenge(next, baseline);
-        } else {
+        if (action === 'reset' && !api.editable()) return;
+        {
           valid();
           if (action === 'check') {
             const ok = verify(api.Network, api.network().save(), challenge);
             reflection.hidden = !ok;
-            message(ok ? 'Restored! A fresh ' + (challenge.testLabel || 'ping') + ' passed. Explain the cause and your fix.' : 'The fresh ' + (challenge.testLabel || 'ping') + ' still fails. Inspect the configuration and follow the exchange in Activity.', ok ? 'success' : 'error');
+            guidance('check', ok?'Repair verified':'Still unresolved',ok ? 'A fresh ' + (challenge.testLabel || 'ping') + ' passed. Explain the cause and your fix.' : 'The fresh ' + (challenge.testLabel || 'ping') + ' still fails. Inspect the configuration and follow the exchange in Activity.');
+            statusBox.dataset.severity=ok?'success':'error';
           } else if (action === 'hint') {
             const hints = challenge.hints || (challenge.kind === 'vlan' ? [
               'The cable can be up while traffic is isolated. Follow the frame into the switch.',
@@ -361,20 +365,35 @@
             guidance('hint', 'Hint ' + (Math.min(hint, 2) + 1) + ' of 3', hints[Math.min(hint++, 2)]);
           } else if (action === 'look') {
             api.select(challenge.device || challenge.source);
-            guidance('look', 'Look here', challenge.testLabel ? 'Inspect the applications on ' + challenge.deviceName + '. ' + (challenge.command ? 'From ' + challenge.sourceName + ', try '+challenge.command+'.' : 'Use the Browser on '+challenge.sourceName+' to open '+challenge.url) : 'Inspect ' + (challenge.deviceName || challenge.sourceName) + '. ' + (challenge.device ? 'Compare port status and access VLANs in the Inspector. CLI ideas: show interfaces, show vlan brief. ' : 'CLI: Windows: ipconfig, arp -a; Linux: ip addr, ip neigh; macOS: ifconfig, arp -a. ') + 'Type help for supported commands; ping ' + challenge.target + ' to retest.');
+            guidance('look', 'Look here', challenge.look || (challenge.testLabel ? 'Inspect the applications on ' + challenge.deviceName + '. ' + (challenge.command ? 'From ' + challenge.sourceName + ', try '+challenge.command+'.' : 'Use the Browser on '+challenge.sourceName+' to open '+challenge.url) : 'Inspect ' + (challenge.deviceName || challenge.sourceName) + '. ' + (challenge.device ? 'Compare port status and access VLANs in the Inspector. CLI ideas: show interfaces, show vlan brief. ' : 'CLI: Windows: ipconfig, arp -a; Linux: ip addr, ip neigh; macOS: ifconfig, arp -a. ') + 'Type help for supported commands; ping ' + challenge.target + ' to retest.'));
           } else if (action === 'reveal') {
             guidance('reveal', 'Fault revealed', challenge.reveal || (challenge.kind === 'vlan' ? challenge.deviceName + ' port ' + challenge.portName + ' was moved to VLAN ' + challenge.broken + '. Restore VLAN ' + challenge.original + '.' : challenge.kind === 'gateway' ? 'The default gateway on ' + challenge.sourceName + ' was cleared. Restore ' + challenge.original + ' in the host configuration.' : (challenge.deviceName || challenge.sourceName) + ' interface ' + challenge.portName + ' was disabled. Enable it in the Inspector.'));
           } else if (action === 'reset') {
             if (!api.restore(baseline)) return;
             clearChallenge();
-            message('Starting network restored. Choose Break something for another challenge.', 'success');
+            message('Starting network restored. Choose New incident for another challenge.', 'success');
           }
         }
       } catch (e) { message(e.message, 'error'); }
     });
-    return () => { if (currentIdentity !== identity()) { clearChallenge(); message('Network loaded. Choose a difficulty, then Break something to start a new challenge.'); } };
+    const incidents = root.NetworkExplorerIncidents;
+    const previous = {};
+    incidents.mount(button('new'), (area, source, settings) => {
+      if (!api.editable() || challenge) return false;
+      const saved = source === 'practice' ? incidents.prepare(api.Network, area, apiModel, Math.random, settings.complexity) : api.network().save();
+      const chosen = incidents.choose(api.Network, saved, area, apiModel, Math.random, previous[area]);
+      if (source === 'practice') {
+        const broken = new api.Network(saved); apply(broken, chosen.fault);
+        if (!api.load(broken.save())) return false;
+      } else api.change(() => apply(api.network(), chosen.fault));
+      previous[area] = chosen.signature;
+      startChallenge(chosen.fault, saved, settings.starter, settings.links);
+      return true;
+    }, {supports:area=>incidents.candidates(api.Network,api.network().save(),area,apiModel).length>0,styleSelect:api.styleSelect});
+    return () => { if (currentIdentity !== identity()) { clearChallenge(); message('Network loaded. Choose New incident to start a new challenge.'); } };
   }
-  const api = {probe, verify, apply, create, generate, generateBroken, mount};
+  const apiModel = {probe, verify, apply, create, generate, generateBroken, incidentReport, reportReferences, mount};
+  const api = apiModel;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.NetworkExplorerTroubleshooting = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

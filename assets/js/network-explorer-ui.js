@@ -6298,7 +6298,7 @@
     bindApplicationButton(button, type);
     compactPalette.append(button);
   }
-  const compactCertificate=certificateButton.cloneNode(true);compactCertificate.id='compact-certificate';compactCertificate.className='compact-device compact-application';compactCertificate.onclick=certificateButton.onclick;compactCertificate.ondragstart=certificateButton.ondragstart;compactPalette.append(compactCertificate);
+  const compactCertificate=certificateButton.cloneNode(true);compactCertificate.id='compact-certificate';compactCertificate.querySelector('span').setAttribute('role','tooltip');compactCertificate.className='compact-device compact-application';compactCertificate.onclick=certificateButton.onclick;compactCertificate.ondragstart=certificateButton.ondragstart;compactPalette.append(compactCertificate);
   for (const side of ["left", "right"]) {
     $("toggle-" + side).onclick = () => {
       const panel = $(side + "-panel"),
@@ -6616,7 +6616,7 @@
   });
   registerExample("example-wireless", () => {
     if(net.devices.length&&!confirm("Replace this network with the Wireless LAN example?"))return;
-    discard();candidateBase=null;const e=NetworkExplorerWireless.example(NetworkExplorer.Network);net=e.network;selected=e.clientId;examined=false;cancelConnect();openInspector();render();say("Wi-Fi is associated and DHCP is complete. Ping 192.168.50.10. In Troubleshooting, choose Break something > Wireless for a wrong-password fault. Classroom password: classroom123.");
+    discard();candidateBase=null;const e=NetworkExplorerWireless.example(NetworkExplorer.Network);net=e.network;selected=e.clientId;examined=false;cancelConnect();openInspector();render();say("Wi-Fi is associated and DHCP is complete. Ping 192.168.50.10. Open Incidents > New incident to practice Wi-Fi authentication.");
   });
   registerExample("example-direct", () => {
     if ((net.devices.length || net.applicationDrafts.length) && !confirm("Replace this network with the direct connection example?")) return;
@@ -7168,7 +7168,7 @@
   troubleshootingPanel.id = "troubleshooting-panel";
   troubleshootingPanel.hidden = true;
   const toolIcons = {
-    troubleshooting: '<path d="m14 6 4-4a6 6 0 0 0-7 7L3 17a3 3 0 0 0 4 4l8-8a6 6 0 0 0 7-7l-4 4Z"/>',
+    troubleshooting: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4M12 2V1"/>',
     events:
       '<path d="M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4"/><circle cx="4" cy="7" r="1"/><circle cx="20" cy="17" r="1"/>',
     terminal:
@@ -7338,12 +7338,12 @@
   troubleshootingPop.id = "float-troubleshooting";
   troubleshootingPop.type = "button";
   troubleshootingPop.className = "heading-popout dock-icon";
-  troubleshootingPop.setAttribute("aria-label", "Expand Troubleshooting");
-  troubleshootingPop.title = "Expand Troubleshooting";
+  troubleshootingPop.setAttribute("aria-label", "Expand Incidents");
+  troubleshootingPop.title = "Expand Incidents";
   troubleshootingPop.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7M21 3l-7 7M10 21H3v-7M3 21l7-7"/></svg>';
   troubleshootingPanel.append(troubleshootingPop);
   troubleshootingPop.onclick = () => {
-    openExternal("troubleshooting", "Troubleshooting - Network Explorer", () => {
+    openExternal("troubleshooting", "Incidents - Network Explorer", () => {
       refreshTroubleshooting();
       const clone = troubleshootingPanel.cloneNode(true);
       clone.hidden = false;
@@ -7360,7 +7360,7 @@
   const dockHeader = document.createElement("div");
   dockHeader.className = "dock-header";
   dockHeader.innerHTML =
-    '<div role="tablist" aria-label="Canvas tools"><button id="dock-tab-terminal" role="tab" aria-controls="terminal-panel">Terminal</button><button id="dock-tab-events" role="tab" aria-controls="events-panel">Activity</button><button id="dock-tab-troubleshooting" role="tab" aria-controls="troubleshooting-panel">Troubleshooting</button></div><button id="dock-split" class="dock-icon" aria-label="Show two tools side by side" title="Show two tools side by side" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg></button><button id="dock-close" class="dock-icon" aria-label="Minimize bottom dock" title="Minimize bottom dock"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17h14"/></svg></button>';
+    '<div role="tablist" aria-label="Canvas tools"><button id="dock-tab-terminal" role="tab" aria-controls="terminal-panel">Terminal</button><button id="dock-tab-events" role="tab" aria-controls="events-panel">Activity</button><button id="dock-tab-troubleshooting" role="tab" aria-controls="troubleshooting-panel">Incidents</button></div><button id="dock-split" class="dock-icon" aria-label="Show two tools side by side" title="Show two tools side by side" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg></button><button id="dock-close" class="dock-icon" aria-label="Minimize bottom dock" title="Minimize bottom dock"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17h14"/></svg></button>';
   for (const key of ["terminal", "events", "troubleshooting"]) {
     const tab = dockHeader.querySelector("#dock-tab-" + key);
     tab.innerHTML =
@@ -7460,9 +7460,10 @@
   }
   refreshTroubleshooting = NetworkExplorerTroubleshooting.mount(troubleshootingPanel, {
     Network: NetworkExplorer.Network, network: () => net, identity: () => networkIdentity(), editable,
+    styleSelect: styleInspectorSelect,
+    mentionIcon: noteTargetIcon, navigateMention: navigateNoteDevice,
     change: fn => mutate(fn),
-    security: kind => {const previous=net;NetworkExplorerActions.run("example-"+kind);if(net===previous)return false;openTool("troubleshooting",true);return true;},
-    load: data => replaceTroubleshootingNetwork(data, "Generate troubleshooting practice network"),
+    load: data => replaceTroubleshootingNetwork(data, "Load incident practice network"),
     restore: data => replaceTroubleshootingNetwork(data, "Restore the challenge starting network (discard challenge edits)"),
     select: id => { cancelConnect(); select(id); },
     command: (id, command) => { cancelConnect(); select(id); openTool("terminal", true); $("command").value = command; $("command").focus(); }
@@ -7814,7 +7815,9 @@
   const canvasGenerate = document.createElement("div");
   canvasGenerate.id = "canvas-generate";
   canvasGenerate.className = "trouble-actions trouble-dropdown";
-  const generateButton = $("trouble-load").cloneNode(true);
+  const generateButton = document.createElement('button');
+  generateButton.className = 'trouble-menu-trigger';
+  generateButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m3 21 12-12 3 3L6 24zM5 2v4M3 4h4m12-3v6m-3-3h6"/></svg><svg class="trouble-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor"><path d="m3 4 3 3 3-3"/></svg>';
   generateButton.id = "canvas-generate-button";
   generateButton.setAttribute("aria-label", "Generate network");
   generateButton.title = "Generate network";
@@ -7822,10 +7825,16 @@
   generateButton.removeAttribute("data-lab");
   generateButton.setAttribute("aria-controls", "canvas-generate-menu");
   generateButton.setAttribute("aria-expanded", "false");
-  const generateMenu = $("trouble-menu-load").cloneNode(true);
+  const generateMenu = document.createElement('div');
+  generateMenu.className = 'trouble-menu';
+  const generateGlyphs = {
+    basic: '<rect x="3" y="3" width="18" height="6" rx="1"/><path d="M6 6h1m3 0h1M12 9v9m-4-4 4 4 4-4M4 21h16"/>',
+    intermediate: '<path d="M3 7h18m-5-5 5 5-5 5M21 17H3m5-5-5 5 5 5"/>',
+    advanced: '<rect x="2" y="3" width="7" height="6" rx="1"/><rect x="15" y="3" width="7" height="6" rx="1"/><path d="M5 9v4h14V9M12 13v3m-4 4 4-4 4 4m-4-4v7"/>'
+  };
+  generateMenu.innerHTML = ['basic','intermediate','advanced'].map(level => '<button type="button" data-level="'+level+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+generateGlyphs[level]+'</svg><span>'+level[0].toUpperCase()+level.slice(1)+'</span></button>').join('');
   generateMenu.id = "canvas-generate-menu";
   generateMenu.setAttribute("aria-label", "Generate working network");
-  generateMenu.querySelector(".trouble-generate-mode").remove();
   generateMenu.hidden = true;
   function closeGenerateMenu() {
     generateMenu.hidden = true;
@@ -7903,6 +7912,7 @@
 
   // Search live device configuration, including interface addresses and installed applications.
   const networkSearch = NetworkExplorerSearch.create({
+    appGlyph,
     getNetwork: () => net,
     applications,
     appLabel,

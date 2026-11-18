@@ -4,6 +4,7 @@ window.NetworkExplorerSearch = {
     getNetwork,
     applications,
     appLabel,
+    appGlyph,
     isPan,
     noteTarget,
     noteName,
@@ -17,7 +18,7 @@ window.NetworkExplorerSearch = {
     const searchField = document.createElement("div");
     searchField.className = "canvas-header-search";
     searchField.innerHTML =
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg><input id="network-query" type="search" aria-label="Search network" placeholder="Search devices, notes, IPs" autocomplete="off" aria-controls="network-search-dropdown" aria-expanded="false">';
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg><input id="network-query" type="search" aria-label="Search network" placeholder="Search devices, notes, incidents" autocomplete="off" aria-controls="network-search-dropdown" aria-expanded="false">';
     document.querySelector(".canvas-toolbar").append(searchField);
     const searchPanel = document.createElement("section");
     searchPanel.id = "network-search-dropdown";
@@ -44,6 +45,22 @@ window.NetworkExplorerSearch = {
       openSearch();
     };
 
+    let activeFilter = 'All';
+    const filterBar = document.createElement('div');
+    filterBar.className = 'network-search-filters';
+    filterBar.setAttribute('role','group');
+    filterBar.setAttribute('aria-label','Filter search results');
+    const filterButtons = new Map();
+    for(const name of ['All','Devices','Applications','Notes','Tools','Incidents','Recent']) {
+      const button=document.createElement('button');button.type='button';
+      button.onclick=()=>{activeFilter=name;refreshSearch();searchResults.scrollTop=0;};
+      filterButtons.set(name,button);filterBar.append(button);
+    }
+    searchPanel.prepend(filterBar);
+    const recentByNetwork = new WeakMap();
+    const rowKey = row => row.d.type + ':' + row.d.id;
+    const categoryOf = d => d.type==='incident'?'Incidents':d.type==='note'?'Notes':d.searchCategory||'Devices';
+    const groupName = d => d.searchCategory ? d.searchCategory : d.type === 'incident' ? 'Incidents' : d.type === 'note' ? 'Notes' : d.wifi || d.wireless ? 'Wireless' : ({host:'Hosts',router:'Routers',switch:'Switches',firewall:'Firewalls',ap:'Wireless'})[d.type] || 'Devices';
     function closeSearch() {
       searchPanel.hidden = true;
       searchInput.setAttribute("aria-expanded", "false");
@@ -110,6 +127,16 @@ window.NetworkExplorerSearch = {
             };
           }),
         )
+        .concat(applications().map(a=>{
+          const host=net.device(a.host),name=appLabel(a.type);
+          const category=['nmap','generator','spoofer','ids','arpInspection','firewall'].includes(a.type)?'Tools':'Applications';
+          return {d:{...a,name,searchCategory:category},detail:host?'On '+host.name:'Not attached',
+            text:[name,category,host?.name,host?.ip].filter(Boolean).join(' ').toLowerCase()};
+        }))
+        .concat((window.NetworkExplorerIncidents?.catalog || []).map(c => ({
+          d:{id:c.id,type:'incident',name:c.title}, detail:c.group+' | '+c.level+' | Open incident dialog',
+          text:('incidents practice '+c.title+' '+c.group+' '+c.level).toLowerCase()
+        })))
         .filter((row) =>
           terms.every((term) =>
             term.startsWith("#") || term.startsWith("tag:")
@@ -119,26 +146,41 @@ window.NetworkExplorerSearch = {
               : row.text.includes(term),
           ),
         );
-      searchPanel.querySelector("[role=status]").textContent =
-        rows.length + " result" + (rows.length === 1 ? "" : "s");
+
       const focusedId = searchResults.contains(document.activeElement)
         ? document.activeElement.dataset.resultId
         : null;
       searchResults.replaceChildren();
-      for (const row of rows) {
+      const recents = recentByNetwork.get(net) || [];
+      const recentRows = recents.map(key=>rows.find(row=>rowKey(row)===key)).filter(Boolean);
+      const matches=(row,name)=>name==='All'||categoryOf(row.d)===name;
+      for(const [name,button] of filterButtons){
+        const count=name==='Recent'?recentRows.length:rows.filter(row=>matches(row,name)).length;
+        button.textContent=name+' ('+count+')';button.setAttribute('aria-pressed',String(activeFilter===name));
+      }
+      const visibleRows=activeFilter==='Recent'?recentRows:rows.filter(row=>matches(row,activeFilter));
+      searchPanel.querySelector('[role=status]').textContent=visibleRows.length+' result'+(visibleRows.length===1?'':'s');
+      const groups = new Map();
+      if((activeFilter==='All'||activeFilter==='Recent')&&recentRows.length)groups.set('Recent',recentRows);
+      for(const row of activeFilter==='Recent'?[]:visibleRows){const name=groupName(row.d);if(!groups.has(name))groups.set(name,[]);groups.get(name).push(row);}
+      for(const [name,items] of groups){
+        const group=document.createElement('div');group.className='network-search-group';
+        const heading=document.createElement('h3');heading.textContent=name+' ('+items.length+')';group.append(heading);searchResults.append(group);
+      for (const row of items) {
         const b = document.createElement("button");
         b.type = "button";
-        b.dataset.resultId = row.d.id;
+        b.dataset.resultId = rowKey(row);
+        b.title = row.d.name + " | " + row.detail;
         b.innerHTML =
           "<strong>" +
-          (row.d.type === "note"
+          (row.d.searchCategory ? '<svg class="search-app-icon" viewBox="-30 -26 60 52" aria-hidden="true">'+appGlyph(row.d.type)+'</svg>' : row.d.type === "incident" ? '<svg class="search-incident-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 10h18c0-3-3-3-3-10M10 22h4"/></svg>' : row.d.type === "note"
             ? noteSymbol()
             : osIcon(
                 row.d.type === "host"
                   ? row.d.os || "windows"
                   : devicePlatform(row.d),
               )) +
-          esc(row.d.name) +
+          "<span>" + esc(row.d.name) + "</span>" +
           "</strong><small>" +
           esc(row.detail) +
           "</small>" +
@@ -148,7 +190,11 @@ window.NetworkExplorerSearch = {
               "</small>"
             : "");
         b.onclick = () => {
+          recentByNetwork.set(net,[rowKey(row),...recents.filter(key=>key!==rowKey(row))].slice(0,5));
           closeSearch();
+          if(row.d.type==='incident'){
+            document.dispatchEvent(new CustomEvent('network-incident-open',{detail:{area:row.d.id}}));return;
+          }
           selectResult(row.d);
           $("canvas").dispatchEvent(
             new CustomEvent("network-locate", {
@@ -168,11 +214,12 @@ window.NetworkExplorerSearch = {
               .querySelector('[data-device="' + row.d.id + '"]')
               ?.focus({ preventScroll: true });
         };
-        searchResults.append(b);
-        if (focusedId === row.d.id) b.focus({ preventScroll: true });
+        group.append(b);
+        if (focusedId === rowKey(row)) b.focus({ preventScroll: true });
       }
-      if (!rows.length)
-        searchResults.textContent = "No matching devices or notes.";
+      }
+      if (!visibleRows.length)
+        searchResults.textContent = "No matching results in this category.";
     }
     function openSearch() {
       clearSearch.hidden = !searchInput.value;
@@ -180,10 +227,10 @@ window.NetworkExplorerSearch = {
       searchPanel.hidden = false;
       searchInput.setAttribute("aria-expanded", "true");
       const r = searchField.getBoundingClientRect(),
-        width = Math.min(380, innerWidth - 16);
+        width = Math.min(560, innerWidth - 16);
       searchPanel.style.width = width + "px";
       searchPanel.style.left =
-        Math.max(8, Math.min(r.left, innerWidth - width - 8)) + "px";
+        Math.max(8, Math.min(r.left + (r.width - width) / 2, innerWidth - width - 8)) + "px";
       searchPanel.style.top = r.bottom + 5 + "px";
       searchPanel.style.maxHeight =
         Math.max(80, innerHeight - r.bottom - 16) + "px";
@@ -224,7 +271,7 @@ window.NetworkExplorerSearch = {
     document.addEventListener("pointerdown", (e) => {
       if (!searchPanel.contains(e.target) && !searchField.contains(e.target))
         closeSearch();
-    });
+    }, { capture: true });
     document.addEventListener("focusin", (e) => {
       if (!searchPanel.contains(e.target) && !searchField.contains(e.target))
         closeSearch();
