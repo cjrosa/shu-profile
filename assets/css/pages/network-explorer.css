@@ -9734,6 +9734,8 @@ body:not(.external-panel-page) #right-panel>section:has(.application-inspector-f
 #inspector .application-inspector-footer button { margin:0; }
 #right-panel > section { padding-left:6px; padding-right:6px; }
 html, body, body * { scrollbar-width:thin; scrollbar-color:#b5bec8 transparent; }
+.arp-cache-header-actions { display:inline-flex; align-items:center; gap:4px; margin-left:auto; }
+#inspector .arp-cache-header-actions button { margin:0; }
 #spoofer-settings .inspector-picker svg { color:var(--teal, #4f8582); stroke-width:1.5; }
 #inspector #spoofer-panel-settings,
 #inspector #spoofer-panel-interception { padding-top:5px; }

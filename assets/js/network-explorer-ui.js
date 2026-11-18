@@ -3684,7 +3684,8 @@
       bindVlanPanel(d);
       if(d.type==='switch'){bindArpPolicy(d);if($('open-arp-inspection'))$('open-arp-inspection').onclick=()=>selectApplication('arpInspection:'+d.id);}
       if(d.type!=='switch'&&d.firewallMode!=='transparent'){
-        const clear=document.createElement('button');clear.id='clear-device-arp';clear.textContent='Clear this ARP cache';$('inspector-table').after(clear);
+        const clear=document.createElement('button');clear.id='clear-device-arp';clear.type='button';clear.className='vlan-icon-button';clear.title='Clear this ARP cache';clear.setAttribute('aria-label','Clear this ARP cache');clear.dataset.tooltip='Clear this ARP cache';clear.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 3 7 7-11 11H6l-4-4L14 3ZM7 12l7 7M10 21h12"/></svg>';
+        const actions=document.createElement('span');actions.className='arp-cache-header-actions';$('float-table').before(actions);actions.append(clear,$('float-table'));
         clear.onclick=()=>{if(!editable())return;safely(()=>{net.clearArpCache(d.id);render();});};
       }
       $("inspector")
@@ -7502,7 +7503,8 @@
   function installCliIpPicker(doc) {
     if (doc.getElementById("cli-ip-picker")) return;
     const addressFields = new Set(["generator-target", "fw-source", "fw-destination", "spoofer-victim", "spoofer-peer", "arp-binding-ip"]);
-    const supportsPicker = target => target.id === "command" || addressFields.has(target.id);
+    const macFields = new Set(["arp-binding-mac"]);
+    const supportsPicker = target => target.id === "command" || addressFields.has(target.id) || macFields.has(target.id);
     const win = doc.defaultView,
       list = doc.createElement("div");
     list.id = "cli-ip-picker";
@@ -7533,7 +7535,7 @@
     const choose = (index) => {
       const row = rows[index];
       if (!row || !input) return;
-      if (input.id === "command" && !cliDevice()) {
+      if (!row.mac && input.id === "command" && !cliDevice()) {
         input.value = "";
         $("command").value = "";
         close();
@@ -7542,8 +7544,8 @@
         next.focus();
         return;
       }
-      input.setRangeText(addressFields.has(input.id) ? row.ip : row.hostname || row.ip, start, end, "end");
-      if(addressFields.has(input.id)){close();input.focus();input.dispatchEvent(new win.Event("change",{bubbles:true}));return;}
+      input.setRangeText(row.mac || (addressFields.has(input.id) ? row.ip : row.hostname || row.ip), start, end, "end");
+      if(addressFields.has(input.id)||macFields.has(input.id)){close();input.focus();input.dispatchEvent(new win.Event("change",{bubbles:true}));return;}
       $("command").value = input.value;
       commandDraft = input.value;
       close();
@@ -7552,7 +7554,7 @@
     const update = (target) => {
       input = target;
       const before = input.value.slice(0, input.selectionStart),
-        match = before.match(/(?:^|\s)@([^@\n]*)$/);
+        match = before.match(/(?:^|\s)([@$])([^@$\n]*)$/);
       if (
         !match ||
         input.selectionStart !== input.selectionEnd ||
@@ -7561,13 +7563,15 @@
         close();
         return;
       }
-      start = before.lastIndexOf("@");
+      const macMode=match[1]==='$';
+      if((macMode&&addressFields.has(input.id))||(!macMode&&macFields.has(input.id))){close();return;}
+      start = before.lastIndexOf(match[1]);
       end = input.selectionStart;
-      const query = match[1].trim().toLowerCase(),
-        selectingDevice = input.id === "command" && !cliDevice();
+      const query = match[2].trim().toLowerCase(),
+        selectingDevice = !macMode && input.id === "command" && !cliDevice();
       list.setAttribute(
         "aria-label",
-        selectingDevice ? "Select a device" : "Device IP addresses and DNS hostnames",
+        macMode ? "Device interface MAC addresses" : selectingDevice ? "Select a device" : "Device IP addresses and DNS hostnames",
       );
       rows = selectingDevice
         ? net.devices
@@ -7598,7 +7602,8 @@
                 .toLowerCase()
                 .includes(query),
             );
-      if (!selectingDevice) {
+      if(macMode)rows=net.devices.flatMap(device=>device.ports.filter(p=>p.mac).map(p=>({device,port:p.name,mac:p.mac}))).filter(r=>(r.device.name+' '+r.device.type+' '+r.port+' '+r.mac).toLowerCase().includes(query));
+      if (!selectingDevice && !macMode) {
         const names = new Set();
         for (const device of net.devices) {
           if (!device.dnsServer?.enabled) continue;
@@ -7615,7 +7620,7 @@
       list.replaceChildren();
       const heading = doc.createElement("div");
       heading.className = "mention-list-title";
-      heading.textContent = selectingDevice
+      heading.textContent = macMode ? "Insert MAC address" : selectingDevice
         ? "Select a device for the CLI"
         : addressFields.has(input.id) ? "Insert IP address" : "Insert IP or DNS hostname";
       list.append(heading);
@@ -7632,7 +7637,7 @@
           "</strong><small>" +
           esc(row.port) +
           "</small></span><code>" +
-          esc(row.ip) +
+          esc(row.mac || row.ip) +
           "</code>";
         b.onpointerdown = (e) => e.preventDefault();
         b.onclick = () => choose(i);
@@ -7641,7 +7646,7 @@
       if (!rows.length) {
         const empty = doc.createElement("div");
         empty.className = "mention-list-empty";
-        empty.textContent = selectingDevice
+        empty.textContent = macMode ? "No matching MAC addresses" : selectingDevice
           ? "No matching devices"
           : "No matching IP addresses or DNS hostnames";
         list.append(empty);
