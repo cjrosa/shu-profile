@@ -1,5 +1,10 @@
 /* One small HTTP/1.1 exchange over an ordered TCP connection. No retransmission. */
 (function(root){'use strict';
+ function responseHtml(c){
+  if(/<!doctype\s+html|<html\b|<title\b/i.test(c.body))return c.body;
+  const escape=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return '<!doctype html>\n<html><head><title>'+escape(c.title)+'</title></head>\n<body><h1>'+escape(c.title)+'</h1>\n'+(/<[a-z][\s\S]*>/i.test(c.body)?c.body:'<p>'+escape(c.body)+'</p>')+'\n</body></html>';
+ }
  function create({ip}){
   const secrets=new WeakMap();
   const bytes=s=>new TextEncoder().encode(s).length;
@@ -9,10 +14,10 @@
    for(const [key,min,max] of [['synCapacity',1,128],['synTimeout',20,1000]])if(c[key]!==undefined&&(!Number.isInteger(c[key])||c[key]<min||c[key]>max))throw Error('Invalid pending connection capacity or timeout.');
    if(c.tls!==undefined&&typeof c.tls!=='boolean')throw Error('Invalid HTTPS setting.');
    if(c.tls&&(!/^[a-z0-9.-]+$/i.test(c.certificateName||'')||typeof c.certificateTrusted!=='boolean'||typeof c.certificateValid!=='boolean'))throw Error('HTTPS needs a certificate hostname and trust/validity settings.');
-   if(!Number.isInteger(c.port)||c.port<1||c.port>65535||typeof c.title!=='string'||c.title.length>80||typeof c.body!=='string'||bytes(c.body)>800)throw Error('Use a port from 1 to 65535, a title up to 80 characters, and a page up to 800 UTF-8 bytes.');
+   if(!Number.isInteger(c.port)||c.port<1||c.port>65535||typeof c.title!=='string'||c.title.length>80||typeof c.body!=='string'||bytes(c.body)>8000)throw Error('Use a port from 1 to 65535, a title up to 80 characters, and a page up to 8000 UTF-8 bytes.');
   }
   function parse(value){let u;try{u=new URL(value);}catch{throw Error('Enter an HTTP or HTTPS URL.');}if(!['http:','https:'].includes(u.protocol)||u.username||u.password||u.hash||!u.hostname||Number(u.port||(u.protocol==='https:'?443:80))<1||u.href.length>512)throw Error('Use an http:// or https:// URL without credentials or fragments.');return {url:u.href,host:u.hostname,authority:u.host,secure:u.protocol==='https:',port:Number(u.port||(u.protocol==='https:'?443:80)),path:u.pathname+u.search};}
-  function browse(n,id,value){const d=n.device(id),url=parse(value);if(d?.type!=='host'||!d.ip||!d.browserServer?.enabled)throw Error('Install and enable Browser on a configured host.');if(n.queue.length&&!n.isDosActive())throw Error('Finish the current exchange first.');if(Object.values(n.tcp).some(c=>c.client===id)||n.queue.some(e=>e.device===id&&(e.kind==='tcp-start'||e.kind==='dns-start'&&e.continuation?.kind==='tcp-start')))throw Error('This Browser already has a request in progress.');let numeric=false;try{ip(url.host);numeric=true;}catch{}if(numeric&&(ip(url.host)>>>24===0||ip(url.host)>>>24===127||ip(url.host)>>>24>=224))throw Error('Use a simulated host unicast IPv4 address.');if(numeric)n.enqueue({kind:'tcp-start',device:id,target:url.host,url});else n.lookupDns(id,url.host,false,true,{kind:'tcp-start',url});n.httpPages[id]={url:url.url,status:'Loading...'};d.browserServer.url=url.url;}
+  function browse(n,id,value){const d=n.device(id),url=parse(value);if(d?.type!=='host'||!d.ip||!d.browserServer?.enabled)throw Error('Install and enable Browser on a configured host.');if(n.queue.length&&!n.isDosActive()&&!n.isSpoofActive())throw Error('Finish the current exchange first.');if(Object.values(n.tcp).some(c=>c.client===id)||n.queue.some(e=>e.device===id&&(e.kind==='tcp-start'||e.kind==='dns-start'&&e.continuation?.kind==='tcp-start')))throw Error('This Browser already has a request in progress.');let numeric=false;try{ip(url.host);numeric=true;}catch{}if(numeric&&(ip(url.host)>>>24===0||ip(url.host)>>>24===127||ip(url.host)>>>24>=224))throw Error('Use a simulated host unicast IPv4 address.');if(numeric)n.enqueue({kind:'tcp-start',device:id,target:url.host,url});else n.lookupDns(id,url.host,false,true,{kind:'tcp-start',url});n.httpPages[id]={url:url.url,status:'Loading...'};d.browserServer.url=url.url;}
   function handle(n,e,d,p,emitIp,hostHop){
    let title='',notes=[];const f=e.frame,id=e.connection||f?.connection,key=d.id+':'+id+':'+(e.localPort??f?.dport);let c=n.tcp[key];
    const send=packet=>{if(packet.dip===d.ip)n.enqueue({kind:'receive',device:d.id,ingress:p.id,frame:{...packet,src:p.mac,dst:p.mac}});else{const hop=hostHop(packet.dip);if(hop)emitIp(p,hop,packet);}};
@@ -52,7 +57,7 @@
    }
    if(e.kind==='web-application'){
     const request=c.secure?vault().get(f.record):f;
-    const found=request.path==='/'||request.path==='/index.html',status=found?200:404,pageTitle=found?d.webServer.title:'Not Found',body=found?d.webServer.body:'No page exists at '+request.path,content=pageTitle+'\n\n'+body,raw='HTTP/1.1 '+status+(found?' OK':' Not Found')+'\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: '+bytes(content)+'\r\nConnection: close\r\n\r\n'+content;
+    const found=request.path==='/'||request.path==='/index.html',status=found?200:404,pageTitle=found?d.webServer.title:'Not Found',body=found?d.webServer.body:'No page exists at '+request.path,content=responseHtml({title:pageTitle,body}),raw='HTTP/1.1 '+status+(found?' OK':' Not Found')+'\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: '+bytes(content)+'\r\nConnection: close\r\n\r\n'+content;
     c.state='RESPONSE-SENT';const payload={http:'Response',status,pageTitle,body,raw,length:bytes(raw)};segment('PSH ACK',c.secure?protect(payload):payload);return {title:c.secure?'Web Server encrypts HTTP response':'Web Server returns HTTP '+status,notes:c.secure?['TLS Application Data: HTTP status, headers and body are encrypted.']:[raw,'The page is sent as one small TCP payload.']};
    }
    if(e.kind==='browser-application'&&e.action==='response'){const response=c.secure?vault().get(f.record):f;n.httpPages[d.id]={url:c.url.url,status:(c.secure?'HTTPS (TLS verified) ':'HTTP ')+response.status+' - closing connection',title:response.pageTitle,body:response.body,code:response.status,secure:!!c.secure};c.state='FIN-WAIT-1';segment('FIN ACK');return {title:c.secure?'Browser decrypts the response':'Browser displays HTTP '+response.status,notes:c.secure?['The receiving endpoint decrypts the page. Open Browser to read it; capture payload remains encrypted.']:['Deliver the response body to the Browser application.',response.pageTitle,response.body,'Close the connection with FIN.']};}
@@ -68,5 +73,5 @@
   }
   return {validate,parse,browse,handle,reset:n=>secrets.delete(n),copyRuntime:(source,target)=>{if(secrets.has(source))secrets.set(target,new Map(secrets.get(source)));}};
  }
- if(typeof module!=='undefined'&&module.exports)module.exports={create};else root.NetworkExplorerHTTP={create};
+ if(typeof module!=='undefined'&&module.exports)module.exports={create,responseHtml};else root.NetworkExplorerHTTP={create,responseHtml};
 })(typeof globalThis!=='undefined'?globalThis:this);

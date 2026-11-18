@@ -46,7 +46,7 @@
   const neighbors=d=>n.links.flatMap(l=>l.a===d.id?[n.device(l.b)]:l.b===d.id?[n.device(l.a)]:[]).filter(Boolean);
   for(const {root,v} of groups){const queue=[root];for(let i=0;i<queue.length;i++){const parent=queue[i],children=neighbors(parent).filter(d=>!placed.has(d.id));children.forEach((d,j)=>{placed.add(d.id);const spread=(j-(children.length-1)/2)*330;d.x=parent.x+300*v.x-spread*v.y;d.y=parent.y+300*v.y+spread*v.x;queue.push(d);});}}
   let isolated=0;for(const d of n.devices)if(!placed.has(d.id)){d.x=250+(isolated%4)*380;d.y=1900+Math.floor(isolated++/4)*300;}
-  for(const d of n.devices){const types=['dhcp','dns','web','browser','echo','nmap','generator'].filter(t=>d[t+'Server']);types.forEach((type,i)=>{d[type==='dhcp'?'applicationOffset':type+'Offset']={x:160,y:(i-(types.length-1)/2)*150};});}
+  for(const d of n.devices){const types=['dhcp','dns','web','browser','echo','nmap','generator','spoofer'].filter(t=>d[t+'Server']);types.forEach((type,i)=>{d[type==='dhcp'?'applicationOffset':type+'Offset']={x:160,y:(i-(types.length-1)/2)*150};});}
   n.applicationDrafts.forEach((a,i)=>{a.x=250+i*200;a.y=2200;});
   // Uniform padding preserves branch spacing even when a branch extends left of the origin.
   if(n.devices.length){const dx=180-Math.min(...n.devices.map(d=>d.x)),dy=120-Math.min(...n.devices.map(d=>d.y));n.devices.forEach(d=>{d.x+=dx;d.y=(d.y+dy-120)*.65+120;});}
@@ -56,7 +56,7 @@
   const footprint=d=>{
    const label=Math.max(85,String(d.name||'').length*3.5);
    const box={left:d.x-label,right:d.x+(d.type==='host'?label:Math.max(label,65+String(d.name||'').length*7)),top:d.y-45,bottom:d.y+85};
-   for(const type of ['dhcp','dns','web','browser','echo','nmap','generator'])if(d[type+'Server']){
+   for(const type of ['dhcp','dns','web','browser','echo','nmap','generator','spoofer'])if(d[type+'Server']){
     const offset=d[type==='dhcp'?'applicationOffset':type+'Offset'];
     box.left=Math.min(box.left,d.x+offset.x-75);box.right=Math.max(box.right,d.x+offset.x+75);
     box.top=Math.min(box.top,d.y+offset.y-40);box.bottom=Math.max(box.bottom,d.y+offset.y+60);
@@ -155,5 +155,23 @@
   n.notes=[{id:'note1',title:'DoS: keep HTTPS available',text:'1. Open Legitimate Client Browser and load its HTTPS URL: the page works.\n2. Open Traffic Generator on External Load Source. Choose Legitimate Client for the availability check, then Run burst. The check runs midway through 40 SYN attempts. Use Pause/Step or inspect Web Server connection capacity. Pending handshakes fill eight slots; the check times out.\n3. Finish the exchange: pending slots expire. Reload the Browser and verify recovery.\n4. On Service Firewall add a DROP rule for source 192.168.1.50, Outside to Inside, TCP port 443. Move it above Public HTTPS. Repeat the burst with the same check: legitimate HTTPS should work.\nExternal and protected segments are separated by a transparent firewall; they share an IP subnet. This models connection exhaustion, not bandwidth saturation. Stop cancels future SYNs; in-flight traffic and pending-slot expiry continue. Reload the example to reset.',x:430,y:510,width:390,height:250,color:'yellow',tags:['security','dos','availability'],target:fw.id}];
   return {network:n,clientId:client.id,sourceId:source.id,serverId:server.id,firewallId:fw.id};
  }
- const api={dos,direct,complex,arrange,internet,firewall,https,securityLab};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerExamples=api;
+ function arpSecurity(Network,kind='intercept'){
+  const n=new Network(),client=n.add('host',170,200),attacker=n.add('host',170,470),sw=n.add('switch',440,280),gateway=n.add('router',700,280),server=n.add('host',990,280);
+  client.name='Victim Client';attacker.name='Attacker';sw.name='Access Switch';gateway.name='Gateway';server.name='HTTP Server';
+  n.configure(client.id,'192.168.1.10',24);n.configure(attacker.id,'192.168.1.50',24);n.configure(server.id,'192.168.2.20',24);
+  n.configureInterface(gateway.id,'p0','192.168.1.1',24);n.configureInterface(gateway.id,'p1','192.168.2.1',24);
+  n.configureGateway(client.id,'192.168.1.1');n.configureGateway(server.id,'192.168.2.1');
+  n.connect(client.id,'p0',sw.id,'p0');n.connect(attacker.id,'p0',sw.id,'p1');n.connect(gateway.id,'p0',sw.id,'p2');n.connect(gateway.id,'p1',server.id,'p0');
+  n.configureWeb(server.id,{enabled:true,port:80,title:'ARP security lab',body:'This HTTP page is readable to an attacker who forwards the traffic.'});
+  n.configureWeb(client.id,{enabled:true,url:'http://192.168.2.20/'},'browser');
+  n.configureSpoofer(attacker.id,{enabled:true,victim:client.ip,peer:gateway.ports[0].ip,technique:'reply',direction:kind==='drop'?'victim':'both',traffic:kind==='drop'?'drop':'forward',count:1,interval:20});
+  client.browserOffset={x:0,y:-110};attacker.spooferOffset={x:0,y:110};server.webOffset={x:0,y:-110};
+  n.configureArpInspection(sw.id,{vlans:kind==='protected'?[1]:[],trustedPorts:[],bindings:[[client,'p0'],[attacker,'p1'],[gateway,'p2']].map(([d,port])=>({ip:d.type==='router'?d.ports[0].ip:d.ip,mac:d.ports[0].mac,vlan:1,port}))});
+  const lesson=kind==='protected'?'Protection starts enabled. Run the attack and test again: the page works, forged claims are dropped, and interception stays at zero. Inspect Access Switch → Layer 2 Security. Break it: trust attacker port P2, rerun the attack and test. Repair by removing trust, clear Victim Client and Gateway ARP caches, then repeat.':
+   kind==='drop'?'Run the attack, then test again: the page times out. Inspect Victim Client’s ARP cache: the gateway now maps to Attacker. Enable VLAN 1 inspection on Access Switch. Test before clearing caches: the old poisoned mapping still causes failure. Clear Victim Client’s ARP cache, then test: normal service returns. Repeat the attack: the forged claim is dropped.':
+   'Run the attack, then test again: the page works through Attacker. Open the ARP Spoofer Interception tab to read HTTP. Inspect the victim and gateway ARP caches. Enable VLAN 1 inspection, clear both endpoint ARP caches, then repeat: the page works without new interception. For HTTPS, attach a certificate to HTTP Server and use https://192.168.2.20/ in Browser; repeat poisoning after configuration resets. TLS content stays encrypted.';
+  n.notes=[{id:'note1',title:kind==='protected'?'ARP: protected LAN':kind==='drop'?'ARP: gateway impersonation':'ARP: hidden interception',text:'1. Open Victim Client Browser and load http://192.168.2.20/ before the attack: the HTTP page works. Repeat requests from that Browser to test connectivity.\n2. '+lesson+'\n3. Use canvas Pause/Step and device Watch to inspect packets, cache changes and switch decisions. Static bindings are prepared, but are enforced only for enabled VLANs. Stop poisoning cancels future claims; forwarding continues until Clear learned state. Reload this example to reset.',x:490,y:460,width:460,height:280,color:'yellow',tags:['security','arp',kind],target:sw.id}];
+  return {network:n,clientId:client.id,sourceId:attacker.id,switchId:sw.id,gatewayId:gateway.id,serverId:server.id};
+ }
+ const api={arpSecurity,dos,direct,complex,arrange,internet,firewall,https,securityLab};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerExamples=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

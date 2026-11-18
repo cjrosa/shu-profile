@@ -95,6 +95,9 @@
     'example-security-harden': firewallArt + '<circle cx="16" cy="17" r="8" fill="#faeceb" stroke="#ab6a65"/><path d="m12 13 8 8m0-8-8 8" stroke="#ab6a65" stroke-width="2"/>',
     'example-security-detect': scanArt + '<path d="M65 12q12-14 24 0-12 14-24 0Z" fill="#fff" stroke="#52718b"/><circle cx="77" cy="12" r="3" fill="#6e9cb4"/>',
     'example-security-prevent': scanArt + '<path d="m76 5 10 4v10l-10 5-10-5V9Z" fill="#e4efeb" stroke="#287d78"/><path d="M71 14h10" stroke="#287d78" stroke-width="2"/>',
+    'example-arp-drop': wire('M15 20H48L80 20M48 35 20 55') + miniDevice('host',15,20,.3) + miniDevice('switch',48,30,.35) + miniDevice('router',80,20,.3) + '<path d="m14 48 12 12m0-12L14 60" stroke="#ac5c50" stroke-width="3"/>',
+    'example-arp-intercept': wire('M15 20H48L80 20M48 35 20 55') + miniDevice('host',15,20,.3) + miniDevice('switch',48,30,.35) + miniDevice('router',80,20,.3) + '<path d="M8 55q12-14 24 0-12 14-24 0Z" fill="#fff" stroke="#ac5c50"/><circle cx="20" cy="55" r="3" fill="#ac5c50"/>',
+    'example-arp-protected': wire('M15 30H80') + miniDevice('host',15,30,.3) + miniDevice('switch',48,30,.35) + '<path d="m78 14 12 5v16L78 43 66 35V19Z" fill="#e4efeb" stroke="#287d78"/><path d="m71 28 5 5 9-12" fill="none" stroke="#287d78" stroke-width="2"/>',
     'example-dos': wire('M7 12 65 24M7 25 65 29M7 38 65 34M7 51 65 39') + [10,23,36,49].map((y,i)=>packet(12+i*7,y,'#bd9455')).join('') + server(68,15) + '<path d="M57 14v37" stroke="#287d78" stroke-width="3"/>',
     'example-echo-tcp': echoArt + '<path d="M35 54h41m-5-4 5 4-5 4M76 61H35m5-3-5 3 5 3" fill="none" stroke="#4c8986" stroke-width="1.8"/>',
     'example-echo-udp': echoArt + packet(36,52,'#6e9cb4') + packet(52,56,'#6e9cb4') + packet(69,51,'#6e9cb4'),
@@ -114,7 +117,7 @@
       ],
     ],
     ["Special Applications", ["example-echo-tcp", "example-echo-udp"]],
-    ["Security", ["example-https", "example-firewall", "example-security-encrypt", "example-security-harden", "example-security-detect", "example-security-prevent", "example-dos"]],
+    ["Security", ["example-https", "example-firewall", "example-security-encrypt", "example-security-harden", "example-security-detect", "example-security-prevent", "example-dos", "example-arp-drop", "example-arp-intercept", "example-arp-protected"]],
   ];
   for (const [name, ids] of exampleGroups) {
     if (name === "Special Applications") {

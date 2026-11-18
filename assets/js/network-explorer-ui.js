@@ -84,6 +84,8 @@
     "browserOffset",
     "echoOffset",
     "echoWatch",
+    "spooferWatch",
+    "spooferOffset",
   ];
   function configSignature(data) {
     const value = JSON.parse(JSON.stringify(data));
@@ -2361,6 +2363,7 @@
       browser:windowFrame+'<rect x="-19" y="-4" width="12" height="18" rx="2" fill="#c6dfee" stroke="#96b6cc"/><path d="M-2-2h20M-2 3h16M-2 8h19M-2 13h11" stroke="#7799b1" stroke-width="1.6"/>',
       echo:windowFrame+'<path d="M-17-1h30m-5-5 5 5-5 5M17 12h-30m5-5-5 5 5 5" stroke="#547c9b" stroke-width="2.5"/><circle cx="-18" cy="-1" r="2" fill="#a1bfd3" stroke="none"/>',
       nmap:'<circle cx="-3" cy="-3" r="20" fill="#e6f1f8"/><circle cx="-3" cy="-3" r="13" stroke="#a3bed1"/><circle cx="-3" cy="-3" r="6" stroke="#a3bed1"/><path d="M-3-23v40M-23-3h40" stroke="#b7cedd"/><path d="M-3-3 10-17" stroke="#527c9c" stroke-width="2.5"/><circle cx="5" cy="-11" r="3" fill="#638caa" stroke="#fff"/><path d="m12 13 12 12" stroke="#4e708a" stroke-width="6"/>',
+      spoofer:windowFrame+'<path d="M-19 0h14l5 10 6-20 7 10h8" stroke="#ac5c50" stroke-width="2.5"/><path d="m-14 15 5-4m17-17 5-4"/>',
       generator:windowFrame+'<path d="M-19 5h38M-12-5v21M0-5v21M12-5v21" stroke="#d0e1ed"/><path d="M-20 8h7l4-10 7 17 6-12 5 5h11" stroke="#527c9c" stroke-width="2.5"/>',
       ids:'<path d="M0-23 21-15v15c0 13-12 20-21 25C-9 20-21 13-21 0v-15Z" fill="#dbe9f3"/><path d="M0-17 15-11v12c0 9-8 15-15 19-7-4-15-10-15-19v-12Z" fill="#f3f8fc" stroke="#a4bfd1"/><path d="M-14 0h8l4-8 5 16 4-8h7" stroke="#577e9b" stroke-width="2"/>'
     };
@@ -2377,9 +2380,10 @@
       echo: { x: 0, y: -100 },
       nmap: { x: 0, y: 120 },
       generator: { x: 0, y: -110 },
+      spoofer: { x: 0, y: -110 },
     })[type];
   const appLabel = (type) =>
-      type === "firewall" ? "Firewall" : type === "ids" ? "IDS/IPS" : type === "generator" ? "Traffic Generator" : type === "nmap" ? "Nmap" : type === "echo" ? "Echo" : type === "web"
+      type === "spoofer" ? "ARP Spoofer" : type === "firewall" ? "Firewall" : type === "ids" ? "IDS/IPS" : type === "generator" ? "Traffic Generator" : type === "nmap" ? "Nmap" : type === "echo" ? "Echo" : type === "web"
         ? "Web Server"
         : type === "browser"
           ? "Browser"
@@ -2454,7 +2458,6 @@
       drawCapacityMonitors();layer.querySelector('[data-capacity-drag="'+id+'"]')?.focus();
     };
   }
-  function serverLoadMarkup(d){return '<section><h3 class="security-monitor-heading">Connection capacity</h3><div class="pair"><label>Pending slots<input id="web-capacity" type="number" min="1" max="128" value="'+(d.webServer.synCapacity??32)+'"></label><label>Timeout (ticks)<input id="web-timeout" type="number" min="20" max="1000" value="'+(d.webServer.synTimeout??120)+'"></label></div><p class="hint">Incomplete handshakes hold a slot until timeout. Live usage appears on the canvas.</p></section>';}
   function nmapPanel(){
     return '<p class="hint">Nmap is a command-line (CLI) tool for discovering open network ports. Run it in the host Terminal.</p><button id="nmap-terminal" class="nmap-terminal-pill" type="button" title="Open Terminal with a scan command"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 6 6 6-6 6M13 18h7"/></svg>Terminal</button><p class="hint">Type <code>@</code> in Terminal to choose a target IP, then press Enter to scan.</p>';
   }
@@ -2467,7 +2470,7 @@
   }
   function appGlyph(type) {
     if(type === "firewall") return '<g transform="scale(.65)">'+NetworkExplorerFirewallUI.glyph()+"</g>";
-    return ['dhcp','dns','web','browser','echo','nmap','generator','ids'].includes(type) ? richApplicationGlyph(type) : applicationGlyph;
+    return ['dhcp','dns','web','browser','echo','nmap','generator','spoofer','ids'].includes(type) ? richApplicationGlyph(type) : applicationGlyph;
   }
   function applications() {
     return [
@@ -2476,7 +2479,7 @@
       ...net.devices
         .filter((d) => d.type === "host")
         .flatMap((d) =>
-          ["dhcp", "dns", "web", "browser", "echo", "nmap", "generator"]
+          ["dhcp", "dns", "web", "browser", "echo", "nmap", "generator", "spoofer"]
             .filter((t) => d[appKey(t)])
             .map((type) => {
               const offset = d[appOffsetKey(type)];
@@ -2514,7 +2517,7 @@
     if (!watchMenu.matches(":popover-open")) $("watch").click();
   }
   function hostApplications(d) {
-    const types = ["dhcp", "dns", "web", "browser", "echo", "nmap", "generator"].filter((t) => d[appKey(t)]);
+    const types = ["dhcp", "dns", "web", "browser", "echo", "nmap", "generator", "spoofer"].filter((t) => d[appKey(t)]);
     return (
       '<div class="small-heading inspector-section-heading">Applications</div>' +
       (types.length
@@ -2747,21 +2750,32 @@
       page = net.httpPages[d.id];
     if (type === "browser") return browserMarkup(d);
     return (
-      '<form id="web-settings">'+serverLoadMarkup(d)+'<label class="certificate-toggle"><span>Enable Web Server</span><input id="web-enabled" role="switch" type="checkbox" ' +
+      '<form id="web-settings"><label class="certificate-toggle"><span>Enable Web Server</span><input id="web-enabled" role="switch" type="checkbox" ' +
       (c.enabled ? "checked" : "") +
       '><span class="certificate-switch" aria-hidden="true"></span></label>' +
       '<label>Transport<select id="web-tls"><option value="http"' + (!c.tls?' selected':'') + '>HTTP</option><option value="https"' + (c.tls?' selected':'') + '>HTTPS (TLS)</option></select></label>' +
       (c.certificateName ? certificatePanel(c) : '<p class="hint">For HTTPS, choose Certificate in the palette, then click this server.</p>') +
       '<label>TCP port<input id="web-port" type="number" min="1" max="65535" required value="' +
       c.port +
-      '"></label><label>Page title<input id="web-title" maxlength="80" value="' +
-      esc(c.title) +
-      '"></label><label>Page text<textarea id="web-body" rows="6" maxlength="800">' +
-      esc(c.body) +
+      '"></label><label>HTML response<textarea id="web-body" rows="12" maxlength="8000" spellcheck="false">' + esc(NetworkExplorerHTTP.responseHtml(c)) +
       '</textarea></label><p id="web-settings-status" class="hint" role="status" aria-live="polite"></p></form>'
     );
   }
   const browserDrafts = new Map();
+  function renderBrowserHtml(html) {
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    const allowed=new Set('p div span h1 h2 h3 h4 h5 h6 strong b em i u s small sub sup br hr pre code blockquote ul ol li dl dt dd table thead tbody tfoot tr th td caption'.split(' '));
+    const render=node=>{
+      if(node.nodeType===3)return esc(node.textContent);
+      if(node.nodeType!==1)return '';
+      let tag=node.localName;
+      if(['script','style','iframe','object','embed','link','meta','img','svg','math','template'].includes(tag))return '';
+      if(tag==='bold')tag='strong';
+      const content=Array.from(node.childNodes,render).join('');
+      return allowed.has(tag)?'<'+tag+'>'+content+(['br','hr'].includes(tag)?'':'</'+tag+'>'):content;
+    };
+    return '<div class="browser-html">'+Array.from(doc.body.childNodes,render).join('')+'</div>';
+  }
   function browserSecurityMarkup(url,page) {
     const https=/^https:/i.test(url),same=page?.url===url,verified=https&&same&&page?.secure,
       failed=https&&same&&/rejected|failed|mismatch|refused|timed out/i.test(page?.status||'');
@@ -2784,7 +2798,7 @@
       esc(url) +
       '" placeholder="http://server.example/"></div><button type="submit" aria-label="Go to address" title="Go"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button></form><article class="browser-page">' +
       (page?.body !== undefined
-        ? "<h3>" + esc(page.title) + "</h3><p>" + esc(page.body) + "</p>"
+        ? renderBrowserHtml(NetworkExplorerHTTP.responseHtml(page))
         : '<div class="browser-empty"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-6 5-6 13 0 18M12 3c6 5 6 13 0 18"/></svg><p>Enter an address to explore your network.</p></div>') +
       '</article><div id="browser-status" role="status">' +
       esc(page?.status || "Ready") +
@@ -2798,7 +2812,7 @@
           "Commit or revert candidate changes before starting traffic.",
         );
       const target=staged?.trial||net;
-      if ((staged || net.queue.length) && !target.isDosActive())
+      if ((staged || net.queue.length) && !target.isDosActive() && !target.isSpoofActive())
         throw Error("Finish or clear the current exchange first.");
       finishPlacement();
       cancelConnect();
@@ -2878,7 +2892,7 @@
         const status=form.querySelector('#web-settings-status');
         if(!form.checkValidity()){status.textContent='Complete the highlighted fields to apply changes.';return;}
         const read=id=>form.querySelector('#'+id);
-        const config={synCapacity:Number(read('web-capacity').value),synTimeout:Number(read('web-timeout').value),enabled:read('web-enabled').checked,tls:read('web-tls').value==='https',port:Number(read('web-port').value),title:read('web-title').value,body:read('web-body').value,
+        const config={...(d.webServer.synCapacity!==undefined?{synCapacity:d.webServer.synCapacity}:{}),...(d.webServer.synTimeout!==undefined?{synTimeout:d.webServer.synTimeout}:{}),enabled:read('web-enabled').checked,tls:read('web-tls').value==='https',port:Number(read('web-port').value),title:new DOMParser().parseFromString(read('web-body').value,'text/html').title.slice(0,80),body:read('web-body').value,
           ...(read('certificate-name')?{certificateName:read('certificate-name').value.trim().toLowerCase(),certificateTrusted:read('certificate-trusted').checked,certificateValid:read('certificate-valid').checked}:{})};
         try{NetworkExplorerHTTP.create({}).validate(config);}catch(error){status.textContent=error.message;return;}
         if(JSON.stringify(config)===JSON.stringify(d.webServer))return;
@@ -2912,24 +2926,29 @@
     }
     bindWatch(d, a.type);
     $("inspector").innerHTML = d
-      ? '<p class="hint">Installed on <button id="application-host" class="application-host">' +
+      ? '<div class="application-inspector-content"><p class="hint">Installed on <button id="application-host" class="application-host">' +
         noteTargetIcon(d.id) +
         "<span>" +
         esc(d.name) +
         "</span></button></p>" +
-        (a.type === "generator" ? generatorPanel(d) : a.type === "nmap" ? nmapPanel(d) : a.type === "echo" ? NetworkExplorerEchoUI.markup(net,d,esc) : ["web", "browser"].includes(a.type)
+        (a.type === "spoofer" ? NetworkExplorerArpSecurityUI.attackPanel(net,d,esc) : a.type === "generator" ? generatorPanel(d) : a.type === "nmap" ? nmapPanel(d) : a.type === "echo" ? NetworkExplorerEchoUI.markup(net,d,esc) : ["web", "browser"].includes(a.type)
           ? webPanel(d, a.type)
           : a.type === "dns"
             ? dnsPanel(d)
             : dhcpPanel(d)) +
-        '<button id="uninstall-app" class="danger destructive-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg>Uninstall application</button>'
+        '</div><div class="application-inspector-footer"><button id="uninstall-app" class="danger destructive-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg>Uninstall application</button></div>'
       : '<p class="hint">Connect this application to a host, or drag it directly onto one.</p><button id="attach-app">Connect to host</button><button id="remove-app" class="danger">Remove application</button>';
     if (d) {
       $("application-host").onclick = () => {
         selected = d.id;
         render();
       };
-      if(a.type === "generator") bindGenerator(d);
+      if(a.type === "spoofer") NetworkExplorerArpSecurityUI.bindAttack($('inspector'),net,d,{
+        styleSelect:styleInspectorSelect,
+        run:c=>safely(()=>{if(candidateBase||staged)throw Error('Finish the current exchange and commit candidate changes first.');net.configureSpoofer(d.id,c);net.spooferControl(d.id,'start');running=true;stage();render();}),
+        stop:()=>safely(()=>{net.spooferControl(d.id,'stop');if(staged)staged.trial.spooferControl(d.id,'stop');render();}),
+      });
+      else if(a.type === "generator") bindGenerator(d);
       else if(a.type === "nmap") $("nmap-terminal").onclick=()=>nmapTerminal(d.id);
       else if (a.type === "echo") NetworkExplorerEchoUI.bind(document.getElementById('inspector'),d.id,{
         get:()=>net, refresh:()=>render(), configure:c=>mutate(()=>net.configureEcho(d.id,c)),
@@ -2956,7 +2975,8 @@
             d.name +
             " and remove its configuration?",
           () => {
-            if(a.type === "generator"){delete d.generatorServer;delete d.generatorOffset;net.reset();}
+            if(a.type === "spoofer"){delete d.spooferServer;delete d.spooferOffset;delete d.spooferWatch;net.reset();}
+            else if(a.type === "generator"){delete d.generatorServer;delete d.generatorOffset;net.reset();}
             else if(a.type === "nmap"){delete d.nmapServer;delete d.nmapWatch;delete d.nmapOffset;net.reset();}
             else if(a.type === "echo"){delete d.echoServer;delete d.echoWatch;delete d.echoOffset;net.reset();}
             else if (["web", "browser"].includes(a.type))
@@ -3343,7 +3363,7 @@
   function bindDhcp(d) {
     if (d.type !== "host") return;
     $("host-gateway").readOnly = d.addressMode === "dhcp";
-    for (const type of ["dhcp", "dns", "web", "browser", "echo", "nmap", "generator"]) {
+    for (const type of ["dhcp", "dns", "web", "browser", "echo", "nmap", "generator", "spoofer"]) {
       const installed = $("host-" + type + "-app");
       if (installed)
         installed.onclick = () => selectApplication(type + ":" + d.id);
@@ -3541,7 +3561,7 @@
             : "") +
         interfacePanel(d) +
         (d.type === "switch"
-          ? vlanPanel(d)
+          ? vlanPanel(d) + NetworkExplorerArpSecurityUI.policyPanel(net,d,esc)
           : d.type === "router"
             ? (d.firewallMode === "transparent" ? "" : routePanel(d)) + NetworkExplorerFirewallUI.panel(net,d,esc,expiryMarkup) + (d.firewallMode === "transparent" ? "" : natPanel(d))
             : "") +
@@ -3613,6 +3633,11 @@
       bindNat(d);
       if(d.type === "router") NetworkExplorerFirewallUI.bind(net,d,mutate,styleInspectorSelect,(id,order)=>{openTool('events',true);if(!NetworkExplorerCapture.revealEvent(id,order))say('This packet is no longer in Activity. Run a fresh scan.');syncExternal();});
       bindVlanPanel(d);
+      if(d.type==='switch')NetworkExplorerArpSecurityUI.bindPolicy($('inspector'),net,d,{configure:c=>{if(!editable())return;safely(()=>{if(candidateBase)throw Error('Commit or revert candidate changes first.');net.configureArpInspection(d.id,c);render();});}});
+      if(d.type!=='switch'&&d.firewallMode!=='transparent'){
+        const clear=document.createElement('button');clear.id='clear-device-arp';clear.textContent='Clear this ARP cache';$('inspector-table').after(clear);
+        clear.onclick=()=>{if(!editable())return;safely(()=>{net.clearArpCache(d.id);render();});};
+      }
       $("inspector")
         .querySelectorAll("[data-port]")
         .forEach((el) => {
@@ -3933,6 +3958,15 @@
   function noteTarget(id) {
     return net.device(id) || applications().find((a) => a.id === id);
   }
+  function noteTargetAnchor(note) {
+    const target=noteTarget(note.target);
+    if(!target)return null;
+    const device=net.device(note.target);
+    const points=device
+      ? ['top','right','bottom','left'].map(side=>portPosition(device,side))
+      : [{x:target.x,y:target.y-26},{x:target.x+30,y:target.y},{x:target.x,y:target.y+26},{x:target.x-30,y:target.y}];
+    return points.reduce((best,p)=>Math.hypot(p.x-note.x-16,p.y-note.y-18)<Math.hypot(best.x-note.x-16,best.y-note.y-18)?p:best);
+  }
   function noteName(n) {
     return (
       n.title?.trim() ||
@@ -4021,7 +4055,7 @@
     }
     layer.innerHTML = net.notes
       .map((n) => {
-        const target = noteTarget(n.target),
+        const target = noteTargetAnchor(n),
           tip =
             (n.text || "Untitled note") +
             (n.tags.length ? "\n" + n.tags.map((t) => "#" + t).join(" ") : "");
@@ -4776,6 +4810,8 @@
         ? '<div class="packet-fields arp-fields">' +
           cell("Operation", frame.op, "op") +
           cell("Sender IP", frame.sip, "sip") +
+          cell("ARP sender MAC", frame.sha ?? frame.src, "sha") +
+          cell("ARP target MAC", frame.tha ?? frame.dst, "tha") +
           cell("Target IP", frame.tip, "tip") +
           "</div>"
         : '<div class="packet-fields ip-fields">' +
@@ -4911,6 +4947,7 @@
     );
   }
   function watchDhcpReport(r) {
+    if(r.kind==='arp-spoof-send'||r.arpIntercept)return !!net.device(r.device)?.spooferWatch;
     const type = r.kind?.split("-")[0];
     return (
       r.kind?.endsWith("-application") &&
@@ -4923,8 +4960,9 @@
     previousFocus = document.activeElement;
     const appWatch = r.kind.endsWith("-application"),
       appType = r.kind.split("-")[0];
-    $("examine-watch").dataset.scope = appWatch ? appType : "device";
-    $("examine-watch").checked = appWatch ? d[appWatchKey(appType)] : d.watch;
+    const watchApp = r.kind==='arp-spoof-send'||r.arpIntercept ? 'spoofer' : appWatch ? appType : null;
+    $("examine-watch").dataset.scope = watchApp || "device";
+    $("examine-watch").checked = watchApp ? d[appWatchKey(watchApp)] : d.watch;
     $("examine-watch-status").textContent = $("examine-watch").checked
       ? "On"
       : "Off";
@@ -5608,6 +5646,7 @@
   const toolsPalette=document.createElement('section');
   toolsPalette.innerHTML='<h2 class="palette-heading" tabindex="0"><svg class="palette-heading-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg><span>Tools</span></h2><div class="palette"><button id="add-nmap-application" type="button"><svg viewBox="-30 -26 60 52">'+appGlyph('nmap')+'</svg><span>Nmap</span></button></div>';
   const generatorButton=document.createElement('button');generatorButton.id='add-generator-application';generatorButton.type='button';generatorButton.innerHTML='<svg viewBox="-30 -26 60 52">'+appGlyph('generator')+'</svg><span>Traffic Generator</span>';toolsPalette.querySelector('.palette').append(generatorButton);
+  const spooferButton=document.createElement('button');spooferButton.id='add-spoofer-application';spooferButton.type='button';spooferButton.innerHTML='<svg viewBox="-30 -26 60 52">'+appGlyph('spoofer')+'</svg><span>ARP Spoofer</span>';toolsPalette.querySelector('.palette').append(spooferButton);
   $('left-panel').append(toolsPalette);
   const certificateGlyph='<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M9 4h24l6 6v25H9ZM15 13h16M15 19h12"/><circle cx="29" cy="30" r="7"/><path d="m24 36-2 9 7-4 7 4-2-9"/></svg>';
   const certificateButton=document.createElement('button');certificateButton.id='add-certificate';certificateButton.type='button';certificateButton.title='Attach certificate to a Web Server';certificateButton.setAttribute('aria-label','Add certificate');certificateButton.innerHTML=certificateGlyph+'<span>Certificate</span>';appPalette.querySelector('.palette').append(certificateButton);
@@ -5629,7 +5668,7 @@
     };
     button.onclick = () => beginPlacement("application", type);
   }
-  for (const type of ["dhcp", "dns", "web", "browser", "echo", "nmap", "generator"])
+  for (const type of ["dhcp", "dns", "web", "browser", "echo", "nmap", "generator", "spoofer"])
     bindApplicationButton($("add-" + type + "-application"), type);
   let paletteDrag=null, paletteDragImage=null;
   function clearPaletteDrag(){paletteDrag=null;paletteDragImage?.remove();paletteDragImage=null;}
@@ -6194,7 +6233,7 @@
   appDivider.className = "compact-palette-divider";
   appDivider.setAttribute("role", "separator");
   compactPalette.append(appDivider);
-  for (const type of ["dhcp", "dns", "web", "browser", "echo", "nmap", "generator"]) {
+  for (const type of ["dhcp", "dns", "web", "browser", "echo", "nmap", "generator", "spoofer"]) {
     const button = document.createElement("button");
     button.className = "compact-device compact-application";
     button.innerHTML =
@@ -6283,7 +6322,7 @@
     if (!staged) return;
     const d = net.device(staged.report.device);
     if (
-      ["dhcp", "dns", "web", "browser", "echo", "nmap", "generator"].includes(
+      ["dhcp", "dns", "web", "browser", "echo", "nmap", "generator", "spoofer"].includes(
         $("examine-watch").dataset.scope,
       )
     )
@@ -7413,7 +7452,7 @@
 
   function installCliIpPicker(doc) {
     if (doc.getElementById("cli-ip-picker")) return;
-    const addressFields = new Set(["generator-target", "fw-source", "fw-destination"]);
+    const addressFields = new Set(["generator-target", "fw-source", "fw-destination", "spoofer-victim", "spoofer-peer", "arp-binding-ip"]);
     const supportsPicker = target => target.id === "command" || addressFields.has(target.id);
     const win = doc.defaultView,
       list = doc.createElement("div");
@@ -8284,6 +8323,10 @@
     const example=NetworkExplorerExamples.securityLab(NetworkExplorer.Network,kind);
     net=example.network;selected='browser:'+example.clientId;examined=false;cancelConnect();openInspector();render();
     say('Start with the canvas walkthrough note. Observe the working network, apply the defense, and verify the result. Reload the example to reset.');
+  });
+  for(const kind of ['drop','intercept','protected'])registerExample('example-arp-'+kind,()=>{
+    if((net.devices.length||net.applicationDrafts.length)&&!confirm('Replace this network with the ARP security example?'))return;
+    discard();candidateBase=null;const e=NetworkExplorerExamples.arpSecurity(NetworkExplorer.Network,kind);net=e.network;selected='spoofer:'+e.sourceId;examined=false;cancelConnect();openInspector();render();say('Open the victim Browser to load a page before and after the attack. Read the canvas walkthrough. Reload this example to reset.');
   });
   registerExample('example-dos',()=>{
     if((net.devices.length||net.applicationDrafts.length)&&!confirm('Replace this network with the DoS example?'))return;

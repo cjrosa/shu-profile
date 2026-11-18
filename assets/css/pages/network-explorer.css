@@ -9687,3 +9687,47 @@ body:not(.external-panel-page) #left-panel > .unified-palette {
 #generator-probe-label { display:flex; align-items:center; gap:5px; }
 #generator-settings .generator-info { display:inline-flex; align-items:center; justify-content:center; border:0; background:transparent; color:var(--muted); padding:2px; margin:0; width:20px; height:20px; min-height:20px; }
 .generator-info svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.8; }
+/* ARP security reuses the Inspector's typography and controls. */
+.arp-security-panel { margin: 12px 0; min-width: 0; }
+.arp-security-panel > summary { font-weight: 650; cursor: pointer; }
+.arp-security-panel fieldset { border: 1px solid var(--line, #ccd5df); border-radius: 6px; margin: 10px 0; }
+.arp-security-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.arp-security-fields input, .arp-security-fields select { min-width: 0; width: 100%; }
+.arp-security-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.arp-binding { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line, #ccd5df); font-size: 12px; overflow-wrap: anywhere; }
+.arp-security-log { max-height: 270px; overflow: auto; font-size: 12px; }
+.arp-security-log details { padding: 7px 0; border-bottom: 1px solid var(--line, #ccd5df); }
+.arp-security-log summary { cursor: pointer; overflow-wrap: anywhere; }
+.arp-security-log pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+#inspector .arp-status-summary { margin:10px 0; padding:8px 10px; border:1px solid var(--line, #dce3ea); border-radius:8px; background:var(--panel, #fff); display:grid; gap:7px; }
+#inspector .arp-status-row { display:flex; align-items:flex-start; gap:7px; font-size:12px; line-height:1.4; color:var(--muted, #61758a); }
+#inspector .arp-status-row>svg { width:15px; height:15px; flex:0 0 15px; margin-top:1px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+#inspector .arp-status-row>div { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; min-width:0; }
+#inspector .arp-status-label { font-size:11px; font-weight:600; color:var(--muted, #61758a); }
+#inspector .arp-status-value { font-size:12px; overflow-wrap:anywhere; }
+#inspector .arp-status-count { padding:1px 5px; margin-left:4px; border-radius:4px; background:#edf2f6; font-size:11px; color:#61758a; white-space:nowrap; }
+#inspector .arp-status-row.is-success { color:#287d78; }
+#inspector .arp-status-row.is-error { color:#a33d3d; }
+#inspector .arp-status-row.is-warning { color:#94651a; }
+#inspector .arp-interception-notice { display:flex; align-items:flex-start; gap:6px; padding:5px 7px; border:1px solid var(--line, #dce3ea); border-radius:5px; background:var(--soft, #f4f8fa); color:var(--muted, #61758a); font-size:11px; line-height:1.35; }
+#inspector .arp-interception-notice>svg { width:13px; height:13px; flex:0 0 13px; margin-top:1px; fill:none; stroke:var(--teal, #287d78); stroke-width:1.7; stroke-linecap:round; }
+#inspector .arp-interception-notice>div { min-width:0; }
+body:not(.external-panel-page) #right-panel:has(.application-inspector-footer) { overflow:hidden; }
+body:not(.external-panel-page) #right-panel>section:has(.application-inspector-footer) { display:flex; flex-direction:column; flex:1; min-height:0; width:100%; box-sizing:border-box; }
+#right-panel:has(.application-inspector-footer) .inspector-heading { flex-shrink:0; }
+#inspector:has(.application-inspector-footer) { display:flex; flex-direction:column; flex:1; min-height:0; }
+#inspector .application-inspector-content { flex:1; min-height:0; overflow:auto; padding:0 3px 8px; }
+#inspector .application-inspector-footer { flex-shrink:0; display:flex; justify-content:center; padding:10px 0 0; border-top:1px solid var(--line, #dce3ea); }
+#inspector .application-inspector-footer button { margin:0; }
+#spoofer-settings .inspector-picker svg { color:var(--teal, #4f8582); stroke-width:1.5; }
+#inspector #spoofer-panel-settings,
+#inspector #spoofer-panel-interception { padding-top:5px; }
+#inspector #spoofer-settings { margin-top:0; }
+#inspector #spoofer-settings>label:first-child { margin-top:0; }
+#inspector .arp-security-actions button { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; min-height:28px; padding:6px; margin:0; border-radius:6px; color:var(--teal); }
+#inspector .spoofer-run-state { display:inline-flex; align-items:center; gap:5px; font-size:11px; }
+.spoofer-run-dot { width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.5; }
+#inspector .spoofer-run-state.is-running { color:var(--teal); }
+.spoofer-run-state.is-running .spoofer-run-dot { opacity:1; animation:spoofer-running 1.2s ease-in-out infinite; }
+@keyframes spoofer-running { 50% { opacity:.35; } }
+@media (prefers-reduced-motion:reduce) { .spoofer-run-state.is-running .spoofer-run-dot { animation:none; } }

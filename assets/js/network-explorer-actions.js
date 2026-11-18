@@ -3,6 +3,9 @@
   "use strict";
   const handlers = new Map();
   const examples = {
+    "example-arp-drop": {title:"ARP: gateway impersonation",description:"Poison a client cache, interrupt service, and recover with switch inspection."},
+    "example-arp-intercept": {title:"ARP: hidden interception",description:"Keep HTTP working through an attacker and inspect what is visible."},
+    "example-arp-protected": {title:"ARP: protected LAN",description:"Validate static bindings, block forged claims, and investigate trusted-port bypass."},
     "example-security-encrypt": {title:"Secure HTTP with HTTPS",description:"Start with readable HTTP and protect the page with a certificate and TLS."},
     "example-security-harden": {title:"Reduce exposed services",description:"Restrict an overly permissive firewall while keeping HTTPS available."},
     "example-security-detect": {title:"Detect a port scan",description:"Enable IDS and investigate a scan without changing its results."},

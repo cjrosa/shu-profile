@@ -15,6 +15,16 @@ Each watched device pauses traffic with an examination overlay. It shows the inc
 - [Styles](../assets/css/pages/network-explorer.css): standalone course-style layout.
 - [Tests](../tests/network-explorer.test.cjs): protocol and topology checks, run with `node --test tests/network-explorer.test.cjs`.
 
+## ARP security
+
+[ARP security engine](../assets/js/network-explorer-arp-security.js) owns bounded forged Request/Reply runs, endpoint discovery through real simulated ARP, drop/forward interception, and switch ingress inspection. [ARP security Inspector](../assets/js/network-explorer-arp-security-ui.js) renders application controls, static bindings, trust settings, and bounded decision/capture logs. The three Home → Security examples cover gateway impersonation, hidden interception, and a protected LAN. See the [manual workflow](../cs339/network_explorer_manual.html#arp-security).
+
+ARP frames carry separate `sha`/`tha` fields alongside Ethernet `src`/`dst`; `sip`/`tip` remain the ARP protocol addresses. Older in-memory frames without hardware fields fall back to Ethernet values. Targeted requests and unsolicited replies update dynamic endpoint caches; gratuitous announcements are not modeled. Forwarding is Ethernet relaying (no TTL change), preserves HTTP/TLS/TCP state, and carries an internal relay guard to prevent loops. TLS records never expose plaintext through the attacker log.
+
+Switch `arpInspection` stores enabled VLAN IDs, independently trusted ports, and approved static IP/MAC/VLAN/port bindings. Validation runs before MAC learning and forwarding. This vendor-neutral teaching policy applies immediately through the Inspector for both platform profiles; it does not implement vendor security CLI syntax or DHCP snooping. Unlike normal topology edits, policy changes preserve runtime caches. `clearArpCache(id)` repairs an endpoint independently; global reset cancels attacks and clears runtime observations. Stop cancels future forged sends but retains forwarding until reset. Only configuration survives save/load.
+
+Victim and impersonated address fields support the existing `@` picker, including router interfaces. Technique, direction, and traffic controls use the shared accessible SVG dropdown component. Run `node --test tests/network-explorer-arp-security.test.cjs` for targeted coverage, and `node --test tests/network-explorer*.test.cjs` for Network Explorer regression coverage.
+
 Topology JSON version 1 stores configuration, interface identities, layout, and watched devices. Runtime caches and queued exchanges are not persisted. Configuration changes reset runtime state and are blocked during an exchange; clearing learned state cancels the exchange explicitly. Both MAC and ARP entries expire 120 seconds after learning, using wall-clock deadlines. Compact ring countdowns update while idle; expiry removes live entries and learning refreshes the deadline. The clock advances with events, not wall time, and animation speed does not affect outcomes.
 
 ## Scope and expansion
