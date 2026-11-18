@@ -9649,6 +9649,19 @@ body:not(.external-panel-page) #left-panel > .unified-palette {
 .capacity-monitor svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; }
 .capacity-monitor-details { border-top:1px solid #d9e2e9; padding:8px 10px; line-height:1.6; }
 .capacity-monitor-details strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#inspector-capacity-monitor { margin:0 0 12px; }
+#inspector-capacity-monitor .capacity-monitor { font-size:12px; border-radius:6px; box-shadow:none; border-color:var(--line,#dce3ea); }
+#inspector-capacity-monitor .capacity-monitor-bar { padding:3px 6px; gap:4px; }
+#inspector-capacity-monitor .capacity-monitor button { padding:2px; font-size:12px; gap:5px; }
+#inspector-capacity-monitor .capacity-monitor svg { width:14px; height:14px; }
+#inspector-capacity-monitor .capacity-status { padding:0 8px 3px; font-size:12px; font-weight:400; }
+#inspector-capacity-monitor .capacity-meter { height:3px; }
+#inspector-capacity-monitor .capacity-monitor-details { padding:5px 8px; line-height:1.35; display:flex; flex-wrap:wrap; column-gap:8px; row-gap:2px; }
+#inspector-capacity-monitor .capacity-monitor-details strong { flex-basis:100%; font-size:12px; }
+#inspector-capacity-monitor .capacity-countdown, #inspector-capacity-monitor .capacity-countdown svg { width:24px; height:24px; }
+#inspector-capacity-monitor [data-capacity-drag] { display:none; }
+#inspector-capacity-monitor [data-capacity-expand] { pointer-events:none; }
+#inspector-capacity-monitor .capacity-monitor button { width:auto; min-height:0; margin:0; }
 .capacity-monitor-details small { color:#68798a; }
 
 .capacity-monitor [data-capacity-drag] { cursor:grab; touch-action:none; padding:4px 0; color:#68798a; }
@@ -9719,9 +9732,16 @@ body:not(.external-panel-page) #right-panel>section:has(.application-inspector-f
 #inspector .application-inspector-content { flex:1; min-height:0; overflow:auto; padding:0 3px 8px; }
 #inspector .application-inspector-footer { flex-shrink:0; display:flex; justify-content:center; padding:10px 0 0; border-top:1px solid var(--line, #dce3ea); }
 #inspector .application-inspector-footer button { margin:0; }
+#right-panel > section { padding-left:6px; padding-right:6px; }
+html, body, body * { scrollbar-width:thin; scrollbar-color:#b5bec8 transparent; }
 #spoofer-settings .inspector-picker svg { color:var(--teal, #4f8582); stroke-width:1.5; }
 #inspector #spoofer-panel-settings,
 #inspector #spoofer-panel-interception { padding-top:5px; }
+#inspector .application-inspector-content:has(#spoofer-panel-interception:not([hidden])) { display:flex; flex-direction:column; overflow:hidden; }
+#inspector .application-inspector-content:has(#spoofer-panel-interception:not([hidden])) > * { flex-shrink:0; }
+#inspector #spoofer-panel-interception:not([hidden]) { display:flex; flex-direction:column; flex:1; min-height:0; overflow:hidden; }
+#spoofer-panel-interception .arp-interception-notice { flex-shrink:0; }
+#inspector #spoofer-panel-interception .arp-security-log { flex:1; min-height:0; max-height:none; overflow:auto; }
 #inspector #spoofer-settings { margin-top:0; }
 #inspector #spoofer-settings>label:first-child { margin-top:0; }
 #inspector .arp-security-actions button { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; min-height:28px; padding:6px; margin:0; border-radius:6px; color:var(--teal); }

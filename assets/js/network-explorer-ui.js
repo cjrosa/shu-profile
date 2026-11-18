@@ -2413,25 +2413,42 @@
   }
   const capacityMonitors = new Map();
   let capacityDrag = null;
+  function updateCapacityConnectors(layer) {
+    layer.querySelectorAll('[data-capacity-monitor]').forEach(card=>{
+      const d=net.device(card.dataset.capacityMonitor),box=card.closest('foreignObject');
+      const x=Number(box.getAttribute('x')),y=Number(box.getAttribute('y')),w=250,h=card.offsetHeight;
+      const edges=[{x:x+w/2,y},{x:x+w,y:y+h/2},{x:x+w/2,y:y+h},{x,y:y+h/2}];
+      let best=null,distance=Infinity;
+      for(const side of ['top','right','bottom','left'])for(const end of edges){const start=portPosition(d,side),length=Math.hypot(start.x-end.x,start.y-end.y);if(length<distance){distance=length;best={start,end};}}
+      box.previousElementSibling.setAttribute('d','M'+best.start.x+' '+best.start.y+'L'+best.end.x+' '+best.end.y);
+      box.setAttribute('height',h+8);
+    });
+  }
   function drawCapacityMonitors() {
     if(capacityDrag)return;
     let layer=$('capacity-monitors');
     if(!layer){layer=document.createElementNS('http://www.w3.org/2000/svg','g');layer.id='capacity-monitors';$('devices').after(layer);}
-    const now=Date.now(),visible=[];
+    const now=Date.now(),visible=[];let docked="";
     for(const [id,l] of Object.entries(net.serverLoad||{})){
-      const d=net.device(id);if(!d?.webServer||!(l.accepted||l.dropped))continue;
+      const d=net.device(id);if(!d?.webServer||!(l.accepted||l.dropped)){capacityMonitors.delete(id);continue;}
       const pending=Object.keys(l.pending).length,signature=[l.accepted,l.dropped,l.expired,pending].join(':');
       let m=capacityMonitors.get(id);
       if(!m){m={signature,changed:now,expanded:false,dx:-125,dy:40};capacityMonitors.set(id,m);}
-      if(m.signature!==signature){m.signature=signature;m.changed=now;}
+      if(m.signature!==signature){if(now-m.changed>=60000)m.dismissed=false;m.signature=signature;m.changed=now;}
       if(pending)m.changed=now;
       if(now-m.changed>=60000)continue;
-      const limit=d.webServer.synCapacity??32,expanded=m.expanded;
+      const limit=d.webServer.synCapacity??32,expanded=m.dismissed||m.expanded;
       const ratio=Math.min(1,pending/limit),state=ratio>=1?'full':ratio>=.75?'busy':'available',status=state==='full'?'Full':state==='busy'?'Near capacity':pending?'Available':'Idle';
-      visible.push('<g><path class="note-connector" d="M'+d.x+' '+d.y+'L'+(d.x+m.dx)+' '+(d.y+m.dy+20)+'"/><foreignObject x="'+(d.x+m.dx)+'" y="'+(d.y+m.dy)+'" width="250" height="'+(expanded?200:80)+'"><div xmlns="http://www.w3.org/1999/xhtml" class="capacity-monitor capacity-'+state+'" data-capacity-monitor="'+id+'"><div class="capacity-monitor-bar"><button type="button" data-capacity-drag="'+id+'" aria-label="Move capacity monitor" title="Drag to move; arrow keys to nudge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01" stroke-width="3" stroke-linecap="round"/></svg></button><button type="button" data-capacity-expand="'+id+'" aria-expanded="'+expanded+'" title="Connection capacity for '+esc(d.name)+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20V4M3 20h18M7 16v-4M12 16V8M17 16V5"/></svg><span>'+pending+' / '+limit+' slots</span></button><small class="capacity-countdown" data-capacity-countdown="'+id+'" role="timer" aria-live="off"><svg viewBox="0 0 24 24" aria-hidden="true"><circle class="countdown-track" cx="12" cy="12" r="9"/><circle class="countdown-progress" cx="12" cy="12" r="9" pathLength="100" stroke-dasharray="100" transform="rotate(-90 12 12)"/></svg><span></span></small></div><div class="capacity-status"><span>'+status+'</span><span>'+Math.round(ratio*100)+'%</span></div><div class="capacity-meter" role="meter" aria-label="Pending connection capacity" aria-valuemin="0" aria-valuemax="'+limit+'" aria-valuenow="'+pending+'" aria-valuetext="'+pending+' of '+limit+' slots occupied; '+status+'"><span style="width:'+ratio*100+'%"></span></div>'+(expanded?'<div class="capacity-monitor-details"><strong>'+esc(d.name)+'</strong><div>'+l.dropped+' SYNs dropped &middot; '+l.expired+' expired</div><div>'+l.accepted+' accepted</div></div>':'')+'</div></foreignObject></g>');
+      const card='<div xmlns="http://www.w3.org/1999/xhtml" class="capacity-monitor capacity-'+state+'" data-capacity-monitor="'+id+'"><div class="capacity-monitor-bar"><button type="button" data-capacity-drag="'+id+'" aria-label="Move capacity monitor" title="Drag to move; arrow keys to nudge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01" stroke-width="3" stroke-linecap="round"/></svg></button><button type="button" data-capacity-expand="'+id+'" aria-expanded="'+expanded+'" title="Connection capacity for '+esc(d.name)+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20V4M3 20h18M7 16v-4M12 16V8M17 16V5"/></svg><span>'+pending+' / '+limit+' slots</span></button><small class="capacity-countdown" data-capacity-countdown="'+id+'" role="timer" aria-live="off"><svg viewBox="0 0 24 24" aria-hidden="true"><circle class="countdown-track" cx="12" cy="12" r="9"/><circle class="countdown-progress" cx="12" cy="12" r="9" pathLength="100" stroke-dasharray="100" transform="rotate(-90 12 12)"/></svg><span></span></small>'+(!m.dismissed?'<button type="button" data-capacity-dismiss="'+id+'" aria-label="Move capacity monitor to Inspector" title="Move to Inspector"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>':'<button type="button" data-capacity-restore="'+id+'" aria-label="Restore capacity monitor to canvas" title="Restore to canvas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7M21 3l-8 8M10 3H3v18h18v-7"/></svg></button>')+'</div><div class="capacity-status"><span>'+status+'</span><span>'+Math.round(ratio*100)+'%</span></div><div class="capacity-meter" role="meter" aria-label="Pending connection capacity" aria-valuemin="0" aria-valuemax="'+limit+'" aria-valuenow="'+pending+'" aria-valuetext="'+pending+' of '+limit+' slots occupied; '+status+'"><span style="width:'+ratio*100+'%"></span></div>'+(expanded?'<div class="capacity-monitor-details"><strong>'+esc(d.name)+'</strong><div>'+l.dropped+' SYNs dropped &middot; '+l.expired+' expired</div><div>'+l.accepted+' accepted</div></div>':'')+'</div>';
+      if(m.dismissed){if(selected===id)docked=card;}else visible.push('<g><path class="note-connector" d="M'+d.x+' '+d.y+'L'+(d.x+m.dx)+' '+(d.y+m.dy+20)+'"/><foreignObject x="'+(d.x+m.dx)+'" y="'+(d.y+m.dy)+'" width="250" height="'+(expanded?200:80)+'">'+card+'</foreignObject></g>');
     }
     for(const id of capacityMonitors.keys())if(!net.serverLoad?.[id])capacityMonitors.delete(id);
-    const updateCountdowns=()=>layer.querySelectorAll('[data-capacity-countdown]').forEach(el=>{
+    let dock=$('inspector-capacity-monitor');
+    const content=$('inspector').querySelector('.application-inspector-content');
+    if(docked&&content){if(!dock){dock=document.createElement('div');dock.id='inspector-capacity-monitor';content.prepend(dock);}if(dock.capacityMarkup!==docked){dock.innerHTML=docked;dock.capacityMarkup=docked;}}
+    else dock?.remove();
+    if(dock&&docked)dock.onclick=e=>{if(e.target.closest('[data-capacity-restore]')){capacityMonitors.get(selected).dismissed=false;drawCapacityMonitors();}};
+    const updateCountdowns=()=>document.querySelectorAll('#capacity-monitors [data-capacity-countdown], #inspector-capacity-monitor [data-capacity-countdown]').forEach(el=>{
       const id=el.dataset.capacityCountdown,m=capacityMonitors.get(id),active=Object.keys(net.serverLoad[id]?.pending||{}).length>0;
       const seconds=Math.max(0,Math.ceil((60000-(now-m.changed))/1000));
       const label=active?'Countdown starts when idle':'Closes in '+seconds+'s';
@@ -2440,6 +2457,7 @@
     });
     const markup=visible.join('');if(layer.capacityMarkup===markup){updateCountdowns();return;}layer.capacityMarkup=markup;
     layer.innerHTML=markup;
+    updateCapacityConnectors(layer);
     updateCountdowns();
     layer.onpointerdown=e=>{
       e.stopPropagation();const handle=e.target.closest('[data-capacity-drag]');if(!handle||e.button!==0)return;
@@ -2451,13 +2469,13 @@
       const drag=capacityDrag,m=capacityMonitors.get(drag.id),d=net.device(drag.id),p=point(e);if(!m||!d)return;
       m.dx=drag.dx+p.x-drag.start.x;m.dy=drag.dy+p.y-drag.start.y;
       const card=layer.querySelector('[data-capacity-monitor="'+drag.id+'"]').closest('foreignObject');card.setAttribute('x',d.x+m.dx);card.setAttribute('y',d.y+m.dy);
-      card.previousElementSibling.setAttribute('d','M'+d.x+' '+d.y+'L'+(d.x+m.dx)+' '+(d.y+m.dy+20));
+      updateCapacityConnectors(layer);
     };
     layer.onpointerup=layer.onpointercancel=e=>{
       if(!capacityDrag||e.pointerId!==capacityDrag.pointer)return;e.stopPropagation();const id=capacityDrag.id;capacityDrag=null;
       if(layer.hasPointerCapture(e.pointerId))layer.releasePointerCapture(e.pointerId);layer.capacityMarkup=null;drawCapacityMonitors();layer.querySelector('[data-capacity-drag="'+id+'"]')?.focus();
     };
-    layer.onclick=e=>{e.stopPropagation();const expand=e.target.closest('[data-capacity-expand]'),m=capacityMonitors.get(expand?.dataset.capacityExpand);if(!m)return;m.expanded=!m.expanded;drawCapacityMonitors();};
+    layer.onclick=e=>{e.stopPropagation();const dismiss=e.target.closest('[data-capacity-dismiss]');if(dismiss){const id=dismiss.dataset.capacityDismiss;capacityMonitors.get(id).dismissed=true;select(id);drawCapacityMonitors();return;}const expand=e.target.closest('[data-capacity-expand]'),m=capacityMonitors.get(expand?.dataset.capacityExpand);if(!m)return;m.expanded=!m.expanded;drawCapacityMonitors();};
     layer.onkeydown=e=>{
       e.stopPropagation();const handle=e.target.closest('[data-capacity-drag]');if(!handle||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;
       e.preventDefault();const id=handle.dataset.capacityDrag,m=capacityMonitors.get(id),step=e.shiftKey?25:5;
@@ -3522,7 +3540,22 @@
       badge.title = "Operating system: " + name;
     }
   }
+  let inspectorScrollOwner = null;
   function inspector() {
+    const sameOwner=inspectorScrollOwner===selected;
+    const scrollTop=$('inspector').querySelector('.application-inspector-content')?.scrollTop||0;
+    const panelScroll=$('right-panel').scrollTop;
+    const dock=$('inspector-capacity-monitor');
+    try { buildInspector(); }
+    finally {
+      const content=$('inspector').querySelector('.application-inspector-content');
+      if(dock&&content&&dock.querySelector('[data-capacity-monitor]')?.dataset.capacityMonitor===selected)content.prepend(dock);
+      drawCapacityMonitors();
+      if(sameOwner){if(content)content.scrollTop=scrollTop;$('right-panel').scrollTop=panelScroll;}
+      inspectorScrollOwner=selected;
+    }
+  }
+  function buildInspector() {
     switchTerminal();
     const consoleDevice = cliDevice();
     const cliReady = !!consoleDevice;
