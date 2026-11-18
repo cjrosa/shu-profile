@@ -9827,3 +9827,31 @@ body[data-platform="paloalto"] #inspector .vlan-row { grid-template-columns:minm
 .nat-panel:has(#nat-enabled:not(:checked)) > :not(:first-child) { display:none; }
 .port-mac-address { display:flex; align-items:center; flex-wrap:wrap; gap:5px; }
 .port-mac-address .vlan-icon-button { width:26px; height:26px; min-height:0; padding:4px; margin:0; }
+#inspector .wireless-settings {
+  margin: 8px 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  min-width: 0;
+}
+#inspector .wireless-settings .inspector-section-heading { margin: 0 0 5px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+#inspector .wireless-settings .wifi-status { font-size: 10px; font-weight: 500; text-transform: none; letter-spacing: normal; color: #61758a; }
+#inspector .wireless-settings form { margin: 0; padding: 0; }
+#inspector .wireless-settings label { display: grid; grid-template-columns: 54px minmax(0, 1fr); align-items: center; gap: 5px; margin: 4px 0; font-size: 11px; }
+#inspector .wireless-settings :is(input,select) { width: 100%; min-width: 0; height: 27px; min-height: 0; padding: 3px 5px; margin: 0; font-size: 11px; border-radius: 5px; }
+#inspector .wireless-settings button { min-height: 25px; padding: 3px 7px; margin: 0; font-size: 11px; border-radius: 5px; }
+#inspector .wireless-settings .wifi-icon-button { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 4px; }
+#inspector .wireless-settings .wifi-icon-button svg { width: 16px; height: 16px; flex: none; }
+#inspector .wireless-settings .wifi-actions { display: flex; gap: 5px; margin: 5px 0; }
+#inspector .wireless-settings .wifi-meta { font-size: 11px; line-height: 1.4; color: #61758a; overflow-wrap: anywhere; }
+#inspector .wireless-settings { padding-right: 4px; }
+#inspector .wireless-settings .inspector-picker { display: grid; grid-template-columns: 54px minmax(0, 1fr); align-items: center; gap: 5px; margin: 4px 0; min-width: 0; font-size: 11px; }
+#inspector .wireless-settings .inspector-picker > button { width: 100%; min-width: 0; height: 27px; padding: 3px 5px; font-size: 11px; }
+#inspector .wireless-settings .inspector-picker button > span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+#inspector .wireless-settings .inspector-picker svg { width: 14px; height: 14px; flex-shrink: 0; }
+#inspector .wireless-settings .inspector-picker [role="listbox"] { left: 59px; right: 0; width: auto; min-width: 0; padding: 3px; }
+#inspector .wireless-settings .inspector-picker [role="option"] { width: 100%; min-height: 29px; padding: 4px 5px; font-size: 11px; }
+#inspector .wireless-settings :is(input,select,button):focus { outline: 1px solid #6488b4; outline-offset: 1px; box-shadow: none; }
+#inspector .wireless-settings .inspector-picker [role="option"]:focus { outline-offset: -1px; }

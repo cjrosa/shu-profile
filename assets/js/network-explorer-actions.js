@@ -3,6 +3,7 @@
   "use strict";
   const handlers = new Map();
   const examples = {
+    "example-wireless": {title:"Wireless LAN",description:"Join Wi-Fi, acquire DHCP, and bridge to Ethernet."},
     "example-arp-drop": {title:"ARP: gateway impersonation",description:"Poison a client cache, interrupt service, and recover with switch inspection."},
     "example-arp-intercept": {title:"ARP: hidden interception",description:"Keep HTTP working through an attacker and inspect what is visible."},
     "example-arp-protected": {title:"ARP: protected LAN",description:"Validate static bindings, block forged claims, and investigate trusted-port bypass."},

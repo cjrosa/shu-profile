@@ -925,6 +925,7 @@
       );
   }
   function icon(d) {
+    if(d.type==="ap"||d.role==="ap"||d.type==="laptop"||d.role==="laptop")return NetworkExplorerWirelessUI.glyph(d.type==="laptop"||d.role==="laptop");
     if (d.type === "firewall" || d.role === "firewall") return NetworkExplorerFirewallUI.glyph();
     if (d.type === "router") return routerIcon() + (d.firewall?.enabled ? '<g transform="translate(25 -17) scale(.35)">' + NetworkExplorerFirewallUI.glyph() + "</g>" : "");
     return d.type === "host"
@@ -1519,11 +1520,11 @@
         const enabled =
           l.enabled &&
           a.ports.find((p) => p.id === l.ap).enabled &&
-          b.ports.find((p) => p.id === l.bp).enabled;
+          b.ports.find((p) => p.id === l.bp).enabled && (l.medium !== 'wifi' || net.wifiStatus(da.wifi ? da.id : db.id) === 'Associated');
         return (
           '<g class="wire" data-link="' +
           esc(l.id) +
-          '" tabindex="0" role="button" aria-label="Cable ' +
+          '" tabindex="0" role="button" aria-label="' + (l.medium==='wifi'?'Wi-Fi ':'Cable ') +
           esc(a.name) +
           " to " +
           esc(b.name) +
@@ -1532,11 +1533,11 @@
           '" fill="none" stroke="transparent" stroke-width="20"/><path d="' +
           pathData(route) +
           '" fill="none" stroke="' +
-          (selected === l.id ? "#287d78" : "#9ab0c2") +
+          (selected === l.id ? "#287d78" : !enabled ? "#b66b60" : "#9ab0c2") +
           '" stroke-width="' +
           (selected === l.id ? 4 : 2) +
           '" ' +
-          (enabled ? "" : 'stroke-dasharray="8 6"') +
+          (l.medium === "wifi" ? 'stroke-dasharray="3 6"' : enabled ? "" : 'stroke-dasharray="8 6"') +
           '/><text x="' +
           (a.x * 0.7 + b.x * 0.3) +
           '" y="' +
@@ -1594,7 +1595,7 @@
                 : "Not configured"
               : d.type === "router"
                 ? d.firewallMode === "transparent" ? "2 bridge ports" : d.ports.length + " routed interfaces"
-                : "8 Ethernet ports",
+                : d.role === "ap" ? "Wi-Fi / Ethernet bridge" : "8 Ethernet ports",
           ) +
           "</text>" +
           (d.watch
@@ -3583,7 +3584,7 @@
         esc(d.name) +
         "</span>"
       : l
-        ? "Ethernet connection"
+        ? (l.medium === "wifi" ? "Wireless association" : "Ethernet connection")
         : "Inspector";
     bindWatch(d);
     if (d) {
@@ -3672,6 +3673,7 @@
           render();
         };
       }
+      NetworkExplorerWirelessUI.mount($("inspector").querySelector(".application-inspector-content"),net,d,{esc,styleSelect:styleInspectorSelect,change:mutate,disconnect:id=>mutate(()=>net.disconnectWifi(id)),join:(id,ap,password)=>{if(!editable()||candidateBase)return;safely(()=>{net.joinWifi(id,ap,password);render();running=true;stage();});}});
       bindDeviceTags(d);
       bindDevicePlatform(d);
       bindDhcp(d);
@@ -3702,7 +3704,7 @@
       const a = net.device(l.a),
         b = net.device(l.b);
       $("inspector").innerHTML =
-        "<strong>Ethernet connection</strong><p>" +
+        "<strong>" + (l.medium === "wifi" ? "Wireless association" : "Ethernet connection") + "</strong><p>" +
         esc(a.name) +
         " / " +
         esc(a.ports.find((p) => p.id === l.ap).name) +
@@ -3712,7 +3714,7 @@
         esc(b.ports.find((p) => p.id === l.bp).name) +
         '</p><label><input id="link-enabled" type="checkbox" ' +
         (l.enabled ? "checked" : "") +
-        '> Cable enabled</label><button id="delete" class="danger">Delete connection</button>';
+        '> ' + (l.medium === 'wifi' ? 'Wireless link enabled' : 'Cable enabled') + '</label><button id="delete" class="danger">Delete connection</button>';
       $("link-enabled").onchange = (e) =>
         mutate(() => (l.enabled = e.target.checked));
       $("delete").onclick = () => deleteTopologyItem(l.id);
@@ -5645,6 +5647,7 @@
   $("add-host").onclick = () => addFromPalette("host");
   $("add-switch").onclick = () => addFromPalette("switch");
   $("add-router").onclick = () => addFromPalette("router");
+  for(const [type,label] of [["ap","Wireless AP"],["laptop","Wireless laptop"]]){const b=document.createElement("button");b.id="add-"+type;b.type="button";b.title="Add "+label;b.setAttribute("aria-label",b.title);b.innerHTML='<svg viewBox="-42 -35 84 72" aria-hidden="true">'+icon({type})+"</svg><span>"+label+"</span>";$("add-router").after(b);b.onclick=()=>addFromPalette(type);}
   const firewallButton = document.createElement("button");
   firewallButton.id="add-firewall";firewallButton.type="button";firewallButton.title="Add firewall";firewallButton.setAttribute("aria-label","Add firewall");
   firewallButton.innerHTML='<svg viewBox="-42 -35 84 72" aria-hidden="true">'+NetworkExplorerFirewallUI.glyph()+"</svg>";
@@ -6258,7 +6261,7 @@
   compactPalette.id = "compact-palette";
   compactPalette.hidden = true;
   compactPalette.setAttribute("aria-label", "Devices");
-  compactPalette.innerHTML = ["host", "switch", "router", "firewall"]
+  compactPalette.innerHTML = ["host", "switch", "router", "firewall", "ap", "laptop"]
     .map(
       (type) =>
         '<button type="button" class="compact-device" data-add-type="' +
@@ -6610,6 +6613,10 @@
     examined = false;
     cancelConnect();
     render();
+  });
+  registerExample("example-wireless", () => {
+    if(net.devices.length&&!confirm("Replace this network with the Wireless LAN example?"))return;
+    discard();candidateBase=null;const e=NetworkExplorerWireless.example(NetworkExplorer.Network);net=e.network;selected=e.clientId;examined=false;cancelConnect();openInspector();render();say("Wi-Fi is associated and DHCP is complete. Ping 192.168.50.10. In Troubleshooting, choose Break something > Wireless for a wrong-password fault. Classroom password: classroom123.");
   });
   registerExample("example-direct", () => {
     if ((net.devices.length || net.applicationDrafts.length) && !confirm("Replace this network with the direct connection example?")) return;
@@ -7454,6 +7461,7 @@
   refreshTroubleshooting = NetworkExplorerTroubleshooting.mount(troubleshootingPanel, {
     Network: NetworkExplorer.Network, network: () => net, identity: () => networkIdentity(), editable,
     change: fn => mutate(fn),
+    security: kind => {const previous=net;NetworkExplorerActions.run("example-"+kind);if(net===previous)return false;openTool("troubleshooting",true);return true;},
     load: data => replaceTroubleshootingNetwork(data, "Generate troubleshooting practice network"),
     restore: data => replaceTroubleshootingNetwork(data, "Restore the challenge starting network (discard challenge edits)"),
     select: id => { cancelConnect(); select(id); },
@@ -8167,7 +8175,7 @@
     if(['add-certificate','compact-certificate'].includes(button.id))return {kind:'certificate',type:'certificate'};
     if(button.id==='add-note')return {kind:'note',type:'note'};
     const type=button.dataset.addType||button.id.replace(/^add-/,'');
-    if(['host','switch','router','firewall'].includes(type))return {kind:'device',type};
+    if(['host','switch','router','firewall','ap','laptop'].includes(type))return {kind:'device',type};
     return null;
   }
   for(const root of [$('left-panel'),compactPalette]){

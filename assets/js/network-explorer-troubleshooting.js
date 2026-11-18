@@ -11,7 +11,8 @@
     } catch (_) { return false; }
   }
   function apply(n, fault, restore = false) {
-    if (fault.kind === 'firewall') {const c=JSON.parse(JSON.stringify(fault.original));if(!restore)c.rules.unshift(fault.rule);n.configureFirewall(fault.device,c);}
+    if(fault.kind==='wireless'){const d=n.device(fault.source);d.wifi.password=restore?fault.original:'incorrect-password';n.reset();}
+    else if (fault.kind === 'firewall') {const c=JSON.parse(JSON.stringify(fault.original));if(!restore)c.rules.unshift(fault.rule);n.configureFirewall(fault.device,c);}
     else if (['dns','dhcp','web'].includes(fault.kind)) {
       if (restore) { Object.assign(n.device(fault.device), JSON.parse(JSON.stringify(fault.removed))); n.reset(); }
       else if (fault.kind === 'dns') n.uninstallDns(fault.device);
@@ -23,6 +24,7 @@
     else n.configurePort(fault.device || fault.source, fault.port || 'p0', {enabled: restore});
   }
   function verify(Network, data, fault) {
+    if(fault.kind==='wireless'){try{const n=new Network(data);if(n.wifiStatus(fault.source)!=='Associated')return false;n.acquireDhcp(fault.source);let steps=0;while(n.queue.length&&++steps<3000)n.next();n.ping(fault.source,fault.target);while(n.queue.length&&++steps<3000)n.next();return n.results.some(r=>r.device===fault.source&&r.target===fault.target&&r.ok);}catch(_){return false;}}
     if (!['dns','dhcp','web','firewall'].includes(fault.kind)) return probe(Network, data, fault.source, fault.target);
     try {
       const n = new Network(data);
@@ -129,6 +131,7 @@
     return n;
   }
   function create(Network, data, random = Math.random, difficulty = 'mixed') {
+    if(difficulty==='wireless'){for(const source of data.devices.filter(d=>d.wifi&&d.addressMode==='dhcp')){const ap=data.devices.find(d=>d.id===source.wifi.ap&&d.wireless?.security==='wpa2');if(!ap)continue;for(const target of data.devices.filter(d=>d.type==='host'&&d.ip&&d.id!==source.id)){const fault={kind:'wireless',source:source.id,sourceName:source.name,target:target.ip,original:source.wifi.password,symptom:'The laptop sees the SSID but cannot join Wi-Fi.',testLabel:'Wi-Fi/DHCP/ping test',hints:['Check Wi-Fi association before IP configuration.','Compare the laptop credentials with the access point settings.','Enter the AP password on the laptop and select Connect Wi-Fi, then acquire DHCP.'],reveal:'The saved laptop password is incorrect. Use '+ap.wireless.password+' and Connect Wi-Fi; then acquire DHCP and ping '+target.ip+'.'};if(verify(Network,data,fault))return fault;}}throw Error('Open Wireless LAN first.');}
     if(difficulty === 'firewall') {
       for(const d of data.devices.filter(d=>d.firewall?.enabled))for(const h of data.devices.filter(d=>d.browserServer?.enabled&&d.ip&&d.dnsServerAddress)) {
         const url=h.browserServer.url;if(new URL(url).hostname.split('.').every(x=>/^\d+$/.test(x)))continue;
@@ -178,9 +181,10 @@
   function mount(panel, api) {
     let challenge = null, owner = null, baseline = null, hint = 0;
     const identity = () => api.identity ? api.identity() : api.network();
-    panel.innerHTML = '<div class="trouble-actions"><button data-lab="load">Load practice network</button><button data-lab="break">Break something</button><button data-lab="check" disabled>Check repair</button><button data-lab="hint" disabled>Hint</button><button data-lab="look" disabled>Look here</button><button data-lab="reveal" disabled>Reveal fault</button><button data-lab="reset" disabled>Reset network</button></div><p class="trouble-status" role="status">Generate a practice network, or open/build a working network, then choose Break something.</p><div class="trouble-evidence"></div><label class="trouble-reflection">Explain your fix <input placeholder="What failed? What evidence led you to the fix?" aria-label="Explain your fix"></label>';
+    panel.innerHTML = '<div class="trouble-actions"><button data-lab="load">Load practice network</button><button data-lab="break">Break something</button><button data-lab="security">Security</button><button data-lab="check" disabled>Check repair</button><button data-lab="hint" disabled>Hint</button><button data-lab="look" disabled>Look here</button><button data-lab="reveal" disabled>Reveal fault</button><button data-lab="reset" disabled>Reset network</button></div><p class="trouble-status" role="status">Generate a practice network, or open/build a working network, then choose Break something.</p><div class="trouble-evidence"></div><label class="trouble-reflection">Explain your fix <input placeholder="What failed? What evidence led you to the fix?" aria-label="Explain your fix"></label>';
     const icons = {
       load: '<path d="m3 21 12-12 3 3L6 24z" transform="translate(0 -2)"/><path d="m12 10 3 3M5 2v4M3 4h4m12-3v6m-3-3h6m-1 11v4m-2-2h4"/>',
+      security: '<path d="M12 2 21 6v6c0 5-5 8-9 10-4-2-9-5-9-10V6Z"/><path d="M12 7v6m0 4h.01"/>',
       break: '<path d="m13 2-9 12h7l-1 8 10-13h-7z"/>',
       check: '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
       hint: '<path d="M9 18h6m-6 3h6M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 2H9s0-1-1-2Z"/>',
@@ -209,20 +213,24 @@
         const option = document.createElement('button'); option.id = 'trouble-' + action + '-' + value;
         option.dataset.lab = action; option.dataset.level = value;
         const levelIcons = {
+          'arp-drop':'<path d="M3 5h7v7H3ZM14 5h7v7h-7ZM6 12v5h12v-5m-9 3 6 6m0-6-6 6"/>',
+          'arp-intercept':'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
           basic:'<rect x="8" y="3" width="8" height="5" rx="1"/><path d="M12 8v5M5 16v-3h14v3"/><rect x="2" y="16" width="6" height="5" rx="1"/><rect x="16" y="16" width="6" height="5" rx="1"/>',
           intermediate:'<rect x="2" y="8" width="6" height="8" rx="1"/><rect x="16" y="8" width="6" height="8" rx="1"/><path d="M8 12h8M5 4v4m14-4v4M5 16v4m14-4v4"/>',
           advanced:'<circle cx="12" cy="4" r="3"/><circle cx="4" cy="18" r="3"/><circle cx="20" cy="18" r="3"/><path d="m10 7-4 8m8-8 4 8M7 18h10"/>',
           easy:'<path d="M5 19v-5h3v5zm6 0V9h3v10zm6 0V4h3v15"/>',
+          wireless:'<path d="M3 8q9-9 18 0M6 12q6-6 12 0M9 16q3-3 6 0"/><circle cx="12" cy="20" r="1"/>',
           firewall:'<path d="M12 2 21 6v6c0 5-5 8-9 10-4-2-9-5-9-10V6Z"/><path d="m7 12 3 3 7-7"/>',
           hard:'<path d="m13 2-9 12h7l-1 8 10-13h-7z"/>'
         };
         option.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + levelIcons[value] + '</svg><div><strong></strong><span></span></div>';
-        option.querySelector('strong').textContent = value === 'firewall' ? 'Firewall policy' : value[0].toUpperCase() + value.slice(1);
+        option.querySelector('strong').textContent = value === 'arp-drop' ? 'ARP: gateway impersonation' : value === 'arp-intercept' ? 'ARP: hidden interception' : value === 'firewall' ? 'Firewall policy' : value[0].toUpperCase() + value.slice(1);
         option.querySelector('span').textContent = description; menu.append(option);
       });
       wrapper.append(menu);
     }
     dropdown('load', 'Generate practice network', [['basic','Random switched LAN'],['intermediate','2–3 routed LANs'],['advanced','3–5 LANs; chain or ring routing']]);
+    dropdown('security', 'Security exercises', [['arp-drop','Investigate disrupted traffic and restore ARP protection'],['arp-intercept','Find hidden interception and protect the LAN']]);
     let startBroken = false;
     const mode = document.createElement('button'); mode.id = 'trouble-generate-broken';
     mode.className = 'trouble-generate-mode'; mode.setAttribute('role','switch'); mode.setAttribute('aria-checked','false');
@@ -230,7 +238,7 @@
     mode.innerHTML = '<span>Start with a fault</span><span class="trouble-switch-track" aria-hidden="true"></span>';
     panel.querySelector('#trouble-menu-load').prepend(mode);
     mode.onclick = () => { startBroken = !startBroken; mode.setAttribute('aria-checked',String(startBroken)); };
-    dropdown('break', 'Break something', [['easy','Host interface disabled'],['intermediate','Gateway or switch port fault'],['hard','Incorrect switch access VLAN'],['firewall','DNS denied by an ordered rule']]);
+    dropdown('break', 'Break something', [['easy','Host interface disabled'],['intermediate','Gateway or switch port fault'],['hard','Incorrect switch access VLAN'],['firewall','DNS denied by an ordered rule'],['wireless','Wrong Wi-Fi password']]);
     function closeMenus() {
       toolbar.querySelectorAll('.trouble-menu').forEach(menu => { menu.hidden = true; });
       toolbar.querySelectorAll('.trouble-menu-trigger').forEach(trigger => trigger.setAttribute('aria-expanded', 'false'));
@@ -313,8 +321,9 @@
       }
       closeMenus();
       try {
-        if (['load','break','reset'].includes(action) && !api.editable()) return;
-        if (action === 'load') {
+        if (['load','break','reset','security'].includes(action) && !api.editable()) return;
+        if(action==='security'){if(!api.security(control.dataset.level))return;clearChallenge();message('Security exercise loaded. Follow the canvas walkthrough to investigate, apply ARP protection, and verify the victim Browser.');}
+        else if (action === 'load') {
           const generated = startBroken ? generateBroken(api.Network, control.dataset.level) : null;
           if (!api.load(generated ? generated.network.save() : generate(api.Network, control.dataset.level).save())) return;
           clearChallenge();

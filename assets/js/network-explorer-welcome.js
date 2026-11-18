@@ -80,6 +80,7 @@
   const scanArt = wire('M8 18 42 28M8 32H42M8 46 42 36') + [15,29,43].map(y=>packet(13,y,'#6f9dbb')).join('') + miniDevice('firewall',57,33,.65);
   const echoArt = '<rect x="25" y="8" width="58" height="39" rx="4" fill="#edf4fa" stroke="#52718b" stroke-width="1.5"/><path d="M25 17h58" stroke="#a4bacb"/><path d="m32 24 5 4-5 4m12 0h16M44 38h28" fill="none" stroke="#4c8986" stroke-width="2"/>' + miniDevice('host',16,42,.33);
   const exampleArt = {
+    'example-wireless': '<g transform="translate(23 32) scale(.55)">'+NetworkExplorerWirelessUI.glyph(true)+'</g><path d="M42 32h20" stroke="#709bbd" stroke-dasharray="3 4"/><g transform="translate(77 32) scale(.55)">'+NetworkExplorerWirelessUI.glyph()+'</g>',
     'example-direct': wire('M24 32H73') + miniDevice('host',22,32,.47) + miniDevice('host',74,32,.47) + packet(46,29),
     'example': lanArt + packet(33,26),
     'example-dhcp': wire('M20 38H75') + miniDevice('host',20,38,.42) + server(64,15) + '<path d="M32 24h23m-5-4 5 4-5 4M55 49H32m5-4-5 4 5 4" fill="none" stroke="#4c8986" stroke-width="2"/>' + packet(42,35),
@@ -106,7 +107,7 @@
   };
   const exampleGroups = [
     ["Basic", ["example-direct", "example", "example-dhcp", "example-dns"]],
-    ["Intermediate", ["example-vlans", "example-routed", "example-http"]],
+    ["Intermediate", ["example-wireless", "example-vlans", "example-routed", "example-http"]],
     [
       "Advanced",
       [
@@ -117,7 +118,7 @@
       ],
     ],
     ["Special Applications", ["example-echo-tcp", "example-echo-udp"]],
-    ["Security", ["example-https", "example-firewall", "example-security-encrypt", "example-security-harden", "example-security-detect", "example-security-prevent", "example-dos", "example-arp-drop", "example-arp-intercept", "example-arp-protected"]],
+    ["Security", ["example-https", "example-firewall", "example-security-encrypt", "example-security-harden", "example-security-detect", "example-security-prevent", "example-dos", "example-arp-protected"]],
   ];
   for (const [name, ids] of exampleGroups) {
     if (name === "Special Applications") {

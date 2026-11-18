@@ -7,6 +7,8 @@ window.NetworkExplorerInspectorPorts = {
         (trustMode ? '<div class="interface-chassis arp-trust-chassis"><div class="interface-ports">' : '<div class="small-heading inspector-section-heading">Interfaces</div><p class="hint">Click a port to configure it. Right-click to enable or disable.</p><div class="interface-chassis"><div class="interface-ports">') +
         d.ports
           .map((p) => {
+            const wireless=!!d.wifi||(d.role==='ap'&&p.id!=='p0');
+            const portLabel=d.role==='ap'&&wireless?'Client '+p.id.slice(1):p.name.replace(/^ethernet/, 'eth');
             const link = net.links.find(
               (l) =>
                 (l.a === d.id && l.ap === p.id) ||
@@ -20,8 +22,9 @@ window.NetworkExplorerInspectorPorts = {
               : p.enabled
                 ? "Available"
                 : "Disabled";
+            const client=link&&[net.device(link.a),net.device(link.b)].find(x=>x.wifi);
             const active = Boolean(
-              link &&
+              link && (!wireless||net.wifiStatus(client?.id)==='Associated') &&
                 link.enabled &&
                 p.enabled &&
                 net
@@ -31,7 +34,7 @@ window.NetworkExplorerInspectorPorts = {
                   ).enabled,
             );
             const description =
-              p.name +
+              (wireless?(d.role==='ap'?'Wireless association slot '+p.id.slice(1):'Wireless interface '+p.name):p.name) +
               " - " +
               state +
               " - " +
@@ -54,8 +57,8 @@ window.NetworkExplorerInspectorPorts = {
               '" title="' +
               esc(description) +
               '"><span class="port-name">' +
-              esc(p.name.replace(/^ethernet/, "eth")) +
-              '</span><svg viewBox="0 0 44 32" aria-hidden="true"><path class="socket" d="M5 3h34v20H28v6H16v-6H5z"/><path class="contacts" d="M12 6v7m5-7v7m5-7v7m5-7v7m5-7v7"/><path class="socket-edge" d="M9 19h7v5h12v-5h7"/></svg><span class="port-led" aria-hidden="true"></span>' +
+              esc(portLabel) +
+              '</span>' + (wireless ? '<svg class="wireless-port-symbol" viewBox="0 0 44 32" aria-hidden="true"><path d="M5 10q17-15 34 0M11 17q11-10 22 0M17 23q5-5 10 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="22" cy="29" r="2" fill="currentColor"/></svg>' : '<svg viewBox="0 0 44 32" aria-hidden="true"><path class="socket" d="M5 3h34v20H28v6H16v-6H5z"/><path class="contacts" d="M12 6v7m5-7v7m5-7v7m5-7v7m5-7v7"/><path class="socket-edge" d="M9 19h7v5h12v-5h7"/></svg>') + '<span class="port-led" aria-hidden="true"></span>' +
               (d.type === "switch"
                 ? '<span class="vlan-badge" style="--vlan-color:' +
                   esc(d.vlans.find((v) => v.id === p.accessVlan)?.color) +
