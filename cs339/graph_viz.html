@@ -50,6 +50,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .tk-t  { background: #E6F1FB; color: #0C447C; border-color: #85B7EB; }
 .tk-m  { background: #E1F5EE; color: #085041; border-color: #5DCAA5; }
 .tk-found { background: #FCEBEB; color: #791F1F; border-color: #E24B4A; }
+.tk-queue-red { background: #E24B4A; color: #fff; border: 1.5px solid #A32D2D; font-weight: 600; }
 .arr-sep { font-size: 11px; color: #bbb; }
 .mono { font-family: 'SFMono-Regular', 'Consolas', monospace; font-size: 11px; }
 
@@ -172,6 +173,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
         <div class="toggle-opt active" data-visit="dequeue">Dequeue</div>
         <div class="toggle-opt" data-visit="enqueue">Enqueue</div>
       </div>
+      <label style="display:flex;align-items:center;gap:5px;margin-left:8px" title="Check visited before adding each neighbor to the queue">
+        <input type="checkbox" id="skip-visited" checked> Skip visited neighbors
+      </label>
     </div>
     <!-- Topo sort: new graph + sources slider + edges toggle -->
     <div id="topo-controls" style="display:none;align-items:center;gap:10px;margin-bottom:0">
@@ -218,6 +222,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
   <div class="legend" id="legend"></div>
 </div>
 
+<script src="../assets/js/graph-layout.js"></script>
 <script>
 // ═══════════════════════════════════════════════════
 // SECTION 1: GRAPH DATA
@@ -300,22 +305,8 @@ function generateDAG(numSources) {
 
   dagSources = new Set(order.slice(0, numSources));
 
-  // 3. Position nodes by tier — spread evenly across 360px wide safe area
-  const nodes = {};
-  const tierY   = { 0: 50,  1: 155, 2: 255 };
-  const tierNodes = { 0: [], 1: [], 2: [] };
-  DAG_NODES.forEach(n => tierNodes[tierOf[n]].push(n));
-
-  // Sort each tier by node name for consistent x ordering
-  [0,1,2].forEach(t => {
-    tierNodes[t].sort();
-    const count = tierNodes[t].length;
-    tierNodes[t].forEach((n, i) => {
-      const xStep = 300 / Math.max(count, 1);
-      const xStart = 30 + xStep * 0.5;
-      nodes[n] = [Math.round(xStart + i * xStep), tierY[t]];
-    });
-  });
+  // Position nodes after the actual dependencies have been chosen.
+  const nodes = Object.fromEntries(DAG_NODES.map(id => [id, [0, 0]]));
 
   // 4. Enumerate all valid forward edges — any (i→j) where i comes before j in topo order
   //    This includes same-tier forward edges, maximising the available pool
@@ -392,6 +383,7 @@ function generateDAG(numSources) {
     if (!removed) break; // can't trim further without breaking coverage
   }
 
+  GraphLayout.layoutDAG(nodes, edges);
   GRAPHS.dag = { nodes, edges };
 }
 // ═══════════════════════════════════════════════════
@@ -419,6 +411,7 @@ let activeSub  = 'dfs';
 let activeDir  = 'undirected';
 let activeOrder = 'rtl';
 let activeVisit = 'dequeue';
+let skipVisitedNeighbors = true;
 let sourcesCount = 2;
 let edgeDensity  = 'many'; // 'few' = 6-7 edges, 'many' = 10-12 edges
 let selPhase   = 'start';   // 'start' | 'target' | 'ready' | 'stepping' | 'done'
@@ -574,118 +567,65 @@ function runDFS(graph, startId, targetId, directed) {
 //   'dequeue' — mark visited on dequeue, duplicates allowed in queue
 //   'enqueue' — mark visited on enqueue, no duplicates in queue
 function runBFS(graph, startId, targetId, directed) {
-  const steps = [];
-  const visited = new Set();
-  const prev = {};
+  const steps = [], visited = new Set(), expanded = new Set(), prev = {};
   const adj = buildAdj(graph.edges, directed);
-  const ns = {};
-  Object.keys(graph.nodes).forEach(n => ns[n] = 'unvisited');
+  const ns = Object.fromEntries(Object.keys(graph.nodes).map(n => [n, 'unvisited']));
   ns[startId] = 'start';
   if (targetId) ns[targetId] = 'target';
-  const es = {};
-  const queue = [startId];
+  const es = {}, queue = [startId];
   const onEnqueue = activeVisit === 'enqueue';
-
-  // Mark start visited immediately in enqueue mode
-  if (onEnqueue) {
-    visited.add(startId);
-    ns[startId] = 'start'; // keep 'start' color but checkmark will show via visited set
-  }
-
+  if (onEnqueue) visited.add(startId);
   function snap(msg, msgClass='', path=null, pendingEdges=null, pulseHead=false) {
-    steps.push({ nodeStates:{...ns}, edgeStates:{...es}, msg, msgClass,
-      frontier: [...queue], visited: [...visited], path, pendingEdges, pulseHead });
+    steps.push({nodeStates:{...ns}, edgeStates:{...es}, msg, msgClass,
+      frontier:[...queue], visited:[...visited], expanded:[...expanded], path, pendingEdges, pulseHead});
   }
-
-  const modeLabel = onEnqueue ? 'Visit on enqueue' : 'Visit on dequeue';
-  snap(`Start: ${startId} enqueued. Target: ${targetId}. [${modeLabel}]`, 'ready');
-
+  snap(`Start: ${startId} enqueued. Target: ${targetId}. [Visit on ${activeVisit}; skip visited neighbors: ${skipVisitedNeighbors ? 'on' : 'off'}]`, 'ready');
   while (queue.length) {
     const v = queue.shift();
-
-    if (onEnqueue) {
-      // ── ENQUEUE MODE ──
-      ns[v] = 'current';
-      if (v === targetId) {
-        ns[v] = 'found';
-        const path = [];
-        let cur = v;
-        while (cur !== undefined) { path.unshift(cur); cur = prev[cur]; }
-        snap(`Dequeue ${v} — found target! Path: ${path.join(' → ')}`, 'found', path);
-        break;
-      }
-      snap(`Dequeue ${v} — already marked visited on enqueue`, '', null,
-        (adj[v]||[]).filter(w => !visited.has(w)).map(w => ekey(v,w)), false);
+    ns[v] = 'current';
+    // Enqueue-mode nodes are already visited on their first removal. Only
+    // previously expanded nodes are skipped, preventing cycles when the rule is off.
+    if (onEnqueue ? expanded.has(v) : visited.has(v)) {
+      snap(`Dequeue ${v} - already ${onEnqueue ? 'processed' : 'visited'}, skip`);
       ns[v] = 'visited';
-
-      const enqNeighbors = adj[v]||[];
-      for (let i = 0; i < enqNeighbors.length; i++) {
-        const w = enqNeighbors[i];
-        const k = ekey(v,w);
-        if (visited.has(w)) {
-          es[k] = 'active';
-          snap(`Neighbor ${w} — already visited, skip`, '');
-          es[k] = 'rejected';
-        } else {
-          visited.add(w);
-          queue.push(w);
-          es[k] = 'active';
-          if (prev[w] === undefined) prev[w] = v;
-          if (w === targetId) ns[w] = 'target';
-          else ns[w] = 'visited';
-          const isLast = enqNeighbors.slice(i+1).every(x => visited.has(x));
-          snap(`Enqueue ${w} — mark visited + enqueue via ${v}→${w}`, '', null, null, isLast && queue.length > 0);
-          es[k] = 'tree';
-        }
-      }
-    } else {
-      // ── DEQUEUE MODE ──
-      // Check visited on dequeue — duplicates may exist in queue
-      if (visited.has(v)) {
-        ns[v] = 'current';
-        snap(`Dequeue ${v} — already visited, skip`, '');
-        ns[v] = 'visited';
-        continue;
-      }
-      visited.add(v);
-      ns[v] = 'current';
-
-      if (v === targetId) {
-        ns[v] = 'found';
-        const path = [];
-        let cur = v;
-        while (cur !== undefined) { path.unshift(cur); cur = prev[cur]; }
-        snap(`Dequeue ${v} — found target! Path: ${path.join(' → ')}`, 'found', path);
-        break;
-      }
-
-      snap(`Dequeue ${v} — mark visited`, '', null,
-        (adj[v]||[]).filter(w => !visited.has(w)).map(w => ekey(v,w)), false);
-      ns[v] = 'visited';
-
-      const bfsNeighbors = adj[v]||[];
-      for (let i = 0; i < bfsNeighbors.length; i++) {
-        const w = bfsNeighbors[i];
-        queue.push(w);
-        const k = ekey(v,w);
-        es[k] = 'active';
-        if (!visited.has(w) && prev[w] === undefined) {
-          prev[w] = v;
-          if (w === targetId) ns[w] = 'target';
-          else ns[w] = 'frontier';
-        }
-        const isLast = i === bfsNeighbors.length - 1;
-        snap(`Enqueue ${w} — discovered via ${v}→${w}`, '', null, null, isLast && queue.length > 0);
-      }
+      continue;
     }
+    if (!onEnqueue) visited.add(v);
+    expanded.add(v);
+    if (v === targetId) {
+      ns[v] = 'found';
+      const path = [];
+      for (let cur=v; cur!==undefined; cur=prev[cur]) path.unshift(cur);
+      snap(`Dequeue ${v} - found target! Path: ${path.join(' -> ')}`, 'found', path);
+      break;
+    }
+    const neighbors = adj[v] || [];
+    snap(`Dequeue ${v} - ${onEnqueue ? 'already marked visited on enqueue' : 'mark visited'}`, '', null,
+      neighbors.filter(w => !skipVisitedNeighbors || !visited.has(w)).map(w => ekey(v,w)));
+    ns[v] = 'visited';
+    neighbors.forEach((w,i) => {
+      const k=ekey(v,w), wasVisited=visited.has(w), wasQueued=queue.includes(w);
+      es[k]='active';
+      if (skipVisitedNeighbors && wasVisited) {
+        snap(`Neighbor ${w} - already visited, skip enqueue`);
+        es[k]='rejected';
+        return;
+      }
+      // Preserve the first-discovery parent, including the root's missing parent.
+      if (w !== startId && prev[w] === undefined) prev[w]=v;
+      queue.push(w);
+      if (onEnqueue) visited.add(w);
+      if (!wasVisited) ns[w] = w===targetId ? 'target' : onEnqueue ? 'visited' : 'frontier';
+      const detail = wasVisited ? 'already visited; rule is off' : wasQueued ? 'already waiting in queue' : onEnqueue ? 'mark visited on enqueue' : 'discovered';
+      snap(`Enqueue ${w} via ${v}->${w} - ${detail}`, '', null, null, i===neighbors.length-1);
+      if (onEnqueue) es[k]='tree';
+    });
   }
-
   if (!steps.some(s=>s.msgClass==='found'))
-    steps.push({...steps[steps.length-1], msg:`Traversal complete. Target ${targetId} not reachable.`, msgClass:'done'});
+    steps.push({...steps[steps.length-1], msg: `Traversal complete. Target ${targetId} not reachable.`, msgClass:'done'});
   return steps;
 }
 
-// ── TOPO SORT — DFS post-order ────────────────────
 function runTopo(graph) {
   const steps = [];
   const visited = new Set();
@@ -1259,21 +1199,21 @@ function edgeStrokeWidth(state) {
 // animNodeFly:   ghost circle flies from node position toward the sidebar
 let animTimeout = null;
 
-function animEdgeSweep(svgEl, x1, y1, x2, y2, color) {
-  const dx=x2-x1, dy=y2-y1;
-  const len = Math.sqrt(dx*dx+dy*dy);
+function animEdgeSweep(svgEl, route, color) {
   const id = 'anim-sweep-' + Date.now();
 
   // Overlay path that sweeps from 0 to full length
   const path = document.createElementNS('http://www.w3.org/2000/svg','path');
   path.setAttribute('id', id);
-  path.setAttribute('d', `M${x1.toFixed(1)},${y1.toFixed(1)} L${x2.toFixed(1)},${y2.toFixed(1)}`);
+  path.setAttribute('d', route.d);
   path.setAttribute('fill','none');
   path.setAttribute('stroke', color);
   path.setAttribute('stroke-width','3');
   path.setAttribute('stroke-linecap','round');
   path.setAttribute('opacity','0.85');
   // Start with full dasharray, offset = length (invisible), animate to 0 (fully visible)
+  svgEl.appendChild(path);
+  const len = path.getTotalLength();
   const L = len.toFixed(1);
   path.setAttribute('stroke-dasharray', L);
   path.setAttribute('stroke-dashoffset', L);
@@ -1328,6 +1268,11 @@ function animNodeFly(svgEl, fromX, fromY, color, label) {
   setTimeout(() => { try { svgEl.removeChild(g); } catch(e){} }, 500);
 }
 
+function isRedQueueEntry(step, id) {
+  if (activeTab !== 'search' || activeSub !== 'bfs') return false;
+  return !!step && (step.visited?.includes(id) || step.frontier?.filter(n => n === id).length > 1);
+}
+
 function renderGraph(animate) {
   const gkey = graphKey(activeTab, activeSub, activeDir);
   const g = GRAPHS[gkey];
@@ -1337,6 +1282,8 @@ function renderGraph(animate) {
   const ns = step ? step.nodeStates : buildInitialNodeStates(g);
   const es = step ? step.edgeStates : {};
   const svg = document.getElementById('svg');
+  const routes = GraphLayout.routeEdges(g);
+  svg.setAttribute('viewBox', GraphLayout.bounds(g, routes).join(' '));
 
   let html = `<defs>
     <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
@@ -1403,18 +1350,11 @@ function renderGraph(animate) {
   const pendingSet = new Set(step && step.pendingEdges ? step.pendingEdges : []);
 
   // Draw edges
-  g.edges.forEach(edge => {
+  g.edges.forEach((edge, edgeIndex) => {
     const [a, b, w] = edge;
-    const [x1,y1] = g.nodes[a];
-    const [x2,y2] = g.nodes[b];
     const k1=ekey(a,b), k2=ekey(b,a);
     const state = es[k1]||es[k2]||'default';
 
-    const dx=x2-x1, dy=y2-y1, len=Math.sqrt(dx*dx+dy*dy);
-    const ux=dx/len, uy=dy/len;
-    const pad = NODE_R + 2;
-    const lx1=x1+ux*pad, ly1=y1+uy*pad;
-    const lx2=x2-ux*pad, ly2=y2-uy*pad;
 
     const onPath = haspath && (pathEdges.has(k1) || pathEdges.has(k2));
     const isPending = !haspath && (pendingSet.has(k1) || pendingSet.has(k2));
@@ -1443,64 +1383,17 @@ function renderGraph(animate) {
       markerAttr = `marker-end="url(#${mId})"`;
     }
 
-    // For DAG (topo): route edges to avoid passing over unrelated nodes.
-    // 1. Start with a small fan offset based on source edge index (avoids edge stacking)
-    // 2. Then check all unrelated nodes — if midpoint control passes within NODE_R+8px,
-    //    push the control point perpendicularly away until clear.
-    let edgeHtml;
-    if (activeTab === 'topo') {
-      const px = -uy, py = ux; // perpendicular unit vector
-
-      // Base fan offset — spread edges from same source symmetrically
-      const sameSource = g.edges.filter(e => e[0] === a);
-      const edgeIdx = sameSource.indexOf(edge);
-      const totalFromSrc = sameSource.length;
-      let offsetMag = totalFromSrc > 1 ? (edgeIdx - (totalFromSrc-1)/2) * 14 : 0;
-
-      // Candidate control point
-      let cx = (x1+x2)/2 + px*offsetMag;
-      let cy = (y1+y2)/2 + py*offsetMag;
-
-      // Check every unrelated node — push control point away if too close
-      const AVOID_R = NODE_R + 10;
-      Object.entries(g.nodes).forEach(([id, [nx, ny]]) => {
-        if (id === a || id === b) return;
-        // Distance from node center to current control point
-        const dcx = cx - nx, dcy = cy - ny;
-        const dc = Math.sqrt(dcx*dcx + dcy*dcy);
-        if (dc < AVOID_R) {
-          // Also check distance from node to the line segment
-          // Project node onto edge line
-          const t = Math.max(0, Math.min(1, ((nx-x1)*dx + (ny-y1)*dy) / (len*len)));
-          const projX = x1 + t*dx, projY = y1 + t*dy;
-          const distToLine = Math.sqrt((nx-projX)**2 + (ny-projY)**2);
-          if (distToLine < AVOID_R) {
-            // Determine which side to push: push away from node
-            const side = (px*(nx-(x1+x2)/2) + py*(ny-(y1+y2)/2)) > 0 ? -1 : 1;
-            offsetMag += side * (AVOID_R - distToLine + 8);
-            cx = (x1+x2)/2 + px*offsetMag;
-            cy = (y1+y2)/2 + py*offsetMag;
-          }
-        }
-      });
-
-      // Recompute padded endpoints with final control point direction
-      const pulseClass = isPending ? ' class="edge-pulse"' : '';
-      edgeHtml = `<path d="M${lx1.toFixed(1)},${ly1.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${lx2.toFixed(1)},${ly2.toFixed(1)}"
-        fill="none" stroke="${sc}" stroke-width="${sw}" opacity="${opacity}" ${markerAttr}${pulseClass}/>`;
-    } else {
-      const pulseClass = isPending ? ' class="edge-pulse"' : '';
-      const dashAttr = state==='frontier' ? ' stroke-dasharray="6 3"'
-                     : state==='pending'  ? ' stroke-dasharray="5 4"'
-                     : state==='excluded' ? ' stroke-dasharray="3 4" opacity="0.35"'
-                     : '';
-      edgeHtml = `<line x1="${lx1.toFixed(1)}" y1="${ly1.toFixed(1)}" x2="${lx2.toFixed(1)}" y2="${ly2.toFixed(1)}"
-        stroke="${sc}" stroke-width="${sw}" opacity="${opacity}" ${markerAttr}${pulseClass}${dashAttr}/>`;
-    }
+    const route = routes[edgeIndex];
+    const pulseClass = isPending ? ' class="edge-pulse"' : '';
+    const dashAttr = state==='frontier' ? ' stroke-dasharray="6 3"'
+                   : state==='pending' ? ' stroke-dasharray="5 4"'
+                   : state==='excluded' ? ' stroke-dasharray="3 4"' : '';
+    const edgeHtml = `<path d="${route.d}" fill="none" stroke="${sc}"
+      stroke-width="${sw}" opacity="${state==='excluded' ? '0.35' : opacity}" ${markerAttr}${pulseClass}${dashAttr}/>`;
     html += edgeHtml;
 
     if (w !== undefined) {
-      const mx=(x1+x2)/2, my=(y1+y2)/2;
+      const [mx,my] = route.label;
       html += `<rect x="${(mx-8).toFixed(1)}" y="${(my-8).toFixed(1)}" width="16" height="15" rx="3"
         fill="#fff" stroke="#dddbd2" stroke-width="0.5" opacity="${haspath&&!onPath?'0.3':'1'}"/>`;
       html += `<text x="${mx.toFixed(1)}" y="${(my+3).toFixed(1)}" text-anchor="middle"
@@ -1572,7 +1465,8 @@ function renderGraph(animate) {
       opacity="${opacity}" style="cursor:${cursor};pointer-events:none">${id}</text>`;
 
     // Checkmark badge — visited/found in Search, MST nodes in Prim's
-    if ((activeTab==='search') && (state==='visited'||state==='found') && !muted) {
+    const visitedOnEnqueue = activeSub==='bfs' && activeVisit==='enqueue' && step?.visited?.includes(id);
+    if (activeTab==='search' && (visitedOnEnqueue || state==='visited' || state==='found') && !muted) {
       const bx=x+11, by=y+11;
       const badgeColor = onPath ? '#185FA5' : '#3B6D11';
       html += `<circle cx="${bx}" cy="${by}" r="7" fill="${badgeColor}" stroke="#fff" stroke-width="1.5" style="pointer-events:none"/>`;
@@ -1658,13 +1552,12 @@ function renderGraph(animate) {
   if (animate) {
     if (sweepEdge) {
       const [a, b] = sweepEdge;
-      const [x1,y1] = g.nodes[a];
-      const [x2,y2] = g.nodes[b];
-      const dx=x2-x1, dy=y2-y1, len=Math.sqrt(dx*dx+dy*dy);
-      const ux=dx/len, uy=dy/len;
-      const pad = NODE_R + 2;
-      // Determine sweep direction: for directed use a→b, for undirected use edge order
-      animEdgeSweep(svg, x1+ux*pad, y1+uy*pad, x2-ux*pad, y2-uy*pad, '#BA7517');
+      let route = routes.find(r => r.a === a && r.b === b);
+      if (!route) {
+        const reverse = routes.find(r => r.a === b && r.b === a);
+        if (reverse) route = { d: `M${reverse.end.join(',')} Q${reverse.control.join(',')} ${reverse.start.join(',')}` };
+      }
+      if (route) animEdgeSweep(svg, route, '#BA7517');
     }
     if (flyNode) {
       const [fx, fy] = g.nodes[flyNode];
@@ -1708,9 +1601,10 @@ function renderSidebar() {
       const pulseHead = step && step.pulseHead;
       display.forEach((n, i) => {
         const isTop = i===0;
+        const redEntry = isRedQueueEntry(step, n);
         html += `<div style="display:flex;align-items:center;gap:6px;padding:4px 2px;
           ${isTop ? 'border-bottom:0.5px solid #e8e6de;margin-bottom:4px;padding-bottom:6px;' : ''}">`;
-        html += `<span class="token tk-q${isTop && pulseHead ? ' token-next' : ''}">${n}</span>`;
+        html += `<span class="token ${redEntry ? 'tk-found tk-queue-red' : 'tk-q'}${isTop && pulseHead && !redEntry ? ' token-next' : ''}" title="${redEntry ? (step.visited?.includes(n) ? 'Already marked visited' : 'Repeated queue entry') : ''}">${n}</span>`;
         if (isTop) html += `<span style="font-size:10px;color:#BA7517;font-weight:500">${activeSub==='dfs'?'← top':'← front'}</span>`;
         html += `</div>`;
       });
@@ -2219,6 +2113,11 @@ document.getElementById('subtabs').addEventListener('click', e => {
     document.getElementById('order-toggle').style.display = s==='dfs' ? 'flex' : 'none';
     document.getElementById('visit-toggle').style.display = s==='bfs' ? 'flex' : 'none';
   }
+  doReset();
+});
+
+document.getElementById('skip-visited').addEventListener('change', e => {
+  skipVisitedNeighbors = e.target.checked;
   doReset();
 });
 
