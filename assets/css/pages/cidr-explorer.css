@@ -17,14 +17,14 @@ nav a:hover,nav a:focus-visible{background:var(--blue-fill);border-color:var(--b
 .icon-heading{display:flex;align-items:center;gap:9px}.icon-heading .nav-icon{width:21px;height:21px;color:var(--blue-text)}
 .teaching-svg{width:100%;min-width:600px;display:block;font:13px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 .range-svg,.comparison-svg{max-width:1040px;margin:0 auto}
-.subdivision-workbench{margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:10px;background:#f9fbfd}
+.subdivision-workbench{margin-top:20px;padding:0;border:0;border-radius:0;background:transparent}
 .subdivision-summary{font-size:13px;margin-bottom:10px}
-.subnet-lessons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:10px 0;border-bottom:1px solid var(--border)}
-.subdivision-workbench .lesson{padding:0;border:0;background:none}
+.subnet-lessons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0;padding:0;border:0}
+.subdivision-workbench .lesson{padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg2)}
 .subdivision-workbench .lesson h3{font-size:11px;margin:0 0 3px}
 .subdivision-workbench .lesson code{font-size:12px}
 .subdivision-workbench .lesson p{font-size:11px;margin:3px 0 0}
-.subdivision-span{margin-top:10px}
+.subdivision-span{margin-top:18px}
 .parent-span{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:4px 12px;padding:5px 10px;border:1px solid var(--border2);border-radius:7px;background:var(--blue-fill);font-size:12px}
 .parent-span span{font-size:11px;color:var(--text2)}
 .span-caption{position:relative;text-align:center;font-size:10px;color:var(--text2);margin:5px 0 4px;padding:0 0 6px;border-bottom:1px solid var(--text2)}
@@ -36,7 +36,7 @@ nav a:hover,nav a:focus-visible{background:var(--blue-fill);border-color:var(--b
 .sub-endpoints{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--text2)}
 .sub-endpoints span{font-size:10px}
 #sub-select-note{font-size:10px;color:var(--text2);margin:4px 0}
-.subdivision-workbench #sub-selected{padding:8px 10px;margin:8px 0;font-size:11px}
+.subdivision-workbench #sub-selected{padding:0;margin:20px 0;font-size:11px}
 .subdivision-workbench .legend{margin:6px 0}
 .subdivision-workbench .scroll{margin:4px 0 0}
 .subdivision-workbench .binary-workbench{padding:6px}
@@ -52,7 +52,12 @@ nav a:hover,nav a:focus-visible{background:var(--blue-fill);border-color:var(--b
 main{padding:14px 22px 24px}footer{padding:12px 22px 24px;color:var(--text3);font-size:12px}a{color:var(--blue-text)}
 .scope-note,.explanation{padding:10px 14px;border-left:3px solid var(--blue);border-radius:7px;background:var(--blue-fill);font-size:13px}
 .scope-note{margin-bottom:16px;border:1px solid var(--border);border-left:3px solid var(--blue)}.scope-note p{margin:3px 0 0;color:var(--text2)}
-.workspace{display:grid;grid-template-columns:235px minmax(0,1fr);gap:16px;align-items:start}
+.workspace{display:grid;grid-template-columns:235px minmax(0,1fr);gap:8px;align-items:start}
+.controls{scrollbar-width:thin;scrollbar-color:#aab6c3 transparent}
+.controls::-webkit-scrollbar{width:6px;height:6px}
+.controls::-webkit-scrollbar-thumb{background:#aab6c3;border-radius:6px}
+.controls::-webkit-scrollbar-track{background:transparent}
+.controls::-webkit-scrollbar-button{display:none}
 .panel{background:white;border:1px solid var(--border);border-radius:14px;box-shadow:0 3px 14px #1a374e0d;padding:18px;min-width:0}
 .controls{position:sticky;top:calc(var(--nav-height,64px) + 16px);padding:16px 14px;max-height:calc(100vh - var(--nav-height,64px) - 32px);overflow:auto}.results{display:grid;gap:16px;min-width:0}
 section{scroll-margin-top:16px}h2{font-size:16px;margin:0 0 12px}h3{font-size:13px;margin:18px 0 10px}
@@ -73,7 +78,7 @@ input[type=text]{font:13px ui-monospace,Consolas,monospace}input[type=range]{acc
 #ip-conversion{margin:6px 0;color:var(--teal-text);font-size:12px;font-weight:650;overflow-wrap:anywhere}
 output{font-family:ui-monospace,Consolas,monospace;color:var(--blue-text)}.range-ends{display:flex;justify-content:space-between;font-size:9px;color:var(--text3)}
 .hint{font-size:11px;color:var(--text3)}.examples{border-top:1px solid var(--border);padding-top:14px;margin-top:18px}.examples h2{font-size:12px}
-.presets{display:flex;gap:6px;flex-wrap:wrap}.presets button{font-size:10px;padding:6px 8px}.presets [aria-pressed=true]{background:var(--blue-fill);border-color:var(--blue);color:var(--blue-text)}
+.presets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}.presets button{min-width:0;font-size:9px;line-height:1.3;padding:5px 3px;border-radius:6px}.presets [aria-pressed=true]{background:var(--blue-fill);border-color:var(--blue);color:var(--blue-text)}
 .reset{width:100%;margin-top:16px}.error{color:#a5233b;font-size:12px;margin:8px 0}.error:empty{display:none}[aria-invalid=true]{border-color:#bf2f49;background:#fff3f6}
 .example-context{margin-top:14px;padding:12px;background:var(--blue-fill);border-left:3px solid var(--blue);border-radius:7px}
 .example-context h3{margin:0 0 10px;font-size:12px}
@@ -88,6 +93,16 @@ output{font-family:ui-monospace,Consolas,monospace;color:var(--blue-text)}.range
 .bit-cell.octet-start{margin-left:4px}.bit-cell.boundary{border-left:3px solid #253954}
 .decimal{font-size:12px;text-align:right;white-space:nowrap}.ruler{font-size:9px;color:var(--text3)}.ruler .bit-cell{border:0;background:none;color:inherit;min-height:15px}
 .result-line{border-top:2px solid var(--border2);padding-top:7px;margin-top:7px}
+.and-divider{display:flex;align-items:center;gap:10px;margin:7px 0;color:var(--text2);font-size:11px;font-weight:700}
+.and-divider::before,.and-divider::after{content:"";height:2px;background:var(--border2);flex:1}
+.and-divider + .result-line{border-top:0;padding-top:0;margin-top:0}
+.scroll.block-summary{margin-top:12px;border:0;border-radius:0;background:transparent}
+#subnet-definition > .scroll[aria-label="Aligned IPv4 binary calculation"]{border:0;border-radius:0;background:transparent}
+#subnet-definition > .scroll[aria-label="Aligned IPv4 binary calculation"]{margin:12px 0 4px}
+#subnet-definition > .scroll > .binary-workbench{padding:0}
+#subnet-definition .prefix-foundations{margin-top:0}
+#subnet-definition > h3{margin:10px 0 8px}
+.teaching-svg .svg-prefix{fill:#594500;font-weight:800;paint-order:stroke;stroke:#fff0a6;stroke-width:5px;stroke-linejoin:round}
 .bit-line .bit-cell.bit-difference{background:#fce5ed;color:#8d2044;border:2px solid #b5345c;font-weight:800;box-shadow:inset 0 -2px 0 #b5345c;animation:bit-difference-pulse 1s ease-in-out 3}
 .ruler .bit-cell.bit-difference{border-radius:3px}
 .verdict .difference-explanation{margin-top:10px;padding-top:10px;border-top:1px solid currentColor}
@@ -112,3 +127,167 @@ table{width:100%;border-collapse:collapse;font-size:12px;text-align:left;white-s
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 @media(max-width:1150px){.controls{max-height:none;overflow:visible}}
 @media(max-width:650px){.section-nav{padding:8px 12px}nav{display:grid;grid-template-columns:1fr 1fr}nav a{justify-content:center;padding:6px 5px;font-size:10px;gap:4px}.nav-icon{width:14px;height:14px}.compact-title{font-size:13px}}
+
+#subnet>.bar{margin-top:14px}
+.neighbor-disclosure{margin:12px 0;border:1px solid var(--border);border-radius:8px;padding:10px 12px}.neighbor-disclosure summary{cursor:pointer;font-weight:650;color:var(--blue-text)}
+.neighbor-strip{display:flex;overflow-x:auto;gap:6px;padding:4px}
+.neighbor-block{flex:1 0 180px;display:flex;flex-direction:column;gap:8px;text-align:center;font-weight:400;min-width:0}
+.neighbor-block strong{font-size:12px}.neighbor-block.own-subnet{background:var(--teal-fill);border-color:#7bc7aa}.neighbor-block[aria-pressed=true]{outline:2px solid var(--blue);outline-offset:1px}
+.neighbor-track{height:8px;position:relative;background:#c6e5d9;border-radius:4px}.neighbor-track i{position:absolute;top:0;width:8px;height:8px;border-radius:50%;background:var(--blue-text);transform:translateX(-50%)}
+.topology-scroll{overflow-x:auto;background:#fff;border:1px solid var(--border);border-radius:10px}
+#cidr-topology{display:block;width:100%;min-width:650px;max-height:620px;font:13px system-ui,sans-serif;fill:var(--text)}
+#cidr-topology .cidr-subnet-cloud path{fill:var(--subnet-color);fill-opacity:.05;stroke:var(--subnet-color);stroke-opacity:.38;stroke-width:1.2;vector-effect:non-scaling-stroke}
+.topology-wires{fill:none;stroke:#8096aa;stroke-width:2}
+#cidr-topology text{paint-order:stroke;stroke:white;stroke-width:4px;stroke-linejoin:round}
+#cidr-topology .topology-network{font-weight:700;font-size:15px}
+#cidr-topology .topology-range{font-size:11px;fill:var(--text2)}
+#cidr-topology .topology-host,#cidr-topology .topology-interface{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+/* Compact topology viewport and Network Explorer-style status controls. */
+.topology-scroll{overflow:hidden;border-radius:8px 8px 0 0}
+#cidr-topology{width:100%;min-width:0;height:340px;max-height:none;cursor:grab;touch-action:none;user-select:none}
+#cidr-topology.panning{cursor:grabbing}
+.host-route-view #cidr-topology{height:220px}
+.topology-status-bar{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:2px 6px;border:1px solid var(--border);border-top:0;background:#f5f8fa;border-radius:0 0 8px 8px;font-size:10px;flex-wrap:wrap}
+.topology-view-controls{display:flex;align-items:center;gap:4px;margin-left:auto}
+.topology-view-controls button{height:24px;min-width:24px;padding:2px 5px;border:0;border-radius:4px;background:transparent;font-size:12px}
+.topology-view-controls input{width:70px;margin:0}
+.topology-view-controls output{min-width:32px;text-align:center;font-size:10px}
+#topology .intro{margin:6px 0 10px;font-size:12px}
+#topology-note{font-size:11px;margin:8px 0 0;padding:7px 10px}
+@media(max-width:650px){#cidr-topology{height:260px}.host-route-view #cidr-topology{height:170px}}
+
+/* Match Network Explorer canvas-status-view controls. */
+/* A fine zoom scale with a circular handle and evenly spaced ticks. */
+.topology-view-controls #topology-zoom {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+  background: repeating-linear-gradient(
+      to right,
+      #aabac7 0 1px,
+      transparent 1px 10%
+    )
+    center bottom / calc(100% - 10px) 4px no-repeat;
+}
+.topology-view-controls #topology-zoom::-webkit-slider-runnable-track {
+  border: 0;
+  border-radius: 1px;
+  background: #aabac7;
+}
+.topology-view-controls #topology-zoom::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+
+  border: 1px solid #547d7c;
+  border-radius: 50%;
+  background: #547d7c;
+  box-shadow: 0 0 0 2px #f5f8fa;
+}
+.topology-view-controls #topology-zoom::-moz-range-track {
+  height: 2px;
+  border: 0;
+  background: #aabac7;
+}
+.topology-view-controls #topology-zoom::-moz-range-progress {
+  height: 2px;
+  background: #aabac7;
+}
+.topology-view-controls #topology-zoom::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border: 1px solid #547d7c;
+  border-radius: 50%;
+  background: #547d7c;
+}
+.topology-view-controls #topology-zoom:focus-visible {
+  outline: 2px solid #85aaca;
+  outline-offset: 3px;
+}
+/* Tighten the canvas footer vertically. */
+.topology-status-bar {
+  padding-top: 1px;
+  padding-bottom: 1px;
+  min-height: 26px;
+}
+.topology-status-bar .device-picker-toggle {
+  min-height: 20px;
+}
+.topology-view-controls .topology-icon-button {
+  height: 22px;
+  min-height: 22px;
+}
+
+/* Fine, full-width zoom scale, including both endpoints. */
+.topology-view-controls #topology-zoom {
+  background-image:
+    linear-gradient(#aabac7, #aabac7), linear-gradient(#aabac7, #aabac7),
+    repeating-linear-gradient(to right, #aabac7 0 0.5px, transparent 0.5px 10%);
+  background-position:
+    left center,
+    right center,
+    center center;
+  background-size:
+    0.5px 5px,
+    0.5px 5px,
+    100% 5px;
+  background-repeat: no-repeat;
+}
+.topology-view-controls #topology-zoom::-webkit-slider-runnable-track {
+  height: 1px;
+}
+.topology-view-controls #topology-zoom::-webkit-slider-thumb {
+  margin-top: -4.5px;
+}
+.topology-view-controls #topology-zoom::-moz-range-track,
+.topology-view-controls #topology-zoom::-moz-range-progress {
+  height: 1px;
+}
+
+.topology-status-bar{padding:1px 6px;gap:2px;min-height:26px}
+.topology-view-controls{gap:2px;flex:none;font-size:10px}
+.topology-view-controls label{font-size:10px;margin:0}
+.topology-view-controls #topology-zoom{width:70px;min-width:40px;min-height:26px;margin:0}
+.topology-view-controls output{font:10px monospace;min-width:30px;text-align:start;color:#29394b}
+.topology-status-bar .topology-icon-button{display:inline-flex;align-items:center;justify-content:center;padding:2px 3px;margin:0;height:24px;min-height:24px;min-width:0;width:auto;border:0;background:transparent;border-radius:4px;color:#29394b}
+.topology-view-controls .topology-icon-button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.topology-view-controls .topology-icon-button:hover{background:#e4edf3}
+#cidr-topology .topology-allocation{fill:#f8fbfd;stroke:var(--border2);stroke-width:1;stroke-dasharray:5 4}
+#cidr-topology .topology-parent{font-size:12px;font-weight:650;fill:var(--blue-text)}
+.address-anatomy{margin-top:14px;margin-bottom:14px}
+#address-octets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;min-width:740px;padding:10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px}
+.octet-positions,.octet-bits{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:3px;text-align:center;font-family:ui-monospace,Consolas,monospace}
+.octet-positions{font-size:10px;color:var(--text3);margin-bottom:5px}
+.octet-bits .bit-cell{padding:5px 0;background:#edf1f5;border:1px solid var(--border2);border-radius:4px;color:var(--text);font-size:14px;font-weight:650}
+.octet-decimal{text-align:center;margin-top:6px;font-size:10px;color:var(--text2)}
+.octet-decimal strong{margin-left:6px;font:700 14px ui-monospace,Consolas,monospace;color:var(--text)}
+.bit-allocation{margin:0 0 8px;font:12px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.bit-allocation span{grid-row:1;min-width:0;height:25px;display:flex;align-items:center;justify-content:center;border-radius:5px;overflow:hidden;white-space:nowrap}
+.bit-allocation #bar-net{background:#b5d4f4;color:#284d73}
+.prefix-value{background:#fff0a6;color:#594500;border-radius:4px;padding:1px 5px;font-weight:700}
+#stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:650px){#stats{grid-template-columns:1fr}}
+.bit-allocation #bar-host{background:#b7e4d4;color:#216c60}
+.prefix-foundations{margin-top:12px}
+.prefix-foundations .bit-allocation{margin:12px -13px 0}
+.topology-current-label{fill:#594500;font-weight:800;paint-order:stroke;stroke:#fff0a6;stroke-width:5px;stroke-linejoin:round}
+.selected-block-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.selected-block-heading>span{font-size:11px;color:var(--text2)}
+.selected-block-heading code{background:#fff0a6;color:#594500;padding:2px 5px;border-radius:4px}
+.selected-block-range{display:flex;gap:12px;flex-wrap:wrap}
+.selected-block-steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 20px;margin:12px 0}
+.selected-block-steps > div{padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px}
+.selected-block-summary{overflow-wrap:anywhere}
+.selected-block-steps dt{font-weight:650;font-size:11px;color:var(--text2);margin-bottom:3px}
+.selected-block-steps dd{margin:0;overflow-wrap:anywhere}
+.selected-block-steps small{display:block;color:var(--text2);font-size:10px;margin-top:2px}
+.selected-block-notes{border-top:1px solid var(--border);padding-top:6px;font-size:11px}
+@media(max-width:650px){.selected-block-steps{grid-template-columns:1fr}}
+#compare > .scroll[aria-label="Subnet comparison diagram"]{border:0;border-radius:0;background:transparent;margin:6px 0}
+.teaching-svg .svg-network-result{font-weight:700;fill:var(--text)}
+.borrowed-index{background:#fff0d4;border:1px solid #d7b16d;color:#78520c;padding:2px 5px;border-radius:4px}

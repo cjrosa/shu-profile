@@ -73,7 +73,7 @@ test('/20 total size and /31, /32 endpoint conventions', () => {
 });
 function app() {
   const dom=new JSDOM(fs.readFileSync(path.join(root,'cs339/cidr_viz.html'),'utf8'),{runScripts:'dangerously'});
-  for(const script of ['cidr-explorer.js','cidr-tour.js'])
+  for(const script of ['network-explorer-subnets.js','cidr-topology.js','cidr-explorer.js','cidr-tour.js'])
     vm.runInContext(fs.readFileSync(path.join(root,'assets/js',script),'utf8'), dom.getInternalVMContext());
   return dom;
 }
@@ -99,7 +99,7 @@ test('comparison highlights only mismatching network bits and clears highlights 
 test('summary tooltips describe all cards and support focus, Escape and replacement', async () => {
   const dom=app(), w=dom.window, d=w.document;
   const cards=[...d.querySelectorAll('.stat')], tip=d.getElementById('cidr-tooltip');
-  assert.equal(cards.length,8);
+  assert.equal(cards.length,7);
   for (const card of cards) {
     assert.ok(card.dataset.tooltip.length>100);
     card.focus();
@@ -114,7 +114,7 @@ test('summary tooltips describe all cards and support focus, Escape and replacem
   w.setExample(4);
   await Promise.resolve();
   assert.equal(tip.hidden,true);
-  d.querySelectorAll('.stat')[2].focus();
+  d.querySelector('.stat[aria-label^="First usable host:"]').focus();
   assert.match(tip.textContent,/Current value: 10.0.0.10/);
   dom.window.close();
 });
@@ -181,5 +181,66 @@ test('selecting child blocks connects binary IDs, ranges, and aggregation totals
   w.setExample(5);
   assert.equal(d.querySelectorAll('.subnet-child').length,0);
   assert.match(get('sub-lessons').textContent,/no host bits left/);
+  dom.window.close();
+});
+test('topology follows every prefix with valid distinct hosts and interfaces', () => {
+  const dom=app(), w=dom.window, get=id=>w.document.getElementById(id);
+  for(const address of ['192.168.1.57','0.0.0.0','255.255.255.255']) {
+    get('ip-input').value=address;
+    for(let prefix=0;prefix<=32;prefix++) {
+      get('prefix').value=prefix; w.update();
+      const blocks=w.topologyBlocks(C.subnet(ip(address),prefix));
+      assert.equal(blocks.length,prefix>0 && prefix<24?Math.min(3,2**(24-prefix)):Math.min(3,2**prefix));
+      assert.equal(blocks.filter(b=>b.isCurrent).length,1);
+      for(const b of blocks) {
+        const addresses=b.gateway===null?b.hosts:[b.gateway,...b.hosts];
+        assert.equal(new Set(addresses).size,addresses.length);
+        for(const n of addresses) assert.ok(n>=b.first && n<=b.last);
+        assert.equal(b.network % b.size,0);
+        assert.ok(b.end<=0xffffffff);
+      }
+      if(prefix===31) assert.ok(blocks.every(b=>b.hosts.length===1));
+      if(prefix===32) assert.ok(blocks.every(b=>b.gateway===null));
+    }
+  }
+  get('ip-input').value='192.168.1.57';get('prefix').value=26;w.update();
+  assert.match(get('cidr-topology').textContent,/192\.168\.1\.64\/26/);
+  assert.match(get('cidr-topology').textContent,/192\.168\.1\.128\/26/);
+  assert.equal(get('subnet-heading').closest('section').previousElementSibling.id,'topology');
+  dom.window.close();
+});
+test('topology zoom limits, keyboard pan and Fit restore the compact host-route view', () => {
+  const dom=app(), w=dom.window, get=id=>w.document.getElementById(id);
+  get('prefix').value=32;w.update();
+  assert.equal(get('cidr-topology').getAttribute('viewBox'),'0 0 940 240');
+  get('topology-zoom').value=125; get('topology-zoom').dispatchEvent(new w.Event('input'));
+  assert.equal(get('topology-zoom-level').textContent,'125%');
+  assert.equal(get('cidr-topology').getAttribute('viewBox'),'94 24 752 192');
+  get('cidr-topology').parentElement.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));
+  assert.notEqual(get('cidr-topology').getAttribute('viewBox'),'94 24 752 192');
+  w.setCidrTopologyZoom(500);assert.equal(get('topology-zoom').value,'300');
+  w.setCidrTopologyZoom(1);assert.equal(get('topology-zoom').value,'50');
+  w.fitCidrTopology();assert.equal(get('cidr-topology').getAttribute('viewBox'),'0 0 940 240');
+  get('prefix').value=26;w.update();
+  assert.equal(get('cidr-topology').getAttribute('viewBox'),'0 0 940 620');
+  assert.equal(get('topology-zoom-level').textContent,'100%');
+  dom.window.close();
+});
+test('organization example explains the allocation and illustrates contained department subnets', () => {
+  const dom=app(), w=dom.window, get=id=>w.document.getElementById(id);
+  w.setExample(6);
+  assert.match(get('example-context').textContent,/10\.20\.0\.0\/16/);
+  assert.match(get('example-context').textContent,/256 separate \/24 subnets/);
+  assert.match(get('example-context').textContent,/devices|Devices/);
+  assert.match(get('topology-summary').textContent,/3 of 256/);
+  assert.match(get('cidr-topology').textContent,/Faculty Department/);
+  const blocks=w.topologyBlocks(C.subnet(ip('10.20.1.57'),16));
+  for(const b of blocks) {assert.equal(b.prefix,24);assert.equal(C.numToIP(b.network).startsWith('10.20.'),true);}
+  get('prefix').value=23;w.update();
+  assert.match(get('topology-summary').textContent,/2 of 2/);
+  assert.match(get('example-context').textContent,/Your current network/);
+  get('ip-input').value='bad';w.update();
+  assert.doesNotMatch(get('example-context').textContent,/10\.20/);
+  w.setExample(5);assert.match(get('example-context').textContent,/no separate broadcast/);
   dom.window.close();
 });

@@ -42,7 +42,7 @@ function subnet(ip, prefix) {
 }
 const examples = [
   ['192.168.1.57',24], ['192.168.1.77',26], ['172.16.35.42',20],
-  ['10.0.0.1',30], ['10.0.0.10',31], ['10.0.0.42',32]
+  ['10.0.0.1',30], ['10.0.0.10',31], ['10.0.0.42',32], ['10.20.1.57',16]
 ];
 const exampleLessons = [
   {
@@ -76,10 +76,44 @@ const exampleLessons = [
     thinking: 'The network, first host, and last host are all 10.0.0.42. A /32 selects one address; it does not provide a pair for a link.'
   }
 ];
+exampleLessons.push({purpose: 'Plan an organization-wide allocation, then divide it into department or building subnets.'});
 const $ = id => document.getElementById(id);
 const fmt = n => n.toLocaleString('en-US');
 let current = null, subnetPage = 0, selectedSubnet = 0;
 const pageSize = 16;
+
+function renderNetworkContext(s, exampleIndex) {
+  const network=numToIP(s.network), end=numToIP(s.end), address=numToIP(s.ip);
+  let use, meaning;
+  if(s.prefix===0) {
+    use='A default route: a fallback when no more-specific route matches a destination.';
+    meaning='0.0.0.0/0 covers the entire IPv4 address space. It does not mean every destination is on one local LAN.';
+  } else if(s.prefix===32) {
+    use='A route to one specific host, often a router loopback or an individually routed address.';
+    meaning='All 32 bits are fixed. This block contains only '+address+'; it has no separate broadcast address or second endpoint.';
+  } else if(s.prefix===31) {
+    use='A point-to-point link between two endpoints, such as two routers.';
+    meaning='Both '+network+' and '+end+' are usable endpoints. There is no reserved network or broadcast address on this /31 link.';
+  } else if(s.prefix===30) {
+    use='A conventional point-to-point link, with two usable endpoint addresses.';
+    meaning='Use '+numToIP(s.first)+' and '+numToIP(s.last)+' for the endpoints. '+network+' identifies the network; '+end+' is its broadcast address.';
+  } else if(s.prefix<24) {
+    use='A larger allocation that could be divided among departments, buildings, or other networks.';
+    const firstChild=numToIP(s.network), lastChild=numToIP(s.end-255), count=2**(24-s.prefix);
+    meaning='This /'+s.prefix+' can contain '+fmt(count)+' separate /24 subnets, from '+firstChild+'/24 to '+lastChild+'/24. Devices in those smaller subnets use a /24 mask; traffic between them is routed. The /'+s.prefix+' describes the overall block, not necessarily one local LAN.';
+  } else {
+    use=s.prefix===24?'A local subnet for a department, building, or VLAN.':'A smaller local subnet sized for a team, lab, or device group.';
+    meaning='With a /'+s.prefix+' mask, usable local addresses run from '+numToIP(s.first)+' to '+numToIP(s.last)+'. Destinations outside '+network+'/'+s.prefix+' require routing. The network and broadcast addresses are reserved.';
+  }
+  const role=s.prefix<31 && (s.ip===s.network || s.ip===s.end)
+    ? address+' is the '+(s.ip===s.network?'network':'broadcast')+' address, not a usable host address.'
+    : address+' belongs to this block.';
+  const context=exampleIndex>=0 ? exampleLessons[exampleIndex].purpose : use;
+  $('example-context').innerHTML='<h3>'+(exampleIndex>=0?"This example's network":'Your current network')+'</h3><dl>'+
+    [['Network',network+'/'+s.prefix+' spans '+network+' to '+end+'. '+fmt(s.size)+' total address'+(s.size===1?'':'es')+'. '+role],
+     ['What it is used for',context],['What this means',meaning]]
+    .map(([label,description])=>'<dt>'+label+'</dt><dd>'+description+'</dd>').join('')+'</dl>';
+}
 
 function bitRow(label, number, prefix, options = {}) {
   let cells = '';
@@ -95,12 +129,12 @@ function bitRow(label, number, prefix, options = {}) {
 function stat(label, value, note) {
   const definitions = {
     'Network address': 'The starting address of the subnet, found by ANDing the IP with the mask. It identifies the block in routing tables. It is reserved in conventional subnets through /30; /31 link endpoints and /32 host routes are exceptions.',
-    'Broadcast address': 'The address used to send to all hosts on this subnet. All host bits are 1, making it the last address in the block. It is reserved for broadcast, not a device. /31 point-to-point links and /32 host routes have no subnet broadcast.',
+    'Broadcast address': 'Use this destination to send one IPv4 packet to all hosts on the local subnet, rather than to one device. It supports announcements and discovery within the subnet. All host bits are 1, making it the last address in the block. It cannot be assigned to a host. /31 point-to-point links and /32 host routes have no subnet broadcast.',
     'First usable host': 'The lowest address available for a device in this subnet. Usually network + 1; for /31 links and /32 routes, it is the network address itself. A gateway may use it, but the gateway address must be configured.',
     'Last usable host': 'The highest address available for a device in this subnet. Usually broadcast − 1. A /31 uses its second endpoint; a /32 has only one address, so first and last are the same.',
     'Block size': 'The total number of addresses covered by the prefix, including any reserved network and broadcast addresses. It is 2 raised to the number of host bits. This is the whole block, not the increment in a split octet.',
     'Usable hosts': 'The number of addresses available for device interfaces under this subnet model. Usually block size − 2. A /31 point-to-point link has 2 usable endpoints; a /32 identifies 1 host. A gateway consumes one usable address.',
-    'Subnet mask': 'A 32-bit pattern that separates the network and host portions of an IP. Network positions contain 1; host positions contain 0. ANDing an IP with this mask keeps its network bits and clears its host bits.',
+    'Subnet mask': 'A device uses the mask to determine whether a destination is on its own subnet or needs a router. Applying the mask to both IP addresses gives their network addresses: matching results mean the same subnet. The mask uses 1s for network bits and 0s for host bits.',
     'Network / host bits': 'How the 32 IPv4 bits are divided: network bits identify the subnet, and host bits select addresses inside it. The prefix is the network-bit count. Moving one bit to the network side halves the block size.'
   };
   const description=(definitions[label]+' Current value: '+value+'. '+note).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
@@ -163,7 +197,7 @@ function lesson(title, formula, note) {
 }
 function rangeDiagram(s) {
   const start='<svg class="teaching-svg range-svg" viewBox="0 0 800 156" role="img" aria-labelledby="range-svg-title"><title id="range-svg-title">Address block '+numToIP(s.network)+'/'+s.prefix+', from '+numToIP(s.network)+' to '+numToIP(s.end)+': '+fmt(s.usable)+' usable addresses</title>'+
-    '<text x="400" y="19" text-anchor="middle" class="svg-label">Entire /'+s.prefix+' block · '+fmt(s.size)+' total address'+(s.size===1?'':'es')+'</text>'+
+    '<text x="400" y="19" text-anchor="middle" class="svg-label">Entire <tspan class="svg-prefix">/'+s.prefix+'</tspan> block · '+fmt(s.size)+' total address'+(s.size===1?'':'es')+'</text>'+
     '<path d="M24 30H776M24 26V34M776 26V34" fill="none" stroke="#52677c" stroke-width="1"/>';
   if (s.prefix===32) {
     return start+
@@ -203,22 +237,18 @@ function rangeDiagram(s) {
 }
 function comparisonDiagram(s, other) {
   const same=s.network===other.network;
-  return '<svg class="teaching-svg comparison-svg" viewBox="0 0 800 112" role="img" aria-labelledby="compare-svg-title"><title id="compare-svg-title">Both addresses use mask '+numToIP(s.mask)+' and produce '+(same?'matching':'different')+' network addresses</title>'+
-    '<rect x="24" y="10" width="240" height="78" rx="8" fill="#eaf3fa" stroke="#b6c8d6"/>'+
-    '<rect x="536" y="10" width="240" height="78" rx="8" fill="#eaf3fa" stroke="#b6c8d6"/>'+
-    '<text x="144" y="28" text-anchor="middle" class="svg-label">Original address</text>'+
-    '<text x="656" y="28" text-anchor="middle" class="svg-label">Compare address</text>'+
-    '<text x="144" y="46" text-anchor="middle" class="svg-ip">'+numToIP(s.ip)+'</text>'+
-    '<text x="656" y="46" text-anchor="middle" class="svg-ip">'+numToIP(other.ip)+'</text>'+
-    '<text x="144" y="62" text-anchor="middle" class="svg-note">Network result</text>'+
-    '<text x="656" y="62" text-anchor="middle" class="svg-note">Network result</text>'+
-    '<text x="144" y="79" text-anchor="middle" class="svg-ip">'+numToIP(s.network)+'</text>'+
-    '<text x="656" y="79" text-anchor="middle" class="svg-ip">'+numToIP(other.network)+'</text>'+
-    '<path d="M264 49H280M520 49H536" stroke="#4d88bd" stroke-width="1.5"/>'+
-    '<rect x="280" y="24" width="240" height="50" rx="8" fill="'+(same?'#e8f5ef':'#fff0d4')+'" stroke="'+(same?'#7bc7aa':'#e9b65c')+'"/>'+
-    '<text x="400" y="45" text-anchor="middle" class="svg-label">'+(same?'= Same subnet':'≠ Different subnets')+'</text>'+
-    '<text x="400" y="62" text-anchor="middle" class="svg-note">Compare the network results</text>'+
-    '<text x="400" y="104" text-anchor="middle" class="svg-note">Same mask on both sides: '+numToIP(s.mask)+'</text></svg>';
+  const card=(x,title,address,network)=>'<g><rect x="'+x+'" y="4" width="260" height="100" rx="8" fill="#eaf3fa" stroke="#b6c8d6"/>'+
+    '<text x="'+(x+14)+'" y="23" class="svg-label">'+title+'</text>'+
+    '<text x="'+(x+14)+'" y="44" class="svg-note">IP address</text><text x="'+(x+246)+'" y="44" text-anchor="end" class="svg-ip">'+numToIP(address)+'</text>'+
+    '<text x="'+(x+14)+'" y="64" class="svg-note">Mask</text><text x="'+(x+246)+'" y="64" text-anchor="end" class="svg-ip">'+numToIP(s.mask)+'</text>'+
+    '<path d="M'+(x+14)+' 73H'+(x+246)+'" stroke="#b6c8d6"/>'+
+    '<text x="'+(x+14)+'" y="94" class="svg-note">Network</text><text x="'+(x+246)+'" y="94" text-anchor="end" class="svg-ip svg-network-result">'+numToIP(network)+'</text></g>';
+  return '<svg class="teaching-svg comparison-svg" viewBox="0 0 800 110" role="img" aria-labelledby="compare-svg-title"><title id="compare-svg-title">Both addresses use mask '+numToIP(s.mask)+' and produce '+(same?'matching':'different')+' network addresses</title>'+
+    card(16,'Original address',s.ip,s.network)+card(524,'Compare address',other.ip,other.network)+
+    '<path d="M276 54H292M508 54H524" stroke="#4d88bd" stroke-width="1.5"/>'+
+    '<rect x="292" y="32" width="216" height="44" rx="8" fill="'+(same?'#e8f5ef':'#fff0d4')+'" stroke="'+(same?'#7bc7aa':'#e9b65c')+'"/>'+
+    '<text x="400" y="50" text-anchor="middle" class="svg-label">'+(same?'= Same subnet':'&#8800; Different subnets')+'</text>'+
+    '<text x="400" y="67" text-anchor="middle" class="svg-note">Compare the network results</text></svg>';
 }
 function setExample(index) {
   const [ip,prefix] = examples[index];
@@ -246,66 +276,50 @@ function update() {
     button.setAttribute('aria-pressed',String(example[0]===decimalAddress && example[1]===prefix));
   });
   const selectedExample=examples.findIndex(([ip,p])=>ip===decimalAddress && p===prefix);
-  const guidance=selectedExample>=0 ? exampleLessons[selectedExample] : {
-    purpose: 'Explore your own address and prefix.',
-    why: 'Changing the prefix changes the network boundary and the number of available host addresses.',
-    thinking: octets ? 'Predict the network and usable range before checking the results. Compare the host count with the number of addresses your devices need.' : 'Enter a valid IPv4 address first, or select an example to return to a worked scenario.'
-  };
-  $('example-context').innerHTML='<h3>'+(selectedExample>=0?'About this example':'Your exploration')+'</h3><dl>'+
-    [['Purpose',guidance.purpose],['Why',guidance.why],['Thinking',guidance.thinking]]
-      .map(([label,description])=>'<dt>'+label+'</dt><dd>'+description+'</dd>').join('')+'</dl>';
-  if (!octets) { current=null; return; }
+  if (!octets) {
+    current=null;
+    $('example-context').innerHTML='<h3>Your network</h3><p>Enter a valid IPv4 address or select an example to see its network explained.</p>';
+    return;
+  }
   current=subnet(ipToNum(octets),prefix);
+  renderNetworkContext(current,selectedExample);
   const s=current, net=numToIP(s.network), mask=numToIP(s.mask);
+  $('address-octets').innerHTML=octets.map((octet,index)=>{
+    const bits=octet.toString(2).padStart(8,'0');
+    return '<div class="address-octet" role="group" aria-label="Octet '+(index+1)+': '+bits+' equals '+octet+'"><div class="octet-positions" aria-hidden="true">'+
+      [...bits].map((_,bit)=>'<span>'+(index*8+bit+1)+'</span>').join('')+'</div><div class="octet-bits" aria-hidden="true">'+
+      [...bits].map(bit=>'<span class="bit-cell">'+bit+'</span>').join('')+'</div><div class="octet-decimal">Octet '+(index+1)+' <strong>'+octet+'</strong></div></div>';
+  }).join('');
+  renderCidrTopology(s);
   const weights=[128,64,32,16,8,4,2,1];
   const octetTerms=weights.filter(weight=>octets[0]&weight);
-  $('binary-foundations').innerHTML=lesson('Read the bits','4 octets × 8 bits = 32 bits',
-    'Each bit is 0 or 1. Within each octet, place values are 128, 64, 32, 16, 8, 4, 2, 1. Add the values where the bit is 1: the first octet '+octets[0].toString(2).padStart(8,'0')+' means '+(octetTerms.join(' + ')||'0')+' = '+octets[0]+'.')+
-    lesson('Read the prefix','32 − '+prefix+' = '+s.hostBits+' host bits',
+  $('binary-foundations').innerHTML=lesson('Interpret the bits','4 octets × 8 bits = 32 bits',
+    'Each bit is 0 or 1. Within each octet, place values are 128, 64, 32, 16, 8, 4, 2, 1. Add the values where the bit is 1: the first octet '+octets[0].toString(2).padStart(8,'0')+' means '+(octetTerms.join(' + ')||'0')+' = '+octets[0]+'.');
+  $('prefix-foundations').innerHTML=lesson('Interpret the prefix','32 − <mark class="prefix-value" title="Prefix length: network bits">'+prefix+'</mark> = '+s.hostBits+' host bits',
     '/'+prefix+' fixes the first '+prefix+' network bits. Each remaining bit has two choices, so '+s.hostBits+' host bits give 2^'+s.hostBits+' = '+fmt(s.size)+' combinations. '+(s.hostBits===0?'With no bits left to vary, there is one address.':'For example, two free bits give 00, 01, 10, 11: 2 × 2 = 4 combinations.'));
+  $('prefix-foundations').querySelector('.lesson').insertAdjacentHTML('beforeend','<div class="bit-line bit-allocation"><span id="bar-net"></span><span id="bar-host"></span></div>');
   $('cidr').textContent=net+'/'+prefix;
   $('binary-workbench').innerHTML=bitRow('Bit position',0,prefix,{ruler:true})+
     bitRow('IP address',s.ip,prefix,{id:'bits'})+
-    bitRow('AND mask',s.mask,prefix,{id:'mask-bits'})+
+    bitRow('Mask',s.mask,prefix,{id:'mask-bits'})+
+    '<div class="and-divider"><span>AND</span></div>'+
     bitRow('= Network',s.network,prefix,{result:true});
-  $('calculation-note').innerHTML='<strong>'+numToIP(s.ip)+' AND '+mask+' = '+net+'</strong><p>AND works one column at a time: 1 AND 1 = 1; 0 AND 1 = 0; either bit AND 0 = 0. The mask has '+prefix+' leading 1s to keep network bits and '+s.hostBits+' zeros to clear host bits. Read the resulting bits back into four decimal octets to get the network.</p><p>Mask octets use the same place values: eight 1s sum to 128 + 64 + 32 + 16 + 8 + 4 + 2 + 1 = 255; eight 0s sum to 0.</p>';
-  $('bar-net').style.width=(prefix/32*100)+'%';
-  $('bar-host').style.width=((32-prefix)/32*100)+'%';
-  $('bar-net').textContent=prefix>=6?prefix+' network bits':'';
-  $('bar-host').textContent=s.hostBits>=6?s.hostBits+' host bits':'';
+  $('bar-net').hidden=prefix===0;
+  $('bar-net').style.gridColumn='2 / span '+Math.max(1,prefix);
+  $('bar-host').hidden=s.hostBits===0;
+  $('bar-host').style.gridColumn=(prefix+2)+' / span '+Math.max(1,s.hostBits);
+  $('bar-host').style.marginLeft=prefix>0 && prefix%8===0?'4px':'0';
+  $('bar-net').textContent=prefix>=6?prefix+' network bits':prefix;
+  $('bar-net').title=prefix+' network bits';
+  $('bar-host').textContent=s.hostBits>=6?s.hostBits+' host bits':s.hostBits;
+  $('bar-host').title=s.hostBits+' host bits';
   $('stats').innerHTML=[
-    stat('Network address',net,prefix<31?'IP AND mask; identifies the block.':'Start of the block; also an assignable address.'),
+    stat('Block size',fmt(s.size),'2^'+s.hostBits+' = '+fmt(s.size)+' addresses (32 − '+prefix+' = '+s.hostBits+' host bits).'),
     stat('Broadcast address',s.broadcast===null?'None':numToIP(s.broadcast),prefix<31?'Last address; all host bits are 1.':'No subnet broadcast for /'+prefix+'.'),
-    stat('First usable host',numToIP(s.first),prefix<31?'Network + 1. A gateway may use it.':prefix===31?'First endpoint of the point-to-point link.':'The single address in this host route.'),
-    stat('Last usable host',numToIP(s.last),prefix<31?'Broadcast − 1.':prefix===31?'Second endpoint of the point-to-point link.':'Same address as the first host.'),
-    stat('Block size',fmt(s.size),'32 − '+prefix+' = '+s.hostBits+' host bits; 2^'+s.hostBits+' = '+fmt(s.size)+'.'),
-    stat('Usable hosts',fmt(s.usable),prefix<31?fmt(s.size)+' − 1 network − 1 broadcast = '+fmt(s.usable)+'.':prefix===31?'Both endpoints usable on a point-to-point link.':'One host address.'),
-    stat('Subnet mask',mask,prefix+' leading 1s, then '+s.hostBits+' zeros.'),
-    stat('Network / host bits',prefix+' / '+s.hostBits,'One more network bit halves the block.')
+    stat('Subnet mask',mask,prefix+' leading 1s, then '+s.hostBits+' zeros.')
   ].join('');
-  let classification=prefix===32?'This is a host route: exactly one address.':
-    prefix===31?'This /31 is modeled as a point-to-point link: both addresses are usable; neither is reserved for broadcast.':
-    s.ip===s.network?'The entered IP is the reserved network address, not a usable host.':
-    s.ip===s.end?'The entered IP is the reserved broadcast address, not a usable host.':
-    'The entered IP is inside the usable host range.';
-  $('address-note').textContent=classification;
   $('range-diagram').innerHTML=rangeDiagram(s);
-  $('range-work').innerHTML=[
-    lesson('Count all addresses','32 − '+prefix+' = '+s.hostBits+'; 2^'+s.hostBits+' = '+fmt(s.size), 'The prefix fixes the network bits. Each host bit doubles the combinations. Count all remaining bits, including those in later octets.'),
-    lesson(prefix<31?'Find the broadcast':'Find the last address',net+' + ('+fmt(s.size)+' − 1) = '+numToIP(s.end),'Addresses start at offset 0, so '+fmt(s.size)+' addresses end at offset '+fmt(s.size-1)+'. Adding across .255 carries into the previous octet. In binary, setting every host bit to 1 gives this same endpoint. '+(prefix<31?'It is reserved for broadcast.':prefix===31?'On a /31 link this endpoint is usable; there is no broadcast.':'With zero host bits, the offset is 0 and the address stays unchanged.')),
-    lesson('Find the usable range',numToIP(s.first)+' → '+numToIP(s.last),prefix<31?'First = '+net+' + 1 = '+numToIP(s.first)+'. Last = '+numToIP(s.end)+' − 1 = '+numToIP(s.last)+'. Skip the two reserved endpoints. A gateway uses one of these addresses; it must be configured.':prefix===31?'The point-to-point convention reserves neither endpoint: both of the 2^1 = 2 addresses are usable.':'2^0 = 1 address: first and last refer to the same host; subtract nothing.'),
-    lesson('Count usable hosts',prefix<31?fmt(s.size)+' − 2 = '+fmt(s.usable):fmt(s.size)+' reserved-free address'+(s.size===1?'':'es'),prefix<31?'Two addresses are reserved in this conventional subnet model.':prefix===31?'The /31 point-to-point exception preserves both endpoints.':'A /32 is a single host route, not a two-endpoint link.')
-  ].join('');
-  if (prefix%8!==0) {
-    const octet=Math.floor(prefix/8), increment=2**(8-prefix%8);
-    const starts=Array.from({length:Math.min(8,256/increment)},(_,i)=>i*increment).join(', ');
-    const networkInOctet=prefix%8, hostInOctet=8-networkInOctet, base=Math.floor(octets[octet]/increment)*increment;
-    $('boundary-note').innerHTML='<strong>Split-octet increment: '+increment+' in octet '+(octet+1)+'.</strong> '+prefix+' network bits = '+octet+' full octet(s) × 8 + '+networkInOctet+' bits here. This leaves 8 − '+networkInOctet+' = '+hostInOctet+' free bits in this octet: 2^'+hostInOctet+' = '+increment+' per step (also 256 − '+((s.mask >>> ((3-octet)*8))&255)+').<p>Boundaries: '+starts+(256/increment>8?', …':'')+'. Round '+octets[octet]+' down to a multiple of '+increment+': floor('+octets[octet]+' ÷ '+increment+') × '+increment+' = '+base+'. Zero the later octets. Each later octet contributes another factor of 256, so the whole block has '+increment+' × 256^'+(3-octet)+' = '+fmt(s.size)+' addresses.</p>';
-  } else {
-    $('boundary-note').textContent=prefix===32?'All 32 bits identify the address. There are no host bits and no smaller IPv4 subnets.':
-      prefix===0?'The /0 block covers all 4,294,967,296 IPv4 bit patterns. The host count is subnet arithmetic, not a claim that special-use addresses are globally assignable.':
-      'The prefix ends on an octet boundary. The remaining '+(s.hostBits/8)+' complete octet(s) provide '+fmt(s.size)+' total addresses.';
-  }
+
   updateComparison(); updateSubdivide();
 }
 function setComparison(different) {
@@ -338,16 +352,14 @@ function updateComparison() {
       ((s.ip >>> (31-firstDifference)) & 1)+' in the original IP and '+((other.ip >>> (31-firstDifference)) & 1)+
       ' in the compare IP. The mask is 1 here, so this difference survives AND and produces different networks.';
   $('compare-diagram').innerHTML=comparisonDiagram(s,other);
-  const reserved=s.prefix<31 && (s.ip===s.network || s.ip===s.end || other.ip===other.network || other.ip===other.end);
-  $('cmp-result').innerHTML='<div class="verdict'+(same?'':' diff')+'"><strong>'+(same?'Same subnet':'Different subnets')+'</strong><p>'+
-    numToIP(s.ip)+' → '+numToIP(s.network)+'; '+numToIP(other.ip)+' → '+numToIP(other.network)+'. '+
-    (same?'The network results match under /'+s.prefix+'.':'The network results differ under /'+s.prefix+'; traffic between hosts in these subnets requires routing.')+
-    (reserved?' At least one entered address is reserved for the network or broadcast, so it is not a usable host.':'')+
-      (s.prefix===0?' Every IPv4 address matches /0; there is no different-subnet example at this prefix.':'')+
-      '</p><p class="difference-explanation">'+why+'</p></div>';
+  const warnings=s.prefix<31?[s,other].filter((v,i,all)=>all.findIndex(x=>x.ip===v.ip)===i).filter(v=>v.ip===v.network||v.ip===v.end).map(v=>'<p><strong>'+numToIP(v.ip)+'</strong> is the '+(v.ip===v.network?'network':'broadcast')+' address of '+numToIP(v.network)+'/'+v.prefix+'. It cannot be assigned to a host.</p>').join(''):'';
+  $('cmp-result').innerHTML='<div class="verdict'+(same?'':' diff')+'"><strong>'+(same?'Same subnet':'Different subnets')+'</strong><p>Using /'+s.prefix+' (mask '+numToIP(s.mask)+'), the network addresses '+(same?'match.':'differ. Traffic between usable hosts in these subnets requires a router.')+'</p>'+
+    (warnings?'<div class="difference-explanation"><strong>Reserved address</strong>'+warnings+'</div>':'')+
+    (s.prefix===0?'<p>Every IPv4 address matches /0; there is no different-subnet example at this prefix.</p>':'')+
+    '<p class="difference-explanation">'+why+'</p></div>';
   $('cmp-math').innerHTML=bitRow('Bit position',0,s.prefix,{ruler:true,differences})+
     bitRow('Original IP',s.ip,s.prefix,{differences})+
-    bitRow('Compare IP',other.ip,s.prefix,{differences})+bitRow('AND mask',s.mask,s.prefix)+
+    bitRow('Compare IP',other.ip,s.prefix,{differences})+bitRow('Mask',s.mask,s.prefix)+
     bitRow('= Compare network',other.network,s.prefix,{result:true,differences})+
     bitRow('Original network',s.network,s.prefix,{differences})+
     '<p class="difference-key">'+(same?'No highlighted network bits: the subnet matches.':
@@ -375,7 +387,7 @@ function updateSubdivide(reset=true) {
         'The child prefix adds '+borrowed+' network bit(s) to the parent. Each borrowed bit can be 0 or 1: <strong>2^'+borrowed+' = '+fmt(count)+' child blocks.</strong> The amber cells below show those binary IDs.'),
       lesson('Count addresses per child','32 − '+child+' = '+hostBits+' host bits',
         'The green bits still vary: <strong>2^'+hostBits+' = '+fmt(size)+' addresses per child.</strong> '+(child<31?fmt(size)+' − 1 network − 1 broadcast = '+fmt(usable)+' usable.':child===31?'Both addresses are usable on a /31 point-to-point link; do not subtract 2.':'Zero variable bits give one address, not zero. A /32 reserves no separate broadcast.')),
-      lesson('Preserve the total',fmt(count)+' × '+fmt(size)+' = '+fmt(s.size),
+      lesson('Sanity check',fmt(count)+' × '+fmt(size)+' = '+fmt(s.size),
         'Child blocks × addresses per child. The parent has 32 − '+s.prefix+' = '+s.hostBits+' host bits: <strong>2^'+s.hostBits+' = '+fmt(s.size)+' addresses.</strong> Splitting redistributes those addresses; it does not create more.')
     ].join('');
   $('sub-map').innerHTML=subdivisionDiagram(s,child,start,stop,selectedSubnet);
@@ -388,12 +400,17 @@ function updateSubdivide(reset=true) {
       '<span>Block '+fmt(index+1)+'</span><code class="borrowed-id" aria-hidden="true">'+Array.from(id,bit=>'<span class="bit-cell borrowed">'+bit+'</span>').join('')+'</code></button>';
   }).join('');
   const selected=subnet(s.network+selectedSubnet*size,child);
-  $('sub-selected').innerHTML=s.prefix===32?'This single host route has no borrowed bits.':
-    '<strong>Block '+fmt(selectedSubnet+1)+': '+numToIP(selected.network)+'/'+child+'</strong> · borrowed bits <code>'+
-    selectedSubnet.toString(2).padStart(borrowed,'0')+'</code><p>Range: <code>'+numToIP(selected.network)+'–'+numToIP(selected.end)+
-    '</code>.<br>Binary ID '+selectedSubnet.toString(2).padStart(borrowed,'0')+' = decimal '+fmt(selectedSubnet)+'. IDs start at 0, so '+fmt(selectedSubnet)+' blocks come before this one. Skip '+fmt(selectedSubnet)+' × '+fmt(size)+' = '+fmt(selectedSubnet*size)+' addresses from '+numToIP(s.network)+' to reach '+numToIP(selected.network)+'. The last address is '+numToIP(selected.network)+' + '+fmt(size-1)+' = '+numToIP(selected.end)+'.</p>';
-  $('sub-selected').innerHTML+='<p>Aggregate the complete, aligned set back to <strong>'+numToIP(s.network)+'/'+s.prefix+'</strong>: all children share the first '+s.prefix+' bits.</p>';
-  $('sub-selected').innerHTML+=s.prefix<31 && child<31?'<p>Network + broadcast reserved per child: '+fmt(count)+' × '+fmt(usable)+' = '+fmt(count*usable)+' usable addresses (was '+fmt(s.usable)+'); total addresses unchanged.</p>':'';
+  const binaryId=selectedSubnet.toString(2).padStart(borrowed,'0');
+  $('sub-selected').innerHTML=s.prefix===32?'<p>This single host route has no borrowed bits.</p>':
+    '<div class="selected-block-heading"><strong>Block '+fmt(selectedSubnet+1)+': '+numToIP(selected.network)+'/'+child+'</strong><span>Borrowed bits <code>'+binaryId+'</code></span></div>'+
+    '<p class="selected-block-range"><strong>Address range</strong> <code>'+numToIP(selected.network)+' &ndash; '+numToIP(selected.end)+'</code></p>'+
+    '<dl class="selected-block-steps">'+
+    '<div><dt>1. Block index</dt><dd><code><span class="borrowed-index">'+binaryId+'</span> = '+fmt(selectedSubnet)+'</code><small>Counting starts at 0.</small></dd></div>'+
+    '<div><dt>2. Address offset</dt><dd><code>'+fmt(selectedSubnet)+' &times; '+fmt(size)+' = '+fmt(selectedSubnet*size)+'</code><small>Block index &times; addresses per block.</small></dd></div>'+
+    '<div><dt>3. First address</dt><dd><code>'+numToIP(s.network)+' + '+fmt(selectedSubnet*size)+' = '+numToIP(selected.network)+'</code></dd></div>'+
+    '<div><dt>4. Last address</dt><dd><code>'+numToIP(selected.network)+' + ('+fmt(size)+' &minus; 1) = '+numToIP(selected.end)+'</code></dd></div></dl>';
+  $('sub-selected').innerHTML+='<div class="selected-block-notes"><p><strong>Aggregate</strong> The complete, aligned set combines into <code>'+numToIP(s.network)+'/'+s.prefix+'</code>. All children share '+s.prefix+' network bits.</p>'+
+    (s.prefix<31 && child<31?'<p><strong>Usable addresses</strong> '+fmt(count)+' &times; '+fmt(usable)+' = <strong>'+fmt(count*usable)+'</strong> (previously '+fmt(s.usable)+'). Each child reserves a network and broadcast address; the total address count stays the same.</p>':'')+'</div>';
   $('sub-caption').textContent='Blocks '+fmt(start+1)+'–'+fmt(stop)+' of '+fmt(count)+'. All address details are shown in each row.';
   $('sub-bits').innerHTML=bitRow('Selected child',selected.network,s.prefix,{childPrefix:child});
   let rows='';

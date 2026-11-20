@@ -5,12 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CIDR Subnet Teaching Tool</title>
 <link rel="stylesheet" href="../assets/css/pages/cidr-explorer.css">
+<script src="../assets/js/network-explorer-subnets.js" defer></script>
+<script src="../assets/js/cidr-topology.js" defer></script>
 <script src="../assets/js/cidr-explorer.js" defer></script>
 <script src="../assets/js/cidr-tour.js" defer></script>
 </head>
 <body>
 <svg class="svg-symbols" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
 <symbol id="icon-network" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="6" rx="1"/><path d="M12 8v5M4 17v-4h16v4"/><rect x="1" y="17" width="6" height="5" rx="1"/><rect x="9" y="17" width="6" height="5" rx="1"/><rect x="17" y="17" width="6" height="5" rx="1"/><path d="M12 13v4"/></symbol>
+<symbol id="icon-address-anatomy" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M7 6v12M12 6v12"/><path d="M17 3v18" stroke="#216c60"/><path d="M4 10h1m4 0h1m4 0h1m5 0h.1M4 14h1m4 0h1m4 0h1m5 0h.1"/></symbol>
 <symbol id="icon-range" viewBox="0 0 24 24"><path d="M3 5v14M21 5v14M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4"/></symbol>
 <symbol id="icon-compare" viewBox="0 0 24 24"><path d="M3 7h18l-4-4M21 17H3l4 4M21 7l-4 4M3 17l4-4"/></symbol>
 <symbol id="icon-blocks" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 12h20M12 3v18M7 12v9M17 12v9"/></symbol>
@@ -18,7 +21,7 @@
 <header>
 <div class="heading"><div><h1>CIDR Subnet Teaching Tool</h1><p>See how a prefix becomes a subnet, one bit and one address at a time.</p></div><button id="tour-launch" onclick="startTour()">Guided tour</button></div>
 </header>
-<div class="section-nav"><div class="compact-title" hidden>CIDR Subnet Teaching Tool</div><nav aria-label="Teaching sections"><a href="#subnet"><svg class="nav-icon" aria-hidden="true"><use href="#icon-network"/></svg>Find the network</a><a href="#range"><svg class="nav-icon" aria-hidden="true"><use href="#icon-range"/></svg>Address range</a><a href="#compare"><svg class="nav-icon" aria-hidden="true"><use href="#icon-compare"/></svg>Compare</a><a href="#aggregation"><svg class="nav-icon" aria-hidden="true"><use href="#icon-blocks"/></svg>Subdivide &amp; aggregate</a></nav></div>
+<div class="section-nav"><div class="compact-title" hidden>CIDR Subnet Teaching Tool</div><nav aria-label="Teaching sections"><a href="#topology"><svg class="nav-icon" aria-hidden="true"><use href="#icon-network"/></svg>See the subnets</a><a href="#subnet"><svg class="nav-icon" aria-hidden="true"><use href="#icon-address-anatomy"/></svg>IP Address Anatomy</a><a href="#subnet-definition"><svg class="nav-icon" aria-hidden="true"><use href="#icon-network"/></svg>How IPs define subnets</a><a href="#compare"><svg class="nav-icon" aria-hidden="true"><use href="#icon-compare"/></svg>Compare</a><a href="#aggregation"><svg class="nav-icon" aria-hidden="true"><use href="#icon-blocks"/></svg>Subdivide &amp; aggregate</a></nav></div>
 <main>
 <div class="scope-note"><strong>One IPv4 address. 32 bits. A flexible boundary.</strong><p>The prefix identifies the network bits. The remaining bits determine the size of the address block. All calculations and explanations below update together.</p></div>
 <div class="workspace">
@@ -35,22 +38,30 @@
 <div class="range-ends"><span>/0 · largest block</span><span>/32 · one address</span></div>
 <p id="prefix-summary" class="hint"></p><div id="error" class="error" role="alert"></div>
 <div class="examples"><h2>Try an example</h2><div class="presets">
-<button data-example="0" onclick="setExample(0)">Everyday /24</button><button data-example="1" onclick="setExample(1)">Small subnet /26</button><button data-example="2" onclick="setExample(2)">Split octet /20</button><button data-example="3" onclick="setExample(3)">Router link /30</button><button data-example="4" onclick="setExample(4)">Point-to-point /31</button><button data-example="5" onclick="setExample(5)">Host route /32</button>
+<button data-example="6" onclick="setExample(6)">Organization /16</button><button data-example="0" onclick="setExample(0)">Everyday /24</button><button data-example="1" onclick="setExample(1)">Small subnet /26</button><button data-example="2" onclick="setExample(2)">Split octet /20</button><button data-example="3" onclick="setExample(3)">Router link /30</button><button data-example="4" onclick="setExample(4)">Point-to-point /31</button><button data-example="5" onclick="setExample(5)">Host route /32</button>
 </div><div id="example-context" class="example-context" aria-live="polite" aria-atomic="true"></div></div>
 <button class="reset" onclick="resetTool()">Reset to defaults</button><p class="hint">Longer prefix → fewer host bits → a smaller block. Each additional network bit halves the total addresses.</p>
 </aside>
 <div id="results" class="results">
+<section id="topology" class="panel" aria-labelledby="topology-heading"><h2 id="topology-heading" class="icon-heading"><svg class="nav-icon" aria-hidden="true"><use href="#icon-network"/></svg>See the subnets</h2><p id="topology-summary" class="intro"></p><div class="topology-scroll" tabindex="0" role="region" aria-label="Router and subnet topology (drag to pan)"><svg id="cidr-topology" viewBox="0 0 940 620" role="img" aria-labelledby="topology-svg-title topology-svg-description"></svg></div><div class="topology-status-bar"><span id="topology-status"></span><div class="topology-view-controls" role="group" aria-label="Topology view"><label for="topology-zoom">Zoom</label><input id="topology-zoom" type="range" min="50" max="300" step="25" value="100" oninput="setCidrTopologyZoom(Number(this.value))"><output id="topology-zoom-level" for="topology-zoom">100%</output><button class="topology-icon-button" type="button" onclick="fitCidrTopology()" title="Fit network" aria-label="Fit network"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg></button></div></div><p id="topology-note" class="explanation"></p></section>
 <section id="subnet" class="panel" aria-labelledby="subnet-heading">
-<div class="section-heading"><h2 id="subnet-heading" class="icon-heading"><svg class="nav-icon" aria-hidden="true"><use href="#icon-network"/></svg>Find the network</h2><strong id="cidr" class="badge"></strong></div>
-<p class="intro">AND keeps a bit only when both inputs are 1. Mask bits keep the network portion and zero the host portion.</p>
-<div id="binary-foundations" class="lesson-grid"></div>
-<div class="scroll" tabindex="0" role="region" aria-label="Aligned IPv4 binary calculation"><div id="binary-workbench" class="binary-workbench"></div></div>
-<div id="calculation-note" class="explanation"></div>
-<div class="bar" aria-hidden="true"><span id="bar-net"></span><span id="bar-host"></span></div>
-<div class="legend"><span class="net-key">Network bits · preserved</span><span class="host-key">Host bits · zeroed by AND</span></div>
-<h3>Your subnet at a glance</h3><div id="stats" class="stats"></div><div id="address-note" class="explanation"></div>
+<div class="section-heading"><h2 id="subnet-heading" class="icon-heading"><svg class="nav-icon" aria-hidden="true"><use href="#icon-address-anatomy"/></svg>IP Address Anatomy</h2></div>
+<div class="scroll address-anatomy" tabindex="0" role="region" aria-label="IPv4 address as four binary octets"><div id="address-octets"></div></div>
+
+<div id="binary-foundations"></div>
 </section>
-<section id="range" class="panel" aria-labelledby="range-heading"><h2 id="range-heading" class="icon-heading"><svg class="nav-icon" aria-hidden="true"><use href="#icon-range"/></svg>Read the address range</h2><div class="scroll" tabindex="0" role="region" aria-label="Address range diagram"><div id="range-diagram"></div></div><div id="range-work" class="lesson-grid"></div><div id="boundary-note" class="explanation"></div></section>
+<section id="subnet-definition" class="panel" aria-labelledby="subnet-definition-heading">
+<div class="section-heading"><h2 id="subnet-definition-heading" class="icon-heading"><svg class="nav-icon" aria-hidden="true"><use href="#icon-network"/></svg>How IPs define subnets</h2><strong id="cidr" class="badge"></strong></div>
+<div class="scroll" tabindex="0" role="region" aria-label="Aligned IPv4 binary calculation"><div class="binary-workbench">
+<div id="prefix-foundations" class="prefix-foundations"></div>
+<div id="binary-workbench"></div>
+</div></div>
+
+
+<h3>Your subnet at a glance</h3><div id="stats" class="stats"></div>
+<div class="scroll block-summary" tabindex="0" role="region" aria-label="Address range diagram"><div id="range-diagram"></div></div>
+</section>
+
 <section id="compare" class="panel" aria-labelledby="compare-heading">
 <h2 id="compare-heading" class="icon-heading"><svg class="nav-icon" aria-hidden="true"><use href="#icon-compare"/></svg>Are these addresses in the same subnet?</h2><p class="intro">Apply the same mask to both addresses, then compare their network results.</p>
 <div class="inline-control"><label for="cmp-ip">Compare IPv4 address</label><input id="cmp-ip" type="text" value="192.168.1.100" spellcheck="false" aria-describedby="cmp-error" oninput="updateComparison()"><button onclick="setComparison(false)">Same-subnet example</button><button onclick="setComparison(true)">Different-subnet example</button></div>
@@ -72,7 +83,7 @@
 <div id="sub-endpoints" class="sub-endpoints"></div>
 <p id="sub-select-note">Select a block; its binary ID shows the borrowed bits.</p>
 </div>
-<div id="sub-selected" class="explanation" aria-live="polite"></div>
+<div id="sub-selected" class="selected-block-summary" aria-live="polite"></div>
 </div>
 <div class="scroll" tabindex="0" role="region" aria-label="Child subnet address ranges"><table id="sub-table"><caption id="sub-caption"></caption><thead><tr><th scope="col">Network / prefix</th><th scope="col">First usable</th><th scope="col">Last usable</th><th scope="col">Broadcast</th><th scope="col">Usable hosts</th></tr></thead><tbody id="sub-rows"></tbody></table></div>
 <div class="pagination"><button id="sub-prev" onclick="changeSubnetPage(-1)">Previous blocks</button><span id="sub-page"></span><button id="sub-next" onclick="changeSubnetPage(1)">Next blocks</button></div>
