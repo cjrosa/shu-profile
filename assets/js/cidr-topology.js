@@ -24,6 +24,7 @@ function topologyBlocks(s) {
   });
 }
 function renderCidrTopology(s) {
+  if(s.prefix===32) { renderCidrHostRoute(s); return; }
   if(s.prefix===30) { renderCidrRouterLink(s); return; }
   const blocks=topologyBlocks(s), singleton=blocks.length===1, divided=blocks[0].prefix!==s.prefix;
   const uses=['Faculty Department','Library Building','Student Labs'];
@@ -70,6 +71,30 @@ function renderCidrTopology(s) {
   document.getElementById('topology-note').textContent=s.prefix===32?'A /32 is a route to one address. These are individual host routes, not multi-host LANs; no extra router-interface address fits inside a /32.':s.prefix===31?'Each /31 is a point-to-point link: one router interface and one other endpoint. Both addresses are usable; neither is reserved for broadcast.':(s.prefix===0?'A /0 spans all IPv4 space, so there are no neighboring /0 subnets. This is an address-space illustration, not a practical LAN design. ':'Each shaded region is a different subnet. Hosts in a region share its prefix; reaching another region requires the router. ' )+'Interface addresses are illustrative, not configured gateways. Lines represent shared local connectivity; switches are omitted.'+(s.ip===s.network || s.ip===s.end?' The entered IP is a reserved network or broadcast address, so it is not drawn as a host.':'');
   if(divided) document.getElementById('topology-note').textContent='Subdivision example: each department or building uses its own /24 mask (255.255.255.0), with 254 conventional usable addresses. Traffic between these /24 subnets goes through the router. The calculator below still describes the overall /'+s.prefix+' allocation. A device actually configured with /'+s.prefix+' would treat that larger block as local.';
 
+}
+function renderCidrHostRoute(s) {
+  const svg=document.getElementById('cidr-topology'),address=numToIP(s.ip);
+  svg.parentElement.classList.add('host-route-view');
+  cidrTopologyView.height=240;
+  svg.innerHTML=`<title id="topology-svg-title">Host route to ${address}/32</title>
+    <desc id="topology-svg-description">A router uses a /32 route to match exactly ${address}. The arrow represents forwarding toward that destination, possibly through other routers, not a dedicated physical link.</desc>
+    <defs><marker id="host-route-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#8096aa"/></marker></defs>
+    <g class="topology-wires"><path d="M235 120H695" stroke-dasharray="6 5" marker-end="url(#host-route-arrow)"/></g>
+    <g class="topology-router" transform="translate(190 120)">${cidrTopologyGlyphs.router}</g>
+    <g class="topology-destination" transform="translate(750 120)" style="color:#3b5278">${cidrTopologyGlyphs.host}</g>
+    <g text-anchor="middle">
+      <text x="190" y="185" class="topology-network">Router</text>
+      <text x="470" y="60" class="topology-network">Host route: <tspan class="topology-current-label">${address}/32</tspan></text>
+      <text x="470" y="82" class="topology-range">Mask: 255.255.255.255 &#183; matches one address</text>
+      <text x="470" y="150" class="topology-range">Forward toward this destination</text>
+      <text x="750" y="185" class="topology-host">${address}</text>
+      <text x="750" y="205" class="topology-range">Entered IP</text>
+    </g>`;
+  document.getElementById('topology-summary').textContent='Prefix /32: all 32 bits must match. This host route selects exactly one destination: '+address+'.';
+  document.getElementById('topology-status').textContent='1 host route · /32 · Drag to pan';
+  document.getElementById('topology-note').textContent='A /32 route identifies one destination; it does not tell us that device\'s LAN mask. The device can belong to a larger subnet. The arrow shows a forwarding direction, possibly through other routers; the next hop and physical network are not shown.';
+  initCidrTopologyView(svg);
+  fitCidrTopology();
 }
 function renderCidrRouterLink(s) {
   const svg=document.getElementById('cidr-topology');

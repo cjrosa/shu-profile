@@ -34,9 +34,9 @@
 <p id="ip-format-hint" class="hint">Four decimal octets, separated by dots.</p>
 <p id="ip-conversion" aria-live="polite" hidden></p>
 </div>
-<label for="prefix">Prefix length <output id="prefix-val" for="prefix">/24</output></label><input id="prefix" type="range" min="0" max="32" value="24" oninput="update()">
+<div class="prefix-entry"><label for="prefix">Prefix length <output id="prefix-val" for="prefix">/24</output></label><input id="prefix" type="range" min="0" max="32" value="24" oninput="update()">
 <div class="range-ends"><span>/0 · largest block</span><span>/32 · one address</span></div>
-<p id="prefix-summary" class="hint"></p><div id="error" class="error" role="alert"></div>
+</div><div id="error" class="error" role="alert"></div>
 <div class="examples"><h2>Try an example</h2><div class="presets">
 <button data-example="6" onclick="setExample(6)">Organization /16</button><button data-example="0" onclick="setExample(0)">Everyday /24</button><button data-example="1" onclick="setExample(1)">Small subnet /26</button><button data-example="2" onclick="setExample(2)">Split octet /20</button><button data-example="3" onclick="setExample(3)">Router link /30</button><button data-example="4" onclick="setExample(4)">Point-to-point /31</button><button data-example="5" onclick="setExample(5)">Host route /32</button>
 </div><div id="example-context" class="example-context" aria-live="polite" aria-atomic="true"></div></div>
@@ -71,6 +71,7 @@
 </section>
 <section id="aggregation" class="panel" aria-labelledby="aggregation-heading">
 <h2 id="aggregation-heading" class="icon-heading"><svg class="nav-icon" aria-hidden="true"><use href="#icon-blocks"/></svg>Subdivide &amp; aggregate</h2><p class="intro">Subdivide this network into equal blocks. Read in reverse, the aligned, contiguous blocks combine into the original route.</p>
+<div id="sub-parent" class="parent-span"></div>
 <div class="inline-control"><label for="sub-prefix">Child prefix <output id="sub-prefix-lbl" for="sub-prefix">/28</output></label><input id="sub-prefix" type="range" min="25" max="32" value="28" oninput="updateSubdivide()"></div>
 <div class="subdivision-workbench">
 <div id="sub-summary" class="subdivision-summary" aria-live="polite"></div>

@@ -267,7 +267,6 @@ function update() {
   $('ip-conversion').hidden=addressMode!=='binary' || !octets;
   $('ip-conversion').textContent=octets?'Decimal IPv4: '+decimalAddress:'';
   $('prefix-val').textContent='/'+prefix;
-  $('prefix-summary').textContent=prefix+' network bits + '+(32-prefix)+' host bits = 32 bits.';
   $('ip-input').setAttribute('aria-invalid',String(!octets));
   $('error').textContent=octets?'':addressMode==='binary'?'Enter exactly 32 bits (0 or 1), together or in four 8-bit groups.':'Enter four whole numbers from 0 to 255, separated by dots.';
   $('results').hidden=!octets;
@@ -390,6 +389,7 @@ function updateSubdivide(reset=true) {
       lesson('Sanity check',fmt(count)+' × '+fmt(size)+' = '+fmt(s.size),
         'Child blocks × addresses per child. The parent has 32 − '+s.prefix+' = '+s.hostBits+' host bits: <strong>2^'+s.hostBits+' = '+fmt(s.size)+' addresses.</strong> Splitting redistributes those addresses; it does not create more.')
     ].join('');
+  $('sub-parent').innerHTML='<strong>Parent '+numToIP(s.network)+'/'+s.prefix+'</strong><span>'+fmt(s.size)+' total addresses</span>';
   $('sub-map').innerHTML=subdivisionDiagram(s,child,start,stop,selectedSubnet);
   $('sub-children').style.gridTemplateColumns='repeat('+(stop-start)+', minmax(54px, 1fr))';
   $('sub-endpoints').innerHTML='<code>'+numToIP(s.network+start*size)+'</code><span>Lowest to highest address</span><code>'+numToIP(s.network+stop*size-1)+'</code>';
@@ -402,7 +402,7 @@ function updateSubdivide(reset=true) {
   const selected=subnet(s.network+selectedSubnet*size,child);
   const binaryId=selectedSubnet.toString(2).padStart(borrowed,'0');
   $('sub-selected').innerHTML=s.prefix===32?'<p>This single host route has no borrowed bits.</p>':
-    '<div class="selected-block-heading"><strong>Block '+fmt(selectedSubnet+1)+': '+numToIP(selected.network)+'/'+child+'</strong><span>Borrowed bits <code>'+binaryId+'</code></span></div>'+
+    '<div class="selected-block-heading"><strong>Block '+fmt(selectedSubnet+1)+': '+numToIP(selected.network)+'/'+child+'</strong></div>'+
     '<p class="selected-block-range"><strong>Address range</strong> <code>'+numToIP(selected.network)+' &ndash; '+numToIP(selected.end)+'</code></p>'+
     '<dl class="selected-block-steps">'+
     '<div><dt>1. Block index</dt><dd><code><span class="borrowed-index">'+binaryId+'</span> = '+fmt(selectedSubnet)+'</code><small>Counting starts at 0.</small></dd></div>'+
@@ -424,8 +424,7 @@ function updateSubdivide(reset=true) {
 }
 function subdivisionDiagram(s,child,start,stop) {
   const count=2**(child-s.prefix), visible=stop-start;
-  return '<div class="parent-span"><strong>Parent '+numToIP(s.network)+'/'+s.prefix+'</strong><span>'+fmt(s.size)+' total addresses</span></div>'+
-    '<div class="span-caption">'+(count===visible?'Full span · '+fmt(count)+' equal block(s)':'Page excerpt: blocks '+fmt(start+1)+'–'+fmt(stop)+' of '+fmt(count))+'</div>';
+  return '<div class="span-caption">'+(count===visible?'Full span · '+fmt(count)+' equal block(s)':'Page excerpt: blocks '+fmt(start+1)+'–'+fmt(stop)+' of '+fmt(count))+'</div>';
 }
 function selectSubnet(index) {
   selectedSubnet=index;
