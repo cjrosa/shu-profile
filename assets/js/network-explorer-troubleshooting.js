@@ -4,6 +4,15 @@
   function probe(Network, data, source, target) {
     try {
       const n = new Network(data);
+      // Saved networks contain OSPF configuration, not learned routes. Let the
+      // isolated verification copy converge before testing baseline reachability.
+      // This does not wait on or change the user's live simulation.
+      if (n.hasOspf()) {
+        n.next();
+        let discovery = 0;
+        while (n.queue.length && ++discovery < 3000) n.next();
+        if (n.queue.length) return false;
+      }
       n.ping(source, target);
       let steps = 0;
       while (n.queue.length && ++steps < 3000) n.next();
@@ -23,6 +32,7 @@
   function incidentReport(fault, random = Math.random) {
     const client=fault.sourceName||'The client', target=fault.targetName||fault.target||'the destination';
     const reports={
+      ospf:['Dynamic routing needs investigation','OSPF neighbors or learned route costs no longer match the healthy network.','Traffic may still reach its destination through an alternate path. Compare router neighbors, interface settings, and learned route costs; restore the intended routing and check your repair.'],
       web:['Website unavailable',client+' cannot open '+fault.url+'.','The page loaded successfully before this incident. A new request now fails. Restore access to the site and verify that the Browser receives a successful response.'],
       firewall:['Website unavailable',client+' cannot load '+fault.url+'.','The same browsing test previously succeeded. It now fails somewhere in the DNS and web exchange. Follow the request and responses, then restore the intended access.'],
       dns:['Name lookup failed',client+' cannot resolve '+fault.hostname+'.','This name previously resolved to an address. A fresh lookup now fails. Check how the client reaches its configured DNS service and restore name resolution.'],
@@ -49,6 +59,12 @@
     else n.configurePort(fault.device || fault.source, fault.port || 'p0', {enabled: restore});
   }
   function verify(Network, data, fault) {
+    if(fault.kind==='ospf'){
+      try{
+        const n=new Network(data);let steps=0;n.next();while(n.queue.length&&++steps<3000)n.next();if(n.queue.length)return false;
+        return fault.expected.every(e=>e.neighbors.every(nb=>{const actual=n.ospfState[e.device]?.neighbors[nb.port];return actual?.state==='Full'&&actual.routerId===nb.routerId;})&&e.routes.every(r=>n.routes(e.device).some(actual=>actual.type==='ospf'&&actual.network===r.network&&actual.prefix===r.prefix&&actual.cost===r.cost)));
+      }catch(_){return false;}
+    }
     if (fault.kind === 'arp') {
       try {
         const n = new Network(data), drain = () => { let i=0; while(n.queue.length && ++i<3000)n.next(); return !n.queue.length; };

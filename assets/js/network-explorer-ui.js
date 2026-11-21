@@ -26,6 +26,7 @@
     examined = false,
     messageTimer;
   let candidateBase = null;
+  let ospfPaused = false;
   let refreshTroubleshooting = () => {};
   const networkIdentities = new WeakMap();
   function networkIdentity(network = net) {
@@ -531,12 +532,13 @@
     }
     const button = $("pause-animation");
     if (!button) return;
-    button.hidden = immediate;
-    button.disabled = !phaseCallback;
-    button.setAttribute("aria-pressed", String(flightPaused));
-    button.title = flightPaused ? "Resume animation" : "Pause animation";
+    button.hidden = immediate && !net.hasOspf();
+    button.disabled = !phaseCallback && !net.hasOspf();
+    if ($("ospf-step")) $("ospf-step").hidden = !net.hasOspf();
+    button.setAttribute("aria-pressed", String(flightPaused || (net.hasOspf() && ospfPaused)));
+    button.title = net.hasOspf() ? (ospfPaused ? "Run simulation" : "Pause simulation") : flightPaused ? "Resume animation" : "Pause animation";
     button.setAttribute("aria-label", button.title);
-    button.innerHTML = flightPaused
+    button.innerHTML = (flightPaused || (net.hasOspf() && ospfPaused))
       ? '<svg class="playback-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7Z"/></svg>'
       : '<svg class="playback-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>';
     $("traffic").classList.toggle("flight-paused", flightPaused);
@@ -597,9 +599,17 @@
     stop();
     staged = null;
     $("traffic").replaceChildren();
+    $("ospf-traffic").replaceChildren();
     if ($("examine").open) $("examine").close();
   }
+  function releaseOspfStage() {
+    if(staged?.report.ospf && net.ospfOnlyWork()) {stop();commit(true);$("traffic").replaceChildren();}
+  }
   function editable() {
+    if(net.hasOspf() && net.ospfOnlyWork() && (!staged || staged.report.ospf)){
+      if(staged){stop();staged=null;$("traffic").replaceChildren();}
+      return true;
+    }
     if (net.queue.length || staged) {
       say(
         "Finish the exchange or clear learned state before changing the network.",
@@ -613,7 +623,7 @@
     if (!editable()) return;
     safely(() => {
       configurationChange(fn);
-      net.reset();
+      if(net.hasOspf()) net.ospfTopologyChanged(); else net.reset();
       examined = false;
       render();
     });
@@ -758,7 +768,7 @@
                 esc(
                   r.type === "connected"
                     ? "Connected"
-                    : "Static" + (!r.active ? " - inactive" : ""),
+                    : r.type === "ospf" ? "OSPF - cost " + r.cost : "Static" + (!r.active ? " - inactive" : ""),
                 ) +
                 "</small></td><td>" +
                 esc(r.nextHop || "Direct") +
@@ -845,7 +855,7 @@
           ? "inside"
           : "none";
     return (
-      '<label>NAT role<select id="port-nat-role">' +
+      '<section class="nat-port"><div class="small-heading inspector-section-heading">NAT / PAT</div><label>NAT role<select id="port-nat-role">' +
       [
         ["none", "None"],
         ["inside", "Inside"],
@@ -862,7 +872,7 @@
             "</option>",
         )
         .join("") +
-      "</select></label>"
+      "</select></label></section>"
     );
   }
   function routePanel(d) {
@@ -2029,7 +2039,7 @@
             '"></label></div><label>DHCP relay server<input id="router-dhcp-relay" value="' +
             esc(p.dhcpRelay || "") +
             '" placeholder="Optional server IPv4 address"></label><p class="hint">Set relay on the client-facing interface to reach a DHCP server on another subnet.</p>' +
-            natRoleMarkup(d, p)
+            natRoleMarkup(d, p) + NetworkExplorerOSPFUI.portPanel(d, p, esc)
           : "") +
       '<footer><button id="close-port-config">Close</button></footer>';
     $("close-port-config").onclick = () => portConfig.close();
@@ -2097,6 +2107,25 @@
         });
         openPortConfig(deviceId, portId);
       };
+      if ($("port-ospf-mode")) {
+        const saveOspfPort = () => {
+          if (!editable()) { openPortConfig(deviceId, portId); return; }
+          const c = JSON.parse(JSON.stringify(net.device(deviceId).ospf));
+          c.interfaces[portId] = { mode: $("port-ospf-mode").value, cost: Number($("port-ospf-cost").value) };
+          try {
+            NetworkExplorerOSPF.validate(net.device(deviceId), c, net.devices);
+            configurationChange(() => net.configureOspf(deviceId, c));
+            render();
+            openPortConfig(deviceId, portId);
+          } catch (e) {
+            $("port-ospf-error").hidden = false;
+            $("port-ospf-error").textContent = e.message;
+          }
+        };
+        $("port-ospf-mode").onchange = saveOspfPort;
+        $("port-ospf-cost").onchange = saveOspfPort;
+        styleInspectorSelect("port-ospf-mode", "Participation", () => "");
+      }
       $("router-ip").onchange = save;
       $("router-prefix").onchange = save;
       $("router-dhcp-relay").onchange = (e) => {
@@ -2401,7 +2430,7 @@
     appOffsetKey = (type) =>
       type === "dhcp" ? "applicationOffset" : type + "Offset";
   function generatorPanel(d){
-    const c=d.generatorServer,r=net.generators[d.id],busy=!!(staged||net.queue.length);
+    const c=d.generatorServer,r=net.generators[d.id],busy=!!((staged&&!staged.report.ospf)||!net.ospfOnlyWork());
     const status=r?(r.status[0].toUpperCase()+r.status.slice(1)+' - '+r.sent+'/'+r.total+' sent'):'Ready';
     return '<form id="generator-settings"><div class="generator-toolbar"><button type="submit" aria-label="Run burst" title="Run burst" '+(busy?'disabled':'')+'><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 4 12 8-12 8Z"/></svg></button><button id="generator-stop" type="button" aria-label="Stop burst" title="Stop burst" '+(r?.status==='running'?'':'disabled')+'><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h12v12H6Z"/></svg></button><span role="status">'+esc(status)+'</span></div><p class="hint">Fills pending connections with SYNs. Use canvas Pause/Step to inspect.</p><label>Target IPv4<input id="generator-target" placeholder="Type @ to choose a host" autocomplete="off" value="'+esc(c.target)+'" required></label><div class="generator-fields"><label>TCP port<input id="generator-port" type="number" min="1" max="65535" value="'+c.port+'"></label><label>SYN count<input id="generator-count" type="number" min="1" max="100" value="'+c.count+'"></label><label>Speed<select id="generator-interval"><option value="10" '+(c.interval>=6?'selected':'')+'>Slow</option><option value="4" '+(c.interval>2&&c.interval<6?'selected':'')+'>Medium</option><option value="2" '+(c.interval<=2?'selected':'')+'>Fast</option></select></label></div><label>Availability check<select id="generator-probe"><option value="">No check</option>'+net.devices.filter(h=>h.id!==d.id&&h.browserServer?.enabled&&h.ip).map(h=>'<option value="'+h.id+'" '+(r?.probeId===h.id?'selected':'')+'>'+esc(h.name)+'</option>').join('')+'</select></label></form>'+(r?.probeId?'<p class="hint" role="status">Check: '+esc(net.httpPages[r.probeId]?.status||'Waiting')+'</p>':'');
   }
@@ -2409,7 +2438,7 @@
     styleInspectorSelect('generator-interval','Speed',()=> '');
     styleInspectorSelect('generator-probe','Check',()=> '');
     $('generator-probe-label').insertAdjacentHTML('beforeend',' <button type="button" class="generator-info" aria-label="About availability check" data-tooltip="Optional Browser request midway through the burst. Use an IP-based URL."><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v1"/></svg></button>');
-    $('generator-settings').onsubmit=e=>{e.preventDefault();safely(()=>{if(candidateBase||staged||net.queue.length)throw Error('Finish the current exchange first.');const config={enabled:true,target:$('generator-target').value.trim(),port:Number($('generator-port').value),count:Number($('generator-count').value),interval:Number($('generator-interval').value)},probe=$('generator-probe').value;NetworkExplorerDos.validate(config);d.generatorServer=config;net.generatorControl(d.id,'start',probe);running=true;stage();render();});};
+    $('generator-settings').onsubmit=e=>{e.preventDefault();safely(()=>{releaseOspfStage();if(candidateBase||staged||!net.ospfOnlyWork())throw Error('Finish the current exchange first.');const config={enabled:true,target:$('generator-target').value.trim(),port:Number($('generator-port').value),count:Number($('generator-count').value),interval:Number($('generator-interval').value)},probe=$('generator-probe').value;NetworkExplorerDos.validate(config);net.device(d.id).generatorServer=config;net.generatorControl(d.id,'start',probe);running=true;stage();render();});};
     $('generator-stop').onclick=()=>safely(()=>{net.generatorControl(d.id,'stop');if(staged)staged.trial.generatorControl(d.id,'stop');render();});
   }
   const capacityMonitors = new Map();
@@ -2839,8 +2868,9 @@
         throw Error(
           "Commit or revert candidate changes before starting traffic.",
         );
+      releaseOspfStage();
       const target=staged?.trial||net;
-      if ((staged || net.queue.length) && !target.isDosActive() && !target.isSpoofActive())
+      if ((staged || net.queue.length) && !target.isDosActive() && !target.isSpoofActive() && !target.ospfOnlyWork())
         throw Error("Finish or clear the current exchange first.");
       finishPlacement();
       cancelConnect();
@@ -2983,7 +3013,7 @@
       };
       if(a.type === "spoofer") NetworkExplorerArpSecurityUI.bindAttack($('inspector'),net,d,{
         styleSelect:styleInspectorSelect,
-        run:c=>safely(()=>{if(candidateBase||staged)throw Error('Finish the current exchange and commit candidate changes first.');net.configureSpoofer(d.id,c);net.spooferControl(d.id,'start');running=true;stage();render();}),
+        run:c=>safely(()=>{releaseOspfStage();if(candidateBase||staged)throw Error('Finish the current exchange and commit candidate changes first.');net.configureSpoofer(d.id,c);net.spooferControl(d.id,'start');running=true;stage();render();}),
         stop:()=>safely(()=>{net.spooferControl(d.id,'stop');if(staged)staged.trial.spooferControl(d.id,'stop');render();}),
       });
       else if(a.type === "generator") bindGenerator(d);
@@ -3000,8 +3030,11 @@
       else if (a.type === "dns") bindDnsPanel(d);
       else {
         const panel = $("inspector").querySelector(".dhcp-application");
-        panel.open = true;
         panel.querySelector("summary").remove();
+        const content = document.createElement("div");
+        content.className = panel.className;
+        content.append(...panel.childNodes);
+        panel.replaceWith(content);
         $("inspector").querySelector(".inspector-section-heading").remove();
         bindDhcpPools(d);
       }
@@ -3053,9 +3086,9 @@
 
   function dnsPanel(d) {
     return (
-      '<label><input type="checkbox" id="dns-enabled" ' +
+      '<label class="examine-watch-control dns-enable"><input type="checkbox" role="switch" id="dns-enabled" ' +
       (d.dnsServer.enabled ? "checked" : "") +
-      '> Enable DNS server</label><div class="small-heading inspector-section-heading">A records' +
+      '><span class="watch-switch-track" aria-hidden="true"></span><span>Enable DNS server</span></label><div class="small-heading inspector-section-heading">A records' +
       dhcpAction("Add DNS record", "M12 4v16M4 12h16", 'id="dns-add-record"') +
       '</div><div id="dns-records">' +
       d.dnsServer.records
@@ -3192,8 +3225,9 @@
     $("inspector-table").after(cache);
   }
   function startDns(id, name) {
+    releaseOspfStage();
     if (candidateBase) throw Error("Commit configuration first.");
-    if (staged || net.queue.length)
+    if (staged || (net.queue.length && !net.ospfOnlyWork()))
       throw Error("Finish the current exchange first.");
     finishPlacement();
     cancelConnect();
@@ -3347,11 +3381,12 @@
     };
   }
   function startDhcp(id) {
+    releaseOspfStage();
     if (candidateBase)
       throw Error(
         "Commit or revert candidate changes before starting traffic.",
       );
-    if (staged || net.queue.length)
+    if (staged || (net.queue.length && !net.ospfOnlyWork()))
       throw Error("Finish or clear the current exchange first.");
     finishPlacement();
     cancelConnect();
@@ -3542,8 +3577,58 @@
     }
   }
   let inspectorScrollOwner = null;
-  function inspector() {
+  let backgroundInspectorPending = false;
+  let inspectorInteractionTimer = null;
+  let inspectorPointerDown = false;
+  let inspectorScrollUntil = 0;
+  function inspectorScrolling() {
+    return inspectorPointerDown || performance.now() < inspectorScrollUntil;
+  }
+  function inspectorInUse() {
+    const pane = $('right-panel');
+    return inspectorScrolling() || pane.matches(':hover') || pane.contains(document.activeElement) || portConfig.open;
+  }
+  function flushBackgroundInspector() {
+    clearTimeout(inspectorInteractionTimer);
+    inspectorInteractionTimer = setTimeout(() => {
+      if (!backgroundInspectorPending || inspectorInUse()) return;
+      backgroundInspectorPending = false;
+      inspector();
+    }, 250);
+  }
+  $('right-panel').addEventListener('pointerleave', flushBackgroundInspector);
+  $('right-panel').addEventListener('focusout', flushBackgroundInspector);
+  portConfig.addEventListener('close', flushBackgroundInspector);
+  // Native scrollbar dragging and wheel momentum do not reliably retain :hover.
+  // Capture descendant scrolls, and protect the current pane from every rebuild.
+  function noteInspectorScroll() {
+    inspectorScrollUntil = performance.now() + 350;
+    clearTimeout(inspectorInteractionTimer);
+    inspectorInteractionTimer = setTimeout(flushBackgroundInspector, 400);
+  }
+  $('right-panel').addEventListener('scroll', noteInspectorScroll, { capture: true, passive: true });
+  $('right-panel').addEventListener('wheel', noteInspectorScroll, { passive: true });
+  window.addEventListener('pointerdown', e => {
+    const rect = $('right-panel').getBoundingClientRect();
+    inspectorPointerDown = e.clientX >= rect.left && e.clientX <= rect.right &&
+      e.clientY >= rect.top && e.clientY <= rect.bottom;
+  }, true);
+  function releaseInspectorPointer() {
+    if (!inspectorPointerDown) return;
+    inspectorPointerDown = false;
+    flushBackgroundInspector();
+  }
+  window.addEventListener('pointerup', releaseInspectorPointer, true);
+  window.addEventListener('pointercancel', releaseInspectorPointer, true);
+  window.addEventListener('blur', releaseInspectorPointer);
+  function inspector(background = false) {
     const sameOwner=inspectorScrollOwner===selected;
+    if (sameOwner && (inspectorScrolling() || (background && inspectorInUse()))) {
+      backgroundInspectorPending = true;
+      return;
+    }
+    backgroundInspectorPending = false;
+    if(sameOwner && document.activeElement?.closest(".ospf-panel") && ["INPUT","SELECT"].includes(document.activeElement.tagName))return;
     const scrollTop=$('inspector').querySelector('.application-inspector-content')?.scrollTop||0;
     const panelScroll=$('right-panel').scrollTop;
     const dock=$('inspector-capacity-monitor');
@@ -3616,7 +3701,7 @@
         (d.type === "switch"
           ? vlanPanel(d)
           : d.type === "router"
-            ? NetworkExplorerFirewallUI.panel(net,d,esc,expiryMarkup) + (d.firewallMode === "transparent" ? "" : natPanel(d) + routePanel(d))
+            ? NetworkExplorerFirewallUI.panel(net,d,esc,expiryMarkup) + (d.firewallMode === "transparent" ? "" : natPanel(d) + NetworkExplorerOSPFUI.panel(net,d,esc) + routePanel(d))
             : "") +
         '<div class="small-heading inspector-section-heading">' +
         (d.type === "switch" ? "MAC forwarding table" : "ARP cache") +
@@ -3680,6 +3765,7 @@
       if (d.type === "host") {
         styleInspectorSelect("host-os", "Operating system");
       }
+      NetworkExplorerOSPFUI.bind(net,d,{getNetwork:()=>net,styleSelect:styleInspectorSelect,change:fn=>{if(!editable())return;safely(()=>{document.activeElement?.blur();configurationChange(fn);render();});}});
       bindRoutes(d);
       bindNat(d);
       if(d.type === "router") NetworkExplorerFirewallUI.bind(net,d,mutate,styleInspectorSelect,(id,order)=>{openTool('events',true);if(!NetworkExplorerCapture.revealEvent(id,order))say('This packet is no longer in Activity. Run a fresh scan.');syncExternal();});
@@ -4562,9 +4648,13 @@
     examining = false,
   } = {}) {
     simulationExamining = examining;
+    // Protocol maintenance stays observable without marking the user's workspace busy.
+    if (net.hasOspf() && net.ospfOnlyWork() && (!staged || staged.report.ospf)) {
+      active = false;
+    }
     NetworkExplorerStatus.render($("sim-status"), { active, paused });
   }
-  function render() {
+  function render({ background = false, refreshInspector = true } = {}) {
     refreshTroubleshooting();
     refreshDevicePickers();
     updatePauseControl();
@@ -4572,7 +4662,7 @@
     refreshSearch();
     refreshPlatform();
     draw();
-    inspector();
+    if (refreshInspector) inspector(background);
     if (portConfig.open && portConfig.dataset.host === "true") {
       if (selected === portConfig.dataset.device && net.device(selected)?.type === "host") openPortConfig(portConfig.dataset.device, portConfig.dataset.port);
       else portConfig.close();
@@ -4584,7 +4674,7 @@
     setSimulationStatus({
       active: !!(flightPaused || staged || running || net.queue.length),
       paused:
-        flightPaused ||
+        (net.hasOspf() && ospfPaused) || flightPaused ||
         !!(staged && !phaseCallback) ||
         (!running && !!net.queue.length),
       examining: !!staged && !phaseCallback && simulationExamining,
@@ -4660,8 +4750,10 @@
       }
     }
   }
-  function animateFlights(reports) {
-    $("traffic").replaceChildren();
+  function animateFlights(reports, background = false) {
+    const layer = $(background ? "ospf-traffic" : "traffic");
+    if (!background) layer.replaceChildren();
+    if (background && Number($("speed").value) === 0) return;
     const motions = [],
       ns = "http://www.w3.org/2000/svg",
       duration = Number($("speed").value) / 1000;
@@ -4694,6 +4786,10 @@
           " while paused",
       );
       circle.flightReport = report;
+      if (background) {
+        circle.removeAttribute("tabindex");
+        circle.removeAttribute("role");
+      }
       const motion = document.createElementNS(ns, "animateMotion");
       motion.setAttribute(
         "path",
@@ -4703,7 +4799,8 @@
       motion.setAttribute("fill", "freeze");
       motion.setAttribute("begin", "indefinite");
       circle.append(motion);
-      $("traffic").append(circle);
+      layer.append(circle);
+      if (background) motion.addEventListener("endEvent", () => circle.remove(), { once: true });
       motions.push(motion);
     }
     const start = $("canvas").getCurrentTime();
@@ -4790,6 +4887,7 @@
     );
   }
   function stage() {
+    if(net.hasOspf() && ospfPaused) return;
     if ($("speed").value === "0") {
       fastForward();
       return;
@@ -4806,11 +4904,25 @@
       arrivedFlights.clear();
       $("traffic").replaceChildren();
       stop();
-      render();
+      render({ background: true, refreshInspector: !net.hasOspf() });
       return;
     }
     staged = { trial, report };
     flashFilterTraffic(report);
+    // Control-plane work must not occupy the foreground animation timeline.
+    // Preserve event order and Activity/Watch evidence, yielding between events.
+    if (report.ospf && !NetworkExplorerWatch.matches(net.device(report.device), report)) {
+      animateFlights([report], true);
+      commit(true);
+      render({ background: true, refreshInspector: !!report.ospfChanged });
+      if (running && net.queue.length) schedulePhase(stage, 0);
+      else if (!net.queue.length) {
+        stop();
+        $("traffic").replaceChildren();
+        updatePauseControl();
+      }
+      return;
+    }
     let duration = 100;
     if (report.link) {
       if (arrivedFlights.delete(report.order)) {
@@ -4819,6 +4931,7 @@
         const flights = net.queue.filter(
           (e) =>
             e.kind === "receive" &&
+            (!!e.frame?.ospf === !!report.ospf) &&
             e.time === report.time &&
             !arrivedFlights.has(e.order),
         );
@@ -4872,7 +4985,7 @@
           cell("TTL", frame.ttl ?? 64, "ttl") +
           cell(
             "Protocol",
-            frame.protocol === "TCP"
+            frame.protocol === "OSPF" ? "89 (OSPF)" : frame.protocol === "TCP"
               ? "6 (TCP)"
               : frame.protocol === "UDP"
                 ? "17 (UDP)"
@@ -4938,7 +5051,7 @@
                     (frame.giaddr ? " | Relay (giaddr) " + frame.giaddr : "")
                   : frame.protocol === "UDP"
                     ? "UDP " + frame.sport + " to " + frame.dport
-                    : frame.icmp +
+                    : frame.ospf ? "OSPF " + frame.ospf.message : frame.icmp +
                       (frame.code === 3 ? " (port unreachable)" : ""),
           ) +
           (frame.quote
@@ -5066,12 +5179,11 @@
           ? "<h3>Routing decision</h3>" +
             routeRows(d, r.routingTable, r.selectedRoute)
           : "") +
-        "<h3>Table before this decision</h3>" +
-        table(visibleTable(r.before, d), d.type) +
+        NetworkExplorerOSPFUI.snapshot(r,esc) +
+        (r.ospf ? "" : "<h3>Table before this decision</h3>" + table(visibleTable(r.before, d), d.type)) +
         '<div class="decision">' +
         r.notes.map((n) => "<p>" + esc(n) + "</p>").join("") +
-        "</div><h3>Table after this decision</h3>" +
-        table(visibleTable(r.after, d), d.type, r.clock) +
+        "</div>" + (r.ospf ? "" : "<h3>Table after this decision</h3>" + table(visibleTable(r.after, d), d.type, r.clock)) +
         (r.outputs.length
           ? "<p><strong>Send through:</strong> " +
             r.outputs
@@ -5091,6 +5203,8 @@
   }
   function commit(immediate = false) {
     if (!staged) return;
+    const background = !!staged.report.ospf && net.ospfOnlyWork();
+    const refreshInspector = !background || !!staged.report.ospfChanged;
     const oldCount = net.results.length;
     const layout = new Map(
       net.devices.map((d) => [
@@ -5118,7 +5232,7 @@
     net.age();
     net.devices.forEach((d) => Object.assign(d, layout.get(d.id)));
     staged = null;
-    if (!immediate) render();
+    if (!immediate) render({ background, refreshInspector });
     publishResults(oldCount);
     if (immediate) return;
     if (running && net.queue.length)
@@ -5126,7 +5240,7 @@
     else if (!net.queue.length) {
       stop();
       $("traffic").replaceChildren();
-      render();
+      render({ background, refreshInspector: !background });
     }
   }
   function publishResults(oldCount) {
@@ -5165,6 +5279,7 @@
   }
   function fastForward() {
     if (fastForwarding || (!staged && !net.queue.length)) return;
+    const background = net.hasOspf() && net.ospfOnlyWork() && (!staged || staged.report.ospf);
     stop();
     fastForwarding = true;
     running = true;
@@ -5176,7 +5291,8 @@
       if (staged) commit(true);
       // Execute the same engine decisions without animation or examination delays.
       let steps = 0;
-      while (net.queue.length) {
+      const ospfLimit = net.hasOspf() ? net.clock + 240 : Infinity;
+      while (net.queue.length && net.queue[0].time <= ospfLimit) {
         if (++steps > 10000)
           throw Error(
             "Fast forward stopped after 10,000 events. Check the topology for a forwarding loop.",
@@ -5197,7 +5313,7 @@
       fastForwarding = false;
       stop();
       examined = false;
-      render();
+      render({ background });
       refreshDhcp();
       refreshCountdowns();
       syncExternal();
@@ -5210,17 +5326,18 @@
       );
     finishPlacement();
     cancelConnect();
-    if (staged || net.queue.length)
-      throw Error("Finish or clear the current exchange first.");
+    // A preview owns the next committed state. Queue new probes there so its
+    // eventual commit cannot overwrite them; unrelated protocol traffic is not busy.
+    const trafficNetwork = staged?.trial || net;
     if (trace) {
-      net.traceroute(id, target);
+      trafficNetwork.traceroute(id, target);
       output(
         "Tracing route to " + target + " - up to 30 hops, one probe per hop.",
         id,
       );
     } else if (!/^\d+\.\d+\.\d+\.\d+$/.test(target))
-      net.lookupDns(id, target, true);
-    else net.ping(id, target);
+      trafficNetwork.lookupDns(id, target, true);
+    else trafficNetwork.ping(id, target);
     running = true;
     stage();
   }
@@ -5303,6 +5420,7 @@
     );
   }
   function command(raw) {
+    releaseOspfStage();
     const cmd = raw.trim().toLowerCase(),
       d = cliDevice();
     if (
@@ -6614,6 +6732,11 @@
     cancelConnect();
     render();
   });
+  for(const [id,triangle]of [['example-ospf',true]])registerExample(id,()=>{
+    if(net.devices.length&&!confirm('Replace this network with the OSPF example?'))return;
+    discard();candidateBase=null;ospfPaused=false;
+    const e=NetworkExplorerOSPF.example(NetworkExplorer.Network,triangle);net=e.network;selected=e.clientId;examined=false;cancelConnect();openInspector();render();say('OSPF is discovering neighbors. Inspect a router or filter Activity with ospf.');
+  });
   registerExample("example-wireless", () => {
     if(net.devices.length&&!confirm("Replace this network with the Wireless LAN example?"))return;
     discard();candidateBase=null;const e=NetworkExplorerWireless.example(NetworkExplorer.Network);net=e.network;selected=e.clientId;examined=false;cancelConnect();openInspector();render();say("Wi-Fi is associated and DHCP is complete. Ping 192.168.50.10. Open Incidents > New incident to practice Wi-Fi authentication.");
@@ -6743,7 +6866,7 @@
     selected = id;
     contextTarget = id;
     render();
-    const busy = Boolean(net.queue.length || staged);
+    const busy = Boolean((net.queue.length && !net.ospfOnlyWork()) || (staged && !staged.report.ospf));
     const actions = [];
     const location = point({
       clientX: Number.isFinite(event.clientX)
@@ -8055,6 +8178,7 @@
   fastForwardButton.onclick = fastForward;
   speedGroup.append(fastForwardButton, pauseAnimation);
   pauseAnimation.onclick = () => {
+    if(net.hasOspf()){ospfPaused=!ospfPaused;if(!phaseCallback){updatePauseControl();if(!ospfPaused&&net.queue.length&&!staged){running=true;stage();}return;}}
     if (!phaseCallback) return;
     if (flightPaused) {
       flightPaused = false;
@@ -8071,6 +8195,15 @@
       updatePauseControl();
     }
   };
+  const ospfStep = document.createElement('button');
+  ospfStep.id='ospf-step';ospfStep.type='button';ospfStep.className='canvas-icon-button';ospfStep.title='Step one simulation event';ospfStep.setAttribute('aria-label',ospfStep.title);
+  ospfStep.innerHTML='<svg class="playback-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 10 7-10 7ZM19 5v14"/></svg>';
+  speedGroup.append(ospfStep);
+  ospfStep.onclick=()=>{if(!net.hasOspf())return;ospfPaused=true;stop();if($('examine').open)$('examine').close();if(staged)commit(true);else{if(!net.queue.length)net.advanceOspf();const count=net.results.length;net.next();publishResults(count);}render();updatePauseControl();};
+  setInterval(()=>{if(!net.hasOspf()||ospfPaused||flightPaused||staged||running||candidateBase||$('examine').open||simulationExamining||document.body.classList.contains('welcome-open'))return;
+    if(!net.queue.length)net.advanceOspf();
+    if(net.queue.length){running=true;stage();}else updatePauseControl();
+  },1000);
   updatePauseControl();
   const flightInspection = document.createElement("dialog");
   flightInspection.id = "flight-inspection";

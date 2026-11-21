@@ -28,7 +28,7 @@
  }
  function start(n,id){
   const d=n.device(id),c=d?.spooferServer;validate(c);if(!d.ip||d.type!=='host')throw Error('Install ARP Spoofer on a configured host.');
-  if(n.queue.length)throw Error('Finish the current exchange before starting another attack.');
+  if(n.queue.length&&!n.ospfOnlyWork())throw Error('Finish the current exchange before starting another attack.');
   const subnet=x=>x.split('.').reduce((v,b)=>(v*256+Number(b))>>>0,0)&(0xffffffff<<(32-d.prefix));
   if([c.victim,c.peer].some(x=>x===d.ip||subnet(x)!==subnet(d.ip)))throw Error('Both endpoints must be other addresses in the attacker subnet and reachable on its local VLAN.');
   n.spoofers[id]={status:'running',sent:0,config:clone(c),captures:[],intercepted:0};n.enqueue({kind:'arp-spoof-send',device:id,attempt:0});

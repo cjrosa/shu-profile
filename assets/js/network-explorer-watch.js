@@ -2,7 +2,7 @@
 (function (root) {
   "use strict";
   const labels = {
-    arp: "ARP / neighbor resolution", routing: "Routing / longest-prefix match",
+    arp: "ARP / neighbor resolution", routing: "Routing / OSPF / longest-prefix match",
     switching: "MAC learning / switching", nat: "NAT / PAT", firewall: "Firewall policy",
     icmp: "ICMP / ping", tcp: "TCP", udp: "UDP / DNS / DHCP", other: "Other decisions"
   };
@@ -14,7 +14,7 @@
   }
   function categories(d, r) {
     const result = [], f = r.frame || {};
-    if (r.routingTable || r.selectedRoute) result.push("routing");
+    if (r.routingTable || r.selectedRoute || r.ospf) result.push("routing");
     if (r.nat) result.push("nat");
     if (r.firewall) result.push("firewall");
     if (f.type === "ARP") result.push("arp");
@@ -30,7 +30,7 @@
     return result.length ? result : ["other"];
   }
   function matches(d, r) {
-    return !!d?.watch && !r.kind?.endsWith("-application") &&
+    return !!d?.watch && !(r.ospf && !r.ospfChanged) && !r.kind?.endsWith("-application") &&
       (!Array.isArray(d.watchDecisions) || categories(d, r).some(k => d.watchDecisions.includes(k)));
   }
   const api = { labels, options, categories, matches };

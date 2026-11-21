@@ -8,10 +8,10 @@
     if (vlan) return r.e.vlan === Number(vlan[1]);
     if (f === "tcp") return ["TCP", "HTTP", "TLS"].includes(r.proto);
     if (f === "udp") return ["UDP", "DHCP", "DNS"].includes(r.proto);
-    if (["arp", "icmp", "dhcp", "dns", "http", "tls", "event"].includes(f))
+    if (["arp", "icmp", "dhcp", "dns", "http", "tls", "ospf", "event"].includes(f))
       return r.proto.toLowerCase() === f;
     if (["ip", "ipv4"].includes(f))
-      return ["ICMP", "UDP", "DHCP", "DNS", "TCP", "HTTP", "TLS"].includes(r.proto);
+      return ["ICMP", "UDP", "DHCP", "DNS", "TCP", "HTTP", "TLS", "OSPF"].includes(r.proto);
     if (["broadcast", "bcast"].includes(f))
       return r.dst === "ff:ff:ff:ff:ff:ff";
     const port = f.match(/^(tcp|udp)\.(port|srcport|dstport)\s*==\s*(\d+)$/);

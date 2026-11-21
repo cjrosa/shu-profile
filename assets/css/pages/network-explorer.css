@@ -774,6 +774,15 @@ footer {
     animation: none;
   }
 }
+/* OSPF uses existing Inspector form/table components. */
+.ospf-panel .route-table td { vertical-align: middle; }
+.ospf-panel input[type="number"] { min-width: 0; width: 100%; }
+.ospf-panel .route-table th:last-child { width: 5.5rem; }
+.ospf-fields { display: grid; grid-template-columns: minmax(0, 1fr) 5rem; gap: .65rem; align-items: start; }
+.ospf-fields > label, .ospf-fields > .inspector-picker { min-width: 0; margin: 0; }
+.ospf-interface { margin-block: .75rem; }
+.ospf-panel details { margin-block: .65rem; }
+.ospf-panel pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 /* Keep the device hit area without drawing a surrounding card or ring. */
 .node .device-body,
 .node.selected .device-body {
@@ -10040,3 +10049,62 @@ body[data-platform="paloalto"] #inspector .vlan-row { grid-template-columns:minm
 #inspector .wireless-settings .inspector-picker [role="option"] { width: 100%; min-height: 29px; padding: 4px 5px; font-size: 11px; }
 #inspector .wireless-settings :is(input,select,button):focus { outline: 1px solid #6488b4; outline-offset: 1px; box-shadow: none; }
 #inspector .wireless-settings .inspector-picker [role="option"]:focus { outline-offset: -1px; }
+
+/* Match the borderless router configuration sections. */
+#inspector .ospf-panel { padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.ospf-panel:has(#ospf-enabled:not(:checked)) > :not(:first-child) { display: none; }
+#port-config .ospf-port {
+  margin: 10px 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 80px;
+  gap: 6px 10px;
+}
+#port-config .ospf-port .inspector-section-heading {
+  grid-column: 1 / -1;
+  margin: 0;
+  min-height: 28px;
+  padding: 3px 6px;
+}
+#port-config #port-ospf-settings:not([hidden]) { display: contents; }
+#port-config .ospf-port .inspector-picker,
+#port-config .ospf-port label { margin: 0; min-width: 0; gap: 4px; font-size: 12px; }
+#port-config .ospf-port input,
+#port-config .ospf-port .inspector-picker > button {
+  margin: 0;
+  min-height: 32px;
+  height: 32px;
+  padding: 6px 9px;
+  font-size: 12px;
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+}
+#port-config .ospf-port .hint { grid-column: 1 / -1; margin: 0; font-size: 11px; line-height: 1.4; }
+#port-config .nat-port {
+  margin: 10px 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+#port-config .nat-port .inspector-section-heading {
+  margin: 0 0 6px;
+  min-height: 28px;
+  padding: 3px 6px;
+}
+#port-config .nat-port label { margin: 0; font-size: 12px; }
+#inspector .ospf-tabs { margin-top: 10px; }
+#inspector .ospf-lsa { margin: 8px 0; padding: 8px 0; border: 0; border-bottom: 1px solid var(--line); background: none; box-shadow: none; border-radius: 0; }
+#inspector .ospf-lsa-heading { font-size: 12px; line-height: 1.4; }
+#inspector .ospf-lsa-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 3px 0 6px; color: var(--muted); font-size: 11px; }
+#inspector .ospf-lsa-table { width: 100%; margin: 4px 0; }
+#inspector .ospf-lsa-table th, #inspector .ospf-lsa-table td { padding: 4px 6px; font-size: 11px; }
+#inspector .ospf-lsa-table th:last-child, #inspector .ospf-lsa-table td:last-child { width: 3rem; text-align: right; }
+#inspector .ospf-lsa code { font-family: "Courier New", monospace; font-size: inherit; }
+#inspector .dns-enable { border: 0; background: none; padding: 0; justify-content: flex-start; }

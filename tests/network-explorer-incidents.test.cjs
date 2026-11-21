@@ -12,7 +12,7 @@ for(const area of incidents.catalog)test(area.id+' incidents fail, repair, and p
   }
   assert.equal(JSON.stringify(baseline),snapshot);
 });
-for(const area of ['arp','firewall','wireless'])test(area+' offers distinct faults and avoids immediate repeats',()=>{
+for(const area of ['arp','firewall','wireless','ospf'])test(area+' offers distinct faults and avoids immediate repeats',()=>{
   const data=incidents.prepare(Network,area,lab,()=>.45,'intermediate');
   const first=incidents.choose(Network,data,area,lab,()=>0),next=incidents.choose(Network,data,area,lab,()=>0,first.signature);
   assert.notEqual(first.fault.variant,next.fault.variant);
@@ -53,4 +53,31 @@ for(const area of incidents.catalog)test(area.id+' supports every network comple
     }
   }
   assert.ok(sizes[0]<sizes[1]&&sizes[1]<sizes[2],JSON.stringify(sizes));
+});
+
+test('OSPF reports describe routing symptoms without disclosing the chosen fault',()=>{
+ const baseline=incidents.prepare(Network,'ospf',lab,()=>.5,'intermediate');
+ const faults=incidents.candidates(Network,baseline,'ospf',lab);
+ assert.deepEqual([...new Set(faults.map(f=>f.variant))].sort(),['cost','disabled','passive']);
+ for(const fault of faults){
+  const report=lab.incidentReport(fault,()=>.99);
+  assert.match(report.body,/alternate path/);
+  assert.doesNotMatch(report.body,/disabled|Passive|raised|cannot reach/);
+ }
+});
+
+test('gateway and interface incidents recognize a saved healthy OSPF triangle',()=>{
+ const OSPF=require('../assets/js/network-explorer-ospf.js');
+ const {network:n}=OSPF.example(Network,true),data=n.save(),snapshot=JSON.stringify(n);
+ for(const area of ['routing','interfaces']){
+  const faults=incidents.candidates(Network,data,area,lab);
+  assert.ok(faults.length,area+' supports the current network before live convergence');
+  for(const fault of faults){
+   assert.ok(lab.verify(Network,data,fault));
+   const broken=new Network(data);lab.apply(broken,fault);
+   assert.equal(lab.verify(Network,broken.save(),fault),false);
+   lab.apply(broken,fault,true);assert.ok(lab.verify(Network,broken.save(),fault));
+  }
+ }
+ assert.equal(JSON.stringify(n),snapshot,'compatibility checks leave the live network untouched');
 });

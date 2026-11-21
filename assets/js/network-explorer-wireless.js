@@ -34,7 +34,7 @@
       const l=base.connect.call(this,a,ap,b,bp,id);if(radio)l.medium='wifi';return l;
     };
     P.joinWifi=function(id,apId,password){
-      if(this.queue.length)throw Error('Finish the exchange first.');
+      if(this.queue.length&&!this.ospfOnlyWork())throw Error('Finish the exchange first.');
       const d=this.device(id),a=this.device(apId);if(!d?.wifi||a?.role!=='ap')throw Error('Select a wireless laptop and access point.');
       if(typeof password!=='string'||password.length>63)throw Error('Password must be at most 63 characters.');
       const old=this.links.find(l=>l.medium==='wifi'&&(l.a===id||l.b===id));

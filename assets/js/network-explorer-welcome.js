@@ -87,6 +87,7 @@
     'example-dns': server(66,17) + '<rect x="5" y="13" width="53" height="19" rx="4" fill="#fff" stroke="#91adbf"/><text x="31" y="26" text-anchor="middle" fill="#42657f" stroke="none" font-size="10" font-family="sans-serif">www.</text><path d="M20 34v16h39m-5-4 5 4-5 4" fill="none" stroke="#4c8986" stroke-width="2"/>' + packet(41,47),
     'example-vlans': '<rect x="2" y="4" width="44" height="55" rx="8" fill="#dceee9"/><rect x="50" y="4" width="44" height="55" rx="8" fill="#e2e8f5"/>' + wire('M20 18 48 40 76 18M20 49 48 40 76 49') + [20,76].map(x=>miniDevice('host',x,18,.3)+miniDevice('host',x,49,.3)).join('') + miniDevice('switch',48,36,.35),
     'example-routed': routedArt,
+    'example-ospf': wire('M22 20 48 51 74 20','#4c8986') + '<path d="M22 20H74" fill="none" stroke="#8daabc" stroke-width="2"/>' + miniDevice('router',22,20,.34) + miniDevice('router',74,20,.34) + miniDevice('router',48,51,.34) + packet(30,33,'#4c8986') + packet(59,33,'#4c8986'),
     'example-static': wire('M9 42 32 24H66L87 42') + miniDevice('host',11,44,.3) + miniDevice('router',32,24,.4) + miniDevice('router',66,24,.4) + miniDevice('host',86,44,.3) + packet(45,21),
     'example-dhcp-relay': wire('M12 45 34 25H64L83 43') + miniDevice('host',12,45,.3) + miniDevice('router',34,25,.34) + miniDevice('router',64,25,.34) + server(73,34) + '<path d="M25 9h45m-5-4 5 4-5 4" fill="none" stroke="#4c8986" stroke-width="2"/>',
     'example-http': browserArt,
@@ -112,6 +113,7 @@
       "Advanced",
       [
         "example-static",
+        "example-ospf",
         "example-dhcp-relay",
         "example-internet",
         "example-complex",

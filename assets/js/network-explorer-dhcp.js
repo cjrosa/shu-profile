@@ -26,7 +26,7 @@
   function configure(n,id,c){const d=n.device(id);if(d?.type!=='host')throw Error('Select a host.');validate(d,c);d.dhcpServer=clone(c);n.reset();}
   function reset(n){n.dhcpPending={};n.dhcpLeases??={};for(const [id,rows]of Object.entries(n.dhcpLeases)){if(!n.device(id)){delete n.dhcpLeases[id];continue;}for(const [mac,r]of Object.entries(rows))if(r.state==='offered')delete rows[mac];}}
   function age(n,now){let changed=false;for(const rows of Object.values(n.dhcpLeases||{}))for(const [mac,r]of Object.entries(rows))if(r.expiresAt<=now){delete rows[mac];changed=true;}for(const d of n.devices)if(d.lease?.expiresAt<=now){clearClient(d);changed=true;}return changed;}
-  function start(n,id){const d=n.device(id);if(d?.type!=='host'||d.addressMode!=='dhcp')throw Error('Choose Automatic (DHCP) addressing on this host first.');if(n.queue.length)throw Error('Finish or clear the current exchange first.');n.age();n.enqueue({kind:'dhcp-start',device:id});}
+  function start(n,id){const d=n.device(id);if(d?.type!=='host'||d.addressMode!=='dhcp')throw Error('Choose Automatic (DHCP) addressing on this host first.');if(n.queue.length&&!n.ospfOnlyWork())throw Error('Finish or clear the current exchange first.');n.age();n.enqueue({kind:'dhcp-start',device:id});}
   function handle(n,e,d,p,send,emitIp,hostHop){
    const notes=[],result=title=>({title,notes}),finish=(ok,message)=>{delete n.dhcpPending[d.id];n.queue=n.queue.filter(q=>!(q.kind==='dhcp-timeout'&&q.device===d.id));n.results.push({device:d.id,dhcp:true,ok,message});};
    const packet=(message,fields={})=>({type:'IPv4',protocol:'UDP',dhcp:message,ttl:64,...fields});

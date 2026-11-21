@@ -3,6 +3,7 @@
   "use strict";
   const handlers = new Map();
   const examples = {
+    "example-ospf": {title:"OSPF: three-router network",description:"Explore neighbor discovery, learned routes, and lowest-cost paths across three connected LANs."},
     "example-wireless": {title:"Wireless LAN",description:"Join Wi-Fi, acquire DHCP, and bridge to Ethernet."},
     "example-arp-drop": {title:"ARP: gateway impersonation",description:"Poison a client cache, interrupt service, and recover with switch inspection."},
     "example-arp-intercept": {title:"ARP: hidden interception",description:"Keep HTTP working through an attacker and inspect what is visible."},

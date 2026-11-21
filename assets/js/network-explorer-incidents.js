@@ -3,7 +3,8 @@
   const clone=x=>JSON.parse(JSON.stringify(x));
   const catalog=[
     {id:'interfaces',title:'Interfaces',group:'Connectivity',level:'Basic',featured:true},
-    {id:'routing',title:'Routing',group:'Connectivity',level:'Intermediate'},
+    {id:'routing',title:'Default gateways',group:'Connectivity',level:'Intermediate'},
+    {id:'ospf',title:'Dynamic routing',group:'Connectivity',level:'Intermediate'},
     {id:'vlans',title:'VLANs',group:'Connectivity',level:'Intermediate'},
     {id:'dns',title:'DNS',group:'Connectivity',level:'Intermediate',featured:true},
     {id:'dhcp',title:'DHCP',group:'Connectivity',level:'Intermediate'},
@@ -19,6 +20,22 @@
     if(['interfaces','routing','vlans'].includes(area)){
       const difficulty={interfaces:'easy',routing:'gateway',vlans:'hard'}[area];
       for(let i=0;i<8;i++)try{const f=lab.create(Network,data,()=>i/8,difficulty);if(!result.some(x=>JSON.stringify(x)===JSON.stringify(f)))result.push(f);}catch(_){}
+    }else if(area==='ospf'){
+      const n=new Network(data);if(!n.hasOspf())return result;
+      let steps=0;n.next();while(n.queue.length&&++steps<3000)n.next();if(n.queue.length)return result;
+      const hosts=data.devices.filter(d=>d.type==='host'&&d.ip);if(hosts.length<2)return result;
+      const expected=Object.entries(n.ospfState).map(([device,state])=>({device,neighbors:Object.entries(state.neighbors).filter(([,nb])=>nb.state==='Full').map(([port,nb])=>({port,routerId:nb.routerId})),routes:n.routes(device).filter(r=>r.type==='ospf').map(r=>({network:r.network,prefix:r.prefix,cost:r.cost}))}));
+      for(const d of data.devices.filter(d=>d.ospf?.enabled)){
+        const base={kind:'ospf',device:d.id,deviceName:d.name,source:hosts[0].id,sourceName:hosts[0].name,target:hosts.at(-1).ip,original:clone(d.ospf),method:'configureOspf',expected,testLabel:'OSPF neighbors and route costs',symptom:'Dynamic routing no longer matches the healthy network. Connectivity may still work through an alternate path.',hints:['Compare OSPF neighbors and learned routes across the routers. A successful ping alone does not prove routing is healthy.','Check OSPF enablement, transit-interface participation, and interface costs.','Restore the affected router or interface settings and verify neighbor adjacencies and route costs.'],look:'Inspect OSPF neighbors, interface settings, and learned route costs.'};
+        add({...base,variant:'disabled',policy:{...clone(d.ospf),enabled:false},reveal:'OSPF was disabled on '+d.name+'. Enable it and let neighbors synchronize.'});
+        for(const p of d.ports.filter(p=>d.ospf.interfaces[p.id]?.mode==='active')){
+          for(const variant of ['passive','cost']){
+            const policy=clone(d.ospf);
+            if(variant==='passive')policy.interfaces[p.id].mode='passive';else policy.interfaces[p.id].cost=Math.min(65535,policy.interfaces[p.id].cost+20);
+            add({...base,port:p.id,variant,policy,reveal:variant==='passive'?p.name+' on '+d.name+' was made Passive. Restore Active participation.':p.name+' on '+d.name+' had its OSPF cost raised. Restore cost '+d.ospf.interfaces[p.id].cost+'.'});
+          }
+        }
+      }
     }else if(area==='arp'){
       for(const attacker of data.devices.filter(d=>d.spooferServer?.enabled)){
         const cfg=attacker.spooferServer, source=data.devices.find(d=>d.ip===cfg.victim&&d.browserServer?.enabled);
@@ -72,7 +89,18 @@
     const examples=root.NetworkExplorerExamples||(typeof require==='function'?require('./network-explorer-examples.js'):null);
     const wireless=root.NetworkExplorerWireless||(typeof require==='function'?require('./network-explorer-wireless.js'):null);
     let n;
-    if(area==='arp')n=examples.arpSecurity(Network,'protected').network;
+    if(area==='ospf'){
+      const ospf=root.NetworkExplorerOSPF||(typeof require==='function'?require('./network-explorer-ospf.js'):null);
+      n=ospf.example(Network,complexity!=='basic').network;
+      if(complexity==='advanced'){
+        const host=n.devices.find(d=>d.type==='host'),link=n.links.find(l=>l.a===host.id||l.b===host.id);
+        const router=n.device(link.a===host.id?link.b:link.a),port=link.a===router.id?link.ap:link.bp;
+        n.links=n.links.filter(l=>l.id!==link.id);
+        const sw=n.add('switch',host.x,host.y-70);n.connect(router.id,port,sw.id,'p0');n.connect(host.id,'p0',sw.id,'p1');
+        for(let i=0;i<2;i++){const h=n.add('host',host.x+100*(i+1),host.y-140);n.configure(h.id,'192.168.1.'+(20+i),24);n.configureGateway(h.id,host.gateway);n.connect(h.id,'p0',sw.id,'p'+(i+2));}
+      }
+    }
+    else if(area==='arp')n=examples.arpSecurity(Network,'protected').network;
     else if(area==='firewall')n=examples.firewall(Network).network;
     else if(area==='wireless')n=wireless.example(Network).network;
     else if(['dns','dhcp','web'].includes(area))n=new Network(lab.generateBroken(Network,complexity,random,area).baseline);
@@ -123,6 +151,7 @@
     const search=dialog.querySelector('input'),[category,level]=dialog.querySelectorAll('select'),results=dialog.querySelector('.incident-results'),error=dialog.querySelector('.incident-error'),startButton=dialog.querySelector('[data-start]');
     const glyphs={
       interfaces:'<rect x="4" y="5" width="16" height="12" rx="2"/><path d="M8 9v4m4-4v4m4-4v4M9 17v4h6v-4"/>',
+      ospf:'<circle cx="5" cy="6" r="3"/><circle cx="19" cy="6" r="3"/><circle cx="12" cy="19" r="3"/><path d="M8 6h8M6 9l4 7m8-7-4 7"/>',
       routing:'<path d="M3 8h16m-4-4 4 4-4 4M21 16H5m4-4-4 4 4 4"/>',
       vlans:'<rect x="2" y="3" width="8" height="6" rx="1"/><rect x="14" y="15" width="8" height="6" rx="1"/><path d="M6 9v9h8M14 5h7M18 2v6M2 13h3"/>',
       dns:'<circle cx="10" cy="10" r="7"/><path d="m15 15 6 6M3 10h14M10 3c-4 4-4 10 0 14m0-14c4 4 4 10 0 14"/>',
