@@ -338,3 +338,10 @@ body.tour-open #tour-panel{inset:0 0 0 auto;width:var(--tour-width);max-width:no
 .subdivision-purpose h3 svg{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
 .subdivision-purpose .intro{margin:0 0 9px;color:var(--text2)}
 .subdivision-purpose .parent-span{margin:10px -14px 0;padding:9px 14px;border:0;border-top:1px solid #b9d9cc;border-radius:0 0 8px 0;background:transparent;color:var(--teal-text)}
+.comparison-svg .svg-ip{font-family:'Courier New',Courier,monospace;font-size:11px}
+.comparison-svg .svg-label{font-size:12px}
+.comparison-svg .svg-note{font-size:10px}
+.range-svg .svg-ip{font-family:'Courier New',Courier,monospace;font-size:11px}
+.range-svg .svg-label{font-size:12px}
+.range-svg .svg-note{font-size:10px}
+.bit-allocation #bar-net,.bit-allocation #bar-host{font-weight:700}

@@ -196,59 +196,59 @@ function lesson(title, formula, note) {
   return '<article class="lesson"><h3>'+title+'</h3><code>'+formula+'</code><p>'+note+'</p></article>';
 }
 function rangeDiagram(s, titleId='range-svg-title') {
-  const start='<svg class="teaching-svg range-svg" viewBox="0 0 800 156" role="img" aria-labelledby="'+titleId+'"><title id="'+titleId+'">Address block '+numToIP(s.network)+'/'+s.prefix+', from '+numToIP(s.network)+' to '+numToIP(s.end)+': '+fmt(s.usable)+' usable addresses</title>'+
+  const start='<svg class="teaching-svg range-svg" viewBox="0 0 800 136" role="img" aria-labelledby="'+titleId+'"><title id="'+titleId+'">Address block '+numToIP(s.network)+'/'+s.prefix+', from '+numToIP(s.network)+' to '+numToIP(s.end)+': '+fmt(s.usable)+' usable addresses</title>'+
     '<text x="400" y="19" text-anchor="middle" class="svg-label">Entire <tspan class="svg-prefix">/'+s.prefix+'</tspan> block · '+fmt(s.size)+' total address'+(s.size===1?'':'es')+'</text>'+
     '<path d="M24 30H776M24 26V34M776 26V34" fill="none" stroke="#52677c" stroke-width="1"/>';
   if (s.prefix===32) {
     return start+
-      '<rect x="24" y="42" width="752" height="58" rx="8" fill="#e8f5ef" stroke="#7bc7aa"/>'+
-      '<text x="400" y="65" text-anchor="middle" class="svg-label">Single host · 1 usable address</text>'+
-      '<text x="400" y="86" text-anchor="middle" class="svg-ip">'+numToIP(s.ip)+'</text>'+
-      '<text x="400" y="126" text-anchor="middle" class="svg-note">First and last are the same address. No reserved network or broadcast address.</text></svg>';
+      '<rect x="24" y="38" width="752" height="50" rx="8" fill="#e8f5ef" stroke="#7bc7aa"/>'+
+      '<text x="400" y="59" text-anchor="middle" class="svg-label">Single host · 1 usable address</text>'+
+      '<text x="400" y="78" text-anchor="middle" class="svg-ip">'+numToIP(s.ip)+'</text>'+
+      '<text x="400" y="112" text-anchor="middle" class="svg-note">First and last are the same address. No reserved network or broadcast address.</text></svg>';
   }
   if (s.prefix===31) {
     return start+
-      '<rect x="24" y="42" width="372" height="58" rx="8" fill="#e8f5ef" stroke="#7bc7aa"/>'+
-      '<rect x="404" y="42" width="372" height="58" rx="8" fill="#e8f5ef" stroke="#7bc7aa"/>'+
-      '<text x="210" y="65" text-anchor="middle" class="svg-label">First endpoint · usable</text>'+
-      '<text x="590" y="65" text-anchor="middle" class="svg-label">Second endpoint · usable</text>'+
-      '<text x="210" y="86" text-anchor="middle" class="svg-ip">'+numToIP(s.first)+'</text>'+
-      '<text x="590" y="86" text-anchor="middle" class="svg-ip">'+numToIP(s.last)+'</text>'+
-      '<text x="400" y="126" text-anchor="middle" class="svg-note">Two adjacent addresses in one point-to-point block. Both are usable.</text></svg>';
+      '<rect x="24" y="38" width="372" height="50" rx="8" fill="#e8f5ef" stroke="#7bc7aa"/>'+
+      '<rect x="404" y="38" width="372" height="50" rx="8" fill="#e8f5ef" stroke="#7bc7aa"/>'+
+      '<text x="210" y="59" text-anchor="middle" class="svg-label">First endpoint · usable</text>'+
+      '<text x="590" y="59" text-anchor="middle" class="svg-label">Second endpoint · usable</text>'+
+      '<text x="210" y="78" text-anchor="middle" class="svg-ip">'+numToIP(s.first)+'</text>'+
+      '<text x="590" y="78" text-anchor="middle" class="svg-ip">'+numToIP(s.last)+'</text>'+
+      '<text x="400" y="112" text-anchor="middle" class="svg-note">Two adjacent addresses in one point-to-point block. Both are usable.</text></svg>';
   }
   return start+
-    '<rect x="24" y="42" width="160" height="58" rx="8" fill="#eaf3fa" stroke="#88b5dc"/>'+
-    '<rect x="192" y="42" width="416" height="58" rx="8" fill="#e8f5ef" stroke="#7bc7aa"/>'+
-    '<rect x="616" y="42" width="160" height="58" rx="8" fill="#fff0d4" stroke="#d7b16d"/>'+
-    '<text x="104" y="59" text-anchor="middle" class="svg-label">Network</text>'+
-    '<text x="104" y="75" text-anchor="middle" class="svg-note">1 reserved address</text>'+
-    '<text x="104" y="91" text-anchor="middle" class="svg-ip">'+numToIP(s.network)+'</text>'+
-    '<text x="400" y="60" text-anchor="middle" class="svg-label">'+fmt(s.usable)+' usable addresses</text>'+
-    '<text x="204" y="76" class="svg-note">First usable</text>'+
-    '<text x="596" y="76" text-anchor="end" class="svg-note">Last usable</text>'+
-    '<text x="204" y="92" class="svg-ip">'+numToIP(s.first)+'</text>'+
-    '<text x="596" y="92" text-anchor="end" class="svg-ip">'+numToIP(s.last)+'</text>'+
-    '<text x="696" y="59" text-anchor="middle" class="svg-label">Broadcast</text>'+
-    '<text x="696" y="75" text-anchor="middle" class="svg-note">1 reserved address</text>'+
-    '<text x="696" y="91" text-anchor="middle" class="svg-ip">'+numToIP(s.end)+'</text>'+
-    '<path d="M192 112H608M192 108V116M608 108V116" fill="none" stroke="#216c60" stroke-width="1"/>'+
-    '<text x="400" y="130" text-anchor="middle" class="svg-note">Usable address span · includes both ends</text>'+
-    '<text x="400" y="149" text-anchor="middle" class="svg-note">Lowest to highest. Cell widths are schematic, not proportional.</text></svg>';
+    '<rect x="24" y="38" width="160" height="50" rx="8" fill="#eaf3fa" stroke="#88b5dc"/>'+
+    '<rect x="192" y="38" width="416" height="50" rx="8" fill="#e8f5ef" stroke="#7bc7aa"/>'+
+    '<rect x="616" y="38" width="160" height="50" rx="8" fill="#fff0d4" stroke="#d7b16d"/>'+
+    '<text x="104" y="53" text-anchor="middle" class="svg-label">Network</text>'+
+    '<text x="104" y="67" text-anchor="middle" class="svg-note">1 reserved address</text>'+
+    '<text x="104" y="81" text-anchor="middle" class="svg-ip">'+numToIP(s.network)+'</text>'+
+    '<text x="400" y="54" text-anchor="middle" class="svg-label">'+fmt(s.usable)+' usable addresses</text>'+
+    '<text x="204" y="68" class="svg-note">First usable</text>'+
+    '<text x="596" y="68" text-anchor="end" class="svg-note">Last usable</text>'+
+    '<text x="204" y="82" class="svg-ip">'+numToIP(s.first)+'</text>'+
+    '<text x="596" y="82" text-anchor="end" class="svg-ip">'+numToIP(s.last)+'</text>'+
+    '<text x="696" y="53" text-anchor="middle" class="svg-label">Broadcast</text>'+
+    '<text x="696" y="67" text-anchor="middle" class="svg-note">1 reserved address</text>'+
+    '<text x="696" y="81" text-anchor="middle" class="svg-ip">'+numToIP(s.end)+'</text>'+
+    '<path d="M192 98H608M192 94V102M608 94V102" fill="none" stroke="#216c60" stroke-width="1"/>'+
+    '<text x="400" y="115" text-anchor="middle" class="svg-note">Usable address span · includes both ends</text>'+
+    '<text x="400" y="132" text-anchor="middle" class="svg-note">Lowest to highest. Cell widths are schematic, not proportional.</text></svg>';
 }
 function comparisonDiagram(s, other) {
   const same=s.network===other.network;
-  const card=(x,title,address,network)=>'<g><rect x="'+x+'" y="4" width="260" height="100" rx="8" fill="#eaf3fa" stroke="#b6c8d6"/>'+
-    '<text x="'+(x+14)+'" y="23" class="svg-label">'+title+'</text>'+
-    '<text x="'+(x+14)+'" y="44" class="svg-note">IP address</text><text x="'+(x+246)+'" y="44" text-anchor="end" class="svg-ip">'+numToIP(address)+'</text>'+
-    '<text x="'+(x+14)+'" y="64" class="svg-note">Mask</text><text x="'+(x+246)+'" y="64" text-anchor="end" class="svg-ip">'+numToIP(s.mask)+'</text>'+
-    '<path d="M'+(x+14)+' 73H'+(x+246)+'" stroke="#b6c8d6"/>'+
-    '<text x="'+(x+14)+'" y="94" class="svg-note">Network</text><text x="'+(x+246)+'" y="94" text-anchor="end" class="svg-ip svg-network-result">'+numToIP(network)+'</text></g>';
-  return '<svg class="teaching-svg comparison-svg" viewBox="0 0 800 110" role="img" aria-labelledby="compare-svg-title"><title id="compare-svg-title">Both addresses use mask '+numToIP(s.mask)+' and produce '+(same?'matching':'different')+' network addresses</title>'+
+  const card=(x,title,address,network)=>'<g><rect x="'+x+'" y="4" width="260" height="82" rx="8" fill="#eaf3fa" stroke="#b6c8d6"/>'+
+    '<text x="'+(x+14)+'" y="21" class="svg-label">'+title+'</text>'+
+    '<text x="'+(x+14)+'" y="38" class="svg-note">IP address</text><text x="'+(x+246)+'" y="38" text-anchor="end" class="svg-ip">'+numToIP(address)+'</text>'+
+    '<text x="'+(x+14)+'" y="54" class="svg-note">Mask</text><text x="'+(x+246)+'" y="54" text-anchor="end" class="svg-ip">'+numToIP(s.mask)+'</text>'+
+    '<path d="M'+(x+14)+' 62H'+(x+246)+'" stroke="#b6c8d6"/>'+
+    '<text x="'+(x+14)+'" y="77" class="svg-note">Network</text><text x="'+(x+246)+'" y="77" text-anchor="end" class="svg-ip svg-network-result">'+numToIP(network)+'</text></g>';
+  return '<svg class="teaching-svg comparison-svg" viewBox="0 0 800 92" role="img" aria-labelledby="compare-svg-title"><title id="compare-svg-title">Both addresses use mask '+numToIP(s.mask)+' and produce '+(same?'matching':'different')+' network addresses</title>'+
     card(16,'Original address',s.ip,s.network)+card(524,'Compare address',other.ip,other.network)+
-    '<path d="M276 54H292M508 54H524" stroke="#4d88bd" stroke-width="1.5"/>'+
-    '<rect x="292" y="32" width="216" height="44" rx="8" fill="'+(same?'#e8f5ef':'#fff0d4')+'" stroke="'+(same?'#7bc7aa':'#e9b65c')+'"/>'+
-    '<text x="400" y="50" text-anchor="middle" class="svg-label">'+(same?'= Same subnet':'&#8800; Different subnets')+'</text>'+
-    '<text x="400" y="67" text-anchor="middle" class="svg-note">Compare the network results</text></svg>';
+    '<path d="M276 45H292M508 45H524" stroke="#4d88bd" stroke-width="1.5"/>'+
+    '<rect x="292" y="25" width="216" height="40" rx="8" fill="'+(same?'#e8f5ef':'#fff0d4')+'" stroke="'+(same?'#7bc7aa':'#e9b65c')+'"/>'+
+    '<text x="400" y="42" text-anchor="middle" class="svg-label">'+(same?'= Same subnet':'&#8800; Different subnets')+'</text>'+
+    '<text x="400" y="57" text-anchor="middle" class="svg-note">Compare the network results</text></svg>';
 }
 function setExample(index) {
   const [ip,prefix] = examples[index];
