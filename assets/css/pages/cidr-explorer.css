@@ -345,3 +345,51 @@ body.tour-open #tour-panel{inset:0 0 0 auto;width:var(--tour-width);max-width:no
 .range-svg .svg-label{font-size:12px}
 .range-svg .svg-note{font-size:10px}
 .bit-allocation #bar-net,.bit-allocation #bar-host{font-weight:700}
+.octet-reminder{margin-top:10px;padding-top:9px;border-top:1px solid var(--border);font-size:11px}
+.octet-choices{display:flex;align-items:center;gap:5px;max-width:620px;margin:7px 0;overflow-x:auto;padding-bottom:3px}
+.octet-choice{flex:1;min-width:48px;text-align:center;border:1px solid var(--border2);border-radius:5px;padding:3px 4px;background:var(--bg)}
+.octet-choice small{display:block;font-size:9px;color:var(--text3)}
+.octet-choice b{font:700 11px 'Courier New',Courier,monospace}
+.octet-choice b span{font:10px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--text3)}
+.choice-times{color:var(--text3)}
+.octet-count code{font-size:11px}
+.octet-limits{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;color:var(--text2)}
+.octet-significance{display:flex;justify-content:space-between;gap:12px;max-width:620px;margin:8px 0 3px;font-size:10px;color:var(--text2)}
+.octet-significance span:last-child{text-align:right}
+.octet-significance + .octet-choices{margin-top:3px}
+.octet-bit-scroll{overflow-x:auto;margin:7px 0}
+.octet-bit-layout{min-width:540px;max-width:620px}
+.octet-bit-layout .octet-significance{margin:0;max-width:none}
+.octet-arrows,.octet-bit-layout .octet-choices{display:grid;grid-template-columns:repeat(7,minmax(48px,1fr) 8px) minmax(48px,1fr);column-gap:5px;align-items:center}
+.octet-arrows{text-align:center;color:var(--text2);font-size:13px;line-height:16px}
+.octet-arrows span:last-child{grid-column:15}
+.octet-bit-layout .octet-choices{margin:0;max-width:none;overflow:visible;padding:0}
+.octet-choice .bit-weight{margin-top:3px;color:var(--text2)}
+.address-octet[role=button]{cursor:pointer;border-radius:6px}
+.address-octet.octet-active{outline:2px solid var(--blue);outline-offset:3px;background:var(--blue-fill)}
+.address-octet:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.octet-choice.bit-on{background:var(--teal-fill);border-color:#7bb89e;color:var(--teal-text)}
+.octet-choice.bit-off{background:var(--bg2);color:var(--text3)}
+.octet-choice.bit-off .bit-weight{opacity:.65}
+.showing-octet .choice-times{visibility:hidden}
+#octet-sum{font-size:11px;margin:6px 0 8px}
+.address-bit-card{margin-top:14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px}
+.address-bit-card .address-anatomy{margin:0;border:0;background:transparent;border-radius:0}
+.address-bit-card #address-octets{border:0;background:transparent;padding:5px;border-radius:0}
+.address-bit-card #binary-foundations .lesson{border:0;border-top:1px solid var(--border);border-radius:0;background:transparent;margin:10px 0 0;padding:10px 2px 2px}
+.address-bit-card .octet-reminder{border:0;margin:0;padding:0}
+.octet-choice.bit-on{background:#b5d4f4;border-color:var(--blue);color:var(--blue-text)}
+.address-octet .bit-cell.bit-on{background:#b5d4f4;border-color:var(--blue);color:var(--blue-text)}
+.address-bit-card{background:#fff}
+.showing-octet #octet-sum{display:inline-block;font-size:14px;font-weight:700;line-height:1.5;color:var(--blue-text);background:var(--blue-fill);border-left:3px solid var(--blue);border-radius:5px;padding:8px 12px;margin:10px 0 2px}
+.octet-bit-scroll{display:flex;align-items:flex-end;gap:18px}
+.octet-bit-layout{flex:1}
+#octet-result{flex:none;align-self:flex-end;padding-bottom:12px;font:700 26px/1.2 'Courier New',Courier,monospace;color:var(--blue-text);white-space:nowrap}
+#octet-calculation{flex:0 0 auto;align-self:flex-end;max-width:230px;padding-bottom:8px;color:var(--blue-text)}
+.showing-octet #octet-sum{display:block;font:700 13px/1.4 'Courier New',Courier,monospace;background:none;border:0;border-radius:0;padding:0;margin:0 0 4px}
+#octet-calculation #octet-result{display:block;padding:0}
+.octet-bit-layout #octet-calculation{max-width:none;padding:10px 0 2px;text-align:center}
+.octet-bit-layout #octet-result{font-size:22px}
+#binary-foundations .lesson > h3{text-align:center}
+.octet-bit-layout{margin-inline:auto}
+.octet-bit-layout #octet-result{font-size:18px;white-space:normal}

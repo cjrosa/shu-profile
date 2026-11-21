@@ -46,9 +46,10 @@
 <section id="topology" class="panel" aria-labelledby="topology-heading"><h2 id="topology-heading" class="icon-heading"><svg class="nav-icon" aria-hidden="true"><use href="#icon-network"/></svg>See the subnets</h2><p id="topology-summary" class="intro"></p><div class="topology-scroll" tabindex="0" role="region" aria-label="Router and subnet topology (drag to pan)"><svg id="cidr-topology" viewBox="0 0 940 620" role="img" aria-labelledby="topology-svg-title topology-svg-description"></svg></div><div class="topology-status-bar"><span id="topology-status"></span><div class="topology-view-controls" role="group" aria-label="Topology view"><label for="topology-zoom">Zoom</label><input id="topology-zoom" type="range" min="50" max="300" step="25" value="100" oninput="setCidrTopologyZoom(Number(this.value))"><output id="topology-zoom-level" for="topology-zoom">100%</output><button class="topology-icon-button" type="button" onclick="fitCidrTopology()" title="Fit network" aria-label="Fit network"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg></button></div></div><p id="topology-note" class="explanation"></p></section>
 <section id="subnet" class="panel" aria-labelledby="subnet-heading">
 <div class="section-heading"><h2 id="subnet-heading" class="icon-heading"><svg class="nav-icon" aria-hidden="true"><use href="#icon-address-anatomy"/></svg>IP Address Anatomy</h2></div>
-<div class="scroll address-anatomy" tabindex="0" role="region" aria-label="IPv4 address as four binary octets"><div id="address-octets"></div></div>
+<div class="address-bit-card"><div class="scroll address-anatomy" tabindex="0" role="region" aria-label="IPv4 address as four binary octets"><div id="address-octets"></div></div>
 
 <div id="binary-foundations"></div>
+</div>
 </section>
 <section id="subnet-definition" class="panel" aria-labelledby="subnet-definition-heading">
 <div class="section-heading"><h2 id="subnet-definition-heading" class="icon-heading"><svg class="nav-icon" aria-hidden="true"><use href="#icon-network"/></svg>How IPs define subnets</h2><strong id="cidr" class="badge"></strong></div>

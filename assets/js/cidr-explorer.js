@@ -193,7 +193,7 @@ function initStatTooltips() {
     .observe(document.getElementById('results'),{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
 }
 function lesson(title, formula, note) {
-  return '<article class="lesson"><h3>'+title+'</h3><code>'+formula+'</code><p>'+note+'</p></article>';
+  return '<article class="lesson"><h3>'+title+'</h3><code>'+formula+'</code>'+(note?'<p>'+note+'</p>':'')+'</article>';
 }
 function rangeDiagram(s, titleId='range-svg-title') {
   const start='<svg class="teaching-svg range-svg" viewBox="0 0 800 136" role="img" aria-labelledby="'+titleId+'"><title id="'+titleId+'">Address block '+numToIP(s.network)+'/'+s.prefix+', from '+numToIP(s.network)+' to '+numToIP(s.end)+': '+fmt(s.usable)+' usable addresses</title>'+
@@ -261,6 +261,28 @@ function resetTool() {
   $('cmp-ip').value='192.168.1.100'; $('sub-prefix').value=28;
   $('ip-input').value=examples[0][0]; $('prefix').value=24; update();
 }
+let inspectedOctet = null;
+function inspectOctet(index) {
+  if (!current) return;
+  inspectedOctet = index;
+  const value=Number(numToIP(current.ip).split('.')[index]);
+  const bits=value.toString(2).padStart(8,'0');
+  document.querySelectorAll('.address-octet').forEach((el,i)=>{
+    el.classList.toggle('octet-active',i===index);
+    el.setAttribute('aria-pressed',String(i===index));
+    el.querySelectorAll('.bit-cell').forEach(bit=>bit.classList.toggle('bit-on',i===index && bit.textContent==='1'));
+  });
+  document.querySelector('.octet-reminder').classList.add('showing-octet');
+  document.querySelectorAll('.octet-choice').forEach((el,i)=>{
+    el.querySelector('b').textContent=bits[i];
+    el.classList.toggle('bit-on',bits[i]==='1');
+    el.classList.toggle('bit-off',bits[i]==='0');
+  });
+  const terms=[...bits].flatMap((bit,i)=>bit==='1'?[2**(7-i)]:[]);
+  document.getElementById('octet-result').textContent='Decimal Value: '+(terms.join(' + ')||'0')+' = '+value;
+  document.getElementById('octet-result').hidden=false;
+  document.getElementById('octet-calculation').hidden=false;
+}
 function update() {
   const prefix=Number($('prefix').value), octets=readAddress();
   const decimalAddress=octets?octets.join('.'):'';
@@ -285,15 +307,18 @@ function update() {
   const s=current, net=numToIP(s.network), mask=numToIP(s.mask);
   $('address-octets').innerHTML=octets.map((octet,index)=>{
     const bits=octet.toString(2).padStart(8,'0');
-    return '<div class="address-octet" role="group" aria-label="Octet '+(index+1)+': '+bits+' equals '+octet+'"><div class="octet-positions" aria-hidden="true">'+
+    return '<div class="address-octet" role="button" tabindex="0" aria-pressed="false" onmouseenter="inspectOctet('+index+')" onfocus="inspectOctet('+index+')" onclick="inspectOctet('+index+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();inspectOctet('+index+');}" aria-label="Show octet '+(index+1)+': '+bits+' equals '+octet+' in the illustration below"><div class="octet-positions" aria-hidden="true">'+
       [...bits].map((_,bit)=>'<span>'+(index*8+bit+1)+'</span>').join('')+'</div><div class="octet-bits" aria-hidden="true">'+
       [...bits].map(bit=>'<span class="bit-cell">'+bit+'</span>').join('')+'</div><div class="octet-decimal">Octet '+(index+1)+' <strong>'+octet+'</strong></div></div>';
   }).join('');
   renderCidrTopology(s);
-  const weights=[128,64,32,16,8,4,2,1];
-  const octetTerms=weights.filter(weight=>octets[0]&weight);
-  $('binary-foundations').innerHTML=lesson('Interpret the bits','4 octets × 8 bits = 32 bits',
-    'Each bit is 0 or 1. Within each octet, place values are 128, 64, 32, 16, 8, 4, 2, 1. Add the values where the bit is 1: the first octet '+octets[0].toString(2).padStart(8,'0')+' means '+(octetTerms.join(' + ')||'0')+' = '+octets[0]+'.');
+  $('binary-foundations').innerHTML='<article class="lesson"><h3>Interpret the bits</h3></article>';
+  $('binary-foundations').querySelector('.lesson').insertAdjacentHTML('beforeend',
+    '<div class="octet-reminder" role="group" aria-label="Eight bits, each with two choices, give 256 possible values">'+
+    '<div class="octet-bit-scroll"><div class="octet-bit-layout"><div class="octet-significance"><span>Most significant bit</span><span>Least significant bit</span></div><div class="octet-arrows" aria-hidden="true"><span>&darr;</span><span>&darr;</span></div><div class="octet-choices">'+
+    Array.from({length:8},(_,i)=>'<span class="octet-choice"><small>Bit '+(i+1)+'</small><b>0 <span>or</span> 1</b><small class="bit-weight">Value: <strong>'+2**(7-i)+'</strong></small></span>').join('<span class="choice-times" aria-hidden="true">&times;</span>')+
+    '</div><div id="octet-calculation" hidden aria-live="polite"><strong id="octet-result" aria-label="Octet decimal value"></strong></div></div></div></div>');
+  if(inspectedOctet!==null) inspectOctet(inspectedOctet);
   $('prefix-foundations').innerHTML=lesson('Interpret the prefix','32 − <mark class="prefix-value" title="Prefix length: network bits">'+prefix+'</mark> = '+s.hostBits+' host bits',
     '/'+prefix+' fixes the first '+prefix+' network bits. Each remaining bit has two choices, so '+s.hostBits+' host bits give 2^'+s.hostBits+' = '+fmt(s.size)+' combinations. '+(s.hostBits===0?'With no bits left to vary, there is one address.':'For example, two free bits give 00, 01, 10, 11: 2 × 2 = 4 combinations.'));
   $('prefix-foundations').querySelector('.lesson').insertAdjacentHTML('beforeend','<div class="bit-line bit-allocation"><span id="bar-net"></span><span id="bar-host"></span></div>');
