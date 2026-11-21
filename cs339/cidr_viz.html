@@ -70,8 +70,14 @@
 <div class="scroll" tabindex="0" role="region" aria-label="Comparison binary calculation"><div id="cmp-math" class="binary-workbench"></div></div>
 </section>
 <section id="aggregation" class="panel" aria-labelledby="aggregation-heading">
-<h2 id="aggregation-heading" class="icon-heading"><svg class="nav-icon" aria-hidden="true"><use href="#icon-blocks"/></svg>Subdivide &amp; aggregate</h2><p class="intro">Subdivide this network into equal blocks. Read in reverse, the aligned, contiguous blocks combine into the original route.</p>
+<h2 id="aggregation-heading" class="icon-heading"><svg class="nav-icon" aria-hidden="true"><use href="#icon-blocks"/></svg>Subdivide &amp; aggregate</h2>
+<aside class="subdivision-purpose" aria-labelledby="subdivision-purpose-title">
+<h3 id="subdivision-purpose-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M9.5 21h5M8 13a6 6 0 1 1 8 0c-1.3 1-1.5 2-1.5 3h-5c0-1-.2-2-1.5-3Z"/><path d="M12 1V0M3 4 1.5 2.5M21 4l1.5-1.5M3 10H1m20 0h2"/></svg>Why subdivide?</h3>
+<p class="intro">Start with one parent block to build an organized address plan. For example, a college can divide its block into separate networks for student labs, faculty offices, and servers. Each gets its own smaller range without overlap, making addresses easier to assign and troubleshoot. Routers connect the networks and can control which traffic passes between them.</p>
+<p class="intro">Networks can also use unrelated address ranges. Using one parent keeps this plan together and lets the complete group be described by one prefix. Sharing a parent does not make the child networks one local subnet.</p>
+<p class="intro">Here, split the parent block into equal-sized child subnets. Use <strong>Child prefix</strong> to choose their size, then select a block to see its addresses. Aggregation works in reverse: the complete set of child blocks can be described by the original parent prefix.</p>
 <div id="sub-parent" class="parent-span"></div>
+</aside>
 <div class="inline-control"><label for="sub-prefix">Child prefix <output id="sub-prefix-lbl" for="sub-prefix">/28</output></label><input id="sub-prefix" type="range" min="25" max="32" value="28" oninput="updateSubdivide()"></div>
 <div class="subdivision-workbench">
 <div id="sub-summary" class="subdivision-summary" aria-live="polite"></div>

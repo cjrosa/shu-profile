@@ -195,8 +195,8 @@ function initStatTooltips() {
 function lesson(title, formula, note) {
   return '<article class="lesson"><h3>'+title+'</h3><code>'+formula+'</code><p>'+note+'</p></article>';
 }
-function rangeDiagram(s) {
-  const start='<svg class="teaching-svg range-svg" viewBox="0 0 800 156" role="img" aria-labelledby="range-svg-title"><title id="range-svg-title">Address block '+numToIP(s.network)+'/'+s.prefix+', from '+numToIP(s.network)+' to '+numToIP(s.end)+': '+fmt(s.usable)+' usable addresses</title>'+
+function rangeDiagram(s, titleId='range-svg-title') {
+  const start='<svg class="teaching-svg range-svg" viewBox="0 0 800 156" role="img" aria-labelledby="'+titleId+'"><title id="'+titleId+'">Address block '+numToIP(s.network)+'/'+s.prefix+', from '+numToIP(s.network)+' to '+numToIP(s.end)+': '+fmt(s.usable)+' usable addresses</title>'+
     '<text x="400" y="19" text-anchor="middle" class="svg-label">Entire <tspan class="svg-prefix">/'+s.prefix+'</tspan> block · '+fmt(s.size)+' total address'+(s.size===1?'':'es')+'</text>'+
     '<path d="M24 30H776M24 26V34M776 26V34" fill="none" stroke="#52677c" stroke-width="1"/>';
   if (s.prefix===32) {
@@ -402,15 +402,14 @@ function updateSubdivide(reset=true) {
   const selected=subnet(s.network+selectedSubnet*size,child);
   const binaryId=selectedSubnet.toString(2).padStart(borrowed,'0');
   $('sub-selected').innerHTML=s.prefix===32?'<p>This single host route has no borrowed bits.</p>':
-    '<div class="selected-block-heading"><strong>Block '+fmt(selectedSubnet+1)+': '+numToIP(selected.network)+'/'+child+'</strong></div>'+
+    '<div class="selected-block-heading"><strong>Selected - Block '+fmt(selectedSubnet+1)+': '+numToIP(selected.network)+' /'+child+'</strong></div>'+
     '<p class="selected-block-range"><strong>Address range</strong> <code>'+numToIP(selected.network)+' &ndash; '+numToIP(selected.end)+'</code></p>'+
     '<dl class="selected-block-steps">'+
     '<div><dt>1. Block index</dt><dd><code><span class="borrowed-index">'+binaryId+'</span> = '+fmt(selectedSubnet)+'</code><small>Counting starts at 0.</small></dd></div>'+
     '<div><dt>2. Address offset</dt><dd><code>'+fmt(selectedSubnet)+' &times; '+fmt(size)+' = '+fmt(selectedSubnet*size)+'</code><small>Block index &times; addresses per block.</small></dd></div>'+
     '<div><dt>3. First address</dt><dd><code>'+numToIP(s.network)+' + '+fmt(selectedSubnet*size)+' = '+numToIP(selected.network)+'</code></dd></div>'+
     '<div><dt>4. Last address</dt><dd><code>'+numToIP(selected.network)+' + ('+fmt(size)+' &minus; 1) = '+numToIP(selected.end)+'</code></dd></div></dl>';
-  $('sub-selected').innerHTML+='<div class="selected-block-notes"><p><strong>Aggregate</strong> The complete, aligned set combines into <code>'+numToIP(s.network)+'/'+s.prefix+'</code>. All children share '+s.prefix+' network bits.</p>'+
-    (s.prefix<31 && child<31?'<p><strong>Usable addresses</strong> '+fmt(count)+' &times; '+fmt(usable)+' = <strong>'+fmt(count*usable)+'</strong> (previously '+fmt(s.usable)+'). Each child reserves a network and broadcast address; the total address count stays the same.</p>':'')+'</div>';
+  $('sub-selected').innerHTML+='<div class="scroll block-summary" id="selected-range-diagram" tabindex="0" role="region" aria-label="Selected child address range">'+rangeDiagram(selected,'selected-range-svg-title')+'</div>';
   $('sub-caption').textContent='Blocks '+fmt(start+1)+'–'+fmt(stop)+' of '+fmt(count)+'. All address details are shown in each row.';
   $('sub-bits').innerHTML=bitRow('Selected child',selected.network,s.prefix,{childPrefix:child});
   let rows='';
@@ -457,4 +456,37 @@ if (typeof document !== 'undefined') {
       document.documentElement.style.setProperty('--nav-height',stickyNav.offsetHeight+'px');
     }).observe(stickyNav);
   }
+}
+
+/* Format address notation in explanatory text, including dynamically updated messages. */
+function formatCidrMessages() {
+  const selector='.explanation,.intro,.hint,.lesson,.example-context,.verdict,#sub-parent,#sub-selected,#sub-summary,#sub-lessons,#tour-body';
+  document.querySelectorAll(selector).forEach(root=>{
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    const nodes=[];
+    while(walker.nextNode()) {
+      const node=walker.currentNode;
+      if(!node.parentElement.closest('code,svg,script,style,textarea,input,.network-notation')) nodes.push(node);
+    }
+    nodes.forEach(node=>{
+      const pattern=/\b(?:\d{1,3}\.){3}\d{1,3}(?:\/(?:3[0-2]|[12]?\d))?\b|\/(?:3[0-2]|[12]?\d)\b/g;
+      const matches=[...node.data.matchAll(pattern)];
+      if(!matches.length) return;
+      const fragment=document.createDocumentFragment();let offset=0;
+      matches.forEach(match=>{
+        fragment.append(node.data.slice(offset,match.index));
+        const span=document.createElement('span');span.className='network-notation';span.textContent=match[0];fragment.append(span);
+        offset=match.index+match[0].length;
+      });
+      fragment.append(node.data.slice(offset));node.replaceWith(fragment);
+    });
+  });
+}
+if(typeof document!=='undefined' && typeof MutationObserver!=='undefined') {
+  const messageObserver=new MutationObserver(()=>{
+    messageObserver.disconnect();formatCidrMessages();
+    messageObserver.observe(document.body,{childList:true,subtree:true,characterData:true});
+  });
+  formatCidrMessages();
+  messageObserver.observe(document.body,{childList:true,subtree:true,characterData:true});
 }

@@ -1,7 +1,7 @@
 const TOUR_STEPS = [
   {
     "title": "1. Start with an IP Address",
-    "what": "An <strong>IPv4 address</strong> identifies a network interface. For example, <strong>192.168.1.57</strong> is written as four decimal numbers separated by dots.",
+    "what": "An <strong>IPv4 address</strong> identifies a device connection to a network, called a <strong>network interface</strong>. For example, <strong>192.168.1.57</strong> is written as four decimal numbers separated by dots.",
     "how": "Each number is called an <strong>octet</strong> and ranges from 0 to 255. Read this example as the four values <strong>192, 168, 1, and 57</strong>.",
     "tryIt": "In Explore the address, select decimal input (###.###.###.###) and enter 192.168.1.57. Leave the other controls unchanged while you examine the address.",
     "highlight": "ip-input",
@@ -86,12 +86,12 @@ const TOUR_STEPS = [
     "how": "<strong>/30:</strong> four addresses, two usable router-interface addresses. See the subnets shows three routers joined by /30 links, with faded example LANs.<br><br><strong>/31:</strong> two usable endpoints on a point-to-point link, without reserving a network or broadcast address.<br><br><strong>/32:</strong> one exact destination. The diagram shows a router forwarding toward that address, with mask 255.255.255.255.",
     "tryIt": "Choose Router link /30, Point-to-point /31, and Host route /32 under Try an example. Read the changing diagram and its explanation.",
     "highlight": "cidr-topology",
-    "takeaway": "A /32 route does not specify the destination device’s LAN mask. Its arrow shows forwarding toward a destination, possibly through other routers, not a dedicated physical link."
+    "takeaway": "A route tells a router where to send data. A /32 route matches just one IP address. That device can still belong to a larger local network, such as a /24 subnet. The arrow shows where data is headed; other routers may be along the way."
   },
   {
     "title": "12. Aggregate the Children",
     "what": "Aggregation combines a complete, contiguous, aligned set of child blocks into one larger prefix.",
-    "how": "For example, 10.0.0.0/24 through 10.0.3.0/24 together form 10.0.0.0/22. The children share the first 22 bits. Read the <strong>Aggregate</strong> explanation below the four selected-block cards.",
+    "how": "For example, 10.0.0.0/24 through 10.0.3.0/24 together form 10.0.0.0/22. The children share the first 22 bits. The <strong>Parent</strong> bar above Child prefix shows the larger block that contains all the children.",
     "tryIt": "Enter 10.0.0.0 with Prefix length /22. In Subdivide &amp; aggregate, set Child prefix to /24. Inspect the four child blocks and the Sanity check: 4 × 256 = 1,024 total addresses. The table lists each child’s range.",
     "highlight": "sub-selected",
     "takeaway": "Splitting preserves the total address count. Conventional child subnets each reserve network and broadcast addresses, so the combined usable count can decrease."
