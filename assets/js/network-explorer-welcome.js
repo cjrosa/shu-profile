@@ -81,6 +81,7 @@
   const echoArt = '<rect x="25" y="8" width="58" height="39" rx="4" fill="#edf4fa" stroke="#52718b" stroke-width="1.5"/><path d="M25 17h58" stroke="#a4bacb"/><path d="m32 24 5 4-5 4m12 0h16M44 38h28" fill="none" stroke="#4c8986" stroke-width="2"/>' + miniDevice('host',16,42,.33);
   const exampleArt = {
     'example-wireless': '<g transform="translate(23 32) scale(.55)">'+NetworkExplorerWirelessUI.glyph(true)+'</g><path d="M42 32h20" stroke="#709bbd" stroke-dasharray="3 4"/><g transform="translate(77 32) scale(.55)">'+NetworkExplorerWirelessUI.glyph()+'</g>',
+    'example-switched-tree': wire('M16 34 48 12 80 34M48 12V34M16 34 6 56M16 34V56M16 34 26 56M48 34 38 56M48 34V56M48 34 58 56M80 34 70 56M80 34V56M80 34 90 56') + [[48,12],[16,34],[48,34],[80,34]].map(([x,y])=>miniDevice('switch',x,y,.25)).join('') + [6,16,26,38,48,58,70,80,90].map(x=>miniDevice('host',x,56,.15)).join(''),
     'example-direct': wire('M24 32H73') + miniDevice('host',22,32,.47) + miniDevice('host',74,32,.47) + packet(46,29),
     'example': lanArt + packet(33,26),
     'example-dhcp': wire('M20 38H75') + miniDevice('host',20,38,.42) + server(64,15) + '<path d="M32 24h23m-5-4 5 4-5 4M55 49H32m5-4-5 4 5 4" fill="none" stroke="#4c8986" stroke-width="2"/>' + packet(42,35),
@@ -108,7 +109,7 @@
   };
   const exampleGroups = [
     ["Basic", ["example-direct", "example", "example-dhcp", "example-dns"]],
-    ["Intermediate", ["example-wireless", "example-vlans", "example-routed", "example-http"]],
+    ["Intermediate", ["example-switched-tree", "example-wireless", "example-vlans", "example-routed", "example-http"]],
     [
       "Advanced",
       [

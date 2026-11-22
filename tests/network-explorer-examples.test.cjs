@@ -2,6 +2,29 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const {Network}=require('../assets/js/network-explorer-engine.js');
 const {complex,arrange}=require('../assets/js/network-explorer-examples.js');
 function drain(n){let steps=0;while(n.queue.length){n.next();assert.ok(++steps<1500);}return n.results.at(-1);}
+test('four-switch LAN connects the diagram branches and supports every host pair',()=>{
+ const {network:n,clientId}=require('../assets/js/network-explorer-examples.js').switchedTree(Network);
+ const byName=name=>n.devices.find(d=>d.name===name),peers=d=>n.links.flatMap(l=>l.a===d.id?[n.device(l.b).name]:l.b===d.id?[n.device(l.a).name]:[]).sort();
+ assert.equal(n.devices.length,13);assert.equal(n.links.length,12);assert.equal(clientId,byName('A').id);
+ for(const [name,expected]of [['S1',['A','B','C','S4']],['S2',['D','E','F','S4']],['S3',['G','H','I','S4']],['S4',['S1','S2','S3']]])assert.deepEqual(peers(byName(name)),expected);
+ const hosts=n.devices.filter(d=>d.type==='host');assert.ok(hosts.every(d=>d.prefix===24&&!d.gateway));
+ const saved=n.save();assert.deepEqual(new Network(saved).save(),saved);
+ for(const a of hosts)for(const b of hosts)if(a!==b){const fresh=new Network(saved);fresh.ping(a.id,b.ip);assert.equal(drain(fresh).ok,true,a.name+' to '+b.name);}
+});
+test('layout modes keep switch branches together and preserve radial router layouts',()=>{
+ const {switchedTree}=require('../assets/js/network-explorer-examples.js');
+ const n=switchedTree(Network).network,links=structuredClone(n.links);
+ arrange(n);const byName=name=>n.devices.find(d=>d.name===name);
+ assert.ok(byName('S4').y<byName('S1').y);
+ assert.ok(byName('S1').x<byName('S2').x&&byName('S2').x<byName('S3').x);
+ assert.ok(Math.max(...['A','B','C'].map(k=>byName(k).x))<Math.min(...['D','E','F'].map(k=>byName(k).x)));
+ const positions=n.devices.map(d=>[d.x,d.y]);arrange(n);assert.deepEqual(n.devices.map(d=>[d.x,d.y]),positions);
+ arrange(n,'radial');assert.notDeepEqual(n.devices.map(d=>[d.x,d.y]),positions);
+ const restored=new Network(n.save());assert.equal(restored.layoutMode,'radial');arrange(restored);assert.deepEqual(restored.devices.map(d=>[d.x,d.y]),n.devices.map(d=>[d.x,d.y]));
+ arrange(restored,'hierarchical');assert.deepEqual(restored.devices.map(d=>[d.x,d.y]),positions);assert.deepEqual(n.links,links);
+ assert.throws(()=>new Network({...n.save(),layoutMode:'invalid'}),/layout mode/);
+ const campus=complex(Network).network;arrange(campus,'auto');const radial=campus.devices.map(d=>[d.x,d.y]);arrange(campus,'radial');assert.deepEqual(campus.devices.map(d=>[d.x,d.y]),radial);
+});
 test('arrange separates hosts on sibling access switches without changing their connections',()=>{
  const n=new Network(),root=n.add('switch'),branches=[n.add('switch'),n.add('switch')];
  branches.forEach((sw,i)=>{n.connect(root.id,'p'+i,sw.id,'p0');for(let j=0;j<2;j++){const h=n.add('host');h.name='LAN 4 Host '+(55+i*2+j);n.connect(sw.id,'p'+(j+1),h.id,'p0');}});

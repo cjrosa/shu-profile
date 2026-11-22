@@ -6356,14 +6356,14 @@
       cancelConnect();
     }
   });
-  function arrangeNetwork() {
+  function arrangeNetwork(mode = net.layoutMode || "auto") {
     finishPlacement();
     drag = null;
     if (!net.devices.length) {
       say("Add devices to arrange the network.");
       return;
     }
-    NetworkExplorerExamples.arrange(net);
+    NetworkExplorerExamples.arrange(net, mode);
     const noteSlots = new Map(),
       noteTargets = new Map(
         [...net.devices, ...applications()].map((item) => [item.id, item]),
@@ -6381,7 +6381,57 @@
     window.NetworkExplorerViewport?.fit();
     say("Network arranged. Drag any device to fine-tune its position.");
   }
-  $("arrange-network").onclick = arrangeNetwork;
+  const arrangeMenu = document.createElement("div");
+  arrangeMenu.id = "arrange-menu";
+  arrangeMenu.className = "arrange-menu";
+  arrangeMenu.hidden = true;
+  arrangeMenu.setAttribute("role", "menu");
+  arrangeMenu.setAttribute("aria-label", "Arrange network");
+  document.body.append(arrangeMenu);
+  const arrangeButton = $("arrange-network");
+  arrangeButton.setAttribute("aria-haspopup", "menu");
+  arrangeButton.setAttribute("aria-expanded", "false");
+  arrangeButton.setAttribute("aria-controls", "arrange-menu");
+  function closeArrangeMenu() {
+    arrangeMenu.hidden = true;
+    arrangeButton.setAttribute("aria-expanded", "false");
+  }
+  const layoutIcons = {
+    auto: '<path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z"/>',
+    hierarchical: '<rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="17" width="6" height="5" rx="1"/><rect x="16" y="17" width="6" height="5" rx="1"/><path d="M12 7v5M5 17v-5h14v5"/>',
+    radial: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="3" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="18" r="2"/><path d="M12 5v4M6 17l4-3m4 0 4 3"/>',
+  };
+  for (const [mode, label] of [["auto", "Auto"], ["hierarchical", "Hierarchical"], ["radial", "Radial"]]) {
+    const row = document.createElement("button");
+    row.type = "button"; row.dataset.mode = mode;
+    row.innerHTML = '<svg class="arrange-mode-icon" viewBox="0 0 24 24" aria-hidden="true">' + layoutIcons[mode] + '</svg><span>' + label + '</span><svg class="arrange-check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';
+    row.setAttribute("role", "menuitemradio");
+    row.onclick = () => { closeArrangeMenu(); arrangeNetwork(mode); arrangeButton.focus(); };
+    arrangeMenu.append(row);
+  }
+  function openArrangeMenu() {
+    const bounds = arrangeButton.getBoundingClientRect();
+    arrangeMenu.querySelectorAll("button").forEach(row => row.setAttribute("aria-checked", String(row.dataset.mode === (net.layoutMode || "auto"))));
+    arrangeMenu.hidden = false;
+    arrangeMenu.style.left = Math.max(8, Math.min(bounds.right - arrangeMenu.offsetWidth, innerWidth - arrangeMenu.offsetWidth - 8)) + "px";
+    arrangeMenu.style.top = Math.max(8, bounds.top - arrangeMenu.offsetHeight - 6) + "px";
+    arrangeButton.setAttribute("aria-expanded", "true");
+    arrangeMenu.querySelector('[aria-checked="true"]').focus();
+  }
+  arrangeButton.onclick = () => arrangeMenu.hidden ? openArrangeMenu() : closeArrangeMenu();
+  arrangeButton.addEventListener("keydown", e => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); openArrangeMenu(); }
+  });
+  arrangeMenu.onkeydown = e => {
+    const rows = [...arrangeMenu.children], index = rows.indexOf(document.activeElement);
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeArrangeMenu(); arrangeButton.focus(); }
+    if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
+      e.preventDefault(); rows[e.key === "Home" ? 0 : e.key === "End" ? rows.length - 1 : (index + (e.key === "ArrowDown" ? 1 : -1) + rows.length) % rows.length].focus();
+    }
+  };
+  document.addEventListener("pointerdown", e => { if (!arrangeMenu.contains(e.target) && !arrangeButton.contains(e.target)) closeArrangeMenu(); });
+  arrangeMenu.addEventListener("focusout", e => { if (!arrangeMenu.contains(e.relatedTarget) && e.relatedTarget !== arrangeButton) closeArrangeMenu(); });
+  window.addEventListener("resize", closeArrangeMenu);
   const compactPalette = document.createElement("aside");
   compactPalette.id = "compact-palette";
   compactPalette.hidden = true;
@@ -6550,12 +6600,12 @@
     // Wait for the welcome screen to close and the canvas layout to settle.
     requestAnimationFrame(() => window.NetworkExplorerViewport?.fit());
   }
-  function registerExample(id, load) {
+  function registerExample(id, load, preserveLayout = false) {
     NetworkExplorerActions.register(id, () => {
       const previous = net;
       const result = load();
       if (net !== previous) {
-        NetworkExplorerExamples.arrange(net);
+        if (!preserveLayout) NetworkExplorerExamples.arrange(net);
         render();
         fitOpenedNetwork();
         document.dispatchEvent(new CustomEvent("network-recent-record", {
@@ -6750,6 +6800,14 @@
     if(net.devices.length&&!confirm("Replace this network with the Wireless LAN example?"))return;
     discard();candidateBase=null;const e=NetworkExplorerWireless.example(NetworkExplorer.Network);net=e.network;selected=e.clientId;examined=false;cancelConnect();openInspector();render();say("Wi-Fi is associated and DHCP is complete. Ping 192.168.50.10. Open Incidents > New incident to practice Wi-Fi authentication.");
   });
+  registerExample("example-switched-tree", () => {
+    if ((net.devices.length || net.applicationDrafts.length) && !confirm("Replace this network with the four-switch LAN example?")) return;
+    discard(); candidateBase = null;
+    const example = NetworkExplorerExamples.switchedTree(NetworkExplorer.Network);
+    net = example.network; selected = example.clientId; examined = false;
+    cancelConnect(); openInspector(); render();
+    say("From A, ping 192.168.1.9 to reach I through S1, S4, and S3. Inspect ARP and switch MAC tables.");
+  }, true);
   registerExample("example-direct", () => {
     if ((net.devices.length || net.applicationDrafts.length) && !confirm("Replace this network with the direct connection example?")) return;
     discard(); candidateBase = null;

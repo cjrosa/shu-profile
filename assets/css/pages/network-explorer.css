@@ -10109,3 +10109,13 @@ body[data-platform="paloalto"] #inspector .vlan-row { grid-template-columns:minm
 #inspector .ospf-lsa-table th:last-child, #inspector .ospf-lsa-table td:last-child { width: 3rem; text-align: right; }
 #inspector .ospf-lsa code { font-family: "Courier New", monospace; font-size: inherit; }
 #inspector .dns-enable { border: 0; background: none; padding: 0; justify-content: flex-start; }
+
+/* Arrange choices share the canvas control palette. */
+.arrange-menu { position:fixed; z-index:10020; width:158px; padding:4px; border:1px solid #cbd7e2; border-radius:8px; background:#fff; box-shadow:0 8px 24px #243b5326; }
+.arrange-menu[hidden] { display:none; }
+.arrange-menu button { display:flex; align-items:center; gap:7px; width:100%; min-height:30px; padding:5px 7px; text-align:left; border:0; border-radius:5px; background:transparent; color:#43566d; font-family:inherit; font-size:12px; line-height:20px; cursor:pointer; }
+.arrange-menu button[aria-checked="true"] { background:#e8eff5; font-weight:600; }
+.arrange-menu svg { width:16px; height:16px; flex:none; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+.arrange-menu .arrange-check { margin-left:auto; width:14px; height:14px; visibility:hidden; stroke-width:2.2; }
+.arrange-menu button[aria-checked="true"] .arrange-check { visibility:visible; }
+.arrange-menu button:hover, .arrange-menu button:focus-visible { background:#edf3f8; outline:2px solid #709bbd; outline-offset:-2px; }

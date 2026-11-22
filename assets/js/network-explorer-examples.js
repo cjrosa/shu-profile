@@ -1,4 +1,18 @@
 (function(root){'use strict';
+ function switchedTree(Network){
+  const n=new Network(),add=(type,name,x,y)=>Object.assign(n.add(type,x,y),{name,watch:false});
+  const core=add('switch','S4',720,110),switches=[add('switch','S1',300,310),add('switch','S2',720,310),add('switch','S3',1140,310)];
+  const positions=[[100,310],[210,500],[410,500],[550,470],[720,570],[890,470],[1030,500],[1230,500],[1430,310]],hosts=[];
+  switches.forEach((sw,i)=>{
+   n.connect(core.id,'p'+i,sw.id,'p0');
+   for(let j=0;j<3;j++){
+    const index=i*3+j,h=add('host',String.fromCharCode(65+index),...positions[index]);
+    h.os='windows';n.configure(h.id,'192.168.1.'+(index+1),24);n.connect(sw.id,'p'+(j+1),h.id,'p0');hosts.push(h);
+   }
+  });
+  n.notes=[{id:'note1',title:'Four switches, one LAN',text:'A-C connect to S1, D-F to S2, and G-I to S3. S4 joins the three switches. All hosts use 192.168.1.0/24 (A=.1 through I=.9) and VLAN 1. No gateway is needed for communication within this subnet.\nFrom A, ping 192.168.1.9. Follow the ARP broadcast across all four switches, then the unicast reply and ping along A → S1 → S4 → S3 → I. Inspect each switch MAC table: switches learn from source MAC addresses. Repeat the ping and compare the traffic.\nCompare with a ping from A to B (192.168.1.2). After learning, their unicast traffic stays on S1. Reload this example to start with empty learned tables.',target:core.id,x:785,y:45,width:340,height:240,color:'blue',tags:['Ethernet','ARP','MAC','switching']}];
+  return {network:n,clientId:hosts[0].id};
+ }
  function direct(Network){
   const n=new Network(),a=n.add('host',240,220),b=n.add('host',660,220);
   a.name='Host 1';b.name='Host 2';a.os=b.os='windows';a.watch=b.watch=false;
@@ -39,13 +53,34 @@
   note(sw1,'Local delivery versus remote delivery\n@Client Switch learns source MAC addresses and forwards frames within the Client LAN. For the remote DNS and web servers, the client sends frames to its gateway MAC, while the IP destination remains the remote server. Inspect ARP and the MAC forwarding table.','yellow',['Ethernet','ARP','MAC','gateway']);
   return {network:n,clientId:client.id};
  }
- function arrange(n){
+ function arrangeHierarchy(n){
+  const adjacent=d=>n.links.flatMap(l=>l.a===d.id?[n.device(l.b)]:l.b===d.id?[n.device(l.a)]:[]).filter(Boolean);
+  const visited=new Set(),trees=[];
+  // Prefer infrastructure with the most infrastructure neighbors as the root.
+  // Stable device order breaks ties without depending on labels or current positions.
+  const rank=d=>(d.type==='host'?0:100)+adjacent(d).filter(p=>p.type!=='host').length;
+  const candidates=[...n.devices].sort((a,b)=>rank(b)-rank(a));
+  for(const root of candidates){
+   if(visited.has(root.id))continue;
+   const tree={device:root,children:[]},queue=[tree];visited.add(root.id);
+   for(const node of queue)for(const d of adjacent(node.device))if(!visited.has(d.id)){visited.add(d.id);const child={device:d,children:[]};node.children.push(child);queue.push(child);}
+   const measure=node=>node.width=Math.max(220,node.children.reduce((sum,c)=>sum+measure(c),0));measure(tree);trees.push(tree);
+  }
+  let start=0;
+  const place=(node,left,depth)=>{node.device.x=left+node.width/2;node.device.y=120+depth*330;let x=left;for(const child of node.children){place(child,x,depth+1);x+=child.width;}};
+  for(const tree of trees){place(tree,start,0);start+=tree.width+220;}
+ }
+ function arrange(n,mode=n.layoutMode||'auto'){
+  if(!['auto','hierarchical','radial'].includes(mode))throw Error('Invalid layout mode.');
+  n.layoutMode=mode;
+  const hierarchical=mode==='hierarchical'||mode==='auto'&&!n.devices.some(d=>d.type==='router')&&n.devices.filter(d=>d.type==='switch').length>1;
   const routers=n.devices.filter(d=>d.type==='router'),placed=new Set(),groups=[];
   if(routers.length){routers.forEach((r,i)=>{const angle=routers.length===3?(-150+i*120)*Math.PI/180:2*Math.PI*i/routers.length-Math.PI/2;const v={x:Math.cos(angle),y:Math.sin(angle)};r.x=1000+180*v.x;r.y=850+180*v.y;placed.add(r.id);groups.push({root:r,v});});}
   else if(n.devices.length){const root=n.devices.find(d=>d.type==='switch')||n.devices[0];Object.assign(root,{x:600,y:180});placed.add(root.id);groups.push({root,v:{x:0,y:1}});}
   const neighbors=d=>n.links.flatMap(l=>l.a===d.id?[n.device(l.b)]:l.b===d.id?[n.device(l.a)]:[]).filter(Boolean);
   for(const {root,v} of groups){const queue=[root];for(let i=0;i<queue.length;i++){const parent=queue[i],children=neighbors(parent).filter(d=>!placed.has(d.id));children.forEach((d,j)=>{placed.add(d.id);const fullCircle=!routers.length&&parent===root;const direction=Math.atan2(v.y,v.x);const angle=fullCircle?direction+2*Math.PI*j/children.length:direction+(children.length===1?0:(j/(children.length-1)-.5)*Math.PI);const radius=Math.max(270,children.length*55);d.x=parent.x+radius*Math.cos(angle);d.y=parent.y+radius*Math.sin(angle);queue.push(d);});}}
   let isolated=0;for(const d of n.devices)if(!placed.has(d.id)){d.x=250+(isolated%4)*380;d.y=1900+Math.floor(isolated++/4)*300;}
+  if(hierarchical)arrangeHierarchy(n);
   for(const d of n.devices){const types=['dhcp','dns','web','browser','echo','nmap','generator','spoofer','firewall','ids','arpInspection'].filter(t=>d[t+'Server']||t==='firewall'&&(d.role==='firewall'||d.firewall?.enabled)||t==='ids'&&d.role==='firewall'||t==='arpInspection'&&d.arpInspection?.vlans.length);types.forEach((type,i)=>{const angle=-Math.PI/2+i*2*Math.PI/types.length;d[type==='dhcp'?'applicationOffset':type+'Offset']={x:Math.round(150*Math.cos(angle)),y:Math.round(130*Math.sin(angle))};});}
   n.applicationDrafts.forEach((a,i)=>{a.x=250+i*200;a.y=2200;});
   // Uniform padding preserves branch spacing even when a branch extends left of the origin.
@@ -180,5 +215,5 @@
   n.notes=[{id:'note1',title:kind==='protected'?'ARP: protected LAN':kind==='drop'?'ARP: gateway impersonation':'ARP: hidden interception',text:'1. Open Victim Client Browser and load http://192.168.2.20/ before the attack: the HTTP page works. Repeat requests from that Browser to test connectivity.\n2. '+lesson+'\n3. Use canvas Pause/Step and device Watch to inspect packets, cache changes and switch decisions. Static bindings are prepared, but are enforced only for enabled VLANs. Stop poisoning cancels future claims; forwarding continues until Clear learned state. Reload this example to reset.',x:490,y:460,width:460,height:280,color:'yellow',tags:['security','arp',kind],target:sw.id}];
   return {network:n,clientId:client.id,sourceId:attacker.id,switchId:sw.id,gatewayId:gateway.id,serverId:server.id};
  }
- const api={arpSecurity,dos,direct,complex,arrange,internet,firewall,https,securityLab};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerExamples=api;
+ const api={switchedTree,arpSecurity,dos,direct,complex,arrange,internet,firewall,https,securityLab};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerExamples=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
