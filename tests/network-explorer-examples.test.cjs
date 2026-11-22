@@ -42,9 +42,9 @@ test('generated routed networks have separated device footprints after arrangeme
   for(const host of n.devices.filter(d=>d.type==='host'))assert.equal(n.links.filter(l=>l.a===host.id||l.b===host.id).length,1);
  }
 });
-test('campus triangle has three routers, three switches, independent LANs and working DHCP/DNS/HTTP',()=>{
+test('campus triangle has three routers, seven switches, VLAN trunks and working DHCP/DNS/HTTP',()=>{
  const {network:n,clientId}=complex(Network),routers=n.devices.filter(d=>d.type==='router');
- assert.equal(routers.length,3);assert.equal(n.devices.filter(d=>d.type==='switch').length,3);
+ assert.equal(routers.length,3);assert.equal(n.devices.filter(d=>d.type==='switch').length,7);
  assert.ok(routers.every(r=>r.ports.length===3));assert.ok(n.devices.every(d=>!d.watch));
  const transit=n.links.filter(l=>n.device(l.a).type==='router'&&n.device(l.b).type==='router');assert.equal(transit.length,3);
  assert.ok(routers.every(r=>transit.filter(l=>l.a===r.id||l.b===r.id).length===2));
@@ -104,4 +104,19 @@ test('OSPF example is compact and radial before any UI arrangement',()=>{
  }
  for(const note of n.notes){const parent=n.device(note.target);assert.ok(Math.hypot(note.x-parent.x,note.y-parent.y)<110,'note starts beside parent');}
  const positions=n.devices.map(d=>[d.x,d.y]);arrange(n);assert.deepEqual(n.devices.map(d=>[d.x,d.y]),positions);
+});
+
+test('campus distribution belongs only to Client Router and carries isolated department VLANs',()=>{
+ const {network:n}=complex(Network),byName=name=>n.devices.find(d=>d.name===name);
+ const peers=d=>n.links.flatMap(l=>l.a===d.id?[n.device(l.b).name]:l.b===d.id?[n.device(l.a).name]:[]).sort();
+ assert.deepEqual(peers(byName('Campus Distribution')),['CS Access','Campus Server','Client Router','EE Access','Shared Access']);
+ assert.deepEqual(peers(byName('Services Switch')),['DHCP Host','DNS Host','Services Router']);
+ assert.deepEqual(peers(byName('Web Switch')),['Web Host','Web Router']);
+ assert.ok(peers(byName('CS Access')).includes('CS Lab'));
+ n.ping(byName('EE Client A').id,byName('EE Client B').ip);assert.equal(drain(n).ok,true);
+ assert.ok(n.history.some(e=>e.frame?.vlanTag===40));
+ const segment=require('../assets/js/network-explorer-vlan.js').segment(n,byName('EE Client A').id,'p0');
+ assert.ok(!segment.some(([id])=>id===byName('Client Router').id));
+ for(const name of ['CS Access','Shared Access','EE Access'])assert.ok(byName(name).y>byName('Campus Distribution').y);
+ assert.ok(byName('Campus Distribution').y>byName('Client Router').y);
 });

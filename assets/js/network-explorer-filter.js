@@ -4,6 +4,9 @@
   function matchAtom(r, filter) {
     const f = filter.trim().toLowerCase();
     if (!f) return true;
+    const tag=f.match(/^vlan\.tag\s*==\s*(\d+)$/);if(tag)return r.e.frame?.vlanTag===Number(tag[1]);
+    if(f==='tagged')return r.e.frame?.vlanTag!==undefined;
+    if(f==='untagged')return !!r.e.frame&&r.e.frame.vlanTag===undefined;
     const vlan = f.match(/^vlan(?:\.id)?\s*==\s*(\d+)$/);
     if (vlan) return r.e.vlan === Number(vlan[1]);
     if (f === "tcp") return ["TCP", "HTTP", "TLS"].includes(r.proto);
@@ -56,7 +59,7 @@
         if (/^(tcp|udp)\.(port|srcport|dstport)$/.test(field)) {
           if (!/^\d+$/.test(value) || Number(value) > 65535)
             throw new Error("Port must be between 0 and 65535.");
-        } else if (/^vlan(\.id)?$/.test(field)) {
+        } else if (/^vlan(\.(id|tag))?$/.test(field)) {
           if (!/^\d+$/.test(value) || Number(value) < 1 || Number(value) > 4094)
             throw new Error("VLAN must be between 1 and 4094.");
         } else if (/^ip\.(src|dst|addr)$/.test(field)) {

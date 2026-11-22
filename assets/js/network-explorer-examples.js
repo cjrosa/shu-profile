@@ -39,10 +39,33 @@
   client.browserOffset={x:0,y:110};dhcp.applicationOffset={x:-100,y:0};dns.dnsOffset={x:0,y:-65};web.webOffset={x:0,y:-65};
   const connect=(a,ap,b,bp,aa,ba)=>Object.assign(n.connect(a.id,ap,b.id,bp),{aAnchor:aa,bAnchor:ba});
   connect(r1,'p1',r2,'p1','right','left');connect(r2,'p2',r3,'p1','bottom','top');connect(r3,'p2',r1,'p2','left','bottom');
-  connect(r1,'p0',sw1,'p0','left','right');connect(sw1,'p1',client,'p0','bottom','top');
+  connect(r1,'p0',sw1,'p0','bottom','top');
   connect(r2,'p0',sw2,'p0','right','left');connect(sw2,'p1',dhcp,'p0','top','right');connect(sw2,'p2',dns,'p0','top','left');
   connect(r3,'p0',sw3,'p0','right','left');connect(sw3,'p1',web,'p0','right','left');
-  arrange(n);
+  const distribution=sw1;distribution.name='Campus Distribution';
+  const cs=add('switch','CS Access',220,650),shared=add('switch','Shared Access',680,650),ee=add('switch','EE Access',1120,650),lab=add('switch','CS Lab',350,930);
+  const remote=add('host','Remote Client',1000,880),csLab=add('host','CS Lab Client',350,1150),sharedClient=add('host','Shared Client',620,880),eeA=add('host','EE Client A',790,880),eeB=add('host','EE Client B',1210,880);
+  const localServer=add('host','Campus Server',950,430);
+  for(const sw of [distribution,cs,shared,ee,lab]){
+   n.setVlan(sw.id,10,'Computer Science');n.setVlan(sw.id,40,'Electrical Engineering');
+   for(const p of sw.ports)n.configurePort(sw.id,p.id,{accessVlan:10});
+  }
+  const trunk=(a,ap,b,bp)=>{
+   for(const [sw,p]of [[a,ap],[b,bp]])n.configurePort(sw.id,p,{mode:'trunk',nativeVlan:1,allowedVlans:[10,40]});
+   connect(a,ap,b,bp,'bottom','top');
+  };
+  trunk(distribution,'p1',cs,'p0');trunk(distribution,'p2',shared,'p0');trunk(distribution,'p3',ee,'p0');trunk(cs,'p2',lab,'p0');
+  connect(cs,'p1',client,'p0','left','top');connect(ee,'p1',remote,'p0','bottom','top');connect(lab,'p1',csLab,'p0','bottom','top');
+  connect(shared,'p1',sharedClient,'p0','bottom','top');connect(shared,'p2',eeA,'p0','bottom','top');connect(ee,'p2',eeB,'p0','bottom','top');
+  n.configurePort(shared.id,'p2',{accessVlan:40});n.configurePort(ee.id,'p2',{accessVlan:40});
+  n.configure(eeA.id,'192.168.40.10',24);n.configure(eeB.id,'192.168.40.11',24);
+  for(const h of [remote,csLab,sharedClient]){n.configureAddressMode(h.id,'dhcp');n.configureWeb(h.id,{enabled:true,url:'http://www.campus.example/'},'browser');}
+  connect(distribution,'p4',localServer,'p0','right','left');n.configure(localServer.id,'192.168.10.20',24);n.configureGateway(localServer.id,'192.168.10.1');
+  n.configureWeb(localServer.id,{enabled:true,port:80,title:'Campus LAN server',body:'This server connects directly to Campus Distribution in VLAN 10.'});
+  // Keep the router triangle above a distinct distribution/access tree.
+  for(const [d,x,y]of [[r1,680,250],[r2,1450,120],[r3,1450,400],[distribution,680,430],[sw2,1740,120],[sw3,1740,400],[dhcp,1990,100],[dns,1990,280],[web,1990,500],[client,120,880]])Object.assign(d,{x,y});
+  for(const h of [client,remote,csLab,sharedClient])h.browserOffset={x:-65,y:-100};
+  localServer.webOffset={x:100,y:-90};dhcp.applicationOffset={x:0,y:-80};dns.dnsOffset={x:0,y:-80};web.webOffset={x:0,y:-80};
   const note=(target,text,color,tags,offset)=>{const position=offset?{x:target.x+offset.x,y:target.y+offset.y}:target;n.notes.push({id:'note'+(n.notes.length+1),title:text.split('\n')[0],text:text.split('\n').slice(1).join('\n'),color,tags,target:offset?tags[0]+':'+target.id:target.id,x:position.x+52,y:position.y-48,width:200,height:130});};
   note(client,'Start here: get connected\nSelect @Browser Client and acquire a DHCP lease. Check the acquired IP, default gateway, and DNS server before opening http://www.campus.example/ in its Browser. Use Activity to follow the exchange.','yellow',['walkthrough','client','DHCP']);
   note(r1,'DHCP across subnets\nThe client starts without an IP address. Its DHCP broadcast stays on the Client LAN; @Client Router relays the request from G0/0 to 192.168.20.2 on the Services LAN. Inspect the interface relay setting.','blue',['DHCP','relay','routing']);
@@ -50,8 +73,11 @@
   note(dns,'Turn a name into an address\nwww.campus.example resolves to 192.168.30.10. From @Browser Client, try nslookup www.campus.example, then inspect the DNS query and reply in Activity. The DNS server is on a different LAN from the web server.','blue',['dns','name resolution','services'],dns.dnsOffset);
   note(web,'Deliver the web page\n@Web Host listens at 192.168.30.10 on TCP port 80. After DNS resolves the name, the browser establishes TCP and sends an HTTP request. Look for the HTTP 200 response and inspect the returned page.','green',['web','HTTP','TCP'],web.webOffset);
   note(r3,'Three LANs, three transit links\n@Client Router, @Services Router, and @Web Router use static routes to reach the other /24 LANs. Each router-to-router link has its own /30 subnet: 10.0.12.0, 10.0.23.0, or 10.0.13.0. Compare the route next hop with the connected interface; the triangle does not provide automatic failover.','pink',['routing','static routes','subnets']);
-  note(sw1,'Local delivery versus remote delivery\n@Client Switch learns source MAC addresses and forwards frames within the Client LAN. For the remote DNS and web servers, the client sends frames to its gateway MAC, while the IP destination remains the remote server. Inspect ARP and the MAC forwarding table.','yellow',['Ethernet','ARP','MAC','gateway']);
-  return {network:n,clientId:client.id};
+  note(sw1,'Local delivery versus remote delivery\n@Campus Distribution learns source MAC addresses and forwards frames within the Client LAN. For the remote DNS and web servers, the client sends frames to its gateway MAC, while the IP destination remains the remote server. Inspect ARP and the MAC forwarding table.','yellow',['Ethernet','ARP','MAC','gateway']);
+  note(distribution,'One router, multiple access switches\n@Client Router connects directly to @Campus Distribution through an access port in VLAN 10. Trunks branch to CS Access, Shared Access, and EE Access; CS Lab extends the CS branch. Trunks carry VLAN 10 (Computer Science) and VLAN 40 (Electrical Engineering). Tagging is automatic. Native VLAN 1 is not in the allowed list, so untagged trunk traffic is rejected. Inspect the trunk ports and compare the on-wire tag with the classified VLAN in Activity.','blue',['VLAN','trunk','802.1Q']);
+  note(remote,'A client on another access switch\nAcquire a DHCP lease on Remote Client, then browse http://www.campus.example/. Its access port belongs to VLAN 10 on EE Access alongside a separate VLAN 40 host. DHCP broadcasts cross the trunks with VLAN 10 tags to reach Client Router and its relay. Host-facing and router-facing access ports remove tags. Try removing VLAN 10 from a trunk allowed list, repeat the request, then restore it.','yellow',['VLAN','trunk','DHCP']);
+  note(ee,'VLANs span access switches\nEE Client A and EE Client B use VLAN 40 on different access switches. Ping 192.168.40.11 from EE Client A and follow tagged frames through Campus Distribution. VLAN 40 has no gateway in this example: it is isolated from VLAN 10 and the routed campus. Switch trunks do not provide inter-VLAN routing.','pink',['VLAN','isolation','EE']);
+  return {network:n,clientId:client.id,remoteClientId:remote.id};
  }
  function arrangeHierarchy(n){
   const adjacent=d=>n.links.flatMap(l=>l.a===d.id?[n.device(l.b)]:l.b===d.id?[n.device(l.a)]:[]).filter(Boolean);

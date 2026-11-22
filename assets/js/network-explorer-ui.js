@@ -1534,6 +1534,9 @@
           db = net.device(l.b),
           a = { ...da, ...portPosition(da, l.ap, l.aAnchor) },
           b = { ...db, ...portPosition(db, l.bp, l.bAnchor) };
+        const trunk = l.medium !== 'wifi' &&
+          (a.ports.find((p) => p.id === l.ap).mode === 'trunk' ||
+            b.ports.find((p) => p.id === l.bp).mode === 'trunk');
         const enabled =
           l.enabled &&
           a.ports.find((p) => p.id === l.ap).enabled &&
@@ -1550,9 +1553,9 @@
           '" fill="none" stroke="transparent" stroke-width="20"/><path d="' +
           pathData(route) +
           '" fill="none" stroke="' +
-          (selected === l.id ? "#287d78" : !enabled ? "#b66b60" : "#9ab0c2") +
+          (selected === l.id ? "#287d78" : !enabled ? "#b66b60" : trunk ? "#526d86" : "#9ab0c2") +
           '" stroke-width="' +
-          (selected === l.id ? 4 : 2) +
+          (selected === l.id ? 4 : trunk ? 3 : 2) +
           '" ' +
           (l.medium === "wifi" ? 'stroke-dasharray="3 6"' : enabled ? "" : 'stroke-dasharray="8 6"') +
           '/><text x="' +
@@ -1560,13 +1563,13 @@
           '" y="' +
           (a.y * 0.7 + b.y * 0.3 - 8) +
           '" font-size="11" fill="#61758a">' +
-          esc(a.ports.find((p) => p.id === l.ap).name) +
+          esc(a.ports.find((p) => p.id === l.ap).name + (a.ports.find(p=>p.id===l.ap).mode==='trunk'?' (Trunk)':'')) +
           '</text><text x="' +
           (a.x * 0.3 + b.x * 0.7) +
           '" y="' +
           (a.y * 0.3 + b.y * 0.7 - 8) +
           '" font-size="11" fill="#61758a">' +
-          esc(b.ports.find((p) => p.id === l.bp).name) +
+          esc(b.ports.find((p) => p.id === l.bp).name + (b.ports.find(p=>p.id===l.bp).mode==='trunk'?' (Trunk)':'')) +
           '</text><circle class="cable-select-handle" cx="' +
           handle.x +
           '" cy="' +
@@ -1787,6 +1790,7 @@
             pill.releasePointerCapture(e.pointerId);
           if (!target || net.device(d.id) !== d) return;
           const port = d.ports.find((p) => p.id === target.dataset.port);
+          if (port.mode === "trunk") { say("Open this trunk port to change its allowed VLANs."); return; }
           if (port.accessVlan !== vlan.id)
             mutate(() =>
               net.configurePort(d.id, port.id, { accessVlan: vlan.id }),
@@ -2020,24 +2024,9 @@
       "</p>" +
       ('<p class="port-mac-address">MAC address: <code>' + esc(p.mac) + '</code><button type="button" id="copy-port-mac" class="vlan-icon-button" aria-label="Copy MAC address" title="Copy MAC address"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg></button></p>') +
       (d.type === "host" ? hostAddressFields(d) : d.type === "switch"
-        ? "<p>" +
-          (isPan(d)
-            ? "Interface type: <strong>Layer 2</strong>"
-            : "Mode: <strong>Access</strong>") +
-          '</p><label>Access VLAN<select id="port-vlan">' +
-          d.vlans
-            .map(
-              (v) =>
-                '<option value="' +
-                v.id +
-                '" ' +
-                (v.id === p.accessVlan ? "selected" : "") +
-                ">" +
-                esc(v.id + " - " + v.name) +
-                "</option>",
-            )
-            .join("") +
-          '</select></label><p class="hint">Access ports carry untagged frames.</p>'
+        ? '<label>Mode<select id="port-mode"><option value="access" '+(p.mode!=='trunk'?'selected':'')+'>Access</option><option value="trunk" '+(p.mode==='trunk'?'selected':'')+(d.role==='ap'?' disabled':'')+'>Trunk</option></select></label>'+ (p.mode==='trunk'?
+          '<label>Allowed VLANs<input id="port-allowed-vlans" value="'+esc((p.allowedVlans||[]).join(','))+'" placeholder="10,20,30"></label><p class="hint">Use configured VLAN IDs, ranges, all, or none. All selects the VLANs currently configured.</p><label>Native VLAN<select id="port-native-vlan">'+d.vlans.map(v=>'<option value="'+v.id+'" '+(v.id===p.nativeVlan?'selected':'')+'>'+esc(v.id+' - '+v.name)+'</option>').join('')+'</select></label><p class="hint">Tagging is automatic. The native VLAN travels untagged; other allowed VLANs carry a tag. Configure both ends of the link.</p>' :
+          '<label>Access VLAN<select id="port-vlan">'+d.vlans.map(v=>'<option value="'+v.id+'" '+(v.id===p.accessVlan?'selected':'')+'>'+esc(v.id+' - '+v.name)+'</option>').join('')+'</select></label><p class="hint">Access ports carry one VLAN without tags.</p>')+(isPan(d)?'<p class="hint">Trunk is a simulator setting. PAN-OS tagged subinterface commands are not modeled.</p>':'')
         : d.type === "router" && d.firewallMode !== "transparent"
           ? '<div class="pair router-address"><label>IPv4 address<input id="router-ip" value="' +
             esc(p.ip) +
@@ -2065,18 +2054,13 @@
         }),
       );
     };
-    if (d.type === "switch")
-      $("port-vlan").onchange = () => {
-        if (!editable()) {
-          openPortConfig(deviceId, portId);
-          return;
-        }
-        mutate(() =>
-          net.configurePort(deviceId, portId, {
-            accessVlan: Number($("port-vlan").value),
-          }),
-        );
-      };
+    if (d.type === "switch") {
+      const updatePort = changes => { if (!editable()) { openPortConfig(deviceId, portId); return; } safely(() => { mutate(() => net.configurePort(deviceId, portId, changes)); openPortConfig(deviceId, portId); }); };
+      $("port-mode").onchange = () => updatePort({mode:$("port-mode").value});
+      if ($("port-vlan")) $("port-vlan").onchange = () => updatePort({accessVlan:Number($("port-vlan").value)});
+      if ($("port-native-vlan")) $("port-native-vlan").onchange = () => updatePort({nativeVlan:Number($("port-native-vlan").value)});
+      if ($("port-allowed-vlans")) $("port-allowed-vlans").onchange = () => safely(() => updatePort({allowedVlans:NetworkExplorerVlan.parse($("port-allowed-vlans").value,d)}));
+    }
     if (d.type === "router" && d.firewallMode !== "transparent") {
       const save = () => {
         if (!editable()) return;
@@ -2170,7 +2154,7 @@
       }
       bindHostAddressing(d);
     }
-    if (d.type === "switch") styleVlanDropdown(d);
+    if (d.type === "switch" && $("port-vlan")) styleVlanDropdown(d);
     if (!portConfig.open) portConfig.showModal();
   }
   const portMenu = document.createElement("div");
@@ -3800,11 +3784,11 @@
         "<strong>" + (l.medium === "wifi" ? "Wireless association" : "Ethernet connection") + "</strong><p>" +
         esc(a.name) +
         " / " +
-        esc(a.ports.find((p) => p.id === l.ap).name) +
+        esc(a.ports.find((p) => p.id === l.ap).name + (a.ports.find(p=>p.id===l.ap).mode==='trunk'?' (Trunk)':'')) +
         " ↔ " +
         esc(b.name) +
         " / " +
-        esc(b.ports.find((p) => p.id === l.bp).name) +
+        esc(b.ports.find((p) => p.id === l.bp).name + (b.ports.find(p=>p.id===l.bp).mode==='trunk'?' (Trunk)':'')) +
         '</p><label class="certificate-toggle"><span>' + (l.medium === 'wifi' ? 'Wireless link enabled' : 'Cable enabled') + '</span><input id="link-enabled" type="checkbox" role="switch" ' +
         (l.enabled ? "checked" : "") +
         '><span class="certificate-switch" aria-hidden="true"></span></label><button id="delete" class="danger">Delete connection</button>';
@@ -4976,7 +4960,9 @@
     const ethernet =
       cell("Destination MAC", frame.dst, "dst") +
       cell("Source MAC", frame.src, "src") +
-      cell("EtherType", frame.type === "ARP" ? "0x0806" : "0x0800", "type");
+      cell("VLAN tag", frame.vlanTag === undefined ? "Untagged" : frame.vlanTag, "vlanTag") +
+      cell("EtherType", frame.vlanTag !== undefined ? "0x8100 (802.1Q)" : frame.type === "ARP" ? "0x0806" : "0x0800", "vlanTag") +
+      (frame.vlanTag !== undefined ? cell("Encapsulated EtherType", frame.type === "ARP" ? "0x0806" : "0x0800", "type") : "");
     const payload =
       frame.type === "ARP"
         ? '<div class="packet-fields arp-fields">' +
@@ -5407,6 +5393,7 @@
       "show vlan brief",
       "show interfaces",
       "show interfaces switchport",
+      "show interfaces trunk",
       "show mac address-table",
     ];
     return base.concat(
@@ -5420,6 +5407,9 @@
             ? ["name"]
             : [
                 "switchport mode access",
+                "switchport mode trunk",
+                "switchport trunk allowed vlan",
+                "switchport trunk native vlan",
                 "switchport access vlan",
                 "shutdown",
                 "no shutdown",
@@ -5608,9 +5598,9 @@
       } else if (
         d.type === "switch" &&
         c.mode === "interface" &&
-        cmd === "switchport mode access"
+        /^switchport mode (access|trunk)$/.test(cmd)
       )
-        change(() => net.configurePort(d.id, c.port, { mode: "access" }));
+        change(() => net.configurePort(d.id, c.port, { mode: parts[2] }));
       else if (
         d.type === "switch" &&
         c.mode === "interface" &&
@@ -5627,6 +5617,12 @@
         change(() =>
           net.configurePort(d.id, c.port, { enabled: cmd === "no shutdown" }),
         );
+      else if (d.type === "switch" && c.mode === "interface" && /^switchport trunk native vlan \d+$/.test(cmd))
+        change(() => net.configurePort(d.id,c.port,{nativeVlan:Number(parts[4])}));
+      else if (d.type === "switch" && c.mode === "interface" && cmd.startsWith("switchport trunk allowed vlan "))
+        change(() => net.configurePort(d.id,c.port,{allowedVlans:NetworkExplorerVlan.parse(parts.slice(4).join(" "),d)}));
+      else if (d.type === "switch" && cmd === "show interfaces trunk")
+        output(d.ports.filter(p=>p.mode==='trunk').map(p=>p.name+'  trunk  native '+p.nativeVlan+'  allowed '+(p.allowedVlans.join(',')||'none')+'  '+(p.enabled?'enabled':'disabled')).join('\n')||'No trunk ports.');
       else if (d.type === "switch" && cmd === "show vlan brief")
         output(
           "VLAN  Name  Ports\n" +
@@ -5638,7 +5634,7 @@
                   v.name +
                   "  " +
                   d.ports
-                    .filter((p) => p.accessVlan === v.id)
+                    .filter((p) => p.mode !== "trunk" && p.accessVlan === v.id)
                     .map((p) => p.name)
                     .join(", "),
               )
@@ -5650,8 +5646,7 @@
             .map(
               (p) =>
                 p.name +
-                "  access  VLAN " +
-                p.accessVlan +
+                (p.mode === "trunk" ? "  trunk  native " + p.nativeVlan + "  allowed " + (p.allowedVlans.join(",") || "none") : "  access  VLAN " + p.accessVlan) +
                 "  " +
                 (p.enabled ? "enabled" : "disabled"),
             )
@@ -8589,7 +8584,7 @@
     say(
       "Acquire a DHCP lease on Browser Client, then open its Browser and visit www.campus.example.",
     );
-  });
+  }, true);
   for(const kind of ['encrypt','harden','detect','prevent']) registerExample('example-security-'+kind,()=>{
     if((net.devices.length||net.applicationDrafts.length)&&!confirm('Replace this network with the security exercise?'))return;
     discard();candidateBase=null;

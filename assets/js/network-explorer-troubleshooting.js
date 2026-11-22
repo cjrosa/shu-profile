@@ -213,6 +213,7 @@
             if (!port?.enabled) continue;
             Object.assign(fault, {device:sw.id, deviceName:sw.name, port:port.id, portName:port.name});
             if (kind === 'vlan') {
+              if (port.mode === 'trunk') continue;
               const other = sw.vlans.find(v => v.id !== port.accessVlan);
               if (!other) continue;
               fault.original = port.accessVlan; fault.broken = other.id;

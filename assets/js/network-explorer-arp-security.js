@@ -14,8 +14,8 @@
   const keys=new Set();
   for(const b of c.bindings){const key=b.vlan+':'+b.ip;if(!validIp(b.ip)||!validMac(b.mac)||!d.vlans.some(v=>v.id===b.vlan)||!d.ports.some(p=>p.id===b.port)||keys.has(key))throw Error('Each binding needs a unique VLAN/IP, unicast MAC and valid switch port.');keys.add(key);}
  }
- function inspect(n,d,p,f,order){
-  const c=d.arpInspection,vlan=p.accessVlan||1;if(f.type!=='ARP'||!c?.vlans.includes(vlan))return null;
+ function inspect(n,d,p,f,order,vlan=p.accessVlan||1){
+  const c=d.arpInspection;if(f.type!=='ARP'||!c?.vlans.includes(vlan))return null;
   const binding=c.bindings.find(b=>b.vlan===vlan&&b.ip===f.sip),claim=f.sha??f.src;
   let reason='Approved static binding matches IP, MAC, VLAN and ingress port.',action='allow';
   if(c.trustedPorts.includes(p.id))reason='Trusted ingress: bypass ARP inspection.';

@@ -41,7 +41,7 @@ window.NetworkExplorerInspectorPorts = {
               (p.enabled ? "Enabled" : "Disabled") +
               " - " +
               peer;
-            const inspected=d.arpInspection?.vlans.includes(p.accessVlan);
+            const inspected=d.arpInspection?.vlans.some(v=>NetworkExplorerVlan.carries(p,v));
             return (
               (trustMode?'<div class="interface-port arp-trust-tile '+(inspected?'':'not-inspected '):'<button type="button" class="interface-port ') +
               (p.enabled ? "enabled" : "disabled") +
@@ -63,7 +63,7 @@ window.NetworkExplorerInspectorPorts = {
                 ? '<span class="vlan-badge" style="--vlan-color:' +
                   esc(d.vlans.find((v) => v.id === p.accessVlan)?.color) +
                   '">' +
-                  esc(vlanLabel(d, p.accessVlan)) +
+                  esc(p.mode==='trunk'?'Trunk':vlanLabel(d, p.accessVlan)) +
                   "</span>"
                 : "") +
               (trustMode?'<label class="certificate-toggle arp-port-trust-toggle" title="'+(inspected?'Trust '+esc(p.name):'No inspected VLAN')+'"><input type="checkbox" role="switch" aria-label="Trust '+esc(p.name)+'" data-arp-trust="'+p.id+'" '+(d.arpInspection?.trustedPorts.includes(p.id)?'checked ':'')+(inspected?'':'disabled ')+'><span class="certificate-switch" aria-hidden="true"></span></label><span class="arp-port-trust-caption">'+(inspected?(d.arpInspection?.trustedPorts.includes(p.id)?'Trusted':'Untrusted'):'Not inspected')+'</span></div>':"</button>")

@@ -59,7 +59,7 @@
     "example-complex": {
       title: "Campus network",
       description:
-        "Three routers, three switches, DHCP relay, DNS and Web browsing.",
+        "Three routers, VLAN trunks, DHCP relay, DNS and web browsing.",
     },
   };
   root.NetworkExplorerActions = {

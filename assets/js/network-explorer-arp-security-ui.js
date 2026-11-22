@@ -74,17 +74,17 @@
     const markup=p=>{
       const v=d.vlans.find(v=>v.id===p.accessVlan),c=d.arpInspection||NetworkExplorerArpSecurity.policyDefaults();
       const link=n.links.find(l=>l.a===d.id&&l.ap===p.id||l.b===d.id&&l.bp===p.id),peer=link?n.device(link.a===d.id?link.b:link.a)?.name:'Not connected';
-      const status=!c.vlans.includes(p.accessVlan)?'Not inspected':c.trustedPorts.includes(p.id)?'Trusted - bypassed':'Inspected';
-      return portSvg()+'<span class="arp-port-choice"><span><strong>'+safe(p.name)+'</strong> <span class="vlan-badge" style="--vlan-color:'+safe(v?.color)+'">V'+p.accessVlan+'</span></span><small>'+status+'</small><small>'+safe(peer)+'</small></span>';
+      const status=!c.vlans.some(v=>NetworkExplorerVlan.carries(p,v))?'Not inspected':c.trustedPorts.includes(p.id)?'Trusted - bypassed':'Inspected';
+      return portSvg()+'<span class="arp-port-choice"><span><strong>'+safe(p.name)+'</strong> <span class="vlan-badge" style="--vlan-color:'+safe(v?.color)+'">'+(p.mode==='trunk'?'Trunk':'V'+p.accessVlan)+'</span></span><small>'+status+'</small><small>'+safe(peer)+'</small></span>';
     };
     const refreshPorts=()=>{
-      for(const option of port.options)option.disabled=d.ports.find(p=>p.id===option.value)?.accessVlan!==Number(vlan.value);
+      for(const option of port.options)option.disabled=!NetworkExplorerVlan.carries(d.ports.find(p=>p.id===option.value),Number(vlan.value));
       if(!port.selectedOptions[0]||port.selectedOptions[0].disabled){const first=[...port.options].find(o=>!o.disabled);if(first)port.value=first.value;}
       const valid=!!port.selectedOptions[0]&&!port.selectedOptions[0].disabled;
       form.querySelector('[type="submit"]').disabled=!valid;
       port.setCustomValidity(valid?'':'No port belongs to the selected VLAN.');
       el.querySelector('#arp-binding-port-value').innerHTML=valid?portSvg()+'<span>'+safe(d.ports.find(p=>p.id===port.value).name)+'</span>':'No matching ports';
-      el.querySelectorAll('#arp-binding-port-options [role="option"]').forEach(button=>{const p=d.ports.find(p=>p.id===button.dataset.value);button.disabled=p.accessVlan!==Number(vlan.value);button.setAttribute('aria-disabled',String(button.disabled));button.setAttribute('aria-selected',String(valid&&p.id===port.value));button.firstElementChild.innerHTML=markup(p);});
+      el.querySelectorAll('#arp-binding-port-options [role="option"]').forEach(button=>{const p=d.ports.find(p=>p.id===button.dataset.value);button.disabled=!NetworkExplorerVlan.carries(p,Number(vlan.value));button.setAttribute('aria-disabled',String(button.disabled));button.setAttribute('aria-selected',String(valid&&p.id===port.value));button.firstElementChild.innerHTML=markup(p);});
     };
     port.addEventListener('change',refreshPorts);vlan.addEventListener('change',refreshPorts);
     form.addEventListener('bindingreset',()=>{vlan.dispatchEvent(new Event('pickerrefresh'));refreshPorts();});
