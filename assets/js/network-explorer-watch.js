@@ -30,7 +30,7 @@
     return result.length ? result : ["other"];
   }
   function matches(d, r) {
-    return !!d?.watch && !(r.ospf && !r.ospfChanged) && !r.kind?.endsWith("-application") &&
+    return !!d?.watch && !r.kind?.endsWith("-application") &&
       (!Array.isArray(d.watchDecisions) || categories(d, r).some(k => d.watchDecisions.includes(k)));
   }
   const api = { labels, options, categories, matches };
