@@ -3805,9 +3805,9 @@
         esc(b.name) +
         " / " +
         esc(b.ports.find((p) => p.id === l.bp).name) +
-        '</p><label><input id="link-enabled" type="checkbox" ' +
+        '</p><label class="certificate-toggle"><span>' + (l.medium === 'wifi' ? 'Wireless link enabled' : 'Cable enabled') + '</span><input id="link-enabled" type="checkbox" role="switch" ' +
         (l.enabled ? "checked" : "") +
-        '> ' + (l.medium === 'wifi' ? 'Wireless link enabled' : 'Cable enabled') + '</label><button id="delete" class="danger">Delete connection</button>';
+        '><span class="certificate-switch" aria-hidden="true"></span></label><button id="delete" class="danger">Delete connection</button>';
       $("link-enabled").onchange = (e) =>
         mutate(() => (l.enabled = e.target.checked));
       $("delete").onclick = () => deleteTopologyItem(l.id);
