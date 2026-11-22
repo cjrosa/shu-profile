@@ -1156,6 +1156,13 @@
     e.preventDefault();
     cancelConnect();
   });
+  function moveDeviceVisual(d, x, y) {
+    const dx=x-d.x, dy=y-d.y;
+    const targets=new Set([d.id,...applications().filter(a=>a.host===d.id).map(a=>a.id)]);
+    for(const note of net.notes)if(targets.has(note.target)){note.x+=dx;note.y+=dy;}
+    d.x=x;d.y=y;
+    for(const link of net.links)if(link.a===d.id||link.b===d.id){delete link.aAnchor;delete link.bAnchor;}
+  }
   function cablePath(l) {
     const a = net.device(l.a),
       b = net.device(l.b);
@@ -6228,20 +6235,21 @@
     if (!drag) return;
     const d = net.device(drag.id),
       p = point(e);
-    d.x = Math.max(
+    const nextX = Math.max(
       55,
       Math.min(
         Math.max(845, svg.viewBox.baseVal.x + svg.viewBox.baseVal.width - 55),
         p.x - drag.dx,
       ),
     );
-    d.y = Math.max(
+    const nextY = Math.max(
       55,
       Math.min(
         Math.max(470, svg.viewBox.baseVal.y + svg.viewBox.baseVal.height - 90),
         p.y - drag.dy,
       ),
     );
+    moveDeviceVisual(d, nextX, nextY);
     drag.target =
       net.devices.find(
         (other) =>
@@ -6266,8 +6274,7 @@
     ) {
       const source = net.device(dropped.id),
         destination = net.device(dropped.target);
-      source.x = dropped.startX;
-      source.y = dropped.startY;
+      moveDeviceVisual(source, dropped.startX, dropped.startY);
       draw();
       if (!editable()) return;
       const dx = destination.x - source.x,
@@ -6548,6 +6555,8 @@
       const previous = net;
       const result = load();
       if (net !== previous) {
+        NetworkExplorerExamples.arrange(net);
+        render();
         fitOpenedNetwork();
         document.dispatchEvent(new CustomEvent("network-recent-record", {
           detail: { name: NetworkExplorerActions.examples[id].title, data: net.save() },
@@ -6811,6 +6820,7 @@
       discard();
       candidateBase = null;
       net = next;
+      NetworkExplorerExamples.arrange(net);
       selected = null;
       examined = false;
       cancelConnect();
@@ -6822,7 +6832,7 @@
           detail: { name: file.name, data: net.save() },
         }),
       );
-      say("Network loaded. Learned tables start empty.");
+      say("Network loaded and arranged. Learned tables start empty.");
     } catch (err) {
       say(err.message);
     } finally {
@@ -8701,6 +8711,7 @@
       discard();
       candidateBase = null;
       net = next;
+      NetworkExplorerExamples.arrange(net);
       selected = null;
       examined = false;
       cancelConnect();
@@ -8708,7 +8719,7 @@
       fitOpenedNetwork();
       recordHistory(before, "Open recent network");
       e.detail.opened = true;
-      say("Recent network loaded. Learned tables start empty.");
+      say("Recent network loaded and arranged. Learned tables start empty.");
     } catch (err) {
       say(err.message);
     }

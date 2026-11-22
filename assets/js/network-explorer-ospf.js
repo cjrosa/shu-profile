@@ -142,6 +142,9 @@
     for(const [a,pa,b,pb,sub]of (triangle?[[0,'p1',1,'p1',12],[1,'p2',2,'p1',23],[0,'p2',2,'p2',13]]:[[0,'p1',1,'p1',12]])){n.configureInterface(routers[a].id,pa,'10.0.'+sub+'.1',30);n.configureInterface(routers[b].id,pb,'10.0.'+sub+'.2',30);n.connect(routers[a].id,pa,routers[b].id,pb);}
     for(const r of routers){const c=defaults(r);c.enabled=true;for(const p of r.ports)c.interfaces[p.id].mode=p.id==='p0'?'passive':'active';n.configureOspf(r.id,c);}
     n.notes=[{id:'note1',title:triangle?'OSPF: three-router network':'OSPF: two-router network',text:'This is a working network. Wait for OSPF neighbors to become Full, then ping '+hosts.at(-1).ip+' from LAN A Host. Inspect each router?s learned routes, interface costs, neighbors, and link-state database. For troubleshooting, open Incidents and choose Dynamic routing.',x:430,y:530,width:460,height:220,color:'blue',tags:['ospf','routing'],target:routers[0].id}];
+    // Give every caller the finished visual layout before the first render or save.
+    const examples=root.NetworkExplorerExamples||(typeof require==='function'?require('./network-explorer-examples.js'):null);
+    examples.arrange(n);
     return {network:n,clientId:hosts[0].id};
   }
   const api={install,defaults,validate,example};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerOSPF=api;

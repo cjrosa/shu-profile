@@ -41,12 +41,12 @@
  }
  function arrange(n){
   const routers=n.devices.filter(d=>d.type==='router'),placed=new Set(),groups=[];
-  if(routers.length){routers.forEach((r,i)=>{const angle=routers.length===3?(-150+i*120)*Math.PI/180:2*Math.PI*i/routers.length-Math.PI/2;const v={x:Math.cos(angle),y:Math.sin(angle)};r.x=1000+260*v.x;r.y=850+260*v.y;placed.add(r.id);groups.push({root:r,v});});}
+  if(routers.length){routers.forEach((r,i)=>{const angle=routers.length===3?(-150+i*120)*Math.PI/180:2*Math.PI*i/routers.length-Math.PI/2;const v={x:Math.cos(angle),y:Math.sin(angle)};r.x=1000+180*v.x;r.y=850+180*v.y;placed.add(r.id);groups.push({root:r,v});});}
   else if(n.devices.length){const root=n.devices.find(d=>d.type==='switch')||n.devices[0];Object.assign(root,{x:600,y:180});placed.add(root.id);groups.push({root,v:{x:0,y:1}});}
   const neighbors=d=>n.links.flatMap(l=>l.a===d.id?[n.device(l.b)]:l.b===d.id?[n.device(l.a)]:[]).filter(Boolean);
-  for(const {root,v} of groups){const queue=[root];for(let i=0;i<queue.length;i++){const parent=queue[i],children=neighbors(parent).filter(d=>!placed.has(d.id));children.forEach((d,j)=>{placed.add(d.id);const spread=(j-(children.length-1)/2)*330;d.x=parent.x+300*v.x-spread*v.y;d.y=parent.y+300*v.y+spread*v.x;queue.push(d);});}}
+  for(const {root,v} of groups){const queue=[root];for(let i=0;i<queue.length;i++){const parent=queue[i],children=neighbors(parent).filter(d=>!placed.has(d.id));children.forEach((d,j)=>{placed.add(d.id);const fullCircle=!routers.length&&parent===root;const direction=Math.atan2(v.y,v.x);const angle=fullCircle?direction+2*Math.PI*j/children.length:direction+(children.length===1?0:(j/(children.length-1)-.5)*Math.PI);const radius=Math.max(270,children.length*55);d.x=parent.x+radius*Math.cos(angle);d.y=parent.y+radius*Math.sin(angle);queue.push(d);});}}
   let isolated=0;for(const d of n.devices)if(!placed.has(d.id)){d.x=250+(isolated%4)*380;d.y=1900+Math.floor(isolated++/4)*300;}
-  for(const d of n.devices){const types=['dhcp','dns','web','browser','echo','nmap','generator','spoofer'].filter(t=>d[t+'Server']);types.forEach((type,i)=>{d[type==='dhcp'?'applicationOffset':type+'Offset']={x:160,y:(i-(types.length-1)/2)*150};});}
+  for(const d of n.devices){const types=['dhcp','dns','web','browser','echo','nmap','generator','spoofer','firewall','ids','arpInspection'].filter(t=>d[t+'Server']||t==='firewall'&&(d.role==='firewall'||d.firewall?.enabled)||t==='ids'&&d.role==='firewall'||t==='arpInspection'&&d.arpInspection?.vlans.length);types.forEach((type,i)=>{const angle=-Math.PI/2+i*2*Math.PI/types.length;d[type==='dhcp'?'applicationOffset':type+'Offset']={x:Math.round(150*Math.cos(angle)),y:Math.round(130*Math.sin(angle))};});}
   n.applicationDrafts.forEach((a,i)=>{a.x=250+i*200;a.y=2200;});
   // Uniform padding preserves branch spacing even when a branch extends left of the origin.
   if(n.devices.length){const dx=180-Math.min(...n.devices.map(d=>d.x)),dy=120-Math.min(...n.devices.map(d=>d.y));n.devices.forEach(d=>{d.x+=dx;d.y=(d.y+dy-120)*.65+120;});}
@@ -75,6 +75,13 @@
    occupied.push(box);
   }
   if(n.devices.length){const dx=Math.max(0,180-Math.min(...n.devices.map(d=>d.x))),dy=Math.max(0,120-Math.min(...n.devices.map(d=>d.y)));n.devices.forEach(d=>{d.x+=dx;d.y+=dy;});}
+  const noteSlots=new Map();
+  for(const note of n.notes){
+    const parts=String(note.target||'').split(':'),d=n.device(parts.at(-1));if(!d)continue;
+    const offset=parts.length>1?(d[parts[0]==='dhcp'?'applicationOffset':parts[0]+'Offset']||{x:150,y:0}):{x:0,y:0};
+    const slot=noteSlots.get(note.target)||0;noteSlots.set(note.target,slot+1);
+    note.x=d.x+offset.x+65+(slot%3)*38;note.y=d.y+offset.y-65-Math.floor(slot/3)*42;
+  }
   n.links.forEach(l=>{delete l.aAnchor;delete l.bAnchor;});
  }
  function internet(Network){

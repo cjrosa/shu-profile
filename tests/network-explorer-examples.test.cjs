@@ -44,3 +44,41 @@ test('direct connection has two static Windows hosts and bidirectional reachabil
  for(const [a,b]of [[0,1],[1,0]]){n.ping(n.devices[a].id,n.devices[b].ip);assert.equal(drain(n).ok,true);}
  assert.deepEqual(new Network(n.save()).save(),n.save());
 });
+
+test('star layout surrounds a switch and keeps attached services and notes nearby',()=>{
+ const n=new Network(),sw=n.add('switch');
+ for(let i=0;i<4;i++){const h=n.add('host');n.connect(sw.id,'p'+i,h.id,'p0');}
+ const h=n.devices[1];n.configureDnsServer(h.id,{enabled:true,records:[]});
+ n.notes=[{id:'note1',target:h.id,x:9000,y:9000},{id:'note2',target:'dns:'+h.id,x:9000,y:9000}];
+ arrange(n);
+ assert.ok(n.devices.some(d=>d.x<sw.x));assert.ok(n.devices.some(d=>d.x>sw.x));
+ assert.ok(n.devices.some(d=>d.y<sw.y));assert.ok(n.devices.some(d=>d.y>sw.y));
+ assert.ok(Math.hypot(h.dnsOffset.x,h.dnsOffset.y)<=160);
+ for(const note of n.notes)assert.ok(Math.hypot(note.x-h.x,note.y-h.y)<260);
+});
+
+test('moving a device carries its notes and refreshes both cable anchors',()=>{
+ const fs=require('node:fs'),vm=require('node:vm'),source=fs.readFileSync(require.resolve('../assets/js/network-explorer-ui.js'),'utf8');
+ const d={id:'a',x:100,y:100},peer={id:'b',x:400,y:100};
+ const link={a:'a',b:'b',ap:'p0',bp:'p0',aAnchor:'top',bAnchor:'bottom'};
+ const net={devices:[d,peer],device:id=>id==='a'?d:peer,links:[link],notes:[{target:'a',x:150,y:50},{target:'dns:a',x:210,y:30},{target:'b',x:400,y:40}]};
+ const context={net,applications:()=>[{id:'dns:a',host:'a'}],portPosition:(d,p,side)=>({x:d.x,y:d.y,side})};
+ vm.createContext(context);vm.runInContext(source.slice(source.indexOf('  function moveDeviceVisual('),source.indexOf('  function pathData(')),context);
+ context.moveDeviceVisual(d,600,100);
+ assert.equal(net.notes[0].x,650);assert.equal(net.notes[1].x,710);assert.equal(net.notes[2].x,400);
+ context.cablePath(link);assert.equal(link.aAnchor,'left');assert.equal(link.bAnchor,'right');
+ context.moveDeviceVisual(d,400,400);context.cablePath(link);assert.equal(link.aAnchor,'top');assert.equal(link.bAnchor,'bottom');
+});
+
+test('OSPF example is compact and radial before any UI arrangement',()=>{
+ const {network:n}=require('../assets/js/network-explorer-ospf.js').example(Network,true);
+ const routers=n.devices.filter(d=>d.type==='router'),center={x:routers.reduce((s,d)=>s+d.x,0)/3,y:routers.reduce((s,d)=>s+d.y,0)/3};
+ for(const router of routers){
+  const link=n.links.find(l=>(l.a===router.id&&n.device(l.b).type==='host')||(l.b===router.id&&n.device(l.a).type==='host'));
+  const host=n.device(link.a===router.id?link.b:link.a);
+  assert.ok((host.x-router.x)*(router.x-center.x)+(host.y-router.y)*(router.y-center.y)>0,'host lies outward from router core');
+  assert.ok(Math.hypot(host.x-router.x,host.y-router.y)<=280,'LAN remains close');
+ }
+ for(const note of n.notes){const parent=n.device(note.target);assert.ok(Math.hypot(note.x-parent.x,note.y-parent.y)<110,'note starts beside parent');}
+ const positions=n.devices.map(d=>[d.x,d.y]);arrange(n);assert.deepEqual(n.devices.map(d=>[d.x,d.y]),positions);
+});
