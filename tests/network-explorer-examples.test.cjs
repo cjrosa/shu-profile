@@ -45,7 +45,7 @@ test('generated routed networks have separated device footprints after arrangeme
 test('campus triangle has three routers, seven switches, VLAN trunks and working DHCP/DNS/HTTP',()=>{
  const {network:n,clientId}=complex(Network),routers=n.devices.filter(d=>d.type==='router');
  assert.equal(routers.length,3);assert.equal(n.devices.filter(d=>d.type==='switch').length,7);
- assert.ok(routers.every(r=>r.ports.length===3));assert.ok(n.devices.every(d=>!d.watch));
+ assert.ok(routers.every(r=>r.ports.filter(p=>!p.parentPort).length===3));assert.ok(n.devices.every(d=>!d.watch));
  const transit=n.links.filter(l=>n.device(l.a).type==='router'&&n.device(l.b).type==='router');assert.equal(transit.length,3);
  assert.ok(routers.every(r=>transit.filter(l=>l.a===r.id||l.b===r.id).length===2));
  for(const l of transit){assert.equal(n.device(l.a).ports.find(p=>p.id===l.ap).prefix,30);assert.equal(n.device(l.b).ports.find(p=>p.id===l.bp).prefix,30);}
@@ -57,7 +57,7 @@ test('campus triangle has three routers, seven switches, VLAN trunks and working
 });
 test('routed triangles are allowed but Ethernet loops remain blocked',()=>{
  const n=new Network(),a=n.add('switch'),b=n.add('switch'),c=n.add('switch');n.connect(a.id,'p0',b.id,'p0');n.connect(b.id,'p1',c.id,'p0');assert.throws(()=>n.connect(c.id,'p1',a.id,'p1'),/Layer 2 loop/);
- const {network:campus}=complex(Network),saved=campus.save(),router=saved.devices.find(d=>d.type==='router');router.ports[2].ip=router.ports[0].ip;router.ports[2].prefix=24;assert.throws(()=>new Network(saved),/Overlapping/);
+ const {network:campus}=complex(Network),saved=campus.save(),router=saved.devices.find(d=>d.type==='router');router.ports[2].ip=router.ports.find(p=>p.parentPort).ip;router.ports[2].prefix=24;assert.throws(()=>new Network(saved),/Overlapping/);
 });
 
 test('direct connection has two static Windows hosts and bidirectional reachability without a gateway',()=>{
@@ -113,10 +113,10 @@ test('campus distribution belongs only to Client Router and carries isolated dep
  assert.deepEqual(peers(byName('Services Switch')),['DHCP Host','DNS Host','Services Router']);
  assert.deepEqual(peers(byName('Web Switch')),['Web Host','Web Router']);
  assert.ok(peers(byName('CS Access')).includes('CS Lab'));
- n.ping(byName('EE Client A').id,byName('EE Client B').ip);assert.equal(drain(n).ok,true);
+ n.acquireDhcp(byName('EE Client A').id);assert.equal(drain(n).ok,true);n.acquireDhcp(byName('EE Client B').id);assert.equal(drain(n).ok,true);n.ping(byName('EE Client A').id,byName('EE Client B').ip);assert.equal(drain(n).ok,true);
  assert.ok(n.history.some(e=>e.frame?.vlanTag===40));
  const segment=require('../assets/js/network-explorer-vlan.js').segment(n,byName('EE Client A').id,'p0');
- assert.ok(!segment.some(([id])=>id===byName('Client Router').id));
+ assert.ok(segment.some(([id,port])=>id===byName('Client Router').id&&port==='p0.40'));assert.ok(!segment.some(([id])=>id===byName('Remote Client').id));
  for(const name of ['CS Access','Shared Access','EE Access'])assert.ok(byName(name).y>byName('Campus Distribution').y);
  assert.ok(byName('Campus Distribution').y>byName('Client Router').y);
 });

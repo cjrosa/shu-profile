@@ -5,7 +5,7 @@ window.NetworkExplorerInspectorPorts = {
       const net = getNetwork();
       return (
         (trustMode ? '<div class="interface-chassis arp-trust-chassis"><div class="interface-ports">' : '<div class="small-heading inspector-section-heading">Interfaces</div><p class="hint">Click a port to configure it. Right-click to enable or disable.</p><div class="interface-chassis"><div class="interface-ports">') +
-        d.ports
+        d.ports.filter(p=>!p.parentPort)
           .map((p) => {
             const wireless=!!d.wifi||(d.role==='ap'&&p.id!=='p0');
             const portLabel=d.role==='ap'&&wireless?'Client '+p.id.slice(1):p.name.replace(/^ethernet/, 'eth');
@@ -65,7 +65,7 @@ window.NetworkExplorerInspectorPorts = {
                   '">' +
                   esc(p.mode==='trunk'?'Trunk':vlanLabel(d, p.accessVlan)) +
                   "</span>"
-                : "") +
+                : d.ports.some(q=>q.parentPort===p.id)?'<span class="vlan-badge">Tagged VLANs</span>': "") +
               (trustMode?'<label class="certificate-toggle arp-port-trust-toggle" title="'+(inspected?'Trust '+esc(p.name):'No inspected VLAN')+'"><input type="checkbox" role="switch" aria-label="Trust '+esc(p.name)+'" data-arp-trust="'+p.id+'" '+(d.arpInspection?.trustedPorts.includes(p.id)?'checked ':'')+(inspected?'':'disabled ')+'><span class="certificate-switch" aria-hidden="true"></span></label><span class="arp-port-trust-caption">'+(inspected?(d.arpInspection?.trustedPorts.includes(p.id)?'Trusted':'Untrusted'):'Not inspected')+'</span></div>':"</button>")
             );
           })

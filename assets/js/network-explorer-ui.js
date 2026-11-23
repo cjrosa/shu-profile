@@ -1042,7 +1042,7 @@
         destination = net.device(device);
       if (
         [source, destination].some(
-          (d) => !d.ports.some((p) => p.enabled && !occupied(d.id, p.id)),
+          (d) => !d.ports.some((p) => !p.parentPort && p.enabled && !occupied(d.id, p.id)),
         )
       ) {
         say("Each endpoint needs an enabled, available Ethernet port.");
@@ -1614,7 +1614,7 @@
                 ? d.ip + "/" + d.prefix
                 : "Not configured"
               : d.type === "router"
-                ? d.firewallMode === "transparent" ? "2 bridge ports" : d.ports.length + " routed interfaces"
+                ? d.firewallMode === "transparent" ? "2 bridge ports" : d.ports.filter(p=>!p.parentPort).length + " ports" + (d.ports.some(p=>p.parentPort)?" + "+d.ports.filter(p=>p.parentPort).length+" subinterfaces":"")
                 : d.role === "ap" ? "Wi-Fi / Ethernet bridge" : "8 Ethernet ports",
           ) +
           "</text>" +
@@ -2006,7 +2006,7 @@
       p = d.ports.find((p) => p.id === portId);
     portConfig.dataset.host = String(d.type === "host");
     const l = net.links.find(
-      (l) => (l.a === d.id && l.ap === p.id) || (l.b === d.id && l.bp === p.id),
+      (l) => (l.a === d.id && l.ap === (p.parentPort||p.id)) || (l.b === d.id && l.bp === (p.parentPort||p.id)),
     );
     const peer = l ? net.device(l.a === d.id ? l.b : l.a) : null;
     const peerPort = peer?.ports.find(
@@ -2035,9 +2035,10 @@
             '"></label></div><label>DHCP relay server<input id="router-dhcp-relay" value="' +
             esc(p.dhcpRelay || "") +
             '" placeholder="Optional server IPv4 address"></label><p class="hint">Set relay on the client-facing interface to reach a DHCP server on another subnet.</p>' +
-            natRoleMarkup(d, p) + NetworkExplorerOSPFUI.portPanel(d, p, esc)
+            (p.parentPort ? '<p class="hint">Tagged logical interface on '+esc(d.ports.find(q=>q.id===p.parentPort).name)+'. The physical port must also be enabled.</p><label>802.1Q VLAN ID<input id="subinterface-vlan" type="number" min="1" max="4094" value="'+esc(p.vlanId??'')+'"></label><button id="remove-subinterface" type="button" class="destructive-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg>Delete subinterface</button>' : natRoleMarkup(d, p) + NetworkExplorerOSPFUI.portPanel(d, p, esc) + (d.role==='firewall'?'':'<section class="subinterface-section" aria-labelledby="subinterface-heading"><div class="small-heading inspector-section-heading"><span id="subinterface-heading">Subinterfaces</span><button id="show-add-subinterface" type="button" class="vlan-icon-button" aria-label="Add subinterface" title="Add subinterface" aria-expanded="false" aria-controls="add-subinterface-form"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div><p class="hint">Each tagged VLAN has its own gateway and optional DHCP relay.</p><div class="subinterface-list">'+d.ports.filter(q=>q.parentPort===p.id).map(q=>'<div class="subinterface-row"><span>'+esc(q.name)+' &middot; VLAN '+esc(q.vlanId??'not set')+' &middot; '+(q.ip?'<span class="subinterface-ip">'+esc(q.ip)+'</span>':'No address')+'</span><button type="button" class="vlan-icon-button" data-open-subinterface="'+esc(q.id)+'" aria-label="Edit '+esc(q.name)+'" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-12 12-6 1 1-6ZM14 5l5 5"/></svg></button><button type="button" class="vlan-icon-button subinterface-delete" data-delete-subinterface="'+esc(q.id)+'" aria-label="Delete '+esc(q.name)+'" title="Delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg></button></div>').join('')+'</div><div id="add-subinterface-form" hidden><p class="hint">Clear the physical IP address before adding a subinterface.</p><label for="new-subinterface-vlan">VLAN ID</label><div class="subinterface-add-row"><input id="new-subinterface-vlan" type="number" min="1" max="4094" placeholder="40"><button id="add-subinterface" type="button" class="vlan-icon-button" aria-label="Confirm subinterface" title="OK"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button><button id="cancel-add-subinterface" type="button" class="vlan-icon-button" aria-label="Cancel subinterface" title="Cancel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></div></section>'))
           : "") +
-      '<footer><button id="close-port-config">Close</button></footer>';
+      '<footer>' + (p.parentPort ? '<button id="back-port-config" type="button">Back</button>' : '') + '<button id="close-port-config">Close</button></footer>';
+    if ($("back-port-config")) $("back-port-config").onclick = () => openPortConfig(deviceId, p.parentPort);
     $("close-port-config").onclick = () => portConfig.close();
     if ($("copy-port-mac")) $("copy-port-mac").onclick = async () => {
       try { await navigator.clipboard.writeText(p.mac); say("MAC address copied."); }
@@ -2062,6 +2063,14 @@
       if ($("port-allowed-vlans")) $("port-allowed-vlans").onchange = () => safely(() => updatePort({allowedVlans:NetworkExplorerVlan.parse($("port-allowed-vlans").value,d)}));
     }
     if (d.type === "router" && d.firewallMode !== "transparent") {
+      portConfig.querySelectorAll('[data-open-subinterface]').forEach(b=>b.onclick=()=>openPortConfig(deviceId,b.dataset.openSubinterface));
+      portConfig.querySelectorAll('[data-delete-subinterface]').forEach(b=>b.onclick=()=>{if(!editable())return;safely(()=>{mutate(()=>net.removeSubinterface(deviceId,b.dataset.deleteSubinterface));openPortConfig(deviceId,portId);});});
+      if ($('show-add-subinterface')) $('show-add-subinterface').onclick=()=>{const form=$('add-subinterface-form');form.hidden=!form.hidden;$('show-add-subinterface').setAttribute('aria-expanded',String(!form.hidden));if(!form.hidden)$('new-subinterface-vlan').focus();};
+      if ($('cancel-add-subinterface')) $('cancel-add-subinterface').onclick=()=>{$('add-subinterface-form').hidden=true;$('new-subinterface-vlan').value='';$('show-add-subinterface').setAttribute('aria-expanded','false');$('show-add-subinterface').focus();};
+      if ($('new-subinterface-vlan')) $('new-subinterface-vlan').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('add-subinterface').click();}};
+      if ($('add-subinterface')) $('add-subinterface').onclick=()=>{if(!editable())return;safely(()=>{const vlan=Number($('new-subinterface-vlan').value);let sub;mutate(()=>{sub=net.addSubinterface(deviceId,p.id,vlan,vlan);});openPortConfig(deviceId,sub.id);});};
+      if ($('subinterface-vlan')) $('subinterface-vlan').onchange=()=>{if(!editable())return;safely(()=>mutate(()=>net.configureSubinterface(deviceId,p.id,Number($('subinterface-vlan').value))));};
+      if ($('remove-subinterface')) $('remove-subinterface').onclick=()=>{if(!editable())return;safely(()=>{mutate(()=>net.removeSubinterface(deviceId,p.id));openPortConfig(deviceId,p.parentPort);});};
       const save = () => {
         if (!editable()) return;
         safely(() => {
@@ -2076,7 +2085,7 @@
           render();
         });
       };
-      $("port-nat-role").onchange = (e) => {
+      if ($("port-nat-role")) $("port-nat-role").onchange = (e) => {
         if (!editable()) {
           openPortConfig(deviceId, portId);
           return;
@@ -3109,7 +3118,7 @@
       esc(r.address || "") +
       '" required></label><label>TTL (seconds)<input name="ttl" type="number" min="1" max="86400" value="' +
       (r.ttl ?? 120) +
-      '" required></label><div class="dhcp-pool-actions"><button type="submit" class="section-expand" aria-label="Save DNS record" title="Save DNS record"><svg viewBox="0 0 24 24"><path d="M4 3h13l4 4v14H3V3h1ZM7 3v6h9V3M7 21v-8h10v8"/></svg></button>' +
+      '" required></label><div class="dhcp-pool-actions"><button type="submit" class="section-expand" aria-label="Save DNS record" title="Save DNS record"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></button>' +
       dhcpAction(
         "Cancel DNS changes",
         "M6 6l12 12M18 6 6 18",

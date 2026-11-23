@@ -11,7 +11,7 @@
       new Set(c.inside).size !== c.inside.length ||
       c.inside.includes(c.outside) ||
       typeof c.outside !== "string" ||
-      ![...c.inside, ...(c.outside ? [c.outside] : [])].every((id) => d.ports.some((p) => p.id === id))
+      ![...c.inside, ...(c.outside ? [c.outside] : [])].every((id) => d.ports.some((p) => p.id === id && !p.parentPort))
     )
       throw Error("Choose distinct inside and outside router interfaces.");
     if (

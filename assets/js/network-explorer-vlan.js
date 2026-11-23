@@ -28,12 +28,12 @@
  function segment(net,id,pid){
   const found=[],seen=new Set(),queue=[];
   const transmit=(id,pid,tag)=>{for(const l of net.links){if(!l.enabled)continue;if(l.a===id&&l.ap===pid)queue.push([l.b,l.bp,tag]);if(l.b===id&&l.bp===pid)queue.push([l.a,l.ap,tag]);}};
-  const start=net.device(id)?.ports.find(p=>p.id===pid);if(!start?.enabled)return found;found.push([id,pid]);transmit(id,pid,undefined);
+  const start=net.device(id)?.ports.find(p=>p.id===pid);if(!start?.enabled||(start.parentPort&&!net.device(id).ports.find(p=>p.id===start.parentPort)?.enabled))return found;found.push([id,pid]);transmit(id,start.parentPort||pid,start.parentPort?start.vlanId:undefined);
   while(queue.length){const [did,portId,tag]=queue.shift(),key=did+':'+portId+':'+tag;if(seen.has(key))continue;seen.add(key);const d=net.device(did),p=d?.ports.find(p=>p.id===portId);if(!p?.enabled)continue;
    if(d.type==='switch'){
     if(d.role==='ap'&&tag!==undefined)continue;const result=classify(d,p,tag===undefined?{}:{vlanTag:tag});if(result.error)continue;found.push([did,portId]);
     for(const q of d.ports)if(q.id!==portId&&q.enabled&&carries(q,result.vlan))transmit(did,q.id,egress(q,{},result.vlan).vlanTag);
-   }else if(tag===undefined){found.push([did,portId]);if(d.firewallMode==='transparent')for(const q of d.ports)if(q.id!==portId&&q.enabled)transmit(did,q.id,undefined);}
+   }else if(d.type==='router'&&tag!==undefined){const sub=d.ports.find(q=>q.parentPort===portId&&q.enabled&&q.vlanId===tag);if(sub)found.push([did,sub.id]);}else if(tag===undefined){found.push([did,portId]);if(d.firewallMode==='transparent')for(const q of d.ports)if(q.id!==portId&&q.enabled)transmit(did,q.id,undefined);}
   }
   return found;
  }

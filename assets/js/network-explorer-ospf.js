@@ -14,7 +14,7 @@
     if(!c||typeof c.enabled!=='boolean'||!address(c.routerId)||!number(c.routerId)||number(c.routerId)===0xffffffff||c.area!==0)throw Error('Use a nonzero IPv4-format router ID and area 0.');
     if(!Number.isInteger(c.hello)||c.hello<1||c.hello>60||!Number.isInteger(c.dead)||c.dead<=c.hello||c.dead>240)throw Error('Hello must be 1–60 ticks; dead interval must exceed Hello and be at most 240 ticks.');
     if(!c.interfaces||Object.keys(c.interfaces).some(id=>!d.ports.some(p=>p.id===id)))throw Error('Invalid OSPF interface.');
-    for(const p of d.ports){const i=c.interfaces[p.id];if(!i||!['active','passive','off'].includes(i.mode)||!Number.isInteger(i.cost)||i.cost<1||i.cost>65535)throw Error('Select Active, Passive or Off and a cost from 1 to 65535.');if(c.enabled&&i.mode!=='off'&&!p.ip)throw Error('Configure an IP address before including '+p.name+' in OSPF.');}
+    for(const p of d.ports){const i=c.interfaces[p.id];if(!i||!['active','passive','off'].includes(i.mode)||!Number.isInteger(i.cost)||i.cost<1||i.cost>65535)throw Error('Select Active, Passive or Off and a cost from 1 to 65535.');if(p.parentPort&&i.mode!=='off')throw Error('This version supports static routing on tagged subinterfaces; leave OSPF off.');if(c.enabled&&i.mode!=='off'&&!p.ip)throw Error('Configure an IP address before including '+p.name+' in OSPF.');}
     if(c.enabled&&devices.some(x=>x.id!==d.id&&x.ospf?.enabled&&x.ospf.routerId===c.routerId))throw Error('Each enabled OSPF router needs a unique router ID.');
   }
   function state(n,d){n.ospfState??={};return n.ospfState[d.id]??=( {routerId:d.ospf.routerId,neighbors:{},database:{},routes:[],serial:0,nextHello:n.clock,nextRefresh:n.clock+1800,signature:'',warnings:[]} );}

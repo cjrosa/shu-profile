@@ -10119,3 +10119,34 @@ body[data-platform="paloalto"] #inspector .vlan-row { grid-template-columns:minm
 .arrange-menu .arrange-check { margin-left:auto; width:14px; height:14px; visibility:hidden; stroke-width:2.2; }
 .arrange-menu button[aria-checked="true"] .arrange-check { visibility:visible; }
 .arrange-menu button:hover, .arrange-menu button:focus-visible { background:#edf3f8; outline:2px solid #709bbd; outline-offset:-2px; }
+
+#port-config .subinterface-section { margin: 12px 16px; padding: 0; border: 0; border-radius: 0; box-shadow: none; }
+#port-config .subinterface-section .hint { font-size: 11px; margin: 8px 0; }
+#port-config .subinterface-list { display: grid; gap: 0; }
+#port-config .subinterface-row { display: flex; align-items: center; gap: 2px; padding: 0; font-size: 12px; line-height: 1.25; }
+#port-config .subinterface-row > span { flex: 1; min-width: 0; }
+#port-config .subinterface-row button { border: 0; margin: 0; width: 24px; height: 24px; min-height: 24px; padding: 3px; }
+#port-config .subinterface-row button svg { width: 15px; height: 15px; }
+#port-config .subinterface-ip { font-family: "Courier New", Courier, monospace; }
+#port-config .subinterface-delete { color: #a32d2d; }
+#port-config #add-subinterface-form { margin-top: 10px; }
+#port-config #add-subinterface-form label { margin: 8px 0; }
+#port-config .subinterface-add-row { display: flex; align-items: center; gap: 4px; }
+#port-config .subinterface-add-row input { flex: 1; min-width: 0; width: 0; margin: 0; }
+#port-config .subinterface-add-row button { margin: 0; }
+#port-config #remove-subinterface { display: flex; width: fit-content; margin: 12px auto; border: 0; }
+/* Compact DHCP pool editing with quiet confirm/cancel controls. */
+#dhcp-server-form .dhcp-pool-form { padding: 8px; }
+#dhcp-server-form .dhcp-pool-form label { font-size: 11px; line-height: 1.25; margin: 5px 0; gap: 3px; }
+#dhcp-server-form .dhcp-pool-form .pair { gap: 6px; margin: 0; }
+#dhcp-server-form .dhcp-pool-form input { font-size: 11px; min-height: 28px; padding: 4px 5px; margin: 0; }
+#dhcp-server-form .dhcp-pool-form input[name="start"],
+#dhcp-server-form .dhcp-pool-form input[name="end"],
+#dhcp-server-form .dhcp-pool-form input[name="gateway"],
+#dhcp-server-form .dhcp-pool-form input[name="dns"] { font-family: "Courier New", Courier, monospace; }
+#dhcp-server-form .dhcp-pool-form > .pair:last-child { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }
+#dhcp-server-form .dhcp-pool-actions { align-items: center; gap: 2px; padding: 0; margin: 0 0 5px; }
+#dhcp-server-form .dhcp-pool-actions button { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 28px; min-height: 28px; padding: 3px; margin: 0; border: 0; background: transparent; box-shadow: none; }
+#dhcp-server-form .dhcp-pool-actions button svg { width: 16px; height: 16px; }
+#dhcp-server-form .dhcp-pool-actions button[type="submit"] { color: var(--teal); }
+#dhcp-server-form .dhcp-pool-actions button:hover { background: var(--pale); }
