@@ -1553,9 +1553,9 @@
           '" fill="none" stroke="transparent" stroke-width="20"/><path d="' +
           pathData(route) +
           '" fill="none" stroke="' +
-          (selected === l.id ? "#287d78" : !enabled ? "#b66b60" : trunk ? "#526d86" : "#9ab0c2") +
+          (selected === l.id ? "#287d78" : !enabled ? "#b66b60" : trunk ? "#284f7a" : "#9ab0c2") +
           '" stroke-width="' +
-          (selected === l.id ? 4 : trunk ? 3 : 2) +
+          (selected === l.id ? (trunk ? 5 : 4) : trunk ? 4 : 2) +
           '" ' +
           (l.medium === "wifi" ? 'stroke-dasharray="3 6"' : enabled ? "" : 'stroke-dasharray="8 6"') +
           '/><text x="' +
@@ -4492,7 +4492,7 @@
       })),
     ];
     $("inspector").innerHTML =
-      '<label>Title<input id="note-title" maxlength="100" placeholder="Optional title"></label><label>Note<textarea id="note-text" rows="6" maxlength="2000" placeholder="Add a reminder or explain this network..."></textarea></label>' +
+      '<div class="application-inspector-content"><label>Title<input id="note-title" maxlength="100" placeholder="Optional title"></label><label>Note<textarea id="note-text" rows="6" maxlength="2000" placeholder="Add a reminder or explain this network..."></textarea></label>' +
       tagEditor(n) +
       '<label>Color<select id="note-color">' +
       ["yellow", "blue", "green", "pink"]
@@ -4517,7 +4517,7 @@
       (noteTarget(n.target)
         ? '<button id="note-locate">Select associated item</button>'
         : "") +
-      '<p class="hint">Drag the note icon to move it. Hover to preview, or select to edit here.</p><button id="delete-note" class="danger" aria-label="Delete note" title="Delete note"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 10v7M14 10v7"/></svg> Delete note</button>';
+      '<p class="hint">Drag the note icon to move it. Hover to preview, or select to edit here.</p></div><div class="application-inspector-footer"><button id="delete-note" class="danger destructive-action" aria-label="Delete note" title="Delete note"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 10v7M14 10v7"/></svg> Delete note</button></div>';
     $("note-title").value = n.title || "";
     $("note-title").oninput = (e) => {
       n.title = e.target.value;
