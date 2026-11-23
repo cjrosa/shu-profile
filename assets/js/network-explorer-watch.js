@@ -18,6 +18,9 @@
     if (r.nat) result.push("nat");
     if (r.firewall) result.push("firewall");
     if (f.type === "ARP") result.push("arp");
+    // DHCP can originate locally without an incoming frame, or wait for ARP.
+    if (d.type === "host" && (r.kind === "dhcp-start" ||
+        r.outgoingFrames?.some(o => o.frame.dhcp))) result.push("udp");
     if (!result.length) {
       if (d.type === "switch") result.push("switching");
       else if (d.type === "host") {

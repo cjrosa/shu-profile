@@ -45,3 +45,23 @@ test('Watch preferences round trip and malformed imported preferences are reject
     assert.throws(() => new Network(data), /Watch decisions/);
   }
 });
+
+test('UDP Watch includes DHCP discovery and renewal originating at the client', () => {
+  const n=new Network(),client=n.add('host'),server=n.add('host');
+  n.configure(server.id,'192.168.1.2',24);
+  n.configureDhcpServer(server.id,{enabled:true,start:'192.168.1.100',end:'192.168.1.110',gateway:'',leaseSeconds:120});
+  n.configureAddressMode(client.id,'dhcp');n.connect(client.id,'p0',server.id,'p0');
+  client.watch=true;client.watchDecisions=['udp'];
+  const run=()=>{n.acquireDhcp(client.id);const reports=[];while(n.queue.length){assert.ok(reports.length<100);reports.push(n.next());}return reports.filter(e=>e.device===client.id);};
+  const first=run(),start=first.find(e=>e.kind==='dhcp-start');
+  assert.equal(Watch.matches(client,start),true);
+  assert.equal(start.outgoingFrames[0].frame.dhcp,'Discover');
+  const offer=first.find(e=>e.frame?.dhcp==='Offer');
+  assert.equal(Watch.matches(client,offer),true);
+  assert.equal(offer.outgoingFrames[0].frame.dhcp,'Request');
+  n.reset();const renewal=run();
+  assert.equal(Watch.matches(client,renewal.find(e=>e.kind==='dhcp-start')),true);
+  assert.ok(renewal.some(e=>e.outgoingFrames.some(o=>o.frame.dhcp==='Request')&&Watch.matches(client,e)));
+  client.watchDecisions=['tcp'];assert.equal(Watch.matches(client,start),false);
+  client.watch=false;assert.equal(Watch.matches(client,start),false);
+});

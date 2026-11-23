@@ -10150,3 +10150,7 @@ body[data-platform="paloalto"] #inspector .vlan-row { grid-template-columns:minm
 #dhcp-server-form .dhcp-pool-actions button svg { width: 16px; height: 16px; }
 #dhcp-server-form .dhcp-pool-actions button[type="submit"] { color: var(--teal); }
 #dhcp-server-form .dhcp-pool-actions button:hover { background: var(--pale); }
+
+.udp-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); background: #f6f1e8; }
+
+.transport-section { display: flow-root; background: #fff; border-top: 1px solid #bad7d1; }

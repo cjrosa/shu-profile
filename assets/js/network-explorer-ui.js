@@ -4995,6 +4995,12 @@
             "protocol",
           ) +
           "</div>" +
+          (frame.protocol === "UDP"
+            ? '<div class="transport-section"><div class="frame-payload transport-payload"><div class="frame-layer-label">UDP datagram</div><div class="packet-fields udp-fields">' +
+              cell("Source port", frame.sport, "sport") +
+              cell("Destination port", frame.dport, "dport") +
+              "</div>"
+            : "") +
           (frame.protocol === "TCP"
             ? '<div class="packet-fields tcp-fields">' +
               cell("Source port", frame.sport, "sport") +
@@ -5040,10 +5046,6 @@
                 : frame.dhcp
                   ? "DHCP " +
                     frame.dhcp +
-                    " | UDP " +
-                    frame.sport +
-                    " to " +
-                    frame.dport +
                     (frame.address
                       ? " | Address " + frame.address + "/" + frame.prefix
                       : "") +
@@ -5059,7 +5061,7 @@
           (frame.quote
             ? " | Original destination " + esc(frame.quote.dip)
             : "") +
-          "</div>";
+          "</div>" + (frame.protocol === "UDP" ? "</div></div>" : "");
     return (
       '<article class="frame-header-card"><h4>' +
       esc(label) +
