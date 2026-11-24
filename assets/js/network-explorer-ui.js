@@ -2736,7 +2736,8 @@
           ]
         : [
             [0, 0],
-            [0, -106],
+            // Leave room above the selection outline for both label lines.
+            [0, -118],
             [100, -48],
             [-100, -48],
           ];
