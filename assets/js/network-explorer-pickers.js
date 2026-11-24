@@ -171,6 +171,11 @@ window.NetworkExplorerPickers = {
           row.type = "button";
           row.dataset.pickerId = d.id;
           row.dataset.pickerAttribute = isNote ? "data-note" : isDevice ? "data-device" : "data-application";
+          const locate = () => $("canvas").dispatchEvent(
+            new CustomEvent("network-locate", { detail: d }),
+          );
+          row.onpointerenter = locate;
+          row.onfocus = locate;
           row.innerHTML =
             (isNote ? noteSymbol() : noteTargetIcon(d.id)) +
             "<span>" +

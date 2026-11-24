@@ -82,13 +82,33 @@
     get('zoom-slider').setAttribute('aria-valuetext', `${Math.round(camera.zoom * 100)} percent`);
   }
 
+  let locateFrame = null;
+  function cancelLocate() {
+    cancelAnimationFrame(locateFrame);
+    locateFrame = null;
+  }
+  stage.addEventListener('pointerdown', cancelLocate, true);
+  stage.addEventListener('wheel', cancelLocate, {capture: true, passive: true});
   canvas.addEventListener('network-locate', event => {
-    camera.zoom = Math.max(camera.zoom, 1);
-    camera.x = event.detail.x - 450 / camera.zoom;
-    camera.y = event.detail.y - 280 / camera.zoom;
-    update(); refreshOverview();
+    cancelLocate();
+    const from = {...camera};
+    const targetZoom = Math.max(camera.zoom, 1);
+    const target = {x: event.detail.x - 450 / targetZoom,
+      y: event.detail.y - 280 / targetZoom, zoom: targetZoom};
+    const duration = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 550;
+    const started = performance.now();
+    function frame(now) {
+      const progress = duration ? Math.min(1, (now - started) / duration) : 1;
+      const eased = progress * progress;
+      for (const key of ['x', 'y', 'zoom']) camera[key] = from[key] + (target[key] - from[key]) * eased;
+      update();
+      if (progress < 1) locateFrame = requestAnimationFrame(frame);
+      else { locateFrame = null; refreshOverview(); }
+    }
+    locateFrame = requestAnimationFrame(frame);
   });
   function zoom(delta) {
+    cancelLocate();
     const cx = camera.x + 450 / camera.zoom;
     const cy = camera.y + 280 / camera.zoom;
     camera.zoom = clamp(camera.zoom + delta, .1, 4);
@@ -252,6 +272,7 @@
     const x=Math.min(...boxes.map(b=>b.x)),y=Math.min(...boxes.map(b=>b.y));return {x,y,width:Math.max(...boxes.map(b=>b.x+b.width))-x,height:Math.max(...boxes.map(b=>b.y+b.height))-y};
   }
   function fit(){
+    cancelLocate();
     const b=contentBounds(),reserve=Math.min(.3,(panel.offsetHeight+28)/Math.max(1,canvas.clientHeight));
     camera.zoom=clamp(Math.min(1,900/(b.width+120),560*(1-reserve)/(b.height+120)),.1,4);
     camera.x=b.x+b.width/2-450/camera.zoom;camera.y=b.y-60;

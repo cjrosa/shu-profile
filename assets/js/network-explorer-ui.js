@@ -3554,9 +3554,12 @@
     if (menu.innerHTML !== html) {
       menu.innerHTML = html;
       menu.querySelectorAll('[data-terminal-device]').forEach(button => {
+        button.onpointerenter = () => revealDevice(button.dataset.terminalDevice);
+        button.onfocus = () => revealDevice(button.dataset.terminalDevice);
         button.onclick = () => {
           setTerminalPickerOpen(false);
           select(button.dataset.terminalDevice);
+          revealDevice(button.dataset.terminalDevice);
           const root = externalPanels.get('terminal')?.window.document || document;
           root.getElementById('command')?.focus();
         };
@@ -4349,11 +4352,17 @@
         icon: noteTargetIcon(d.id),
       }));
   }
+  function revealDevice(id) {
+    const d = net.device(id);
+    if (!d) return;
+    svg.dispatchEvent(new CustomEvent("network-locate", { detail: d }));
+    svg.dispatchEvent(new CustomEvent("network-highlight", { detail: { id } }));
+  }
   function navigateNoteDevice(id) {
     const d = net.device(id);
     if (!d) return;
     select(d.id);
-    svg.dispatchEvent(new CustomEvent("network-locate", { detail: d }));
+    revealDevice(id);
   }
   document.addEventListener("note-device-navigate", (e) =>
     navigateNoteDevice(e.detail),
@@ -4467,6 +4476,7 @@
           esc(d.type + (d.ip ? " ? " + d.ip : "")) +
           "</small></span>";
         b.onpointerdown = (e) => e.preventDefault();
+        b.onpointerenter = () => revealDevice(row.device.id);
         b.onclick = () => choose(i);
         list.append(b);
       });
@@ -7940,6 +7950,7 @@
         $("command").value = "";
         close();
         select(row.device.id);
+        revealDevice(row.device.id);
         const next = doc.getElementById("command") || $("command");
         next.focus();
         return;
@@ -7950,6 +7961,7 @@
       commandDraft = input.value;
       close();
       input.focus();
+      if (!row.mac) revealDevice(row.device.id);
     };
     const update = (target) => {
       input = target;
