@@ -93,5 +93,14 @@ if(typeof module!=='undefined'&&module.exports)module.exports={observations:netw
  function setFilter(value){clearTimeout(filterInputTimer);const next=String(value).trim();if(!validateFilter(next))return false;filter=next;if($('capture-filter').value.trim()!==filter)$('capture-filter').value=filter;if(network)render(network);document.dispatchEvent(new Event('capture-filter-changed'));return true;}
  function matchesEvent(e,net=network){const d=net.device(e.device),port=d?.ports.find(p=>p.id===e.ingress);const event={...e,notes:e.notes||[],vlan:e.vlan??(d?.type==='switch'&&port?NetworkExplorerVlan.classify(d,port,e.frame||{}).vlan:undefined)};return (monitored===null||monitored.has(e.device))&&networkExplorerCaptureObservations(event,net).some(observed=>match(record(observed,0,net)));}
  function revealEvent(device,order){const e=network?.history.find(e=>e.device===device&&e.order===order);if(!e)return false;cleared.delete(key(e));monitored=new Set([device]);setFollowing(false);selected=key(e);setFilter('');render(network);$('events').querySelector('[data-capture-id="'+selected+'"]')?.scrollIntoView({block:'nearest'});return true;}
- window.NetworkExplorerCapture={revealEvent,render,bindScroll,scrollLatest,mountMonitor,monitorSummary,isFollowing:()=>following,matchesEvent,getFilter:()=>filter,setFilter};
+ function filterDevice(id,mode){
+   if(!network?.device(id))return;
+   if(mode==='only')monitored=new Set([id]);
+   else if(mode==='exclude')monitored=new Set(network.devices.filter(d=>d.id!==id).map(d=>d.id));
+   else if(mode==='remove'){if(monitored===null)monitored=new Set(network.devices.map(d=>d.id));monitored.delete(id);}
+   else {if(monitored===null)monitored=new Set();monitored.add(id);}
+   render(network);
+   document.dispatchEvent(new Event('capture-monitor-changed'));
+ }
+ window.NetworkExplorerCapture={filterDevice,revealEvent,render,bindScroll,scrollLatest,mountMonitor,monitorSummary,isFollowing:()=>following,matchesEvent,getFilter:()=>filter,setFilter};
 })();

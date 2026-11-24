@@ -7090,6 +7090,7 @@
     });
     actions.push({
       label: "Add note",
+      icon: '<path d="M5 3h10l4 4v14H5zM15 3v5h4M8 12h8M8 16h6"/>',
       run: () =>
         createNote(
           location.x + 20,
@@ -7098,33 +7099,30 @@
         ),
     });
     if (device) {
-      if (device.type === "host")
-        actions.push({
-          label: "Ping...",
-          run: () => {
-            selected = id;
-            inspector();
-            $("command").value = "ping ";
-            commandDraft = "ping ";
-            historyIndex = commandHistory.length;
-            syncExternal();
-            openTool("terminal", true);
-            const input =
-              externalPanels
-                .get("terminal")
-                ?.window.document.getElementById("command") || $("command");
-            input.value = "ping ";
-            input.focus();
-            input.setSelectionRange(5, 5);
-          },
-        });
       actions.push({
-        label: device.watch ? "Unwatch device" : "Watch device",
-        run: () => {
-          const current = net.device(id);
-          current.watch = !current.watch;
-          render();
-        },
+        label: "Filter",
+        dividerBefore: true,
+        icon: '<path d="M3 4h18l-7 8v7l-4 2v-9z"/>',
+        children: [
+          {label:"This device only", run:()=>NetworkExplorerCapture.filterDevice(id,"only")},
+          {label:"Include this device", run:()=>NetworkExplorerCapture.filterDevice(id,"append")},
+          {label:"Remove this device", run:()=>NetworkExplorerCapture.filterDevice(id,"remove")},
+          {label:"All but this device", run:()=>NetworkExplorerCapture.filterDevice(id,"exclude")},
+        ],
+      });
+      actions.push({
+        label: "Watch",
+        dividerAfter: true,
+        icon: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+        children: [
+          {label:"Off", checked:()=>!net.device(id).watch, run:()=>{net.device(id).watch=false;render();}},
+          {label:"All decisions", checked:()=>!!net.device(id).watch&&!Array.isArray(net.device(id).watchDecisions), run:()=>{const current=net.device(id);current.watch=true;delete current.watchDecisions;render();}},
+          ...NetworkExplorerWatch.options(device).map(key=>({
+            label:NetworkExplorerWatch.labels[key],
+            checked:()=>{const current=net.device(id);return !!current.watch&&(!Array.isArray(current.watchDecisions)||current.watchDecisions.includes(key));},
+            run:()=>{const current=net.device(id),keys=NetworkExplorerWatch.options(current);const chosen=new Set(current.watch?(current.watchDecisions||keys):[]);if(chosen.has(key))chosen.delete(key);else chosen.add(key);current.watch=chosen.size>0;current.watchDecisions=[...chosen];if(chosen.size===keys.length)delete current.watchDecisions;render();},
+          })),
+        ],
       });
       actions.push({
         label: "Connect to another device",
@@ -7136,6 +7134,11 @@
           $("cancel-connect").hidden = false;
           $("connection-hint").textContent = "Choose the first interface";
           choosePort(id);
+          const source = net.device(id);
+          const dx = location.x - source.x, dy = location.y - source.y;
+          const side = Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? "right" : "left") : (dy >= 0 ? "bottom" : "top");
+          pickAnchor({dataset:{anchorDevice:id,anchorPort:side}});
+          previewCable(location);
         },
       });
       actions.push({
@@ -7162,12 +7165,65 @@
     }
     contextMenu.replaceChildren();
     for (const action of actions) {
+      const addDivider = () => {
+        const divider = document.createElement("div");
+        divider.className = "context-divider";
+        divider.setAttribute("role", "separator");
+        contextMenu.append(divider);
+      };
+      if (action.dividerBefore) addDivider();
       const button = document.createElement("button");
       button.type = "button";
       button.setAttribute("role", "menuitem");
       button.textContent = action.label;
+      const menuLabel = (action.icon ? '<svg class="context-item-icon" viewBox="0 0 24 24" aria-hidden="true">' + action.icon + '</svg>' : '') + '<span>' + esc(action.label) + '</span>';
+      button.innerHTML = menuLabel;
+      if (action.icon) {
+        button.classList.add("context-icon-item");
+        button.innerHTML = menuLabel;
+      }
       button.disabled = Boolean(action.disabled);
       if (action.danger) button.className = "context-danger";
+      if (action.children) {
+        const submenu = document.createElement("div");
+        submenu.className = "context-submenu";
+        submenu.setAttribute("role", "menu");
+        submenu.setAttribute("aria-label", action.label);
+        submenu.hidden = true;
+        button.classList.add("context-submenu-toggle");
+        button.innerHTML = menuLabel + '<svg class="context-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>';
+        button.setAttribute("aria-haspopup", "menu");
+        button.setAttribute("aria-expanded", "false");
+        for (const child of action.children) {
+          const item = document.createElement("button");
+          item.type = "button"; item.setAttribute("role", "menuitem"); item.textContent = child.label;
+          if (child.checked) {
+            item.setAttribute("role", "menuitemcheckbox");
+            item.setAttribute("aria-checked", String(child.checked()));
+            item.classList.add("context-watch-choice");
+            item.innerHTML = '<svg class="context-check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>' + esc(child.label) + '</span>';
+          }
+          item.onclick = () => {
+            if (!child.checked) closeContext();
+            child.run();
+            if (child.checked) {
+              [...submenu.children].forEach((el,index)=>el.setAttribute("aria-checked",String(action.children[index].checked())));
+              item.focus();
+            }
+          };
+          submenu.append(item);
+        }
+        const expand = () => { submenu.hidden=false; button.setAttribute("aria-expanded","true"); submenu.querySelector("button").focus(); const r=contextMenu.getBoundingClientRect(); if(r.bottom>innerHeight-4)contextMenu.style.top=Math.max(4,innerHeight-r.height-4)+'px'; };
+        button.onclick = () => {
+          if (submenu.hidden) expand();
+          else { submenu.hidden=true; button.setAttribute("aria-expanded","false"); button.focus(); }
+        };
+        button.onkeydown = e => { if(e.key==='ArrowRight'){e.preventDefault();e.stopPropagation();expand();} };
+        submenu.onkeydown = e => { if(['ArrowLeft','Escape'].includes(e.key)){e.preventDefault();e.stopPropagation();submenu.hidden=true;button.setAttribute('aria-expanded','false');button.focus();} };
+        contextMenu.append(button, submenu);
+        if (action.dividerAfter) addDivider();
+        continue;
+      }
       button.onclick = () => {
         closeContext();
         action.run();
@@ -7226,7 +7282,7 @@
       closeContext();
       return;
     }
-    const buttons = [...contextMenu.querySelectorAll("button:not(:disabled)")];
+    const buttons = [...contextMenu.querySelectorAll("button:not(:disabled)")].filter(button => button.getClientRects().length);
     let index = buttons.indexOf(document.activeElement);
     if (event.key === "ArrowDown") index = (index + 1) % buttons.length;
     else if (event.key === "ArrowUp")

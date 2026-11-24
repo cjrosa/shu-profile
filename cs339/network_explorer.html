@@ -178,8 +178,6 @@
                 />
               </svg></button
             ><strong id="canvas-title">Network canvas</strong
-            ><span id="connection-hint"></span
-            ><button id="cancel-connect" hidden>Cancel connection</button
             ><button
               id="open-help"
               class="panel-toggle"
@@ -258,6 +256,7 @@
             ><span id="sim-status" role="status">Ready to build</span>
           </div>
           <div class="canvas-stage" id="canvas-stage">
+            <div class="connection-banner"><span id="connection-hint" role="status"></span><button id="cancel-connect" hidden>Cancel connection</button></div>
             <svg
               id="canvas"
               viewBox="0 0 900 560"
