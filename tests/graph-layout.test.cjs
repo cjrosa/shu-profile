@@ -142,3 +142,114 @@ for (const course of ['cs112','cs339']) test(course + ': optional visited guard 
   assert.equal(box.checked,false,'setting persists between visit modes');
   dom.window.close();
 });
+
+for (const course of ['cs112','cs339']) test(course + ': Kruskal previews do not append playback steps', () => {
+  const html = fs.readFileSync(path.join(__dirname,'..',course,'graph_viz.html'),'utf8');
+  const dom = new JSDOM(html, {runScripts:'outside-only'}), w=dom.window;
+  w.GraphLayout=geometry;
+  w.eval(html.match(/<script>([\s\S]*?)<\/script>/)[1] + `
+    window.checkKruskal = () => {
+      activeTab='span'; activeSub='kruskal'; doReset();
+      const initial = steps.length;
+      renderGraph(false); renderSidebar(); renderGraph(false); renderSidebar();
+      const preview = steps.length;
+      const expected = buildSteps().length;
+      const render = renderAll; renderAll = () => render(false);
+      for (let i=0; i<expected; i++) stepForward();
+      const finalIndex = stepIndex;
+      stepForward();
+      return {initial, preview, expected, total:steps.length, finalIndex, afterExtra:stepIndex,
+        done:selPhase==='done', disabled:document.getElementById('btn-next').disabled,
+        doneCount:steps.filter(s=>s.msgClass==='done').length};
+    };
+  `);
+  const r=w.checkKruskal();
+  assert.equal(r.initial,0); assert.equal(r.preview,0);
+  assert.equal(r.total,r.expected); assert.equal(r.finalIndex,r.total);
+  assert.equal(r.afterExtra,r.total); assert.equal(r.done,true);
+  assert.equal(r.disabled,true); assert.equal(r.doneCount,1);
+  dom.window.close();
+});
+
+for (const course of ['cs112','cs339']) test(course + ': New search graphs preserve settings and reset playback', () => {
+  const html=fs.readFileSync(path.join(__dirname,'..',course,'graph_viz.html'),'utf8');
+  const dom=new JSDOM(html,{runScripts:'outside-only'}), w=dom.window;
+  w.GraphLayout=geometry;
+  w.eval(html.match(/<script>([\s\S]*?)<\/script>/)[1] + `
+    window.newSearchCase = (sub, dir) => {
+      activeTab='search'; activeSub=sub; activeDir=dir;
+      startNode='A'; targetNode='D'; stepIndex=3;
+      const key=graphKey(activeTab,activeSub,activeDir);
+      const old=JSON.stringify(GRAPHS[key].edges);
+      newGraph();
+      return {graph:GRAPHS[key],changed:old!==JSON.stringify(GRAPHS[key].edges),sub:activeSub,dir:activeDir,
+        reset:startNode===null && targetNode===null && stepIndex===0 && steps.length===0};
+    };
+  `);
+  for(const sub of ['dfs','bfs']) for(const dir of ['directed','undirected']) for(let i=0;i<5;i++) {
+    const r=w.newSearchCase(sub,dir);
+    assert.equal(r.sub,sub); assert.equal(r.dir,dir); assert.ok(r.reset); assert.ok(r.changed);
+    check(r.graph);
+    const reached=new Set(['A']);
+    for(let pass=0;pass<7;pass++) for(const [a,b] of r.graph.edges) {
+      assert.notEqual(a,b);
+      if(reached.has(a)||reached.has(b)) {reached.add(a);reached.add(b);}
+    }
+    assert.equal(reached.size,7);
+    assert.equal(new Set(r.graph.edges.map(e=>[...e].sort().join('-'))).size,r.graph.edges.length);
+  }
+  dom.window.close();
+});
+
+for(const course of ['cs112','cs339']) test(course + ': reciprocal directed edges highlight independently',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'..',course,'graph_viz.html'),'utf8');
+  const dom=new JSDOM(html,{runScripts:'outside-only'}),w=dom.window;
+  w.GraphLayout=geometry;
+  w.eval(html.match(/<script>([\s\S]*?)<\/script>/)[1]+`
+    window.checkDirection = kind => {
+      activeTab='search'; activeSub='dfs'; activeDir='directed';
+      GRAPHS.directed.edges=[['A','F'],['F','A']];
+      steps=[{nodeStates:{},edgeStates:kind==='active'?{'A-F':'active'}:{},
+        path:kind==='path'?['A','F']:null,pendingEdges:kind==='pending'?['A-F']:[]}];
+      stepIndex=1; renderGraph(false);
+      return [...document.querySelectorAll('#svg > path')].map(p=>({stroke:p.getAttribute('stroke'),pulse:p.classList.contains('edge-pulse')}));
+    };
+    window.dfsDirection = () => runDFS(GRAPHS.directed,'A','F',true).some(s=>s.edgeStates['F-A']);
+  `);
+  for(const kind of ['path','active','pending']) {
+    const edges=w.checkDirection(kind);
+    assert.equal(edges.length,2); assert.notEqual(edges[0].stroke,edges[1].stroke);
+    if(kind==='pending') {assert.ok(edges[0].pulse);assert.equal(edges[1].pulse,false);}
+  }
+  assert.equal(w.dfsDirection(),false);
+  dom.window.close();
+});
+
+for(const course of ['cs112','cs339']) test(course + ': New weighted graphs vary layout, connections, and weights',()=>{
+ const html=fs.readFileSync(path.join(__dirname,'..',course,'graph_viz.html'),'utf8');
+ const dom=new JSDOM(html,{runScripts:'outside-only'}),w=dom.window; w.GraphLayout=geometry;
+ let seed=87321; w.Math.random=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
+ w.eval(html.match(/<script>([\s\S]*?)<\/script>/)[1]+`
+ window.newWeightedCase = tab => {
+   activeTab=tab; activeSub=tab==='span'?'kruskal':''; activeDir='directed';
+   newGraph(); return {u:GRAPHS.weighted_u,d:GRAPHS.weighted_d};
+ };
+ `);
+ let previous;
+ for(const tab of ['span','dijk']) for(let i=0;i<15;i++) {
+   const {u,d}=w.newWeightedCase(tab); check(u); check(d);
+   const reached=new Set(['A']);
+   for(let pass=0;pass<7;pass++) for(const [a,b,weight] of u.edges) {
+     assert.ok(weight>=1&&weight<=15);
+     if(reached.has(a)||reached.has(b)){reached.add(a);reached.add(b);}
+   }
+   assert.equal(reached.size,7);
+   assert.equal(new Set(u.edges.map(e=>e[2])).size,u.edges.length);
+   if(previous) {
+     assert.notEqual(JSON.stringify(u.nodes),JSON.stringify(previous.nodes));
+     assert.notEqual(JSON.stringify(u.edges),JSON.stringify(previous.edges));
+   }
+   previous=u;
+ }
+ dom.window.close();
+});

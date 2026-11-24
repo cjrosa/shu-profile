@@ -36,7 +36,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 /* ── Main layout ── */
 .main { display: flex; gap: 12px; align-items: stretch; }
 .graph-wrap { flex: 1; background: #fff; border: 0.5px solid #dddbd2; border-radius: 8px; overflow: hidden; min-width: 0; }
-.graph-wrap svg { display: block; cursor: default; }
+.graph-wrap > svg { display: block; cursor: default; }
 .sidebar { width: 158px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
 
 /* ── Panels ── */
@@ -108,6 +108,137 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .hla:hover { opacity:0.75; }
 .brd { border:0.5px solid #dddbd2; color:#444441; }
 .fil { background:#0A66C2; color:#fff; border-radius:4px; }
+
+/* Consistent operation panels and discrete navigation tabs. */
+.tabs, .subtabs { gap: 6px; border-bottom: 1px solid #bcc9d5; padding: 0 2px; }
+.tab, .subtab { font-family: inherit; border: 1px solid #bcc9d5; border-bottom: 0; border-radius: 8px 8px 0 0; background: #eef1f4; color: #526170; padding: 9px 14px; font-weight: 600; position: relative; }
+.tab.active, .subtab.active, .toggle-opt.active { background: #fff; color: #0C447C; border-color: #85B7EB; box-shadow: none; }
+.tab.active::after, .subtab.active::after { content: ''; position: absolute; height: 2px; background: #fff; bottom: -1px; left: 0; right: 0; }
+.tab:hover, .subtab:hover { background: #E6F1FB; }
+.tab:focus-visible, .subtab:focus-visible { outline: 2px solid #185FA5; outline-offset: 2px; }
+.subtabs, .toggle-wrap { display: flex; gap: 0; padding: 3px; border: 1px solid #ccd3db; border-radius: 8px; background: #eef1f4; }
+.subtab, .toggle-opt { font-family: inherit; font-size: 11px; font-weight: 600; padding: 6px 12px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: #526170; }
+.subtab.active { background: #fff; border-color: #85B7EB; color: #0C447C; box-shadow: 0 1px 2px #00000012; }
+.subtab.active::after { content: none; }
+.toggle-opt + .toggle-opt { border-left: 1px solid transparent; }
+.toggle-opt.active + .toggle-opt { border-left-color: transparent; }
+.toggle-opt + .toggle-opt.active { border-left-color: #85B7EB; }
+.toggle-opt:hover { background: #E6F1FB; }
+.sidebar { width: 190px; }
+.graph-wrap { align-self: flex-start; width: 100%; }
+.graph-wrap > svg { height: 350px; }
+.panel-output { order: 3; }
+.panel-ready { order: -1; }
+.sidebar .panel { flex: 0 0 auto !important; }
+.panel-label { color: #526170; font-size: 11px; font-weight: 600; text-transform: none; letter-spacing: 0; }
+.panel-hint { font-size: 11px; line-height: 1.4; color: #687580; margin: -2px 0 8px; }
+.panel-empty { color: #687580; }
+.status-bar { min-height: 58px; display: flex; align-items: center; line-height: 1.5; }
+@media (max-width: 600px) {
+  .main { flex-direction: column; }
+  .sidebar { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .app-header { flex-wrap: wrap; gap: 8px; }
+  .tab { padding: 9px 10px; }
+}
+
+.app-footer { width: 100%; max-width: 780px; margin-top: 0; padding-top: 16px; justify-content: flex-start; flex-wrap: wrap; text-align: left; }
+.app-footer .hla { flex-shrink: 0; }
+/* Keep each label and its choices inside one shared container. */
+#mode-control, #dir-toggle, #order-toggle { gap: 0; padding: 3px; border: 1px solid #ccd3db; border-radius: 8px; background: #eef1f4; }
+#mode-control > span, #dir-toggle > span, #order-toggle > span { padding: 0 8px; font-size: 11px; font-weight: 400; color: #687580; white-space: nowrap; }
+#mode-control .subtabs, #dir-toggle .toggle-wrap, #order-toggle .toggle-wrap { padding: 0; border: 0; background: transparent; }
+/* Give option groups a clear visual hierarchy. */
+#mode-control, #dir-toggle, #order-toggle, .toggle-wrap { background: #edf3fa; border-color: #bdcfe2; box-shadow: 0 1px 2px #183f6810; }
+#mode-control > span, #dir-toggle > span, #order-toggle > span { color: #476480; font-weight: 600; letter-spacing: .02em; padding: 0 10px; }
+.subtab, .toggle-opt { color: #506781; transition: background .15s, color .15s, box-shadow .15s; }
+.subtab.active, .toggle-opt.active { background: #245f9e; color: #fff; border-color: #245f9e; box-shadow: 0 1px 3px #173e6930; }
+.toggle-opt + .toggle-opt.active { border-left-color: #245f9e; }
+.subtab:hover:not(.active), .toggle-opt:hover:not(.active) { background: #dbe8f6; color: #174c82; }
+.subtab.active:hover, .toggle-opt.active:hover { background: #1c518b; color: #fff; }
+.tab { display: inline-flex; align-items: center; gap: 7px; }
+.tab-icon { width: 18px; height: 18px; flex-shrink: 0; pointer-events: none; }
+.status-panel { margin-top: 12px; padding: 7px 14px 7px 8px; background: #edf5ff; border: 1px solid #b8d3ef; border-left: 4px solid #3979b9; border-radius: 8px; }
+.status-panel h2 { margin: 0 0 5px; font-size: 12px; font-weight: 650; line-height: 1.4; color: #174d80; }
+.status-panel .status-bar { margin: 0; padding: 0; min-height: 0; border: 0; border-radius: 0; background: transparent; color: #254b6d; display: block; line-height: 1.5; }
+.status-panel .status-bar.found, .status-panel .status-bar.done { color: #12634d; }
+.status-next { display: inline-block; vertical-align: baseline; margin: 0 3px; padding: 3px 10px; border: 1px solid #245f9e; border-radius: 5px; background: #245f9e; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+.status-next:hover { background: #1c518b; }
+.status-next:focus-visible { outline: 2px solid #245f9e; outline-offset: 3px; }
+.vertex-reference { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; width: 22px; height: 22px; margin: 0 2px; border: 1.5px solid #6596c8; border-radius: 50%; background: #fff; color: #174d80; font: inherit; font-weight: 650; cursor: pointer; }
+.vertex-reference:hover, .vertex-reference:focus-visible { background: #245f9e; color: #fff; border-color: #245f9e; outline: 2px solid #9bc6ed; outline-offset: 2px; }
+.message-vertex-ring { fill: none; stroke: #2478ca; stroke-width: 3; pointer-events: none; animation: message-vertex-pulse 1.2s ease-in-out infinite; }
+@keyframes message-vertex-pulse { 0%, 100% { r: 23; opacity: .95; } 50% { r: 28; opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .message-vertex-ring { animation: none; } }
+.order-info { display: inline-flex; align-items: center; justify-content: center; width: 27px; height: 27px; margin: 0 2px 0 4px; border: 0; border-radius: 50%; color: #39658f; background: transparent; cursor: pointer; }
+.order-info:hover { background: #d4e5f7; color: #174d80; }
+.order-info:focus-visible { outline: 2px solid #245f9e; outline-offset: 2px; }
+.help-overlay { margin: auto; padding: 0; width: min(440px, calc(100vw - 32px)); max-height: calc(100vh - 48px); border: 1px solid #b8d3ef; border-radius: 12px; color: #254b6d; background: #f8fbff; box-shadow: 0 16px 50px #173e6938; }
+.help-overlay::backdrop { background: #152c4859; }
+.help-overlay-content { padding: 22px; }
+.help-overlay h2 { font-size: 17px; color: #174d80; margin-bottom: 12px; }
+.help-overlay p { font-size: 13px; line-height: 1.6; margin-bottom: 12px; }
+.help-overlay form { display: flex; justify-content: flex-end; margin-top: 16px; }
+.selection-panel { order: -2; }
+.selection-row { display: flex; gap: 8px; align-items: center; min-height: 34px; font-size: 12px; color: #476480; }
+.selection-row > :first-child { margin-right: auto; }
+.selection-start { background: #EEEDFE; color: #534AB7; border-color: #afa9e5; }
+.selection-target { background: #FBEAF0; color: #993556; border-color: #d995ae; }
+.clear-selection { width: 24px; height: 24px; border: 0; border-radius: 50%; background: transparent; color: #65758a; font-size: 18px; cursor: pointer; }
+.clear-selection:hover { background: #e5edf7; color: #174d80; }
+.clear-selection:focus-visible { outline: 2px solid #245f9e; }
+.tabs-actions { margin-left: auto; align-self: center; margin-bottom: 4px; display: flex; gap: 6px; }
+.vertex-transfer { position: fixed; z-index: 10000; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border: 1.5px solid #c18722; border-radius: 50%; background: #FAEEDA; color: #633806; font-size: 12px; font-weight: 600; pointer-events: none; box-shadow: 0 2px 5px #63380630; }
+.panel-label { display: flex; align-items: center; gap: 6px; }
+.panel-title-icon { width: 15px; height: 15px; flex-shrink: 0; fill: none; stroke: #58799a; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.order-alert { margin-top: 8px; padding: 7px 14px 7px 8px; border: 1px solid #e8cf8f; border-left: 4px solid #c59328; border-radius: 8px; background: #fff8e8; color: #70501b; }
+.order-alert h2 { display: flex; align-items: center; gap: 6px; margin: 0 0 4px; font-size: 12px; font-weight: 650; }
+.order-alert p { margin: 0; font-size: 12px; line-height: 1.5; }
+.graph-column { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.graph-column .graph-wrap { flex: none; }
+#topo-output .panel { min-height: 75px; }
+#topo-output .token-row { flex-wrap: wrap; }
+.incoming-panel { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; row-gap: 3px; }
+.incoming-panel > .panel-label, .incoming-panel > .panel-hint { grid-column: 1 / -1; }
+.status-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+.status-header h2 { margin: 0; }
+.status-header .controls { margin: 0; gap: 6px; }
+.status-header .step-ctr { color: #526e88; }
+.order-alert:not([hidden]) { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 6px 10px; }
+.order-alert h2 { margin: 0; }
+.order-alert .order-info { color: #876015; margin: 0; }
+#order-alert-message { grid-column: 1 / -1; padding-top: 6px; border-top: 1px solid #ead9b3; }
+@media (max-width: 600px) { .graph-column { flex: none; width: 100%; } }
+#topo-controls { flex-wrap: wrap; max-width: 100%; }
+.graph-wrap.has-output { display: flex; flex-direction: column; height: 350px; }
+.graph-wrap.has-output > svg { flex: 1 1 0; min-height: 0; height: auto; width: 100%; }
+.graph-wrap #topo-output { flex: 0 0 auto; border-top: 1px solid #dbe5ef; background: #f6f9fd; }
+.graph-wrap #topo-output .panel { min-height: 0; border: 0; border-radius: 0; background: transparent; padding: 5px 10px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; }
+.graph-wrap #topo-output .panel-label { margin-bottom: 3px; }
+.graph-wrap #topo-output .panel-hint { margin-bottom: 5px; }
+.output-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 3px 7px; margin-bottom: 0; }
+.output-guidance { font-size: 11px; font-weight: 400; color: #687580; }
+/* Compact option groups without reducing label text. */
+#mode-control, #dir-toggle, #order-toggle { padding: 2px; border-radius: 7px; }
+#mode-control > span, #dir-toggle > span, #order-toggle > span { padding: 0 6px; letter-spacing: 0; }
+.subtab, .toggle-opt { padding: 4px 8px; }
+.subtabs, .toggle-wrap { padding: 2px; }
+#mode-control .subtabs, #dir-toggle .toggle-wrap, #order-toggle .toggle-wrap { padding: 0; }
+#order-toggle .order-info { width: 23px; height: 23px; margin: 0 1px 0 2px; }
+.status-header .step-ctr { display: inline-block; min-width: 11ch; margin-left: 0; text-align: left; font-variant-numeric: tabular-nums; }
+.status-start { background: #20805a; border-color: #20805a; padding: 2px 7px; font-size: .9em; line-height: 1.3; animation: start-pulse 1.8s ease-out infinite; }
+@keyframes start-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(32,128,90,0); } 25% { box-shadow: 0 0 0 2px rgba(32,128,90,.28); } 75% { box-shadow: 0 0 0 6px rgba(32,128,90,0); } }
+@media (prefers-reduced-motion: reduce) { .status-start { animation: none; } }
+.status-start:hover { background: #176744; }
+.status-start:focus-visible { outline-color: #20805a; }
+.graph-wrap .legend { flex: 0 0 auto; margin: 0; padding: 5px 8px; gap: 3px 9px; border-top: 1px solid #e2e8ef; background: #f8fafc; }
+.graph-wrap .leg { font-size: 9px; gap: 3px; }
+.graph-wrap .leg-dot { width: 9px; height: 9px; }
+.graph-wrap #topo-output .panel-label { margin-bottom: 0; }
+#topo-output .token { width: 20px; height: 20px; font-size: 10px; }
+.status-header .controls { position: relative; min-height: 28px; margin-left: auto; }
+#btn-start { position: absolute; right: 0; top: 50%; transform: translateY(-50%); margin: 0; font-size: 11px; }
+#btn-start[hidden] { display: none; }
+#btn-skip-target { position: absolute; right: 0; top: 50%; transform: translateY(-50%); margin: 0; }
 </style>
 </head>
 <body>
@@ -126,46 +257,44 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     </svg>
     <span class="header-title">Graph Algorithm Visualizer</span>
   </div>
-  <div class="hr">
-    Developed by Professor Chris Rosa &mdash; CS112 Data Structures, Sacred Heart University
-    <a href="/cdn-cgi/l/email-protection#2f5d405c4e4c181a1f19196f5c4e4c5d4a4b474a4e5d5b014a4b5a" class="hla brd" title="Email">
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="14" height="10" rx="2"/><path d="M1 5l7 5 7-5"/></svg>
-    </a>
-    <a href="https://linkedin.com/in/chris-rosa-3192326" target="_blank" class="hla fil">
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="white"><path d="M2.5 1A1.5 1.5 0 1 0 2.5 4 1.5 1.5 0 0 0 2.5 1zM1 5.5h3V15H1zM6 5.5h2.9v1.3h.04C9.36 5.9 10.5 5.3 12 5.3c3.1 0 3.7 2 3.7 4.7V15h-3v-4.4c0-1.1 0-2.4-1.5-2.4s-1.7 1.2-1.7 2.4V15H6z"/></svg>
-    </a>
-  </div>
 </header>
 
 <div class="card">
 
   <!-- ── Tabs ── -->
   <div class="tabs" id="tabs">
-    <div class="tab active" data-tab="search">Search</div>
-    <div class="tab" data-tab="topo">Topo sort</div>
-    <div class="tab" data-tab="span">Spanning tree</div>
-    <div class="tab" data-tab="dijk">Dijkstra's</div>
+    <button type="button" class="tab active" data-tab="search"><svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="6"/><path d="m14.5 14.5 5 5"/></svg>Search</button>
+    <button type="button" class="tab" data-tab="topo"><svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="16" width="5" height="5" rx="1"/><path d="M8 5.5h10.5V13m-3-3 3 3 3-3M5.5 11v7.5H13m-3-3 3 3-3 3"/></svg>Topo sort</button>
+    <button type="button" class="tab" data-tab="span"><svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 6v5M5 17v-6h14v6"/><circle cx="12" cy="4" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/></svg>Spanning tree</button>
+    <button type="button" class="tab" data-tab="dijk"><svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="4" cy="18" r="2"/><circle cx="20" cy="6" r="2"/><path d="M6 18h6a3 3 0 0 0 3-3V9a3 3 0 0 1 3-3M4 12V6h10"/><path d="m11 3 3 3-3 3"/></svg>Dijkstra's</button>
+  <div class="tabs-actions"><button type="button" class="btn" id="btn-new-graph" onclick="newGraph()">New graph</button><button type="button" class="btn tabs-reset" onclick="doReset()">Reset</button></div>
   </div>
 
   <!-- ── Subtabs + dir-toggle + neighbor order on same row ── -->
-  <div style="display:flex;align-items:center;gap:16px;margin-bottom:10px;flex-wrap:wrap">
-    <div class="subtabs" id="subtabs" style="display:flex;margin-bottom:0">
-      <div class="subtab active" data-sub="dfs">DFS</div>
-      <div class="subtab" data-sub="bfs">BFS</div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+    <div class="dir-toggle" id="mode-control">
+      <span>Mode:</span>
+    <div class="subtabs" id="subtabs" role="group" aria-label="Algorithm mode" style="display:flex;margin-bottom:0">
+      <button type="button" class="subtab active" data-sub="dfs">DFS</button>
+      <button type="button" class="subtab" data-sub="bfs">BFS</button>
+    </div>
     </div>
     <div class="dir-toggle" id="dir-toggle" style="display:flex;margin-bottom:0">
-      <span>Graph type:</span>
+      <span>Type:</span>
       <div class="toggle-wrap">
         <div class="toggle-opt active" data-dir="undirected">Undirected</div>
         <div class="toggle-opt" data-dir="directed">Directed</div>
       </div>
     </div>
     <div class="dir-toggle" id="order-toggle" style="display:flex;margin-bottom:0">
-      <span>Neighbor order:</span>
+      <span>Order:</span>
       <div class="toggle-wrap">
         <div class="toggle-opt active" data-order="rtl">Right→Left</div>
         <div class="toggle-opt" data-order="ltr">Left→Right</div>
       </div>
+      <button type="button" class="order-info" aria-label="Explain neighbor order" aria-haspopup="dialog" title="About neighbor order" onclick="document.getElementById('order-help').showModal()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7" r="1" fill="currentColor" stroke="none"/></svg>
+      </button>
     </div>
     <div class="dir-toggle" id="visit-toggle" style="display:none;margin-bottom:0">
       <span>Visit on:</span>
@@ -179,7 +308,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     </div>
     <!-- Topo sort: new graph + sources slider + edges toggle -->
     <div id="topo-controls" style="display:none;align-items:center;gap:10px;margin-bottom:0">
-      <button class="btn" onclick="newDAG()">New graph</button>
       <span style="font-size:12px;color:#666">Sources:</span>
       <input type="range" id="sources-slider" min="1" max="3" value="2" step="1"
         style="width:70px" oninput="sourcesCount=+this.value;document.getElementById('sources-val').textContent=this.value;newDAG()"/>
@@ -194,33 +322,69 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     </div>
     <!-- Span: new graph (randomize weights) -->
     <div id="span-controls" style="display:none;align-items:center;gap:10px;margin-bottom:0">
-      <button class="btn" onclick="newWeightedGraph()">New graph</button>
     </div>
     <!-- Dijk: new graph (randomize weights + directions) -->
     <div id="dijk-controls" style="display:none;align-items:center;gap:10px;margin-bottom:0">
-      <button class="btn" onclick="newDijkstraGraph()">New graph</button>
     </div>
   </div>
 
   <div class="main">
+    <div class="graph-column">
     <div class="graph-wrap">
       <svg id="svg" width="100%" viewBox="0 0 360 280"></svg>
+      <div class="legend" id="legend" aria-label="Vertex color legend"></div>
+      <div id="topo-output" hidden></div>
+    </div>
     </div>
     <div class="sidebar" id="sidebar"></div>
   </div>
 
-  <div class="status-bar" id="status"></div>
-
+  <section class="status-panel" aria-labelledby="status-heading">
+    <div class="status-header"><h2 id="status-heading">What's happening?</h2>
   <div class="controls">
+    <button type="button" class="status-next status-start" id="btn-start" hidden onclick="stepForward(); document.getElementById('btn-next').focus();">Start</button>
     <button class="btn" id="btn-prev" onclick="stepBack()" disabled>Prev</button>
     <button class="btn primary" id="btn-next" onclick="stepForward()" disabled>Next</button>
-    <button class="btn" onclick="doReset()">Reset</button>
     <button class="btn" id="btn-skip-target" onclick="skipDijkTarget()" style="display:none">Skip target</button>
     <span class="step-ctr" id="step-ctr"></span>
   </div>
+    </div>
+    <div class="status-bar" id="status" role="status" aria-live="polite" aria-atomic="true"></div>
+  </section>
 
-  <div class="legend" id="legend"></div>
+  <aside id="order-alert" class="order-alert" aria-labelledby="order-alert-title" hidden>
+    <h2 id="order-alert-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 3 2 21h20L12 3Z"/><path d="M12 9v5m0 3v.1"/></svg>Alert</h2>
+    <p id="order-alert-summary"></p>
+    <button type="button" class="order-info" id="alert-details-toggle" aria-label="Explain alphabetical order" aria-expanded="false" aria-controls="order-alert-message" onclick="const detail=document.getElementById('order-alert-message'); detail.hidden=!detail.hidden; this.setAttribute('aria-expanded', String(!detail.hidden));">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7" r="1" fill="currentColor" stroke="none"/></svg>
+    </button>
+    <p id="order-alert-message" hidden></p>
+  </aside>
+
+
+
 </div>
+
+<footer class="app-footer hr">
+    Developed by Professor Chris Rosa &mdash; CS112 Data Structures, Sacred Heart University
+    <a href="/cdn-cgi/l/email-protection#2f5d405c4e4c181a1f19196f5c4e4c5d4a4b474a4e5d5b014a4b5a" class="hla brd" title="Email">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="14" height="10" rx="2"/><path d="M1 5l7 5 7-5"/></svg>
+    </a>
+    <a href="https://linkedin.com/in/chris-rosa-3192326" target="_blank" class="hla fil">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="white"><path d="M2.5 1A1.5 1.5 0 1 0 2.5 4 1.5 1.5 0 0 0 2.5 1zM1 5.5h3V15H1zM6 5.5h2.9v1.3h.04C9.36 5.9 10.5 5.3 12 5.3c3.1 0 3.7 2 3.7 4.7V15h-3v-4.4c0-1.1 0-2.4-1.5-2.4s-1.7 1.2-1.7 2.4V15H6z"/></svg>
+    </a>
+</footer>
+
+<dialog id="order-help" class="help-overlay" onkeydown="if(event.key === 'Escape') { event.preventDefault(); this.close(); }" aria-labelledby="order-help-title" onclick="if(event.target === this) this.close()">
+  <div class="help-overlay-content">
+    <h2 id="order-help-title">What does Order change?</h2>
+    <p>This sets the order in which DFS <strong>pushes neighboring vertices onto the stack</strong>, based on their left-to-right positions in the graph.</p>
+    <p><strong>Right &rarr; Left:</strong> push rightmost first, leftmost last. The leftmost eligible vertex is then on top and explored next. <strong>Left &rarr; Right</strong> reverses this.</p>
+    <p>The last vertex pushed is the first one popped. Changing the order can change the exploration sequence, the path found, and the number of steps before reaching the target.</p>
+    <p><strong>The reachability result stays the same:</strong> if a path to the target exists, DFS finds one with either order. DFS does not guarantee the shortest path.</p>
+    <form method="dialog"><button class="btn primary" autofocus>Got it</button></form>
+  </div>
+</dialog>
 
 <script src="../assets/js/graph-layout.js"></script>
 <script>
@@ -478,7 +642,7 @@ function runDFS(graph, startId, targetId, directed) {
     });
   }
 
-  snap(`Start: ${startId} pushed onto stack. Target: ${targetId}.`, 'ready');
+  snap(`Since we're starting from ${startId}, push ${startId} onto the stack.`, 'ready');
 
   while (stack.length) {
     const { node: v, parent } = stack[stack.length - 1];
@@ -503,9 +667,9 @@ function runDFS(graph, startId, targetId, directed) {
     if (parent !== null) {
       const k = ekey(parent, v);
       const kr = ekey(v, parent);
-      es[k] = 'active'; es[kr] = 'active';
-      snap(`Traverse edge ${parent}→${v} (exploring)`, '');
-      es[k] = 'tree'; es[kr] = 'tree';
+      es[k] = 'active'; if (!directed) es[kr] = 'active';
+      snap(`Follow ${parent} → ${v}.`, '');
+      es[k] = 'tree'; if (!directed) es[kr] = 'tree';
     }
 
     visited.add(v);
@@ -534,7 +698,7 @@ function runDFS(graph, startId, targetId, directed) {
     const dfsPending = neighbors
       .filter(w => !visited.has(w) && !onStack.has(w))
       .map(w => ekey(v, w));
-    snap(`Visit ${v} — push neighbors not visited or on stack`, '', null, null, dfsPending, false);
+    snap(`Visit ${v}; add neighbors not visited or already on the stack.`, '', null, null, dfsPending, false);
     const pushable = neighbors.filter(w => !visited.has(w) && !onStack.has(w));
     for (let i = 0; i < neighbors.length; i++) {
       const w = neighbors[i];
@@ -543,21 +707,25 @@ function runDFS(graph, startId, targetId, directed) {
         onStack.add(w);
         ns[w] = w === targetId ? 'target' : 'frontier';
         const isLast = i === neighbors.length - 1 || neighbors.slice(i+1).every(x => visited.has(x) || onStack.has(x));
-        snap(`Push ${w} onto stack (neighbor of ${v})`, '', null, null, null, isLast && stack.length > 0);
+        const orderLabel = activeOrder === 'rtl' ? 'Right\u2192Left' : 'Left\u2192Right';
+        const orderImpact = pushable.length > 1
+          ? `${orderLabel}: push ${pushable.join(' \u2192 ')}. ${pushable[pushable.length - 1]} goes on top and is visited next.`
+          : 'Only one neighbor to add; push order makes no difference here.';
+        snap(`Push ${w} onto the stack (neighbor of ${v}). ${orderImpact}`, '', null, null, null, isLast && stack.length > 0);
       } else if (visited.has(w)) {
         const k = ekey(v, w); const kr = ekey(w, v);
-        if (!es[k] && !es[kr]) {
+        if (!es[k] && (directed || !es[kr])) {
           es[k] = 'active';
-          snap(`Edge ${v}→${w}: ${w} already visited — back edge (phase 1)`, '');
+          snap(`Check ${v} → ${w}: ${w} is already visited.`, '');
           es[k] = 'rejected';
-          snap(`Edge ${v}→${w}: confirmed back edge — rejected`, '');
+          snap(`Skip ${v} → ${w}: do not revisit ${w}.`, '');
         }
       }
     }
   }
 
   if (!steps.some(s => s.msgClass === 'found')) {
-    snap(`Traversal complete. Target ${targetId} not reachable.`, 'done');
+    snap(`Done. Target ${targetId} is unreachable.`, 'done');
   }
   return steps;
 }
@@ -579,14 +747,14 @@ function runBFS(graph, startId, targetId, directed) {
     steps.push({nodeStates:{...ns}, edgeStates:{...es}, msg, msgClass,
       frontier:[...queue], visited:[...visited], expanded:[...expanded], path, pendingEdges, pulseHead});
   }
-  snap(`Start: ${startId} enqueued. Target: ${targetId}. [Visit on ${activeVisit}; skip visited neighbors: ${skipVisitedNeighbors ? 'on' : 'off'}]`, 'ready');
+  snap(`Enqueue ${startId}. Mark visited on ${activeVisit}.`, 'ready');
   while (queue.length) {
     const v = queue.shift();
     ns[v] = 'current';
     // Enqueue-mode nodes are already visited on their first removal. Only
     // previously expanded nodes are skipped, preventing cycles when the rule is off.
     if (onEnqueue ? expanded.has(v) : visited.has(v)) {
-      snap(`Dequeue ${v} - already ${onEnqueue ? 'processed' : 'visited'}, skip`);
+      snap(`Dequeue ${v}: already ${onEnqueue ? 'processed' : 'visited'}, skip`);
       ns[v] = 'visited';
       continue;
     }
@@ -596,18 +764,18 @@ function runBFS(graph, startId, targetId, directed) {
       ns[v] = 'found';
       const path = [];
       for (let cur=v; cur!==undefined; cur=prev[cur]) path.unshift(cur);
-      snap(`Dequeue ${v} - found target! Path: ${path.join(' -> ')}`, 'found', path);
+      snap(`Found ${v}. Path: ${path.join(' → ')}`, 'found', path);
       break;
     }
     const neighbors = adj[v] || [];
-    snap(`Dequeue ${v} - ${onEnqueue ? 'already marked visited on enqueue' : 'mark visited'}`, '', null,
+    snap(`Dequeue ${v}: ${onEnqueue ? 'already marked visited on enqueue' : 'mark visited'}`, '', null,
       neighbors.filter(w => !skipVisitedNeighbors || !visited.has(w)).map(w => ekey(v,w)));
     ns[v] = 'visited';
     neighbors.forEach((w,i) => {
       const k=ekey(v,w), wasVisited=visited.has(w), wasQueued=queue.includes(w);
       es[k]='active';
       if (skipVisitedNeighbors && wasVisited) {
-        snap(`Neighbor ${w} - already visited, skip enqueue`);
+        snap(`Skip ${w}: already visited.`);
         es[k]='rejected';
         return;
       }
@@ -617,13 +785,34 @@ function runBFS(graph, startId, targetId, directed) {
       if (onEnqueue) visited.add(w);
       if (!wasVisited) ns[w] = w===targetId ? 'target' : onEnqueue ? 'visited' : 'frontier';
       const detail = wasVisited ? 'already visited; rule is off' : wasQueued ? 'already waiting in queue' : onEnqueue ? 'mark visited on enqueue' : 'discovered';
-      snap(`Enqueue ${w} via ${v}->${w} - ${detail}`, '', null, null, i===neighbors.length-1);
+      snap(`Enqueue ${w} via ${v} → ${w}: ${detail}.`, '', null, null, i===neighbors.length-1);
       if (onEnqueue) es[k]='tree';
     });
   }
   if (!steps.some(s=>s.msgClass==='found'))
-    steps.push({...steps[steps.length-1], msg: `Traversal complete. Target ${targetId} not reachable.`, msgClass:'done'});
+    steps.push({...steps[steps.length-1], msg: `Done. Target ${targetId} is unreachable.`, msgClass:'done'});
   return steps;
+}
+
+function topoScenario(graph, method) {
+  const incoming = new Set(graph.edges.map(edge => edge[1]));
+  const sources = Object.keys(graph.nodes).filter(id => !incoming.has(id)).sort();
+  const scenario = 'This graph has ' + sources.length + ' source' + (sources.length === 1 ? '' : 's') + ': ' + sources.join(', ') + ' (vertices with no incoming edges). ';
+  return scenario + (method === 'dfs'
+    ? 'DFS explores each branch, then puts each finished vertex at the front of the output.'
+    : "Kahn's algorithm removes ready vertices with no remaining incoming edges and appends them to the output.");
+}
+
+function updateOrderAlert() {
+  const box = document.getElementById('order-alert');
+  box.hidden = activeTab !== 'topo';
+  if (box.hidden) return;
+  document.getElementById('order-alert-summary').textContent = activeSub === 'dfs'
+    ? 'Source vertices are chosen alphabetically.'
+    : 'Ready vertices are chosen alphabetically.';
+  document.getElementById('order-alert-message').textContent = activeSub === 'dfs'
+    ? 'DFS chooses source vertices alphabetically. Within a branch, neighbors follow the stored edge order. Other valid choices can produce a different topological order while still placing every prerequisite before the vertices that depend on it.'
+    : "Kahn's algorithm chooses the alphabetically first ready vertex whenever several have no incoming edges remaining. Other ready choices can produce a different, equally valid topological order.";
 }
 
 function runTopo(graph) {
@@ -641,18 +830,18 @@ function runTopo(graph) {
       topoResult:[...result], callStack:[...callStack] });
   }
 
-  snap('Topo sort — DFS post-order. Press Next to begin.', 'ready');
+  snap(topoScenario(graph, 'dfs'), 'ready');
 
   function dfs(v) {
     visited.add(v);
     callStack.push(v);
     ns[v] = 'processing';
-    snap(`Push ${v} onto recursion stack`, '');
+    snap(`Enter ${v}: push onto the DFS call stack.`, '');
     for (const w of (adj[v]||[])) {
       const k = ekey(v,w);
       if (!visited.has(w)) {
         es[k] = 'active';
-        snap(`Follow edge ${v}→${w}`, '');
+        snap(`Follow ${v} → ${w}. Return to ${v} after exploring ${w}'s branch.`, '');
         dfs(w);
         es[k] = 'tree';
       } else {
@@ -662,13 +851,13 @@ function runTopo(graph) {
     callStack.pop();
     result.unshift(v);
     ns[v] = 'removed';
-    snap(`${v} finished — pop stack, prepend to output`, '');
+    snap(`Finish ${v}: pop the call stack; put ${v} at the front of the output.`, '');
   }
 
   // Start from in-degree 0 nodes first, then mop up any remaining unvisited
   const startOrder = [
-    ...Object.keys(graph.nodes).filter(n =>  dagSources.has(n)),
-    ...Object.keys(graph.nodes).filter(n => !dagSources.has(n))
+    ...Object.keys(graph.nodes).filter(n =>  dagSources.has(n)).sort(),
+    ...Object.keys(graph.nodes).filter(n => !dagSources.has(n)).sort()
   ];
   startOrder.forEach(n => { if (!visited.has(n)) dfs(n); });
   snap(`Topo sort complete: ${result.join(' → ')}`, 'done');
@@ -699,16 +888,16 @@ function runKahn(graph) {
   const queue = nodes.filter(n => inDeg[n] === 0).sort();
   queue.forEach(n => ns[n] = 'frontier');
 
-  snap(`Kahn\'s: compute in-degrees. Ready set: [${queue.join(', ')}]`, 'ready');
+  snap(topoScenario(graph, 'kahn'), 'ready');
 
   while (queue.length) {
     const v = queue.shift();
     ns[v] = 'current';
-    snap(`Process ${v} (in-degree = 0) — add to output`, '');
+    snap(`Select ${v}: no incoming edges.${queue.length ? " First alphabetically among ready vertices." : ""}`, '');
 
     result.push(v);
     ns[v] = 'removed';
-    snap(`${v} removed — append to topo order`, '');
+    snap(`Remove ${v}; put it at the end of the output.`, '');
 
     // Decrement neighbors
     const neighbors = [...(adj[v]||[])].sort();
@@ -716,13 +905,13 @@ function runKahn(graph) {
       const k = ekey(v, w);
       es[k] = 'active';
       inDeg[w]--;
-      snap(`Decrement in-degree of ${w}: now ${inDeg[w]}`, '');
+      snap(`Remove ${v} → ${w}: ${w} has ${inDeg[w]} incoming edges left.`, '');
       es[k] = 'tree';
       if (inDeg[w] === 0) {
         queue.push(w);
         queue.sort();
         ns[w] = 'frontier';
-        snap(`${w} in-degree = 0 — add to ready set`, '');
+        snap(`Ready: ${w} has no incoming edges left.`, '');
       }
     }
   }
@@ -767,7 +956,7 @@ function runPrim(graph, startId) {
       es[ekey(a,b)]='frontier'; es[ekey(b,a)]='frontier';
     }
   });
-  snap(`Start node: ${startId}. Scanning neighbors — ${getCandidates().length} crossing edges found.`, 'ready');
+  snap(`Tree rooted at ${startId}: ${getCandidates().length} edges lead outside the tree.`, 'ready');
 
   const nodeCount = Object.keys(graph.nodes).length;
   while (inMST.size < nodeCount) {
@@ -780,7 +969,7 @@ function runPrim(graph, startId) {
 
     // Highlight the minimum
     es[k1]='active'; es[k2]='active';
-    snap(`Minimum crossing edge: ${a}–${b} (w=${w}) — add to MST`, '');
+    snap(`Choose ${a}–${b} (weight ${w}): cheapest edge leaving the tree.`, '');
 
     // Add new node to MST
     inMST.add(newNode);
@@ -805,7 +994,7 @@ function runPrim(graph, startId) {
 
     // Flash excluded edges red for one step, then settle to 'excluded' (faded dashed)
     if (newlyExcluded.length) {
-      snap(`Edges [${newlyExcluded.join(', ')}] — both endpoints now in MST, permanently excluded`, '', [...excludedEndpoints]);
+      snap(`Exclude ${newlyExcluded.join(', ')}: both ends are already in the tree.`, '', [...excludedEndpoints]);
       // Downgrade from rejected flash → excluded (permanent dim)
       graph.edges.forEach(([ea,eb]) => {
         const ek1=ekey(ea,eb), ek2=ekey(eb,ea);
@@ -828,14 +1017,15 @@ function runPrim(graph, startId) {
       }
     });
 
-    snap(`Added ${a}–${b} (w=${w}) to MST. Total: ${total}${newCrossing.length ? ` — new crossing edges: [${newCrossing.join(', ')}]` : ''}`, '');
+    snap(`Add ${a}–${b} (weight ${w}). Tree weight: ${total}.`, '');
   }
-  snap(`Prim's complete — ${nodeCount-1} edges for ${nodeCount} nodes (n−1 = ${nodeCount}−1). MST total weight: ${total}`, 'done');
+  snap(`Done. Tree: ${mstEdges.length} edges; total weight ${total}.`, 'done');
   return steps;
 }
 
 // ── KRUSKAL'S ────────────────────────────────────
 function runKruskal(graph) {
+  const steps = [];
   const ns = {};
   Object.keys(graph.nodes).forEach(n => ns[n] = 'unvisited');
   const es = {};
@@ -865,18 +1055,24 @@ function runKruskal(graph) {
     return rootMap;
   }
 
+  const groupColors = [
+    ['#DBEAFE','#2563EB','#1E3A8A'], ['#FCE7F3','#BE185D','#831843'],
+    ['#D1FAE5','#047857','#064E3B'], ['#FEF3C7','#B45309','#78350F'],
+    ['#EDE9FE','#7C3AED','#4C1D95'], ['#CFFAFE','#0E7490','#164E63'],
+    ['#FFEDD5','#C2410C','#7C2D12']
+  ];
   function snapComponents() {
     const rootMap = getComponents();
     const compInfo = {};
     nodes.forEach(n => {
       const r = find(n);
       const members = [...rootMap[r]].sort();
-      const isConnected = members.length > 1;
+      const color = groupColors[nodes.indexOf(r) % groupColors.length];
       compInfo[n] = {
         root: r,
-        fill:   isConnected ? '#E1F5EE' : '#ffffff',
-        stroke: isConnected ? '#0F6E56' : '#B4B2A9',
-        text:   isConnected ? '#04342C' : '#444441',
+        fill: color[0],
+        stroke: color[1],
+        text: color[2],
         members
       };
     });
@@ -889,7 +1085,7 @@ function runKruskal(graph) {
       components: snapComponents(), cycleNodes });
   }
 
-  snap(`Kruskal's: edges sorted by weight. Each node starts in its own component.`, 'ready');
+  snap(`Check edges from lowest weight; each vertex starts in a separate group.`, 'ready');
 
   for (const [a,b,w] of sorted) {
     const k1=ekey(a,b), k2=ekey(b,a);
@@ -907,13 +1103,13 @@ function runKruskal(graph) {
     } else {
       es[k1]='rejected'; es[k2]='rejected';
       const cycleMembers = snapComponents()[a].members;
-      snap(`Reject ${a}–${b} — ${a} and ${b} already in same component [${cycleMembers.join(', ')}]`, '', [a, b]);
+      snap(`Reject ${a}–${b}: its ends are already connected; this would form a cycle.`, '', [a, b]);
       // Downgrade from red flash → excluded (faded dashed), same as Prim's
       es[k1]='excluded'; es[k2]='excluded';
     }
   }
   const n = nodes.length;
-  snap(`Kruskal's complete — ${n-1} edges for ${n} nodes (n−1 = ${n}−1). MST total weight: ${total}`, 'done');
+  snap(`Done. Tree: ${mstEdges.length} edges; total weight ${total}.`, 'done');
   return steps;
 }
 
@@ -958,8 +1154,8 @@ function runDijkstra(graph, startId, directed, targetId) {
       nextNode: nextPick, candidateNodes, path });
   }
 
-  const targetStr = targetId ? ` Target: ${targetId}.` : ' No target — finding all shortest paths.';
-  snap(`Start: ${startId} — d[${startId}]=0, all others = ∞.${targetStr} Press Next to begin.`, 'ready', startId);
+  const targetStr = targetId ? '' : ' No target — finding all shortest paths.';
+  snap(`Distance to ${startId}: 0; others ∞ (unreached).${targetStr}`, 'ready', startId);
 
   for (let i=0; i<nodeIds.length; i++) {
     let u=null;
@@ -971,7 +1167,7 @@ function runDijkstra(graph, startId, directed, targetId) {
     const rivalStr = pqList.length > 1
       ? ` — queue: [${pqList.map(n=>`${n}=${dist[n]}`).join(', ')}]`
       : '';
-    snap(`Select ${u}: d[${u}]=${dist[u]} is smallest in queue${rivalStr}`, '', u);
+    snap(`Select ${u}: distance ${dist[u]} is smallest in the queue.`, '', u);
 
     settled.add(u);
     ns[u] = u===startId ? 'start' : 'visited';
@@ -981,13 +1177,13 @@ function runDijkstra(graph, startId, directed, targetId) {
       ns[u] = 'found';
       const path = buildPath(u);
       const pathStr = path ? path.join(' → ') : `${startId} → ${u}`;
-      snap(`Settle ${u} — d[${u}]=${dist[u]} is now permanent. Target reached! Shortest path: ${pathStr} (cost=${dist[u]}).`, 'found', null, null, path);
+      snap(`Found ${u}. Shortest path: ${pathStr}; distance ${dist[u]}.`, 'found', null, null, path);
       break;
     }
 
     const toRelax = adj[u].filter(([v]) => !settled.has(v));
     toRelax.forEach(([v]) => { es[ekey(u,v)] = 'pending'; });
-    snap(`Settle ${u} — d[${u}]=${dist[u]} is now permanent. Will relax ${toRelax.length} edge${toRelax.length!==1?'s':''}.`, '', pickNext());
+    snap(`Settle ${u}: distance ${dist[u]} is final. Check ${toRelax.length} outgoing edge${toRelax.length!==1?'s':''}.`, '', pickNext());
 
     for (const [v,w] of adj[u]) {
       if (!settled.has(v)) {
@@ -995,16 +1191,16 @@ function runDijkstra(graph, startId, directed, targetId) {
         es[k]='active';
         const candidate = dist[u]+w;
         const current = dist[v]===Infinity ? '∞' : dist[v];
-        snap(`Relax ${u}→${v} (w=${w}): d[${u}]+${w} = ${candidate} vs current d[${v}]=${current}`, '', pickNext());
+        snap(`Check ${u} → ${v}: ${dist[u]} + ${w} = ${candidate}; current distance ${current}.`, '', pickNext());
         if (candidate < dist[v]) {
           dist[v]=candidate;
           prev[v]=u;  // record best predecessor
           discovered.add(v);
           es[k]='tree';
-          snap(`Improvement! d[${v}] updated: ${current} → ${candidate} — added/updated in queue`, '', pickNext());
+          snap(`Update ${v}: distance ${current} → ${candidate}, via ${u}.`, '', pickNext());
         } else {
           es[k]='rejected';
-          snap(`No improvement — d[${v}]=${current} ≤ ${candidate}, keep ${current}`, '', pickNext());
+          snap(`Keep ${v} at ${current}: the route via ${u} costs ${candidate}.`, '', pickNext());
         }
       }
     }
@@ -1014,7 +1210,7 @@ function runDijkstra(graph, startId, directed, targetId) {
     if (candidates.length > 0) {
       const candStr = candidates.map(n => `${n}=${dist[n]}`).join(', ');
       snap(
-        `All edges from ${u} relaxed. Candidates: [${candStr}] — lowest is ${next} (d=${dist[next]}), press Next to dequeue.`,
+        `Finished checking ${u}. Next: ${next}, with smallest distance ${dist[next]}.`,
         '', next, candidates
       );
     }
@@ -1057,27 +1253,85 @@ function updateSelPhase() {
   updateNextBtn();
 }
 
+function clearVertexHighlight() {
+  document.getElementById('message-vertex-ring')?.remove();
+}
+
+function highlightMessageVertex(id) {
+  clearVertexHighlight();
+  const node = document.getElementById('node-' + id);
+  if (!node) return;
+  const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  ring.id = 'message-vertex-ring';
+  ring.setAttribute('cx', node.getAttribute('cx'));
+  ring.setAttribute('cy', node.getAttribute('cy'));
+  ring.setAttribute('r', '25');
+  ring.setAttribute('class', 'message-vertex-ring');
+  ring.setAttribute('aria-hidden', 'true');
+  document.getElementById('svg').appendChild(ring);
+}
+
+function decorateMessageVertices(el) {
+  const graph = GRAPHS[graphKey(activeTab, activeSub, activeDir)];
+  // Work only on text, leaving the inline Next button intact.
+  for (const text of [...el.childNodes]) {
+    if (text.nodeType !== Node.TEXT_NODE) continue;
+    const fragment = document.createDocumentFragment();
+    let offset = 0;
+    for (const match of text.textContent.matchAll(/\b[A-Z]\b/g)) {
+      const id = match[0];
+      if (!Object.hasOwn(graph.nodes, id)) continue;
+      fragment.append(document.createTextNode(text.textContent.slice(offset, match.index)));
+      const badge = document.createElement('button');
+      badge.type = 'button';
+      badge.className = 'vertex-reference';
+      badge.textContent = id;
+      badge.setAttribute('aria-label', 'Highlight vertex ' + id);
+      badge.title = 'Highlight vertex ' + id + ' on the graph';
+      const show = () => highlightMessageVertex(id);
+      badge.addEventListener('pointerenter', show);
+      badge.addEventListener('focus', show);
+      badge.addEventListener('click', show);
+      badge.addEventListener('pointerleave', () => {
+        if (document.activeElement !== badge) clearVertexHighlight();
+      });
+      badge.addEventListener('blur', () => {
+        if (!badge.matches(':hover')) clearVertexHighlight();
+      });
+      badge.addEventListener('keydown', event => {
+        if (event.key === 'Escape') { clearVertexHighlight(); badge.blur(); }
+      });
+      fragment.append(badge);
+      offset = match.index + id.length;
+    }
+    fragment.append(document.createTextNode(text.textContent.slice(offset)));
+    text.replaceWith(fragment);
+  }
+}
+
 function updateStatus() {
+  clearVertexHighlight();
   const el = document.getElementById('status');
   if (selPhase==='start') {
     el.textContent='Click a node to set the start node.';
     el.className='status-bar selecting';
   } else if (selPhase==='dijk-target') {
-    el.textContent=`Start: ${startNode}. Click a node to set a target, or click "Skip target" to find all shortest paths.`;
+    el.textContent=`From ${startNode}. Click a node to set a target, or click "Skip target" to find all shortest paths.`;
     el.className='status-bar selecting';
   } else if (selPhase==='target') {
-    el.textContent=`Start: ${startNode}. Now click a node to set the search target.`;
+    el.textContent=`From ${startNode}. Now click a node to set the search target.`;
     el.className='status-bar selecting';
   } else if (selPhase==='ready') {
     const cfg = TAB_CFG[activeTab];
     const needsTarget = cfg.needsTarget;
     let msg = '';
-    if (startNode && needsTarget && targetNode) msg=`Start: ${startNode} · Target: ${targetNode} · Press Next to begin.`;
-    else if (startNode && activeTab==='dijk' && targetNode) msg=`Start: ${startNode} · Target: ${targetNode} · Press Next to begin.`;
-    else if (startNode && activeTab==='dijk') msg=`Start: ${startNode} · No target — will find all shortest paths. Press Next to begin.`;
-    else if (startNode) msg=`Start: ${startNode} · Press Next to begin.`;
+    if (startNode && needsTarget && targetNode) msg=`Using ${activeSub.toUpperCase()}, let's search from ${startNode} → ${targetNode}. Press Next to begin.`;
+    else if (startNode && activeTab==='dijk' && targetNode) msg=`From ${startNode} · Target: ${targetNode} · Press Next to begin.`;
+    else if (startNode && activeTab==='dijk') msg=`From ${startNode} · No target — will find all shortest paths. Press Next to begin.`;
+    else if (startNode) msg=`From ${startNode} · Press Next to begin.`;
+    else if (activeTab === 'topo') msg = topoScenario(GRAPHS.dag, activeSub) + ' Press Next to begin.';
     else msg='Press Next to begin.';
-    el.textContent=msg;
+    el.textContent = msg.replace(/\s*Press Next to begin\./, '').replace(/\s*\u00b7\s*$/, '.').trim() || 'Build a minimum spanning tree using Kruskal\'s algorithm.';
     el.className='status-bar ready';
   } else if (selPhase==='stepping') {
     const s = steps[stepIndex-1];
@@ -1086,11 +1340,17 @@ function updateStatus() {
     const s = steps[stepIndex-1];
     if (s) { el.textContent=s.msg; el.className=`status-bar done`; }
   }
+  decorateMessageVertices(el);
+  updateOrderAlert();
 }
 
 function updateNextBtn() {
   const next = document.getElementById('btn-next');
   const prev = document.getElementById('btn-prev');
+  document.getElementById('btn-start').hidden = selPhase !== 'ready';
+  const playing = selPhase === 'stepping' || selPhase === 'done';
+  next.style.visibility = playing ? '' : 'hidden';
+  prev.style.visibility = playing ? '' : 'hidden';
   if (selPhase==='start'||selPhase==='target'||selPhase==='dijk-target') {
     next.disabled=true;
   } else if (selPhase==='ready') {
@@ -1122,6 +1382,7 @@ function buildSteps() {
 }
 
 function stepForward() {
+  if (['start', 'target', 'dijk-target'].includes(selPhase)) return;
   if (selPhase==='ready') {
     steps = buildSteps();
     stepIndex = 0;
@@ -1138,6 +1399,7 @@ function stepForward() {
 }
 
 function stepBack() {
+  if (['start', 'target', 'dijk-target'].includes(selPhase)) return;
   if (stepIndex > 1) {
     stepIndex--;
     selPhase='stepping';
@@ -1146,6 +1408,7 @@ function stepBack() {
     stepIndex=0;
     selPhase='ready';
     renderGraph(false);
+    renderSidebar();
     updateStatus();
   }
   updateNextBtn();
@@ -1233,41 +1496,56 @@ function animEdgeSweep(svgEl, route, color) {
   }, 540);
 }
 
-function animNodeFly(svgEl, fromX, fromY, color, label) {
-  // Ghost circle flies from node toward right edge (sidebar direction)
-  const toX = 355; // right edge of 360-wide viewBox
-  const toY = fromY;
-
-  const g = document.createElementNS('http://www.w3.org/2000/svg','g');
-  const circ = document.createElementNS('http://www.w3.org/2000/svg','circle');
-  circ.setAttribute('cx', fromX); circ.setAttribute('cy', fromY);
-  circ.setAttribute('r','14');
-  circ.setAttribute('fill', color); circ.setAttribute('stroke','#fff');
-  circ.setAttribute('stroke-width','1.5'); circ.setAttribute('opacity','0.9');
-
-  const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
-  txt.setAttribute('x', fromX); txt.setAttribute('y', fromY);
-  txt.setAttribute('text-anchor','middle'); txt.setAttribute('dominant-baseline','central');
-  txt.setAttribute('font-size','11'); txt.setAttribute('font-weight','500');
-  txt.setAttribute('fill','#633806');
-  txt.setAttribute('font-family','-apple-system,sans-serif');
-  txt.textContent = label;
-
-  g.appendChild(circ); g.appendChild(txt);
-  svgEl.appendChild(g);
-
-  const dx = toX - fromX;
-  const dy = toY - fromY;
-
-  g.animate(
-    [
-      { transform: `translate(0,0)`, opacity: 0.9 },
-      { transform: `translate(${dx*0.6}px,${dy*0.6}px)`, opacity: 0.9 },
-      { transform: `translate(${dx}px,${dy}px)`, opacity: 0 }
-    ],
-    { duration: 480, easing: 'cubic-bezier(0.4,0,0.6,1)', fill: 'forwards' }
-  );
-  setTimeout(() => { try { svgEl.removeChild(g); } catch(e){} }, 500);
+let activeTransfers = [];
+function clearTransfers() {
+  activeTransfers.splice(0).forEach(cleanup => cleanup());
+}
+function animateTransfer(id, from, to, destination) {
+  if (!from || !to || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const ghost = document.createElement('div');
+  ghost.className = 'vertex-transfer';
+  ghost.textContent = id;
+  ghost.setAttribute('aria-hidden', 'true');
+  const x = from.left + from.width / 2, y = from.top + from.height / 2;
+  const dx = to.left + to.width / 2 - x, dy = to.top + to.height / 2 - y;
+  ghost.style.left = (x - 13) + 'px';
+  ghost.style.top = (y - 13) + 'px';
+  document.body.appendChild(ghost);
+  if (destination) destination.style.visibility = 'hidden';
+  const animation = ghost.animate([
+    { transform: 'translate(0, 0) scale(' + from.width / 26 + ')' },
+    { transform: 'translate(' + dx + 'px, ' + dy + 'px) scale(' + to.width / 26 + ')' }
+  ], { duration: 650, easing: 'cubic-bezier(.25,.7,.3,1)', fill: 'forwards' });
+  const cleanup = () => {
+    animation.cancel(); ghost.remove();
+    if (destination) destination.style.visibility = '';
+    activeTransfers = activeTransfers.filter(fn => fn !== cleanup);
+  };
+  activeTransfers.push(cleanup);
+  animation.onfinish = cleanup;
+}
+function transferState(step) {
+  if (activeTab === 'search') return step?.frontier || [];
+  if (activeTab === 'topo' && activeSub === 'dfs') return step?.callStack || [];
+  return [];
+}
+function animatePanelTransfers(before, after, oldPositions) {
+  const remaining = [...before];
+  const added = after.filter(id => {
+    const index = remaining.indexOf(id);
+    if (index < 0) return true;
+    remaining.splice(index, 1); return false;
+  });
+  for (const id of added) {
+    const node = document.getElementById('node-' + id);
+    const tokens = [...document.querySelectorAll('[data-transfer-node="' + id + '"]')];
+    const token = activeTab === 'search' && activeSub === 'bfs' ? tokens.at(-1) : tokens[0];
+    if (node && token) animateTransfer(id, node.getBoundingClientRect(), token.getBoundingClientRect(), token);
+  }
+  for (const id of remaining) {
+    const node = document.getElementById('node-' + id);
+    if (node) animateTransfer(id, oldPositions[id], node.getBoundingClientRect());
+  }
 }
 
 function isRedQueueEntry(step, id) {
@@ -1276,10 +1554,11 @@ function isRedQueueEntry(step, id) {
 }
 
 function renderGraph(animate) {
+  clearTransfers();
   const gkey = graphKey(activeTab, activeSub, activeDir);
   const g = GRAPHS[gkey];
-  const isDirected = activeTab==='topo' || activeDir==='directed';
-  const step = steps[stepIndex-1];
+  const isDirected = activeTab==='topo' || (activeTab!=='span' && activeDir==='directed');
+  const step = steps[stepIndex-1] || (activeTab==='span' && activeSub==='kruskal' ? runKruskal(g)[0] : null);
   const prevStep = steps[stepIndex-2];
   const ns = step ? step.nodeStates : buildInitialNodeStates(g);
   const es = step ? step.edgeStates : {};
@@ -1324,17 +1603,6 @@ function renderGraph(animate) {
   }
 
   // ── Determine node being pushed (for fly animation) ──
-  // A node that just transitioned to 'frontier' (on stack/queue) this step
-  let flyNode = null;
-  if (animate && step && activeTab==='search') {
-    const prevNs = prevStep ? prevStep.nodeStates : {};
-    for (const [id, state] of Object.entries(ns)) {
-      if (state==='frontier' && prevNs[id]!=='frontier') {
-        flyNode = id; break;
-      }
-    }
-  }
-
   // ── Build path lookup for found state ──
   const pathNodes = new Set();
   const pathEdges = new Set();
@@ -1343,7 +1611,7 @@ function renderGraph(animate) {
     foundPath.forEach(n => pathNodes.add(n));
     for (let i = 0; i < foundPath.length - 1; i++) {
       pathEdges.add(ekey(foundPath[i], foundPath[i+1]));
-      pathEdges.add(ekey(foundPath[i+1], foundPath[i])); // undirected
+      if (!isDirected) pathEdges.add(ekey(foundPath[i+1], foundPath[i]));
     }
   }
   const haspath = pathNodes.size > 0;
@@ -1355,11 +1623,11 @@ function renderGraph(animate) {
   g.edges.forEach((edge, edgeIndex) => {
     const [a, b, w] = edge;
     const k1=ekey(a,b), k2=ekey(b,a);
-    const state = es[k1]||es[k2]||'default';
+    const state = es[k1] || (!isDirected && es[k2]) || 'default';
 
 
-    const onPath = haspath && (pathEdges.has(k1) || pathEdges.has(k2));
-    const isPending = !haspath && (pendingSet.has(k1) || pendingSet.has(k2));
+    const onPath = haspath && (pathEdges.has(k1) || (!isDirected && pathEdges.has(k2)));
+    const isPending = !haspath && (pendingSet.has(k1) || (!isDirected && pendingSet.has(k2)));
 
     // Kahn's: dim edges whose source node has been removed
     const kahnSourceRemoved = activeTab==='topo' && activeSub==='kahn'
@@ -1555,16 +1823,13 @@ function renderGraph(animate) {
     if (sweepEdge) {
       const [a, b] = sweepEdge;
       let route = routes.find(r => r.a === a && r.b === b);
-      if (!route) {
+      if (!route && !isDirected) {
         const reverse = routes.find(r => r.a === b && r.b === a);
         if (reverse) route = { d: `M${reverse.end.join(',')} Q${reverse.control.join(',')} ${reverse.start.join(',')}` };
       }
       if (route) animEdgeSweep(svg, route, '#BA7517');
     }
-    if (flyNode) {
-      const [fx, fy] = g.nodes[flyNode];
-      animNodeFly(svg, fx, fy, '#FAEEDA', flyNode);
-    }
+
   }
 }
 
@@ -1579,23 +1844,85 @@ function buildInitialNodeStates(g) {
 }
 
 function canClickNode(id) {
-  if (selPhase==='start')  return true;
+  if (selPhase==='start')  return id !== targetNode;
   if (selPhase==='target') return id !== startNode;
   if (selPhase==='dijk-target') return id !== startNode;
   return false;
 }
 
+function clearSelection(which) {
+  if (which === 'start') startNode = null;
+  else targetNode = null;
+  steps = [];
+  stepIndex = 0;
+  document.getElementById('step-ctr').textContent = '';
+  updateSelPhase();
+  renderAll(false);
+  renderLegend();
+}
+
+function selectionPanel() {
+  const needsStart = TAB_CFG[activeTab].needsStart || (activeTab === 'span' && activeSub === 'prim');
+  if (!needsStart) return '';
+  const fields = [['start', 'Start', startNode]];
+  if (activeTab === 'search' || activeTab === 'dijk') fields.push(['target', 'Target', targetNode]);
+  let html = '<div class="panel selection-panel"><div class="panel-label">Selected vertices</div>';
+  for (const [key, label, value] of fields) {
+    html += '<div class="selection-row"><span>' + label + '</span>';
+    if (value) {
+      html += '<span class="token selection-' + key + '">' + value + '</span>';
+      html += '<button type="button" class="clear-selection" aria-label="Clear ' + label.toLowerCase() + ' vertex" title="Clear and select another vertex" onclick="clearSelection(\'' + key + '\')">&times;</button>';
+    } else {
+      const skipped = key === 'target' && activeTab === 'dijk' && startNode && !['start','dijk-target'].includes(selPhase);
+      html += '<span class="panel-empty">' + (skipped ? 'All vertices' : 'Select on graph') + '</span>';
+      if (skipped) html += '<button type="button" class="clear-selection" aria-label="Select target vertex" onclick="clearSelection(\'target\')">&#9998;</button>';
+    }
+    html += '</div>';
+  }
+  return html + '</div>';
+}
+
+function decoratePanelTitles(el) {
+  const paths = {
+    'Selected vertices': '<circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="m8 8 8 8M16 4h4v4M4 16v4h4"/>',
+    'Stack': '<path d="m4 7 8-4 8 4-8 4-8-4Zm0 5 8 4 8-4M4 17l8 4 8-4"/>',
+    'DFS call stack': '<path d="m4 7 8-4 8 4-8 4-8-4Zm0 5 8 4 8-4M4 17l8 4 8-4"/>',
+    'Queue': '<rect x="5" y="7" width="4" height="10" rx="1"/><rect x="11" y="7" width="4" height="10" rx="1"/><path d="M1 12h3m13 0h6m-3-3 3 3-3 3"/>',
+    'Output order': '<path d="M8 5h13M8 12h13M8 19h13M3 5h.01M3 12h.01M3 19h.01"/>',
+    'Incoming edges': '<path d="m3 4 6 6M3 20l6-6M9 7v3H6m0 4h3v3M10 12h5"/><circle cx="18" cy="12" r="3"/>',
+    'Ready vertices': '<circle cx="12" cy="12" r="9"/><path d="m7 12 3 3 7-7"/>',
+    'Connected groups': '<circle cx="5" cy="6" r="3"/><circle cx="19" cy="6" r="3"/><circle cx="12" cy="19" r="3"/><path d="M8 6h8M6 9l4 7m8-7-4 7"/>',
+    'Edges by weight': '<path d="M4 5h16M4 12h12M4 19h7"/>',
+    'Candidate edges': '<circle cx="5" cy="12" r="3"/><path d="m8 10 11-6M8 14l11 6"/>',
+    'MST edges': '<path d="M12 4v7M5 20v-9h14v9"/><circle cx="12" cy="4" r="2"/>',
+    'Priority queue': '<path d="M8 5h12M8 12h8M8 19h4M3 20V4m-2 3 2-3 2 3"/>',
+    'Final distances': '<circle cx="12" cy="12" r="9"/><path d="m7 12 3 3 7-7"/>'
+  };
+  el.querySelectorAll('.panel-label').forEach(label => {
+    const path = paths[label.textContent.replace(/ \(\d+\)$/, '')];
+    if (!path) return;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('class', 'panel-title-icon');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.innerHTML = path;
+    label.prepend(svg);
+  });
+}
+
 function renderSidebar() {
-  const step = steps[stepIndex-1];
+  const graph = GRAPHS[graphKey(activeTab, activeSub, activeDir)];
+  const step = steps[stepIndex-1] || (activeTab==='topo' && activeSub==='kahn' ? runKahn(graph)[0]
+    : activeTab==='span' && activeSub==='kruskal' ? runKruskal(graph)[0] : null);
   const el = document.getElementById('sidebar');
   const cycleSet = new Set(step && step.cycleNodes ? step.cycleNodes : []);
-  let html = '';
+  let html = selectionPanel();
 
   if (activeTab==='search') {
     const label = activeSub==='dfs' ? 'Stack' : 'Queue';
     const frontier = step ? (step.frontier||[]) : [];
     html += `<div class="panel" style="flex:1">`;
-    html += `<div class="panel-label">${label}</div>`;
+    html += `<div class="panel-label">${label}</div><div class="panel-hint">${activeSub==='dfs' ? 'Last added is next (top).' : 'First added is next (front).'}</div>`;
     if (!frontier.length) {
       html += `<span class="panel-empty">empty</span>`;
     } else {
@@ -1606,7 +1933,7 @@ function renderSidebar() {
         const redEntry = isRedQueueEntry(step, n);
         html += `<div style="display:flex;align-items:center;gap:6px;padding:4px 2px;
           ${isTop ? 'border-bottom:0.5px solid #e8e6de;margin-bottom:4px;padding-bottom:6px;' : ''}">`;
-        html += `<span class="token ${redEntry ? 'tk-found tk-queue-red' : 'tk-q'}${isTop && pulseHead && !redEntry ? ' token-next' : ''}" title="${redEntry ? (step.visited?.includes(n) ? 'Already marked visited' : 'Repeated queue entry') : ''}">${n}</span>`;
+        html += `<span data-transfer-node="${n}" class="token ${redEntry ? 'tk-found tk-queue-red' : 'tk-q'}${isTop && pulseHead && !redEntry ? ' token-next' : ''}" title="${redEntry ? (step.visited?.includes(n) ? 'Already marked visited' : 'Repeated queue entry') : ''}">${n}</span>`;
         if (isTop) html += `<span style="font-size:10px;color:#BA7517;font-weight:500">${activeSub==='dfs'?'← top':'← front'}</span>`;
         html += `</div>`;
       });
@@ -1620,7 +1947,7 @@ function renderSidebar() {
     // Recursion stack — DFS only
     if (activeSub==='dfs') {
       const callStack = step ? (step.callStack||[]) : [];
-      html+=`<div class="panel"><div class="panel-label">Recursion stack</div>`;
+      html+=`<div class="panel"><div class="panel-label">DFS call stack</div><div class="panel-hint">Calls still exploring; current call on top.</div>`;
       if (!callStack.length) {
         html+=`<span class="panel-empty">empty</span>`;
       } else {
@@ -1630,7 +1957,7 @@ function renderSidebar() {
           const isTop = i===0;
           html+=`<div style="display:flex;align-items:center;gap:6px;padding:4px 2px;
             ${isTop?'border-bottom:0.5px solid #e8e6de;margin-bottom:4px;padding-bottom:6px;':''}">`;
-          html+=`<span class="token tk-q">${n}</span>`;
+          html+=`<span data-transfer-node="${n}" class="token tk-q">${n}</span>`;
           if (isTop) html+=`<span style="font-size:10px;color:#BA7517;font-weight:500">← top</span>`;
           html+=`</div>`;
         });
@@ -1639,12 +1966,12 @@ function renderSidebar() {
     }
 
     // Output order — both DFS and Kahn's
-    html+=`<div class="panel"><div class="panel-label">Output order</div>`;
+    html+=`<div class="panel panel-output"><div class="output-heading"><div class="panel-label">Output order</div><span class="output-guidance">(${activeSub==='dfs' ? 'push' : 'append'})</span></div>`;
     if (!result.length) html+=`<span class="panel-empty">none yet</span>`;
     else {
       html+=`<div class="token-row">`;
       result.forEach((n,i) => {
-        html+=`<span class="token tk-t">${n}</span>`;
+        html+=`<span class="token tk-t" data-output-node="${n}">${n}</span>`;
         if (i<result.length-1) html+=`<span class="arr-sep">→</span>`;
       });
       html+=`</div>`;
@@ -1656,7 +1983,7 @@ function renderSidebar() {
       const inDeg = step ? step.inDegrees : null;
       const gkey = graphKey(activeTab, activeSub, activeDir);
       const gNodes = Object.keys(GRAPHS[gkey].nodes);
-      html+=`<div class="panel"><div class="panel-label">In-degrees</div>`;
+      html+=`<div class="panel incoming-panel"><div class="panel-label">Incoming edges</div><div class="panel-hint">Remaining edges into each vertex.</div>`;
       if (inDeg) {
         gNodes.forEach(n => {
           const removed = (step.nodeStates[n]==='removed');
@@ -1671,13 +1998,12 @@ function renderSidebar() {
 
       // Zero in-degree ready set
       const frontier = step ? Object.keys(step.nodeStates).filter(n => step.nodeStates[n]==='frontier').sort() : [];
-      html+=`<div class="panel"><div class="panel-label">Ready (in-degree = 0)</div>`;
+      html+=`<div class="panel panel-ready"><div class="panel-label">Ready vertices</div><div class="panel-hint">No incoming edges remain.</div>`;
       if (!frontier.length) html+=`<span class="panel-empty">empty</span>`;
       else {
         html+=`<div class="token-row">`;
         frontier.forEach(n => html+=`<span class="token tk-v">${n}</span>`);
         html+=`</div>`;
-        html+=`<div style="font-size:10px;color:#888780;margin-top:6px;font-style:italic">processing order does not matter</div>`;
       }
       html+=`</div>`;
     }
@@ -1696,7 +2022,7 @@ function renderSidebar() {
         if (!rootMap[info.root]) rootMap[info.root] = info;
       });
       const compList = Object.values(rootMap).sort((a,b) => a.root.localeCompare(b.root));
-      html+=`<div class="panel"><div class="panel-label">Components</div>`;
+      html+=`<div class="panel"><div class="panel-label">Connected groups (${compList.length})</div>`;
       compList.forEach(comp => {
         const isSingleton = comp.members.length === 1;
         if (isSingleton) {
@@ -1745,7 +2071,7 @@ function renderSidebar() {
     } else {
       // Prim's — candidates panel + accepted edge list
       const cands = step ? (step.candidates||[]) : [];
-      html+=`<div class="panel"><div class="panel-label">Crossing edges</div>`;
+      html+=`<div class="panel"><div class="panel-label">Candidate edges</div><div class="panel-hint">Connect the tree to an outside vertex.</div>`;
       if (!cands.length) {
         html+=`<span class="panel-empty">none yet</span>`;
       } else {
@@ -1800,7 +2126,7 @@ function renderSidebar() {
     if (!pqEntries.length && !undiscovered.length) {
       html+=`<span class="panel-empty">empty</span>`;
     } else if (!pqEntries.length) {
-      html+=`<span class="panel-empty">empty — relax an edge to add nodes</span>`;
+      // No extra guidance in the empty priority queue.
     } else {
       const isSurveyStep = !!(step && step.candidateNodes);
       pqEntries.forEach(({n, d}) => {
@@ -1836,7 +2162,7 @@ function renderSidebar() {
 
     // ── Settled distances panel ──
     const settledEntries = nodeIds.filter(n => settled.has(n));
-    html+=`<div class="panel" style="flex:1"><div class="panel-label">Settled (permanent)</div>`;
+    html+=`<div class="panel" style="flex:1"><div class="panel-label">Final distances</div><div class="panel-hint">Shortest distance from the start.</div>`;
     if (!settledEntries.length) {
       html+=`<span class="panel-empty">none yet</span>`;
     } else {
@@ -1860,6 +2186,13 @@ function renderSidebar() {
   }
 
   el.innerHTML = html;
+  decoratePanelTitles(el);
+  const outputHost = document.getElementById('topo-output');
+  outputHost.replaceChildren();
+  const output = el.querySelector('.panel-output');
+  outputHost.hidden = !output;
+  outputHost.closest('.graph-wrap').classList.toggle('has-output', !!output);
+  if (output) outputHost.appendChild(output);
 
   // ── Prim's: pulse MST edge sidebar rows containing either excluded endpoint ──
   if (activeTab==='span' && activeSub==='prim' && step && step.pulseNodes && step.pulseNodes.length) {
@@ -1926,11 +2259,51 @@ function renderLegend() {
   document.getElementById('legend').innerHTML=html;
 }
 
+function animateOutputPush(oldPositions, stackPositions) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.querySelectorAll('[data-output-node]').forEach(token => {
+    const id = token.dataset.outputNode;
+    const to = token.getBoundingClientRect();
+    const from = oldPositions[id];
+    if (!from) {
+      const node = document.getElementById('node-' + id);
+      animateTransfer(id, stackPositions[id] || node?.getBoundingClientRect(), to, token);
+      return;
+    }
+    const animation = token.animate([
+      { transform: 'translate(' + (from.left - to.left) + 'px, ' + (from.top - to.top) + 'px)' },
+      { transform: 'translate(0, 0)' }
+    ], { duration: 650, easing: 'cubic-bezier(.25,.7,.3,1)' });
+    const cleanup = () => {
+      animation.cancel();
+      activeTransfers = activeTransfers.filter(fn => fn !== cleanup);
+    };
+    activeTransfers.push(cleanup);
+    animation.onfinish = cleanup;
+  });
+}
+
 function renderAll(animate=false) {
+  const before = transferState(steps[stepIndex-2]);
+  const after = transferState(steps[stepIndex-1]);
+  const oldPositions = {};
+  document.querySelectorAll('[data-transfer-node]').forEach(token => {
+    oldPositions[token.dataset.transferNode] ||= token.getBoundingClientRect();
+  });
+  const oldOutputPositions = {};
+  document.querySelectorAll('[data-output-node]').forEach(token => {
+    oldOutputPositions[token.dataset.outputNode] = token.getBoundingClientRect();
+  });
   renderGraph(animate);
   renderSidebar();
   updateStatus();
   updateNextBtn();
+  if (animate) {
+    const outputAdded = activeTab === 'topo' &&
+      (steps[stepIndex-1]?.topoResult?.length || 0) > (steps[stepIndex-2]?.topoResult?.length || 0);
+    if (outputAdded) animateOutputPush(oldOutputPositions, oldPositions);
+    else animatePanelTransfers(before, after, oldPositions);
+  }
 }
 
 // ═══════════════════════════════════════════════════
@@ -1938,6 +2311,7 @@ function renderAll(animate=false) {
 // ═══════════════════════════════════════════════════
 function nodeClick(id) {
   if (selPhase==='start') {
+    if (id === targetNode) return;
     startNode=id;
     updateSelPhase();
     renderGraph();
@@ -1956,6 +2330,8 @@ function nodeClick(id) {
     updateNextBtn();
     renderGraph();
   }
+  renderSidebar();
+  renderLegend();
 }
 
 function skipDijkTarget() {
@@ -1966,62 +2342,70 @@ function skipDijkTarget() {
   updateStatus();
   updateNextBtn();
   renderGraph();
+  renderSidebar();
+}
+
+function newGraph() {
+  if (activeTab === 'search') newSearchGraph();
+  else if (activeTab === 'topo') newDAG();
+  else if (activeTab === 'span') newWeightedGraph();
+  else if (activeTab === 'dijk') newDijkstraGraph();
+}
+
+function newSearchGraph() {
+  const key = graphKey(activeTab, activeSub, activeDir);
+  const graph = GRAPHS[key];
+  const ring = ['A','B','C','D','E','F'];
+  const signature = edges => edges.map(e => activeDir === 'directed' ? e.join('-') : [...e].sort().join('-')).sort().join(',');
+  const previous = signature(graph.edges);
+  let edges;
+  do {
+    // The outer ring keeps the underlying graph connected; random spokes vary the routes.
+    edges = ring.map((id, i) => [id, ring[(i + 1) % ring.length]]);
+    const spokes = [...ring];
+    for (let i = spokes.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [spokes[i], spokes[j]] = [spokes[j], spokes[i]];
+    }
+    edges.push(...spokes.slice(0, 2 + Math.floor(Math.random() * 3)).map(id => [id, 'G']));
+    if (activeDir === 'directed') edges = edges.map(([a,b]) => Math.random() < .5 ? [a,b] : [b,a]);
+  } while (signature(edges) === previous);
+  GRAPHS[key] = { nodes: graph.nodes, edges };
+  doReset();
 }
 
 function newWeightedGraph() {
-  // Keep same nodes and topology, randomize weights 1-12
-  const baseEdges = [
-    ['A','B'], ['A','F'], ['B','G'], ['B','C'],
-    ['C','D'], ['D','G'], ['D','E'], ['E','F'],
-    ['E','G'], ['F','G']
-  ];
-  const newEdges = baseEdges.map(([a,b]) => [a, b, Math.floor(Math.random()*12)+1]);
-  // Ensure no duplicate weights for clarity
-  const seen = new Set();
-  newEdges.forEach(e => {
-    while (seen.has(e[2])) e[2] = e[2] % 12 + 1;
-    seen.add(e[2]);
+  const shuffle = values => {
+    const items = [...values];
+    for (let i = items.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [items[i], items[j]] = [items[j], items[i]];
+    }
+    return items;
+  };
+  const ids = shuffle(['A','B','C','D','E','F','G']);
+  const hub = ids.pop(), nodes = {};
+  const rotation = Math.random() * Math.PI / 3;
+  const radiusX = 120 + Math.random() * 18;
+  const radiusY = 96 + Math.random() * 18;
+  ids.forEach((id, i) => {
+    const angle = rotation + i * Math.PI / 3;
+    nodes[id] = [180 + radiusX * Math.cos(angle), 140 + radiusY * Math.sin(angle)];
   });
-  GRAPHS.weighted_u = { nodes: GRAPHS.weighted_u.nodes, edges: newEdges };
-  // Directed version uses same edges with some reversed
-  const dirEdges = [
-    ['A','B',newEdges[0][2]], ['A','F',newEdges[1][2]], ['B','G',newEdges[2][2]], ['B','C',newEdges[3][2]],
-    ['C','D',newEdges[4][2]], ['D','E',newEdges[6][2]], ['G','D',newEdges[5][2]], ['E','F',newEdges[7][2]],
-    ['G','E',newEdges[8][2]], ['F','G',newEdges[9][2]]
-  ];
-  GRAPHS.weighted_d = { nodes: GRAPHS.weighted_d.nodes, edges: dirEdges };
+  nodes[hub] = [166 + Math.random() * 28, 130 + Math.random() * 20];
+  // A perimeter path connects the outer vertices; spokes connect the center.
+  const omitted = Math.floor(Math.random() * ids.length);
+  const pairs = ids.flatMap((id, i) => i === omitted ? [] : [[id, ids[(i + 1) % ids.length]]]);
+  pairs.push(...shuffle(ids).slice(0, 2 + Math.floor(Math.random() * 4)).map(id => [id, hub]));
+  const weights = shuffle(Array.from({length:15}, (_, i) => i + 1));
+  const edges = pairs.map(([a,b], i) => [a,b,weights[i]]);
+  GRAPHS.weighted_u = { nodes, edges };
+  GRAPHS.weighted_d = { nodes, edges: edges.map(([a,b,w]) => Math.random() < .5 ? [a,b,w] : [b,a,w]) };
   doReset();
 }
 
 function newDijkstraGraph() {
-  // Same 7 nodes, same 10 base pairs — randomize both weight AND direction of each edge.
-  // To keep the graph useful (reachable from any start), we use a base undirected
-  // spanning tree and then randomly orient all edges, guaranteeing connectivity isn't
-  // broken structurally (Dijkstra's handles unreachable nodes gracefully anyway).
-  const basePairs = [
-    ['A','B'], ['A','F'], ['B','G'], ['B','C'],
-    ['C','D'], ['D','G'], ['D','E'], ['E','F'],
-    ['E','G'], ['F','G']
-  ];
-
-  // Random unique weights 1–15
-  const weights = [];
-  const used = new Set();
-  while (weights.length < basePairs.length) {
-    const w = Math.floor(Math.random() * 15) + 1;
-    if (!used.has(w)) { used.add(w); weights.push(w); }
-  }
-
-  // Random direction for each edge — flip ~half of them
-  const newEdgesU = basePairs.map(([a,b], i) => [a, b, weights[i]]);
-  const newEdgesD = basePairs.map(([a,b], i) => {
-    const flip = Math.random() < 0.5;
-    return flip ? [b, a, weights[i]] : [a, b, weights[i]];
-  });
-
-  GRAPHS.weighted_u = { nodes: GRAPHS.weighted_u.nodes, edges: newEdgesU };
-  GRAPHS.weighted_d = { nodes: GRAPHS.weighted_d.nodes, edges: newEdgesD };
-  doReset();
+  newWeightedGraph();
 }
 
 function setEdgeDensity(d) {
@@ -2037,6 +2421,10 @@ function newDAG() {
 }
 
 function doReset() {
+  document.getElementById('order-alert-message').hidden = true;
+  document.getElementById('alert-details-toggle').setAttribute('aria-expanded', 'false');
+  document.getElementById('mode-control').style.display = activeTab === 'dijk' ? 'none' : 'flex';
+  document.querySelectorAll('.subtab').forEach(el => el.setAttribute('aria-pressed', String(el.dataset.sub === activeSub)));
   startNode=null; targetNode=null;
   steps=[]; stepIndex=0; selPhase='start';
   document.getElementById('step-ctr').textContent='';
@@ -2048,7 +2436,7 @@ function doReset() {
 
 // Tab click
 document.getElementById('tabs').addEventListener('click', e => {
-  const t = e.target.dataset.tab;
+  const t = e.target.closest('[data-tab]')?.dataset.tab;
   if (!t||t===activeTab) return;
   activeTab=t;
   // Set default subtab per tab
@@ -2062,7 +2450,7 @@ document.getElementById('tabs').addEventListener('click', e => {
   const rowEl = subtabsEl.closest('div[style*="align-items:center"]');
   if (t==='search') {
     subtabsEl.style.display='flex';
-    subtabsEl.innerHTML=`<div class="subtab active" data-sub="dfs">DFS</div><div class="subtab" data-sub="bfs">BFS</div>`;
+    subtabsEl.innerHTML=`<button type="button" class="subtab active" data-sub="dfs">DFS</button><button type="button" class="subtab" data-sub="bfs">BFS</button>`;
     dirEl.style.display='flex';
     document.getElementById('order-toggle').style.display='flex';
     document.getElementById('visit-toggle').style.display='none';
@@ -2070,7 +2458,7 @@ document.getElementById('tabs').addEventListener('click', e => {
     if (rowEl) rowEl.style.display='flex';
   } else if (t==='span') {
     subtabsEl.style.display='flex';
-    subtabsEl.innerHTML=`<div class="subtab active" data-sub="prim">Prim's</div><div class="subtab" data-sub="kruskal">Kruskal's</div>`;
+    subtabsEl.innerHTML=`<button type="button" class="subtab active" data-sub="prim">Prim's</button><button type="button" class="subtab" data-sub="kruskal">Kruskal's</button>`;
     dirEl.style.display='none';
     activeDir='undirected';
     document.getElementById('order-toggle').style.display='none';
@@ -2080,7 +2468,7 @@ document.getElementById('tabs').addEventListener('click', e => {
     if (rowEl) rowEl.style.display='flex';
   } else if (t==='topo') {
     subtabsEl.style.display='flex';
-    subtabsEl.innerHTML=`<div class="subtab active" data-sub="dfs">DFS</div><div class="subtab" data-sub="kahn">Kahn's</div>`;
+    subtabsEl.innerHTML=`<button type="button" class="subtab active" data-sub="dfs">DFS</button><button type="button" class="subtab" data-sub="kahn">Kahn's</button>`;
     dirEl.style.display='none';
     activeDir='undirected';
     document.getElementById('order-toggle').style.display='none';
