@@ -9701,11 +9701,10 @@ body:not(.external-panel-page) #left-panel > .unified-palette {
 #inspector .firewall-panel .inspector-picker svg { width: 12px; height: 12px; }
 #inspector .firewall-panel .inspector-picker [role="option"] { min-height: 24px; padding: 4px 6px; font-size: 11px; }
 #inspector .firewall-form .pair { align-items: end; }
-#inspector :is(.firewall-panel,.nat-panel) .inspector-section-heading { padding: 3px 6px; min-height: 28px; }
-#inspector :is(.firewall-panel,.nat-panel) .examine-watch-control { padding: 0; margin: 0; border: 0; background: none; gap: 5px; font-size: 11px; min-height: 24px; }
-#inspector :is(.firewall-panel,.nat-panel) .watch-switch-track { width: 26px; height: 16px; flex: 0 0 26px; box-sizing: border-box; }
-#inspector :is(.firewall-panel,.nat-panel) .watch-switch-track:before { width: 12px; height: 12px; top: 50%; margin-top: -6px; left: 2px; }
-#inspector :is(.firewall-panel,.nat-panel) input:checked + .watch-switch-track:before { transform: translateX(10px); }
+#inspector .inspector-section-heading .examine-watch-control { padding: 0; margin: 0; border: 0; background: none; gap: 5px; font-size: 11px; min-height: 24px; }
+#inspector .inspector-section-heading .watch-switch-track { width: 26px; height: 16px; flex: 0 0 26px; box-sizing: border-box; }
+#inspector .inspector-section-heading .watch-switch-track:before { width: 12px; height: 12px; top: 50%; margin-top: -6px; left: 2px; }
+#inspector .inspector-section-heading input:checked + .watch-switch-track:before { transform: translateX(10px); }
 .firewall-rule-toggle { position: relative; cursor: pointer; }
 .firewall-rule-toggle input { position: absolute; opacity: 0; width: 1px !important; height: 1px; }
 .firewall-rule-toggle input:checked + .watch-switch-track { background: #287d78; border-color: #287d78; }
@@ -10166,21 +10165,21 @@ body[data-platform="paloalto"] #inspector .vlan-row { grid-template-columns:minm
   stroke-linecap: round;
 }
 
-/* Match the compact Inspector section headers. */
-#inspector #dhcp-server-form > .inspector-section-heading {
+/* Use the compact treatment for every Inspector section. */
+#inspector .inspector-section-heading {
   min-height: 28px;
   padding: 3px 6px;
   margin-top: 6px;
   font-size: 12px;
 }
-#inspector #dhcp-pool-add {
+#inspector .inspector-section-heading button {
   width: 24px;
   height: 22px;
   min-height: 22px;
   padding: 2px;
   margin: 0;
 }
-#inspector #dhcp-pool-add svg { width: 16px; height: 16px; }
+#inspector .inspector-section-heading button svg { width: 16px; height: 16px; }
 
 /* Inventory hover uses the same amber cue as ARP-cache hover. */
 #canvas .inventory-highlight { filter: drop-shadow(0 0 5px #e7a52c); }
