@@ -1561,7 +1561,7 @@
           '" fill="none" stroke="transparent" stroke-width="20"/><path d="' +
           pathData(route) +
           '" fill="none" stroke="' +
-          esc(!enabled ? "#b66b60" : vlanColor || (selected === l.id ? "#287d78" : trunk ? "#284f7a" : "#9ab0c2")) +
+          esc(!enabled ? "#b66b60" : vlanColor || (trunk ? "#61758a" : selected === l.id ? "#287d78" : "#9ab0c2")) +
           '" stroke-width="' +
           (selected === l.id ? (trunk ? 5 : 4) : trunk ? 4 : 2) +
           '" ' +
@@ -1906,6 +1906,9 @@
   }
   const portConfig = document.createElement("dialog");
   portConfig.id = "port-config";
+  portConfig.addEventListener("pointerdown", e => {
+    portConfig.querySelectorAll(".vlan-choice[open]").forEach(picker => { if (!picker.contains(e.target)) picker.open = false; });
+  });
   document.body.append(portConfig);
   portConfig.addEventListener("close", () => { if (!portConfig.open) portConfig.innerHTML = ""; });
   function styleVlanDropdown(d) {
@@ -2076,10 +2079,38 @@
     };
     if (d.type === "switch") {
       const updatePort = changes => { if (!editable()) { openPortConfig(deviceId, portId); return; } safely(() => { mutate(() => net.configurePort(deviceId, portId, changes)); openPortConfig(deviceId, portId); }); };
-      $("port-mode").onchange = () => updatePort({mode:$("port-mode").value});
+      for (const [field, multiple] of [["port-allowed-vlans", true], ["port-native-vlan", false]]) {
+        const original = $(field);
+        if (!original) continue;
+        const label = original.closest("label");
+        if (multiple && label.nextElementSibling?.classList.contains("hint")) label.nextElementSibling.remove();
+        const wrap = document.createElement("div");
+        wrap.className = "vlan-choice-field";
+        const caption = multiple ? "Allowed VLANs" : "Native VLAN";
+        const chosen = multiple ? p.allowedVlans || [] : [p.nativeVlan];
+        const chip = v => '<span class="port-vlan-color-chip"><i aria-hidden="true" style="background:' + esc(v.color) + '"></i>' + esc('V' + v.id + ' · ' + v.name) + '</span>';
+        wrap.innerHTML = '<span>' + caption + '</span><details id="' + field + '" class="vlan-choice"><summary aria-label="' + caption + '"><span class="vlan-choice-value">' + (d.vlans.filter(v=>chosen.includes(v.id)).map(chip).join('') || 'None') + '</span><span aria-hidden="true">⌄</span></summary><div class="vlan-choice-options" role="group" aria-label="' + caption + '">' + d.vlans.map(v=>'<label><input type="' + (multiple?'checkbox':'radio') + '" name="' + field + '" value="' + v.id + '" ' + (chosen.includes(v.id)?'checked':'') + '>' + chip(v) + '</label>').join('') + '</div></details>';
+        label.replaceWith(wrap);
+        const picker = wrap.querySelector("details");
+        picker.onkeydown = e => { if(e.key==='Escape' && picker.open){ e.preventDefault(); e.stopPropagation(); picker.open=false; picker.querySelector('summary').focus(); } };
+        picker.querySelectorAll("input").forEach(input => input.onchange = () => {
+          const value = Number(input.value);
+          const ids = [...picker.querySelectorAll("input:checked")].map(el=>Number(el.value));
+          updatePort(multiple ? {allowedVlans:ids} : {nativeVlan:value});
+          const next = $(field);
+          if (next) { next.open=multiple; (multiple ? next.querySelector('input[value="'+value+'"]') : next.querySelector('summary'))?.focus(); }
+        });
+      }
+      const modeField = document.createElement("div");
+      modeField.className = "vlan-choice-field";
+      modeField.innerHTML = '<span>Mode</span><details id="port-mode" class="vlan-choice"><summary aria-label="Mode"><span class="vlan-choice-value">' + (p.mode === 'trunk' ? 'Trunk' : 'Access') + '</span><span aria-hidden="true">⌄</span></summary><div class="vlan-choice-options" role="group" aria-label="Mode">' + ['access','trunk'].map(mode => '<label><input type="radio" name="port-mode" value="' + mode + '" ' + (p.mode === mode ? 'checked ' : '') + (mode === 'trunk' && d.role === 'ap' ? 'disabled ' : '') + '><span>' + (mode === 'trunk' ? 'Trunk' : 'Access') + '</span></label>').join('') + '</div></details>';
+      $("port-mode").closest("label").replaceWith(modeField);
+      const modePicker = $("port-mode");
+      modePicker.onkeydown = e => { if(e.key === 'Escape' && modePicker.open){ e.preventDefault(); e.stopPropagation(); modePicker.open=false; modePicker.querySelector('summary').focus(); } };
+      modePicker.querySelectorAll('input').forEach(input => input.onchange = () => { updatePort({mode:input.value}); $("port-mode").querySelector('summary').focus(); });
       if ($("port-vlan")) $("port-vlan").onchange = () => updatePort({accessVlan:Number($("port-vlan").value)});
-      if ($("port-native-vlan")) $("port-native-vlan").onchange = () => updatePort({nativeVlan:Number($("port-native-vlan").value)});
-      if ($("port-allowed-vlans")) $("port-allowed-vlans").onchange = () => safely(() => updatePort({allowedVlans:NetworkExplorerVlan.parse($("port-allowed-vlans").value,d)}));
+
+
     }
     if (d.type === "router" && d.firewallMode !== "transparent") {
       portConfig.querySelectorAll('[data-open-subinterface]').forEach(b=>b.onclick=()=>openPortConfig(deviceId,b.dataset.openSubinterface));

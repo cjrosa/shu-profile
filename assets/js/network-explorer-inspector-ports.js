@@ -61,10 +61,10 @@ window.NetworkExplorerInspectorPorts = {
               '</span>' + (wireless ? '<svg class="wireless-port-symbol" viewBox="0 0 44 32" aria-hidden="true"><path d="M5 10q17-15 34 0M11 17q11-10 22 0M17 23q5-5 10 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="22" cy="29" r="2" fill="currentColor"/></svg>' : '<svg viewBox="0 0 44 32" aria-hidden="true"><path class="socket" d="M5 3h34v20H28v6H16v-6H5z"/><path class="contacts" d="M12 6v7m5-7v7m5-7v7m5-7v7m5-7v7"/><path class="socket-edge" d="M9 19h7v5h12v-5h7"/></svg>') + '<span class="port-led" aria-hidden="true"></span>' +
               (d.type === "switch"
                 ? '<span class="vlan-badge" style="--vlan-color:' +
-                  esc(d.vlans.find((v) => v.id === p.accessVlan)?.color) +
+                  esc(p.mode === 'trunk' ? '#61758a' : d.vlans.find((v) => v.id === p.accessVlan)?.color) +
                   '">' +
                   esc(p.mode==='trunk'?'Trunk':vlanLabel(d, p.accessVlan)) +
-                  "</span>"
+                  "</span>" + (p.mode === 'trunk' ? '<span class="trunk-vlan-colors" aria-label="Allowed VLANs: '+esc((p.allowedVlans||[]).join(', '))+'">'+(p.allowedVlans||[]).map(id=>'<span title="VLAN '+id+'" style="background:'+esc(d.vlans.find(v=>v.id===id)?.color||'#61758a')+'"></span>').join('')+'</span>' : '')
                 : d.ports.some(q=>q.parentPort===p.id)?'<span class="vlan-badge">Tagged VLANs</span>': "") +
               (trustMode?'<label class="certificate-toggle arp-port-trust-toggle" title="'+(inspected?'Trust '+esc(p.name):'No inspected VLAN')+'"><input type="checkbox" role="switch" aria-label="Trust '+esc(p.name)+'" data-arp-trust="'+p.id+'" '+(d.arpInspection?.trustedPorts.includes(p.id)?'checked ':'')+(inspected?'':'disabled ')+'><span class="certificate-switch" aria-hidden="true"></span></label><span class="arp-port-trust-caption">'+(inspected?(d.arpInspection?.trustedPorts.includes(p.id)?'Trusted':'Untrusted'):'Not inspected')+'</span></div>':"</button>")
             );
