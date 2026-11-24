@@ -239,6 +239,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 #btn-start { position: absolute; right: 0; top: 50%; transform: translateY(-50%); margin: 0; font-size: 11px; }
 #btn-start[hidden] { display: none; }
 #btn-skip-target { position: absolute; right: 0; top: 50%; transform: translateY(-50%); margin: 0; }
+.distance-preview { cursor: pointer; }
+.distance-preview:hover, .distance-preview:focus-visible { outline: 2px solid #3979b9; outline-offset: 1px; }
 </style>
 </head>
 <body>
@@ -1150,7 +1152,7 @@ function runDijkstra(graph, startId, directed, targetId) {
 
   function snap(msg, msgClass='', nextPick=null, candidateNodes=null, path=null) {
     steps.push({ nodeStates:{...ns}, edgeStates:{...es}, msg, msgClass,
-      dist:{...dist}, settled:[...settled], discovered:[...discovered],
+      dist:{...dist}, predecessors:{...prev}, settled:[...settled], discovered:[...discovered],
       nextNode: nextPick, candidateNodes, path });
   }
 
@@ -1553,6 +1555,23 @@ function isRedQueueEntry(step, id) {
   return !!step && (step.visited?.includes(id) || step.frontier?.filter(n => n === id).length > 1);
 }
 
+let distancePreviewPath = null;
+function previewDistancePath(id) {
+  const step = steps[stepIndex-1];
+  if (activeTab !== 'dijk' || targetNode || !step?.settled?.includes(id) || !Number.isFinite(step.dist[id])) return;
+  const path = [], seen = new Set();
+  for (let node = id; node !== undefined && !seen.has(node); node = step.predecessors?.[node]) {
+    path.unshift(node); seen.add(node);
+  }
+  if (path[0] !== startNode) return;
+  distancePreviewPath = path;
+  renderGraph(false);
+}
+function clearDistancePreview() {
+  if (!distancePreviewPath) return;
+  distancePreviewPath = null;
+  renderGraph(false);
+}
 function renderGraph(animate) {
   clearTransfers();
   const gkey = graphKey(activeTab, activeSub, activeDir);
@@ -1606,8 +1625,8 @@ function renderGraph(animate) {
   // ── Build path lookup for found state ──
   const pathNodes = new Set();
   const pathEdges = new Set();
-  const foundPath = step && step.path;
-  if (foundPath && foundPath.length > 1) {
+  const foundPath = activeTab === 'dijk' && !targetNode && distancePreviewPath ? distancePreviewPath : step && step.path;
+  if (foundPath && foundPath.length > 0) {
     foundPath.forEach(n => pathNodes.add(n));
     for (let i = 0; i < foundPath.length - 1; i++) {
       pathEdges.add(ekey(foundPath[i], foundPath[i+1]));
@@ -1851,6 +1870,7 @@ function canClickNode(id) {
 }
 
 function clearSelection(which) {
+  distancePreviewPath = null;
   if (which === 'start') startNode = null;
   else targetNode = null;
   steps = [];
@@ -2168,7 +2188,8 @@ function renderSidebar() {
     } else {
       settledEntries.forEach(n => {
         const dv = dist ? (dist[n]===Infinity?'∞':dist[n]) : '∞';
-        html+=`<div style="display:flex;justify-content:space-between;align-items:center;
+        const previewAttrs = !targetNode && Number.isFinite(dist?.[n]) ? ` class="distance-preview" data-distance-node="${n}" tabindex="0" aria-label="Shortest path to ${n}, distance ${dv}"` : '';
+        html+=`<div${previewAttrs} style="display:flex;justify-content:space-between;align-items:center;
           padding:3px 5px;border-radius:5px;font-size:11px;font-family:monospace;
           background:#E1F5EE;color:#085041;font-weight:500;margin-bottom:2px">`;
         html+=`<span style="display:flex;align-items:center;gap:4px">`;
@@ -2186,6 +2207,18 @@ function renderSidebar() {
   }
 
   el.innerHTML = html;
+  el.querySelectorAll('[data-distance-node]').forEach(row => {
+    const show = () => previewDistancePath(row.dataset.distanceNode);
+    row.addEventListener('pointerenter', show);
+    row.addEventListener('focus', show);
+    row.addEventListener('pointerleave', () => {
+      const focused = el.querySelector('[data-distance-node]:focus');
+      if (focused) previewDistancePath(focused.dataset.distanceNode);
+      else clearDistancePreview();
+    });
+    row.addEventListener('blur', () => clearDistancePreview());
+    row.addEventListener('keydown', event => { if (event.key === 'Escape') { row.blur(); clearDistancePreview(); } });
+  });
   decoratePanelTitles(el);
   const outputHost = document.getElementById('topo-output');
   outputHost.replaceChildren();
@@ -2284,6 +2317,7 @@ function animateOutputPush(oldPositions, stackPositions) {
 }
 
 function renderAll(animate=false) {
+  distancePreviewPath = null;
   const before = transferState(steps[stepIndex-2]);
   const after = transferState(steps[stepIndex-1]);
   const oldPositions = {};
@@ -2421,6 +2455,7 @@ function newDAG() {
 }
 
 function doReset() {
+  distancePreviewPath = null;
   document.getElementById('order-alert-message').hidden = true;
   document.getElementById('alert-details-toggle').setAttribute('aria-expanded', 'false');
   document.getElementById('mode-control').style.display = activeTab === 'dijk' ? 'none' : 'flex';

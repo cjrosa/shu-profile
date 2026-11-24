@@ -253,3 +253,26 @@ for(const course of ['cs112','cs339']) test(course + ': New weighted graphs vary
  }
  dom.window.close();
 });
+
+for(const course of ['cs112','cs339']) test(course + ': final distances preview shortest paths without selecting a target',()=>{
+ const html=fs.readFileSync(path.join(__dirname,'..',course,'graph_viz.html'),'utf8');
+ const dom=new JSDOM(html,{runScripts:'outside-only'}),w=dom.window; w.GraphLayout=geometry;
+ w.eval(html.match(/<script>([\s\S]*?)<\/script>/)[1]+`
+   activeTab='dijk'; activeDir='directed'; startNode='A'; targetNode=null;
+   GRAPHS.weighted_d.edges=[['A','B',2],['B','C',3],['A','C',9],['B','A',2]];
+   steps=runDijkstra(GRAPHS.weighted_d,'A',true,null); stepIndex=steps.length; selPhase='done';
+   renderAll(false);
+   window.previewState=()=>({path:distancePreviewPath,target:targetNode,index:stepIndex,total:steps.length});
+ `);
+ const row=w.document.querySelector('[data-distance-node="C"]'); assert.ok(row);
+ row.dispatchEvent(new w.Event('pointerenter'));
+ assert.deepEqual(Array.from(w.previewState().path),['A','B','C']);
+ assert.equal(w.document.querySelectorAll('#svg > path[stroke="#185FA5"]').length,2);
+ assert.equal(w.previewState().target,null);
+ row.dispatchEvent(new w.Event('pointerleave')); assert.equal(w.previewState().path,null);
+ row.focus(); assert.equal(w.previewState().path.length,3);
+ row.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape'})); assert.equal(w.previewState().path,null);
+ assert.equal(w.previewState().index,w.previewState().total);
+ assert.equal(w.document.querySelector('[data-distance-node="D"]'),null);
+ dom.window.close();
+});
