@@ -125,6 +125,41 @@
   }
 
   let canvasPan=null,spaceHeld=false,suppressClick=false,emptyCanvasClick=false;
+  let areaMode=false,areaDrag=null,shiftHeld=false,panMode=false;
+  const panButton=document.createElement('button');
+  panButton.id='canvas-pan';panButton.type='button';panButton.className='canvas-icon-button';panButton.setAttribute('aria-label','Pan');panButton.setAttribute('aria-pressed','false');
+  panButton.title='Pan: drag anywhere on the canvas. Click again or press Escape to exit.';
+  panButton.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12V9a2 2 0 0 1 4 0v2-3a2 2 0 0 1 4 0v3-2a2 2 0 0 1 4 0v3-1a2 2 0 0 1 4 0v3c0 3-2 4-3 6v1H8v-1l-5-6a2 2 0 0 1 3-3l3 3"/></svg>';
+  get('zoom-reset').before(panButton);
+  function setPanMode(enabled){panMode=enabled;panButton.setAttribute('aria-pressed',String(enabled));canvas.classList.toggle('pan-mode',enabled);}
+  panButton.onclick=()=>{const next=!panMode;endArea();endPan();setPanMode(next);};
+  const areaButton=document.createElement('button');
+  areaButton.id='zoom-area';areaButton.type='button';areaButton.className='canvas-icon-button';areaButton.setAttribute('aria-label','Zoom area');
+  areaButton.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6"/><rect x="7" y="7" width="10" height="10" rx="1" stroke-dasharray="2 2"/></svg>';
+  areaButton.title='Zoom to an area (Shift + drag). Escape cancels.';
+  areaButton.setAttribute('aria-pressed','false');get('zoom-reset').after(areaButton);
+  const areaBox=document.createElement('div');areaBox.hidden=true;areaBox.setAttribute('aria-hidden','true');
+  areaBox.style.cssText='position:absolute;pointer-events:none;border:2px dashed #2675a5;background:rgba(38,117,165,.15);box-sizing:border-box;z-index:20';
+  stage.append(areaBox);
+  const areaCursor=()=>{canvas.classList.toggle('zoom-area-ready',areaMode||shiftHeld||!!areaDrag);};
+  const areaStyle=document.createElement('style');areaStyle.textContent='#canvas.pan-mode,#canvas.pan-mode *{cursor:grab!important} #canvas.pan-mode.panning,#canvas.pan-mode.panning *{cursor:grabbing!important} #canvas.zoom-area-ready,#canvas.zoom-area-ready *{cursor:crosshair!important} #zoom-area[aria-pressed="true"],#canvas-pan[aria-pressed="true"]{background:#dceefa;color:#174c70;border-color:#2675a5}';document.head.append(areaStyle);
+  function endArea(commit=false){
+    const drag=areaDrag;areaDrag=null;areaBox.hidden=true;areaMode=false;areaButton.setAttribute('aria-pressed','false');areaCursor();
+    if(!drag)return;
+    suppressClick=true;
+    if(canvas.hasPointerCapture(drag.id))canvas.releasePointerCapture(drag.id);
+    const width=Math.abs(drag.end.x-drag.start.x),height=Math.abs(drag.end.y-drag.start.y);
+    if(!commit||width*drag.scale<8||height*drag.scale<8)return;
+    camera.zoom=clamp(Math.min(900/(width*1.1),560/(height*1.1)),.1,4);
+    camera.x=(drag.start.x+drag.end.x)/2-450/camera.zoom;
+    camera.y=(drag.start.y+drag.end.y)/2-280/camera.zoom;
+    update();refreshOverview();
+  }
+  areaButton.onclick=()=>{const next=!areaMode;endArea();endPan();setPanMode(false);areaMode=next;areaButton.setAttribute('aria-pressed',String(next));areaCursor();};
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&panMode){event.preventDefault();endPan();setPanMode(false);}});
+  document.addEventListener('keydown',event=>{if(event.key==='Shift'&&!editing(event.target)){shiftHeld=true;areaCursor();}if(event.key==='Escape'&&(areaDrag||areaMode)){event.preventDefault();endArea();}});
+  document.addEventListener('keyup',event=>{if(event.key==='Shift'){shiftHeld=false;areaCursor();}});
+  window.addEventListener('blur',()=>{shiftHeld=false;endArea();});
   const editing=target=>target.closest('input,textarea,select,[contenteditable=true]');
   document.addEventListener('keydown',event=>{if(event.code==='Space'&&!editing(event.target)&&!document.querySelector('dialog[open]')){spaceHeld=true;canvas.classList.add('pan-ready');if(event.target===canvas||stage.contains(event.target))event.preventDefault();}});
   document.addEventListener('keyup',event=>{if(event.code==='Space'){spaceHeld=false;canvas.classList.remove('pan-ready');}});
@@ -140,6 +175,7 @@
   }
   canvas.addEventListener('wheel',event=>{
     event.preventDefault();
+    if(areaDrag)return;
     const delta=event.deltaY*(event.deltaMode===1?16:event.deltaMode===2?canvas.clientHeight:1);
     zoomAt(camera.zoom*Math.exp(-clamp(delta,-300,300)*.002),event.clientX,event.clientY);
   },{passive:false});
@@ -149,7 +185,7 @@
     if(event.pointerType!=='touch'||!canvas.contains(event.target))return;
     touches.set(event.pointerId,{x:event.clientX,y:event.clientY});
     if(touches.size<2)return;
-    event.preventDefault();event.stopImmediatePropagation();endPan();pinching=true;suppressClick=true;pinchDistance=distance();
+    event.preventDefault();event.stopImmediatePropagation();endArea();endPan();pinching=true;suppressClick=true;pinchDistance=distance();
     canvas.dispatchEvent(new Event('viewport-gesture-start'));
     for(const id of touches.keys())canvas.setPointerCapture(id);
   },true);
@@ -170,17 +206,40 @@
   },true);
   window.addEventListener('blur',()=>{touches.clear();pinching=false;});
   stage.addEventListener('pointerdown',event=>{
+    if(!canvas.contains(event.target)||event.button!==0||!(event.shiftKey||areaMode)||pinching)return;
+    if(canvas.classList.contains('placing')||!get('cancel-connect').hidden)return;
+    event.preventDefault();event.stopImmediatePropagation();endPan();emptyCanvasClick=false;suppressClick=false;
+    const matrix=canvas.getScreenCTM(),p=canvas.createSVGPoint();p.x=event.clientX;p.y=event.clientY;
+    const start=p.matrixTransform(matrix.inverse()),bounds=stage.getBoundingClientRect();
+    areaDrag={id:event.pointerId,start,end:start,scale:matrix.a,inverse:matrix.inverse(),x:event.clientX-bounds.left,y:event.clientY-bounds.top};
+    areaBox.hidden=false;Object.assign(areaBox.style,{left:areaDrag.x+'px',top:areaDrag.y+'px',width:'0px',height:'0px'});
+    canvas.dispatchEvent(new Event('viewport-gesture-start'));canvas.setPointerCapture(event.pointerId);areaCursor();
+  },true);
+  stage.addEventListener('pointermove',event=>{
+    if(!areaDrag||event.pointerId!==areaDrag.id)return;
+    event.preventDefault();event.stopImmediatePropagation();
+    const bounds=canvas.getBoundingClientRect(),stageBounds=stage.getBoundingClientRect(),p=canvas.createSVGPoint();
+    p.x=clamp(event.clientX,bounds.left,bounds.right);p.y=clamp(event.clientY,bounds.top,bounds.bottom);areaDrag.end=p.matrixTransform(areaDrag.inverse);
+    const x=p.x-stageBounds.left,y=p.y-stageBounds.top;
+    Object.assign(areaBox.style,{left:Math.min(x,areaDrag.x)+'px',top:Math.min(y,areaDrag.y)+'px',width:Math.abs(x-areaDrag.x)+'px',height:Math.abs(y-areaDrag.y)+'px'});
+  },true);
+  for(const type of ['pointerup','pointercancel'])stage.addEventListener(type,event=>{
+    if(!areaDrag||event.pointerId!==areaDrag.id)return;
+    event.preventDefault();event.stopImmediatePropagation();endArea(type==='pointerup');
+  },true);
+  canvas.addEventListener('lostpointercapture',event=>{if(areaDrag?.id===event.pointerId)endArea();});
+  stage.addEventListener('pointerdown',event=>{
     emptyCanvasClick=false;
     if(!canvas.contains(event.target)||![0,1].includes(event.button))return;
     if(canvas.classList.contains('placing')||!get('cancel-connect').hidden)return;
     const object=event.target.closest('[data-device],[data-application],[data-note],[data-capacity-monitor],[data-link],[data-anchor-device],.in-flight-frame');
-    if(event.button!==1&&!spaceHeld&&object)return;
-    emptyCanvasClick=!object&&event.button===0&&!spaceHeld;
+    if(event.button!==1&&!spaceHeld&&!panMode&&object)return;
+    emptyCanvasClick=!object&&event.button===0&&!spaceHeld&&!panMode;
     event.preventDefault();event.stopImmediatePropagation();
-    const matrix=canvas.getScreenCTM();canvasPan={id:event.pointerId,x:event.clientX,y:event.clientY,cx:camera.x,cy:camera.y,scale:matrix.a,moved:false};
+    const matrix=canvas.getScreenCTM();canvasPan={id:event.pointerId,x:event.clientX,y:event.clientY,cx:camera.x,cy:camera.y,scale:matrix.a,moved:panMode};
     canvas.setPointerCapture(event.pointerId);canvas.classList.add('panning');
   },true);
-  stage.addEventListener('pointermove',event=>{if(!canvasPan)return;event.preventDefault();event.stopImmediatePropagation();const dx=event.clientX-canvasPan.x,dy=event.clientY-canvasPan.y;canvasPan.moved ||= Math.hypot(dx,dy)>3;camera.x=canvasPan.cx-dx/canvasPan.scale;camera.y=canvasPan.cy-dy/canvasPan.scale;update();refreshOverview();},true);
+  stage.addEventListener('pointermove',event=>{if(!canvasPan)return;event.preventDefault();event.stopImmediatePropagation();const dx=event.clientX-canvasPan.x,dy=event.clientY-canvasPan.y;canvasPan.moved ||= Math.hypot(dx,dy)>3;camera.x=canvasPan.cx-dx/canvasPan.scale;camera.y=canvasPan.cy-dy/canvasPan.scale;update();},true);
   for(const type of ['pointerup','pointercancel'])stage.addEventListener(type,event=>{if(!canvasPan)return;event.preventDefault();event.stopImmediatePropagation();endPan();},true);
   canvas.addEventListener('lostpointercapture',()=>{canvasPan=null;canvas.classList.remove('panning');});
   stage.addEventListener('click',event=>{const empty=emptyCanvasClick;emptyCanvasClick=false;if(suppressClick){suppressClick=false;event.preventDefault();event.stopImmediatePropagation();return;}if(empty&&canvas.contains(event.target))canvas.dispatchEvent(new Event('canvas-deselect'));},true);

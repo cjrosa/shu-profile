@@ -75,7 +75,7 @@
   const note=(target,text,color,tags,offset)=>{const position=offset?{x:target.x+offset.x,y:target.y+offset.y}:target;n.notes.push({id:'note'+(n.notes.length+1),title:text.split('\n')[0],text:text.split('\n').slice(1).join('\n'),color,tags,target:offset?tags[0]+':'+target.id:target.id,x:position.x+52,y:position.y-48,width:200,height:130});};
   note(client,'Start here: get connected\nSelect @Browser Client and acquire a DHCP lease. Check the acquired IP, default gateway, and DNS server before opening http://www.campus.example/ in its Browser. Use Activity to follow the exchange.','yellow',['walkthrough','client','DHCP']);
   note(r1,'DHCP across subnets\nThe client starts without an IP address. Its DHCP broadcast stays on the Client LAN; @Client Router relays the request from G0/0.10 or G0/0.40 to 192.168.20.2 on the Services LAN. Inspect the interface relay setting.','blue',['DHCP','relay','routing']);
-  note(dhcp,'Address pool for the Client LAN\n@DHCP Host offers 192.168.10.100?192.168.10.120 with /24, gateway 192.168.10.1, and DNS 192.168.20.3. Leases last 120 seconds. Follow Discover, Offer, Request, and ACK in Activity.','green',['dhcp','leases','services'],dhcp.applicationOffset);
+  note(dhcp,'Address pool for the Client LAN\n@DHCP Host offers 192.168.10.100\u2013192.168.10.120 with /24, gateway 192.168.10.1, and DNS 192.168.20.3. Leases last 120 seconds. Follow Discover, Offer, Request, and ACK in Activity.','green',['dhcp','leases','services'],dhcp.applicationOffset);
   note(dns,'Turn a name into an address\nwww.campus.example resolves to 192.168.30.10. From @Browser Client, try nslookup www.campus.example, then inspect the DNS query and reply in Activity. The DNS server is on a different LAN from the web server.','blue',['dns','name resolution','services'],dns.dnsOffset);
   note(web,'Deliver the web page\n@Web Host listens at 192.168.30.10 on TCP port 80. After DNS resolves the name, the browser establishes TCP and sends an HTTP request. Look for the HTTP 200 response and inspect the returned page.','green',['web','HTTP','TCP'],web.webOffset);
   note(r3,'Three LANs, three transit links\n@Client Router, @Services Router, and @Web Router use static routes to reach the other /24 LANs. Each router-to-router link has its own /30 subnet: 10.0.12.0, 10.0.23.0, or 10.0.13.0. Compare the route next hop with the connected interface; the triangle does not provide automatic failover.','pink',['routing','static routes','subnets']);
@@ -142,6 +142,32 @@
    occupied.push(box);
   }
   if(n.devices.length){const dx=Math.max(0,180-Math.min(...n.devices.map(d=>d.x))),dy=Math.max(0,120-Math.min(...n.devices.map(d=>d.y)));n.devices.forEach(d=>{d.x+=dx;d.y+=dy;});}
+  // Reserve cable curves as well as device/application footprints. Use the same
+  // facing anchors and control-point reach as the canvas's automatic cabling.
+  const cablePoints=[];
+  for(const link of n.links){
+   const a=n.device(link.a),b=n.device(link.b),horizontal=Math.abs(b.x-a.x)>Math.abs(b.y-a.y);
+   const vx=horizontal?Math.sign(b.x-a.x):0,vy=horizontal?0:Math.sign(b.y-a.y);
+   const start={x:a.x+vx*41,y:a.y+vy*33},end={x:b.x-vx*41,y:b.y-vy*33};
+   const reach=Math.max(60,Math.min(140,Math.hypot(end.x-start.x,end.y-start.y)*.35));
+   const steps=Math.max(40,Math.ceil((Math.hypot(end.x-start.x,end.y-start.y)+2*reach)/8));
+   for(let i=0;i<=steps;i++){const t=i/steps,u=1-t;cablePoints.push({x:u*u*u*start.x+3*u*u*t*(start.x+vx*reach)+3*u*t*t*(end.x-vx*reach)+t*t*t*end.x,y:u*u*u*start.y+3*u*u*t*(start.y+vy*reach)+3*u*t*t*(end.y-vy*reach)+t*t*t*end.y});}
+  }
+  const appKeys=['applicationOffset','dnsOffset','webOffset','browserOffset','echoOffset','nmapOffset','generatorOffset','spooferOffset','firewallOffset','idsOffset','arpInspectionOffset'];
+  const apps=n.devices.flatMap(d=>appKeys.filter(key=>d[key]).map(key=>({d,key})));
+  const appBox=(d,p)=>({left:d.x+p.x-80,right:d.x+p.x+110,top:d.y+p.y-45,bottom:d.y+p.y+60});
+  const deviceBoxes=n.devices.map(d=>({left:d.x-85,right:d.x+Math.max(85,65+String(d.name||'').length*7),top:d.y-45,bottom:d.y+85}));
+  const intersects=(a,b)=>a.left<b.right+12&&a.right+12>b.left&&a.top<b.bottom+12&&a.bottom+12>b.top;
+  for(const app of apps){
+   const otherBoxes=[...deviceBoxes,...apps.filter(other=>other!==app).map(other=>appBox(other.d,other.d[other.key]))];
+   const clear=p=>{const box=appBox(app.d,p);return !otherBoxes.some(other=>intersects(box,other))&&!cablePoints.some(p=>p.x>=box.left-12&&p.x<=box.right+12&&p.y>=box.top-12&&p.y<=box.bottom+12);};
+   if(clear(app.d[app.key]))continue;
+   let found=false;
+   for(let radius=160;radius<=1600&&!found;radius+=40)for(let i=0;i<16;i++){
+    const angle=i*Math.PI/8,p={x:radius*Math.cos(angle),y:radius*Math.sin(angle)};
+    if(clear(p)){app.d[app.key]=p;found=true;break;}
+   }
+  }
   const noteSlots=new Map();
   for(const note of n.notes){
     const parts=String(note.target||'').split(':'),d=n.device(parts.at(-1));if(!d)continue;

@@ -1537,6 +1537,14 @@
         const trunk = l.medium !== 'wifi' &&
           (a.ports.find((p) => p.id === l.ap).mode === 'trunk' ||
             b.ports.find((p) => p.id === l.bp).mode === 'trunk');
+        const accessVlans = !trunk && l.medium !== 'wifi'
+          ? [[da, l.ap], [db, l.bp]].filter(([d]) => d.type === 'switch')
+              .map(([d, port]) => d.vlans.find(v => v.id === d.ports.find(p => p.id === port).accessVlan))
+              .filter(Boolean)
+          : [];
+        // A mismatched pair of access ports has no single shared VLAN color.
+        const vlanColor = accessVlans.length && accessVlans.every(v => v.id === accessVlans[0].id)
+          ? accessVlans[0].color : null;
         const enabled =
           l.enabled &&
           a.ports.find((p) => p.id === l.ap).enabled &&
@@ -1553,7 +1561,7 @@
           '" fill="none" stroke="transparent" stroke-width="20"/><path d="' +
           pathData(route) +
           '" fill="none" stroke="' +
-          (selected === l.id ? "#287d78" : !enabled ? "#b66b60" : trunk ? "#284f7a" : "#9ab0c2") +
+          esc(!enabled ? "#b66b60" : vlanColor || (selected === l.id ? "#287d78" : trunk ? "#284f7a" : "#9ab0c2")) +
           '" stroke-width="' +
           (selected === l.id ? (trunk ? 5 : 4) : trunk ? 4 : 2) +
           '" ' +
@@ -1578,6 +1586,17 @@
         );
       })
       .join("");
+    // Paint every port label after every cable, including crossing cables.
+    const cableLabels = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    cableLabels.classList.add("cable-labels");
+    $("links").querySelectorAll(".wire").forEach(wire => {
+      const labels = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      labels.classList.add("wire");
+      labels.dataset.link = wire.dataset.link;
+      labels.append(...wire.querySelectorAll("text"));
+      cableLabels.append(labels);
+    });
+    $("links").append(cableLabels);
     $("devices").innerHTML = net.devices
       .map(
         (d) =>
@@ -3460,6 +3479,17 @@
         $("dhcp-acquire").setAttribute("aria-label", label);
         $("dhcp-acquire").dataset.tooltip = label;
       }
+      const portAcquire = $("inspector").querySelector(".port-dhcp-acquire");
+      if (portAcquire) {
+        const waiting = !!net.dhcpPending[d.id];
+        const label = waiting ? "Acquiring DHCP lease…" : d.lease ? "Renew DHCP lease" : "Acquire DHCP lease";
+        portAcquire.disabled = waiting || !d.ports[0].enabled;
+        portAcquire.setAttribute("aria-label", label);
+        portAcquire.dataset.tooltip = label;
+        portAcquire.querySelector("span").textContent = waiting ? "Acquiring…" : d.lease ? "Renew" : "Acquire";
+      }
+      const portLease = $("inspector").querySelector(".port-dhcp-status");
+      if (portLease) portLease.innerHTML = dhcpClientStatus(d);
       if ($("dhcp-leases")) $("dhcp-leases").innerHTML = dhcpLeases(d);
       if (d.addressMode === "dhcp") {
         for (const [id, value] of [
@@ -3786,11 +3816,41 @@
           };
         });
       $("delete").onclick = () => deleteTopologyItem(d.id);
+      if (d.type === "host" && d.addressMode === "dhcp") {
+        const port = $("inspector").querySelector("[data-port]");
+        const tile = document.createElement("div");
+        tile.className = "host-dhcp-port";
+        port.before(tile);tile.append(port);
+        tile.parentElement.classList.add("host-dhcp-ports");
+        const status = document.createElement("div");
+        status.className = "port-dhcp-status";
+        status.setAttribute("aria-label", "Port DHCP lease");
+        const details = document.createElement("div");
+        details.className = "port-dhcp-details";
+        const cli = document.createElement("button");
+        const renewCommand = d.os === "linux" ? "dhclient eth0" : d.os === "macos" ? "ipconfig set eth0 DHCP" : "ipconfig /renew";
+        cli.type = "button";
+        cli.className = "nmap-terminal-pill port-dhcp-cli";
+        cli.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 6 6 6-6 6M13 18h7"/></svg><code>' + esc(renewCommand) + '</code>';
+        cli.title = "Open Terminal with " + renewCommand;
+        cli.setAttribute("aria-label", "Open CLI with " + renewCommand);
+        cli.onclick = () => {
+          openTool("terminal", true);
+          $("command").value = renewCommand;
+          commandDraft = renewCommand;
+          historyIndex = commandHistory.length;
+          syncExternal();
+          $("command").focus({preventScroll:true});
+        };
+        details.append(status, cli);
+        tile.after(details);
+        refreshDhcp();
+      }
     } else if (l) {
       const a = net.device(l.a),
         b = net.device(l.b);
       $("inspector").innerHTML =
-        "<strong>" + (l.medium === "wifi" ? "Wireless association" : "Ethernet connection") + "</strong><p>" +
+        '<div class="application-inspector-content"><strong>' + (l.medium === "wifi" ? "Wireless association" : "Ethernet connection") + "</strong><p>" +
         esc(a.name) +
         " / " +
         esc(a.ports.find((p) => p.id === l.ap).name + (a.ports.find(p=>p.id===l.ap).mode==='trunk'?' (Trunk)':'')) +
@@ -3800,7 +3860,7 @@
         esc(b.ports.find((p) => p.id === l.bp).name + (b.ports.find(p=>p.id===l.bp).mode==='trunk'?' (Trunk)':'')) +
         '</p><label class="certificate-toggle"><span>' + (l.medium === 'wifi' ? 'Wireless link enabled' : 'Cable enabled') + '</span><input id="link-enabled" type="checkbox" role="switch" ' +
         (l.enabled ? "checked" : "") +
-        '><span class="certificate-switch" aria-hidden="true"></span></label><button id="delete" class="danger">Delete connection</button>';
+        '><span class="certificate-switch" aria-hidden="true"></span></label></div><div class="application-inspector-footer"><button id="delete" class="danger destructive-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg>Delete connection</button></div>';
       $("link-enabled").onchange = (e) =>
         mutate(() => (l.enabled = e.target.checked));
       $("delete").onclick = () => deleteTopologyItem(l.id);
@@ -4195,8 +4255,7 @@
       .map((n) => {
         const target = noteTargetAnchor(n),
           tip =
-            (n.text || "Untitled note") +
-            (n.tags.length ? "\n" + n.tags.map((t) => "#" + t).join(" ") : "");
+            (n.text || "Untitled note");
         return (
           (target
             ? '<path class="note-connector" data-note-connector="' +
@@ -4219,6 +4278,8 @@
           (target ? target.y : "") +
           '" data-note-title="' +
           esc(n.title?.trim() || "Note") +
+          '" data-note-tags="' +
+          esc(JSON.stringify(n.tags || [])) +
           '" data-note-mentions="' +
           esc(JSON.stringify(noteMentions(n))) +
           '" data-tooltip="' +
@@ -4655,6 +4716,8 @@
     NetworkExplorerStatus.render($("sim-status"), { active, paused });
   }
   function render({ background = false, refreshInspector = true } = {}) {
+    $("canvas-title").dataset.networkTitle = net.title || "Network canvas";
+    if (!document.body.classList.contains("welcome-open")) $("canvas-title").textContent = net.title || "Network canvas";
     refreshTroubleshooting();
     refreshDevicePickers();
     updatePauseControl();
@@ -4721,6 +4784,45 @@
       selected = null;
     });
   }
+  const canvasTitle = $("canvas-title");
+  canvasTitle.tabIndex = 0;
+  canvasTitle.setAttribute("role", "button");
+  canvasTitle.setAttribute("aria-label", "Edit network title");
+  const titleEdit = document.createElement("button");
+  titleEdit.type = "button";
+  titleEdit.className = "canvas-title-edit";
+  titleEdit.setAttribute("aria-label", "Edit network title");
+  titleEdit.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 4 5 5M4 20l4-1L20 7a2 2 0 0 0-5-5L3 14l-1 6Z"/></svg>';
+  const titleInput = document.createElement("input");
+  titleInput.id = "canvas-title-input";
+  titleInput.maxLength = 80;
+  titleInput.setAttribute("aria-label", "Network title");
+  titleInput.hidden = true;
+  canvasTitle.after(titleEdit, titleInput);
+  let titleNetwork = null;
+  const editTitle = () => {
+    if (document.body.classList.contains("welcome-open")) return;
+    titleNetwork = net;
+    titleInput.value = net.title || "";
+    titleInput.placeholder = "Network canvas";
+    canvasTitle.hidden = titleEdit.hidden = true;
+    titleInput.hidden = false;
+    titleInput.focus();
+    titleInput.select();
+  };
+  const finishTitle = (save) => {
+    if (titleInput.hidden) return;
+    titleInput.hidden = true;
+    canvasTitle.hidden = titleEdit.hidden = false;
+    if (save && net === titleNetwork && (net.title || "") !== titleInput.value.trim()) mutate(() => { net.title = titleInput.value.trim(); });
+  };
+  canvasTitle.onclick = titleEdit.onclick = editTitle;
+  canvasTitle.onkeydown = e => { if (["Enter", " "].includes(e.key)) { e.preventDefault(); editTitle(); } };
+  titleInput.onblur = () => finishTitle(true);
+  titleInput.onkeydown = e => {
+    if (!["Enter", "Escape"].includes(e.key)) return;
+    e.preventDefault(); e.stopPropagation(); finishTitle(e.key === "Enter"); canvasTitle.focus();
+  };
   function cancelConnect() {
     pendingCable = null;
     if (portPicker.open) portPicker.close();
@@ -6197,6 +6299,11 @@
   );
   svg.addEventListener("pointerdown", (e) => {
     if (e.button !== 0) return;
+    if ((connecting || endpoint) && !e.target.closest("[data-device],[data-anchor-device],[data-link],[data-application],[data-note],[data-watch-device],.in-flight-frame")) {
+      cancelConnect();
+      e.preventDefault();
+      return;
+    }
     const anchor = e.target.closest("[data-anchor-device]");
     if (anchor) {
       e.preventDefault();
@@ -7101,7 +7208,7 @@
   });
   document.addEventListener("pointerdown", (event) => {
     if (!contextMenu.contains(event.target)) closeContext();
-  });
+  }, true); // Dismiss before canvas pan/drag handlers stop propagation.
   document.addEventListener("scroll", () => closeContext(), true);
   window.addEventListener("resize", () => closeContext());
   function completeCommand(input) {
@@ -8109,6 +8216,7 @@
 
   // Search live device configuration, including interface addresses and installed applications.
   const networkSearch = NetworkExplorerSearch.create({
+    noteMentions,
     appGlyph,
     getNetwork: () => net,
     applications,

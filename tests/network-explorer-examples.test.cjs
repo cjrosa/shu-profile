@@ -120,3 +120,18 @@ test('campus distribution belongs only to Client Router and carries isolated dep
  for(const name of ['CS Access','Shared Access','EE Access'])assert.ok(byName(name).y>byName('Campus Distribution').y);
  assert.ok(byName('Campus Distribution').y>byName('Client Router').y);
 });
+
+test('Internet services avoid the ISP cable after arranging',()=>{
+ const {internet}=require('../assets/js/network-explorer-examples.js');
+ const n=internet(Network).network;arrange(n);
+ const host=n.devices.find(d=>d.name==='Internet Server');
+ const router=n.devices.find(d=>d.name==='ISP Router');
+ for(const key of ['dnsOffset','webOffset']){
+  const p=host[key],left=host.x+p.x-80,right=host.x+p.x+110,top=host.y+p.y-45,bottom=host.y+p.y+60;
+  for(let i=0;i<=100;i++){
+   const x=host.x+(router.x-host.x)*i/100,y=host.y+(router.y-host.y)*i/100;
+   assert.ok(x<left||x>right||y<top||y>bottom,key+' overlaps the ISP connection');
+  }
+ }
+ const offsets=[host.dnsOffset,host.webOffset];arrange(n);assert.deepEqual([host.dnsOffset,host.webOffset],offsets);
+});

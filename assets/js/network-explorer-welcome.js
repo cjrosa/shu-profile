@@ -159,7 +159,7 @@
     welcome.hidden = !open;
     document.body.classList.toggle("welcome-open", open);
     home.setAttribute("aria-pressed", String(open));
-    $("canvas-title").textContent = open ? "Welcome" : "Network canvas";
+    $("canvas-title").textContent = open ? "Welcome" : ($("canvas-title").dataset.networkTitle || "Network canvas");
     if (open && focus) welcome.querySelector("h1").focus();
     if (!open && focus) home.focus();
     window.dispatchEvent(new Event("resize"));

@@ -9,6 +9,7 @@ window.NetworkExplorerSearch = {
     noteTarget,
     noteName,
     noteSymbol,
+    noteMentions,
     osIcon,
     devicePlatform,
     esc,
@@ -20,6 +21,25 @@ window.NetworkExplorerSearch = {
     searchField.innerHTML =
       '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg><input id="network-query" type="search" aria-label="Search network" placeholder="Search devices, notes, incidents" autocomplete="off" aria-controls="network-search-dropdown" aria-expanded="false">';
     document.querySelector(".canvas-toolbar").append(searchField);
+    const toolbar = searchField.parentElement;
+    const centerSearch = () => {
+      const bounds = toolbar.getBoundingClientRect();
+      const width = Math.min(320, Math.max(160, toolbar.clientWidth * .35));
+      const left = bounds.left + bounds.width / 2 - width / 2;
+      const rightToggle = $("toggle-right").getBoundingClientRect();
+      const occupied = [...toolbar.children].filter(el => el !== searchField && el.id !== "toggle-right" && !(el.id === "connection-hint" && !el.textContent.trim()) && el.getClientRects().length);
+      const leftEdge = Math.max(bounds.left, ...occupied.map(el => el.getBoundingClientRect().right));
+      toolbar.classList.toggle("search-centered", left >= leftEdge + 12 && left + width <= rightToggle.left - 12);
+    };
+    let centerFrame = 0;
+    const scheduleCenter = () => {
+      cancelAnimationFrame(centerFrame);
+      centerFrame = requestAnimationFrame(centerSearch);
+    };
+    const headerResize = new ResizeObserver(scheduleCenter);
+    headerResize.observe(toolbar);
+    for (const el of toolbar.children) if (el !== searchField) headerResize.observe(el);
+    scheduleCenter();
     const searchPanel = document.createElement("section");
     searchPanel.id = "network-search-dropdown";
     searchPanel.className = "network-search";
@@ -60,6 +80,21 @@ window.NetworkExplorerSearch = {
     const recentByNetwork = new WeakMap();
     const rowKey = row => row.d.type + ':' + row.d.id;
     const categoryOf = d => d.type==='incident'?'Incidents':d.type==='note'?'Notes':d.searchCategory||'Devices';
+    function previewMarkup(text, note) {
+      const mentions = noteMentions(note).sort((a, b) => b.label.length - a.label.length);
+      let remaining = text, html = "";
+      while (remaining) {
+        let match = null, index = remaining.length;
+        for (const mention of mentions) {
+          const i = remaining.indexOf(mention.label);
+          if (i >= 0 && i < index) { match = mention; index = i; }
+        }
+        if (!match) return html + esc(remaining);
+        html += esc(remaining.slice(0, index)) + '<span class="search-note-mention"><span class="mention-glyph">' + match.icon + '</span><span>' + esc(match.label.slice(1)) + '</span></span>';
+        remaining = remaining.slice(index + match.label.length);
+      }
+      return html;
+    }
     const groupName = d => d.searchCategory ? d.searchCategory : d.type === 'incident' ? 'Incidents' : d.type === 'note' ? 'Notes' : d.wifi || d.wireless ? 'Wireless' : ({host:'Hosts',router:'Routers',switch:'Switches',firewall:'Firewalls',ap:'Wireless'})[d.type] || 'Devices';
     function closeSearch() {
       searchPanel.hidden = true;
@@ -186,7 +221,7 @@ window.NetworkExplorerSearch = {
           "</small>" +
           (row.preview
             ? '<small class="note-search-preview">' +
-              esc(row.preview) +
+              previewMarkup(row.preview, row.d) +
               "</small>"
             : "");
         b.onclick = () => {
@@ -213,6 +248,7 @@ window.NetworkExplorerSearch = {
             $("devices")
               .querySelector('[data-device="' + row.d.id + '"]')
               ?.focus({ preventScroll: true });
+          $("canvas").dispatchEvent(new CustomEvent("network-highlight", { detail: { id: row.d.id } }));
         };
         group.append(b);
         if (focusedId === rowKey(row)) b.focus({ preventScroll: true });

@@ -21,7 +21,55 @@ window.NetworkExplorerPickers = {
     devicePickers.className = "canvas-device-pickers";
     devicePickers.setAttribute("aria-label", "Find a device");
     container.insertBefore(devicePickers, before);
+    let highlightedRow = null;
+    let attentionRing = null;
+    let attentionTimer = null;
+    $("canvas").addEventListener("network-highlight", event => {
+      clearTimeout(attentionTimer);
+      const { id } = event.detail;
+      const attribute = ["data-device", "data-note", "data-application"].find(attribute =>
+        [...$("canvas").querySelectorAll('[' + attribute + ']')].some(node => node.getAttribute(attribute) === id));
+      if (!attribute) return;
+      const row = { dataset: { pickerAttribute: attribute, pickerId: id } };
+      highlightItem(row);
+      attentionTimer = setTimeout(() => { if (highlightedRow === row) highlightItem(null); }, 2400);
+    });
+    function highlightItem(row) {
+      if (row === highlightedRow && (!row || attentionRing?.isConnected)) return;
+      highlightedRow = row;
+      attentionRing?.remove();
+      attentionRing = null;
+      $("canvas").querySelectorAll(".inventory-highlight").forEach(node => node.classList.remove("inventory-highlight"));
+      if (!row) return;
+      const attribute = row.dataset.pickerAttribute;
+      $("canvas").querySelectorAll('[' + attribute + ']').forEach(node => {
+        if (node.getAttribute(attribute) !== row.dataset.pickerId) return;
+        node.classList.add("inventory-highlight");
+        const ns = "http://www.w3.org/2000/svg";
+        const bounds = node.getBBox();
+        const matrix = $("canvas").getCTM().inverse().multiply(node.getCTM());
+        attentionRing = document.createElementNS(ns, "g");
+        attentionRing.setAttribute("class", "inventory-attention-ring");
+        attentionRing.setAttribute("pointer-events", "none");
+        attentionRing.setAttribute("aria-hidden", "true");
+        attentionRing.setAttribute("transform", `matrix(${matrix.a} ${matrix.b} ${matrix.c} ${matrix.d} ${matrix.e} ${matrix.f})`);
+        const circle = document.createElementNS(ns, "circle");
+        circle.setAttribute("cx", bounds.x + bounds.width / 2);
+        circle.setAttribute("cy", bounds.y + bounds.height / 2);
+        circle.setAttribute("r", Math.hypot(bounds.width, bounds.height) / 2 + 8);
+        attentionRing.append(circle);
+        $("canvas").append(attentionRing);
+      });
+    }
+    for (const type of ["pointerover", "focusin"]) devicePickers.addEventListener(type, event => {
+      highlightItem(event.target.closest("[data-picker-id]"));
+    });
+    for (const type of ["pointerout", "focusout"]) devicePickers.addEventListener(type, event => {
+      const row = event.relatedTarget?.closest?.("[data-picker-id]");
+      highlightItem(row && devicePickers.contains(row) ? row : null);
+    });
     function refreshDevicePickers() {
+      highlightItem(null);
       const net = getNetwork();
       const focused = document.activeElement,
         focusedType = focused
@@ -93,6 +141,7 @@ window.NetworkExplorerPickers = {
           button.setAttribute("aria-expanded", "true");
         };
         const hide = () => {
+          highlightItem(null);
           list.hidden = true;
           button.setAttribute("aria-expanded", "false");
         };
@@ -121,6 +170,7 @@ window.NetworkExplorerPickers = {
           const row = document.createElement("button");
           row.type = "button";
           row.dataset.pickerId = d.id;
+          row.dataset.pickerAttribute = isNote ? "data-note" : isDevice ? "data-device" : "data-application";
           row.innerHTML =
             (isNote ? noteSymbol() : noteTargetIcon(d.id)) +
             "<span>" +
@@ -180,6 +230,7 @@ window.NetworkExplorerPickers = {
       }
     }
     document.addEventListener("pointerdown", (e) => {
+      if (!devicePickers.contains(e.target)) highlightItem(null);
       if (!devicePickers.contains(e.target))
         for (const group of devicePickers.children) {
           group.querySelector(".device-picker-list").hidden = true;
