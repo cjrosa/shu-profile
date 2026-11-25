@@ -13,6 +13,8 @@
 </div></header>
 <main>
   <div class="ide-card">
+<div id="quick-picker" role="search" aria-label="Quick navigation"><span class="picker-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m5 3 5 5-5 5"/></svg></span><input id="picker-input" role="combobox" aria-label="Search files or commands" aria-autocomplete="list" aria-controls="picker-results" aria-expanded="false" placeholder="Search commands (Ctrl+Shift+P)" autocomplete="off" spellcheck="false"><div class="layout-actions"><button id="toggle-left" aria-label="Hide left menu" title="Hide left menu" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path class="pane-fill" d="M4 5h5v14H4z"/><path d="M10 4v16"/></svg></button><button id="toggle-terminal" aria-label="Hide terminal" title="Hide terminal" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path class="pane-fill" d="M4 15h16v4H4z"/><path d="M3 14h18"/></svg></button></div><div id="picker-dropdown" hidden><div id="picker-results" role="listbox" aria-label="Results"></div><p id="picker-help">Up/Down to select &middot; Enter to open &middot; Esc to close</p></div></div>
+
   <nav class="activity" aria-label="Workspace views">
     <button id="explorer-view" title="Explorer" aria-label="Explorer" aria-pressed="false"><svg viewBox="0 0 32 36" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6H6a3 3 0 0 0-3 3v20a5 5 0 0 0 5 5h15"/><path d="M11 2h9l10 10v15a3 3 0 0 1-3 3H11a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3Z"/><path d="M19 2v9a2 2 0 0 0 2 2h9"/></svg></button>
     <button id="debug-view" class="active" title="Run and Debug" aria-label="Run and Debug" aria-pressed="true"><svg viewBox="0 0 36 36" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12V5a2 2 0 0 1 3-1.7l17 10a2 2 0 0 1 0 3.4l-11 6.5"/><path d="M8 19v-2a4 4 0 0 1 8 0v2M5 22a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v4a7 5 0 0 1-14 0Z"/><path d="M12 20v11M5 23H1m4 3H1m5 3-3 3m16-9h4m-4 3h4m-5 3 3 3M7 17l-3-3m13 3 3-3"/></svg></button>
@@ -31,6 +33,7 @@
   </aside>
   <div id="sidebar-divider" role="separator" tabindex="0" aria-label="Resize sidebar" aria-orientation="vertical" aria-valuemin="180" aria-valuenow="260" title="Drag to resize sidebar; double-click to reset"><span aria-hidden="true">&#8942;</span></div>
   <section class="workspace" aria-label="Python editor and output">
+
     <div class="toolbar" role="toolbar" aria-label="Debugger controls">
       <button id="toolbar-grip" title="Drag to move toolbar. Arrow keys move it; Home resets its position." aria-label="Move debugger toolbar"><svg viewBox="0 0 12 24" aria-hidden="true" class="grip-dots"><circle cx="3" cy="6" r="1.3"/><circle cx="9" cy="6" r="1.3"/><circle cx="3" cy="12" r="1.3"/><circle cx="9" cy="12" r="1.3"/><circle cx="3" cy="18" r="1.3"/><circle cx="9" cy="18" r="1.3"/></svg></button>
       <button id="start" title="Start / Continue (F5)" aria-label="Start"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16l14-8Z"/></svg><b class="visually-hidden">Start</b></button>

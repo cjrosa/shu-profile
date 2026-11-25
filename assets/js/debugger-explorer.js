@@ -63,6 +63,7 @@
     $('run-debug').textContent = next === 'loading' ? 'Loading Python…' : 'Run and Debug';
     renderView();
     renderStack();
+    if (!$('picker-dropdown').hidden) renderPicker();
   }
   function save() { files[activeFile] = $('code').value; }
   function renderFiles() {
@@ -229,7 +230,7 @@
         status(`${snapshot.reason} · ${snapshot.frames[0].file}:${snapshot.frames[0].line}`);
       } else if (data.type === 'output') append(data.text);
       else if (data.type === 'input') {
-        setPhase('input'); status('Waiting for program input');
+        setPaneVisible('terminal', true); setPhase('input'); status('Waiting for program input');
         $('input-label').textContent = data.prompt || 'Program input'; $('input-form').hidden = false; $('program-input').focus();
       } else if (data.type === 'finished') {
         if (checking) $('check-result').textContent = runOutput.trim() === 'Fahrenheit: [32.0, 68.0, 212.0]' ? '✓ All three expected values appeared. Explain how your loop now reaches the final item.' : 'Not yet: expected Fahrenheit: [32.0, 68.0, 212.0]. Compare this with your output.';
@@ -317,7 +318,7 @@
     $('file-section').open = true; $('debug-welcome').open = true;
     $('code').scrollTop = 0; $('code').scrollLeft = 0; $('position').textContent = 'Ln 1';
     document.querySelector('.output-panel').style.height = '';
-    view(true); resetToolbar(); setLessonVisible(true);
+    view(true); setPaneVisible('terminal', true); resetToolbar(); setLessonVisible(true);
     renderFiles(); renderGutter(); renderBreakpoints(); renderWatches(); renderLesson(); status('Workspace reset. Start when ready.');
   };
   $('previous').onclick = () => { lesson--; renderLesson(); }; $('next').onclick = () => { lesson++; renderLesson(); };
@@ -339,7 +340,16 @@
     $('debug-view').classList.toggle('active', debugView); $('explorer-view').classList.toggle('active', !debugView);
     $('debug-view').setAttribute('aria-pressed', debugView); $('explorer-view').setAttribute('aria-pressed', !debugView);
   }
-  function view(debug) { debugView = debug; renderView(); }
+  function setPaneVisible(pane, visible) {
+    document.querySelector('.ide-card').classList.toggle('hide-' + pane, !visible);
+    const button = $(pane === 'left' ? 'toggle-left' : 'toggle-terminal');
+    button.setAttribute('aria-pressed', String(visible));
+    button.title = (visible ? 'Hide ' : 'Show ') + (pane === 'left' ? 'left menu' : 'terminal');
+    button.setAttribute('aria-label', button.title);
+  }
+  $('toggle-left').onclick = () => setPaneVisible('left', document.querySelector('.ide-card').classList.contains('hide-left'));
+  $('toggle-terminal').onclick = () => setPaneVisible('terminal', document.querySelector('.ide-card').classList.contains('hide-terminal'));
+  function view(debug) { setPaneVisible('left', true); debugView = debug; renderView(); }
   $('debug-view').onclick = () => view(true); $('explorer-view').onclick = () => view(false);
   function setTheme(theme) {
     document.querySelector('.ide-card').dataset.theme = theme;
@@ -382,7 +392,108 @@
     else if (delta) { event.preventDefault(); toolbarMoved = true; placeToolbar(toolbar.offsetLeft + delta[0], toolbar.offsetTop + delta[1]); }
   };
   new ResizeObserver(() => toolbarMoved ? placeToolbar(toolbar.offsetLeft, toolbar.offsetTop) : resetToolbar()).observe(workspace);
+  const picker = $('quick-picker'), pickerInput = $('picker-input');
+  let pickerItems = [], pickerIndex = 0, pickerFocus = null, pickerLine = 1, pickerCommandMode = false;
+  function pickerCommands() {
+    const buttonCommand = (label, id, shortcut = '', before = () => {}) => ({
+      label, shortcut, disabled: $(id).disabled,
+      run: () => { if (!$(id).disabled) { before(); $(id).click(); } }
+    });
+    const currentBreakpoint = () => breakpoints.findIndex(bp => bp.file === activeFile && bp.line === pickerLine);
+    const revealBreakpoint = () => { view(true); $('breakpoint-section').open = true; };
+    const watchAvailable = ['running', 'paused', 'input'].includes(phase);
+    return [
+      { label: 'Go to File', shortcut: 'Ctrl+P', run: () => openPicker(false) },
+      buttonCommand('Preferences: Toggle Light/Dark Theme', 'theme-toggle'),
+      buttonCommand('View: Toggle Left Menu', 'toggle-left'),
+      buttonCommand('View: Toggle Terminal', 'toggle-terminal'),
+      buttonCommand('View: Explorer', 'explorer-view'),
+      buttonCommand('View: Run and Debug', 'debug-view'),
+      buttonCommand('View: Toggle Guided Lesson', 'lesson-toggle'),
+      buttonCommand('File: New Python File', 'add-file'),
+      buttonCommand(phase === 'paused' ? 'Debug: Continue' : 'Debug: Start Debugging', 'start', 'F5'),
+      buttonCommand('Debug: Pause', 'pause'),
+      buttonCommand('Debug: Step Over', 'over', 'F10'),
+      buttonCommand('Debug: Step Into', 'into', 'F11'),
+      buttonCommand('Debug: Step Out', 'out', 'Shift+F11'),
+      buttonCommand('Debug: Restart', 'restart'),
+      buttonCommand('Debug: Stop', 'stop'),
+      { label: `Debug: Toggle Breakpoint at ${activeFile}:${pickerLine}`, run: () => {
+        const i = currentBreakpoint();
+        if (i < 0) breakpoints.push({ file: activeFile, line: pickerLine, enabled: true, condition: '' });
+        else breakpoints.splice(i, 1);
+        renderBreakpoints(); renderGutter(); inspect();
+      } },
+      { label: `Debug: Edit Breakpoint Condition at ${activeFile}:${pickerLine}`, disabled: currentBreakpoint() < 0, run: () => {
+        const i = currentBreakpoint(); if (i < 0) return;
+        revealBreakpoint(); const input = $('breakpoints').querySelector(`[data-condition="${i}"]`);
+        input.hidden = false;
+        $('breakpoints').querySelector(`[data-edit="${i}"]`).setAttribute('aria-expanded', 'true');
+        input.focus();
+      } },
+      buttonCommand('Debug: Enable/Disable All Breakpoints', 'toggle-breakpoints'),
+      buttonCommand('Debug: Remove All Breakpoints', 'clear-breakpoints'),
+      { ...buttonCommand('Debug: Add to Watch', 'add-watch', '', () => view(true)), disabled: !watchAvailable },
+      buttonCommand('Debug: Remove All Watch Expressions', 'clear-watches'),
+      buttonCommand('Terminal: Clear Output', 'clear-output'),
+      buttonCommand('Lesson: Previous Step', 'previous'),
+      buttonCommand('Lesson: Next Step', 'next'),
+      buttonCommand('Lesson: Check Repair', 'check'),
+      { label: 'View: Reset Debug Toolbar Position', run: resetToolbar },
+      buttonCommand('Workspace: Reset', 'reset')
+    ];
+  }
+  function renderPicker() {
+    const commands = pickerCommandMode;
+    picker.classList.toggle('command-mode', commands);
+    const query = pickerInput.value.replace(/^>/, '').trim().toLowerCase();
+    const items = commands ? pickerCommands() : [
+      { label: 'Show and Run Commands', shortcut: 'Ctrl+Shift+P', run: () => openPicker(true) },
+      ...Object.keys(files).map(name => ({ label: name, file: true, run: () => { openFile(name); $('code').focus(); } }))
+    ];
+    pickerItems = items.filter(item => !item.disabled && query.split(/\s+/).every(word => item.label.toLowerCase().includes(word)));
+    pickerIndex = Math.max(0, Math.min(pickerIndex, pickerItems.length - 1));
+    $('picker-results').innerHTML = pickerItems.map((item, i) => `<div id="picker-option-${i}" role="option" aria-selected="${i === pickerIndex}" aria-disabled="${!!item.disabled}" data-pick="${i}">${item.file ? '<span class="picker-kind" aria-hidden="true">PY</span>' : ''}<span>${esc(item.label)}</span>${item.shortcut ? `<kbd>${esc(item.shortcut)}</kbd>` : ''}${item.disabled ? '<small>Unavailable</small>' : ''}</div>`).join('') || '<p class="empty">No matching results.</p>';
+    if (pickerItems.length) pickerInput.setAttribute('aria-activedescendant', `picker-option-${pickerIndex}`);
+    else pickerInput.removeAttribute('aria-activedescendant');
+    $('picker-results').querySelectorAll('[data-pick]').forEach(row => row.onclick = () => runPickerItem(Number(row.dataset.pick)));
+    $(`picker-option-${pickerIndex}`)?.scrollIntoView({ block: 'nearest' });
+  }
+  function closePicker(restoreFocus = true) { pickerCommandMode = false; picker.classList.remove('command-mode'); $('picker-dropdown').hidden = true; pickerInput.setAttribute('aria-expanded', 'false'); pickerInput.removeAttribute('aria-activedescendant'); pickerInput.value = ''; pickerInput.placeholder = 'Search commands (Ctrl+Shift+P)'; if (restoreFocus) (pickerFocus && !picker.contains(pickerFocus) ? pickerFocus : $('code')).focus(); }
+  function runPickerItem(index) {
+    const item = pickerItems[index]; if (!item || item.disabled) return;
+    closePicker(); item.run();
+  }
+  function openPicker(commands) {
+    if ($('picker-dropdown').hidden) {
+      pickerFocus = document.activeElement;
+      pickerLine = $('code').value.slice(0, $('code').selectionStart).split('\n').length;
+      $('picker-dropdown').hidden = false; pickerInput.setAttribute('aria-expanded', 'true');
+    }
+    pickerInput.placeholder = commands ? 'Search existing commands' : 'Search files by name (type > for commands)';
+    pickerCommandMode = commands; pickerInput.value = ''; pickerIndex = 0; renderPicker(); pickerInput.focus();
+  }
+  pickerInput.addEventListener('focus', () => { if ($('picker-dropdown').hidden) openPicker(true); });
+  pickerInput.addEventListener('click', () => { if ($('picker-dropdown').hidden) openPicker(true); });
+  document.addEventListener('pointerdown', event => { if (!$('picker-dropdown').hidden && !picker.contains(event.target)) closePicker(false); });
+  pickerInput.oninput = () => { if (pickerInput.value.startsWith('>')) { pickerCommandMode = true; pickerInput.value = pickerInput.value.slice(1); } pickerIndex = 0; renderPicker(); };
+  pickerInput.addEventListener('keydown', event => { if (event.key === 'Backspace' && !pickerInput.value && pickerCommandMode) { event.preventDefault(); pickerCommandMode = false; pickerInput.placeholder = 'Search files by name'; renderPicker(); } });
+  picker.addEventListener('cancel', event => { event.preventDefault(); closePicker(); });
+  picker.onclick = event => { if (event.target === picker) {
+    const r = picker.getBoundingClientRect();
+    if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) closePicker();
+  } };
   document.addEventListener('keydown', event => {
+    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 'p') {
+      event.preventDefault(); openPicker(event.shiftKey); return;
+    }
+    if (!$('picker-dropdown').hidden) {
+      if (event.key === 'Escape') { event.preventDefault(); closePicker(); }
+      else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault(); pickerIndex = (pickerIndex + (event.key === 'ArrowDown' ? 1 : -1) + pickerItems.length) % (pickerItems.length || 1); renderPicker();
+      } else if (event.key === 'Enter') { event.preventDefault(); runPickerItem(pickerIndex); }
+      return;
+    }
     const action = event.key === 'F5' ? 'start' : event.key === 'F10' ? 'over' : event.key === 'F11' ? (event.shiftKey ? 'out' : 'into') : null;
     if (action) { event.preventDefault(); if (!$(action).disabled) $(action).click(); }
   });

@@ -217,3 +217,37 @@ main{height:calc(100vh - 93px)}
 #debug-welcome>summary::before,#file-section>summary::before{content:'';width:8px;height:8px;flex:0 0 8px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(-45deg);margin:0 3px 0 4px}
 #debug-welcome[open]>summary::before,#file-section[open]>summary::before{transform:rotate(45deg);margin-top:-4px}
 #file-section>summary #add-file{margin-left:auto;float:none}
+#quick-picker{position:fixed;top:18px;bottom:auto;margin:0 auto;width:min(600px,calc(100vw - 24px));max-height:75vh;padding:9px;border:1px solid var(--border);border-radius:9px;background:var(--panel-bg);color:var(--text);box-shadow:0 12px 40px #0004;overflow:hidden}
+#quick-picker::backdrop{background:#0001}#picker-input{width:100%;padding:8px 10px;background:var(--editor-bg);color:var(--text);border:1px solid var(--blue);border-radius:5px;font-size:13px}#picker-results{max-height:55vh;overflow:auto;margin-top:7px}#picker-results [role=option]{display:flex;align-items:center;gap:8px;padding:6px 8px;min-height:30px;border-radius:4px;cursor:pointer;font-size:12px}#picker-results [aria-selected=true]{background:#4669c8;color:white}#picker-results [aria-disabled=true]{opacity:.5;cursor:default}.picker-kind{font-size:10px;min-width:18px;font-weight:600}#picker-results kbd{margin-left:auto;font:10px 'Segoe UI',sans-serif;border:1px solid currentColor;border-radius:3px;padding:1px 4px;white-space:nowrap}#picker-results small{margin-left:auto;font-size:10px}#picker-help{font-size:10px;color:var(--muted);margin:7px 4px 0}
+/* VS Code-style command density: plain labels, compact rows. */
+#quick-picker{padding:6px}
+#picker-input{padding:5px 8px;font-size:12px}
+#picker-results{margin-top:4px}
+#picker-results [role=option]{min-height:22px;padding:2px 7px;line-height:18px;gap:6px;border-radius:3px}
+#picker-help{margin:4px 3px 0;font-size:9px}
+/* Persistent quick navigation above the file tabs. */
+#quick-picker{position:relative;inset:auto;flex:none;display:block;width:100%;max-height:none;margin:0;padding:5px 8px;border:0;border-bottom:1px solid var(--border);border-radius:0;background:var(--panel-bg);box-shadow:none;overflow:visible;z-index:20}
+#picker-input{display:block;height:25px;padding:3px 8px;font-size:12px;border-color:var(--border)}
+#picker-dropdown{position:absolute;left:8px;right:8px;top:calc(100% - 1px);padding:4px;background:var(--panel-bg);border:1px solid var(--border);border-radius:0 0 6px 6px;box-shadow:0 8px 18px #0003}
+#picker-dropdown[hidden]{display:none}#picker-results{max-height:min(300px,45vh);margin-top:0}
+/* The command bar spans the whole IDE, above every pane. */
+.ide-card{grid-template-rows:auto minmax(0,1fr)}
+.ide-card>#quick-picker{grid-column:1/-1;grid-row:1}
+.ide-card>.activity,.ide-card>.sidebar,.ide-card>#sidebar-divider,.ide-card>.workspace{grid-row:2}
+/* Centered command field with persistent layout controls. */
+#quick-picker{display:flex;align-items:center;justify-content:center;padding:5px 76px;min-height:36px}
+#picker-input{width:min(100%,480px)}
+.layout-actions{position:absolute;right:8px;top:5px;display:flex;gap:4px}
+.layout-actions button{display:flex;align-items:center;justify-content:center;width:25px;height:25px;padding:3px;border:0;background:transparent;color:var(--muted);border-radius:4px}
+.layout-actions button:hover{background:var(--active-bg)}.layout-actions svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.5}.layout-actions .pane-fill{fill:currentColor;stroke:none}.layout-actions [aria-pressed=false] .pane-fill{fill:none}
+#picker-dropdown{left:50%;right:auto;transform:translateX(-50%);width:min(600px,calc(100% - 16px))}
+.ide-card.hide-left{grid-template-columns:42px minmax(0,1fr)}
+.ide-card.hide-left>.sidebar,.ide-card.hide-left>#sidebar-divider{display:none}
+.ide-card.hide-left>.workspace{grid-column:2}
+@media(max-width:1050px){.ide-card.hide-left{grid-template-columns:38px minmax(0,1fr)}}
+@media(max-width:640px){.ide-card.hide-left{grid-template-columns:36px minmax(0,1fr)}}
+.ide-card.hide-terminal .output-panel{display:none}
+#quick-picker .picker-chevron{display:none;position:absolute;left:max(85px,calc(50% - 231px));top:10px;pointer-events:none;color:var(--muted);width:15px;height:15px}
+.picker-chevron svg{display:block;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+#quick-picker.command-mode .picker-chevron{display:block}
+#quick-picker.command-mode #picker-input{padding-left:27px}
