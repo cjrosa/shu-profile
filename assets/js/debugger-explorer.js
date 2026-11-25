@@ -332,7 +332,9 @@
     const active = ['running', 'paused', 'input'].includes(phase);
     $('file-section').hidden = debugView;
     $('debug-welcome').hidden = !debugView || active;
-    $('debug-sections').hidden = !debugView || !active;
+    $('debug-sections').hidden = !debugView;
+    $('debug-sections').classList.toggle('debug-idle', !active);
+    $('debug-sections').querySelectorAll(':scope > .debug-section').forEach(section => { section.hidden = !active && section.id !== 'breakpoint-section'; });
     $('view-title').textContent = debugView ? 'Run And Debug' : 'Explorer';
     $('debug-view').classList.toggle('active', debugView); $('explorer-view').classList.toggle('active', !debugView);
     $('debug-view').setAttribute('aria-pressed', debugView); $('explorer-view').setAttribute('aria-pressed', !debugView);

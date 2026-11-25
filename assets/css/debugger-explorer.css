@@ -204,3 +204,16 @@ main{height:calc(100vh - 93px)}
 /* Share the gutter offset between the visible source and editable text. */
 #code-colors{left:var(--gutter-width,54px)}
 .line-badge{min-width:18px;padding:1px 4px;font-size:10px;line-height:14px;border-radius:5px}
+/* Keep breakpoint configuration available before and after execution. */
+#debug-sections.debug-idle{flex:0 0 auto;min-height:0;margin-top:auto}
+#debug-sections.debug-idle #breakpoint-section{flex:none;min-height:34px;max-height:260px}
+#debug-sections>.debug-section[hidden]{display:none}
+#tabs{min-height:32px;padding-top:4px;gap:3px}
+#tabs .tab,#tabs .tab[aria-selected=true]{padding:5px 10px;font-size:12px;line-height:18px}
+/* Match the Run and Explorer disclosure arrows to Breakpoints. */
+#debug-welcome>summary,#file-section>summary{display:flex;align-items:center;gap:9px;list-style:none}
+#debug-welcome>summary::-webkit-details-marker,#file-section>summary::-webkit-details-marker{display:none}
+#debug-welcome>summary::marker,#file-section>summary::marker{content:''}
+#debug-welcome>summary::before,#file-section>summary::before{content:'';width:8px;height:8px;flex:0 0 8px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(-45deg);margin:0 3px 0 4px}
+#debug-welcome[open]>summary::before,#file-section[open]>summary::before{transform:rotate(45deg);margin-top:-4px}
+#file-section>summary #add-file{margin-left:auto;float:none}
