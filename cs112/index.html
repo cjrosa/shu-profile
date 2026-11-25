@@ -122,8 +122,8 @@
           </div>
           <div class="cat-title-area">
             <div class="cat-name">Foundations</div>
-            <div class="cat-tagline">Python Classes &middot; OOP &middot; Dunder Methods &middot; Instance Variables &middot; Inheritance &middot; Composition</div>
-            <span class="cat-tool-count">1 Tool</span>
+            <div class="cat-tagline">Debugging &middot; Python Classes &middot; OOP &middot; Inheritance &middot; Composition</div>
+            <span class="cat-tool-count">2 Tools</span>
           </div>
           <div class="cat-chevron">
             <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,6 8,10 12,6"/></svg>
@@ -132,6 +132,11 @@
       </button>
       <div class="cat-body">
         <div class="tools-grid">
+          <a class="tool-card" href="../viewer.html?tool=cs112/debugger_explorer.html&amp;course=CS112&amp;label=Data%20Structures&amp;name=Debugger%20Explorer&amp;back=cs112/index.html">
+            <div class="tool-card-header"><div class="tool-icon" style="background:#EEE9E4"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A6F66" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 3v18M8 8h13m-9 4 5 3-5 3z"/></svg></div><div><div class="tool-subtitle" style="color:#7A6F66">Python Debugging</div><div class="tool-title">Debugger Explorer</div></div></div>
+            <div class="tool-body"><p class="tool-desc">Run editable Python in a VS Code-style workspace. Follow a guided investigation to inspect execution and repair a bug.</p><div class="tool-features"><div class="tool-feature"><div class="tool-feature-dot" style="background:#7A6F66"></div>Locals, watches &amp; conditional breakpoints</div><div class="tool-feature"><div class="tool-feature-dot" style="background:#7A6F66"></div>Step into, over &amp; out of functions</div><div class="tool-feature"><div class="tool-feature-dot" style="background:#7A6F66"></div>Editable files &amp; call-stack inspection</div></div></div>
+            <div class="tool-footer"><span class="tool-cta" style="color:#7A6F66">Open tool →</span><span class="tool-tag" style="background:#EEE9E4;color:#7A6F66">Interactive</span></div>
+          </a>
           <a class="tool-card" href="../viewer.html?tool=cs112/python_classes.html&amp;course=CS112&amp;label=Data%20Structures&amp;name=Python%20Classes%2C%20Inheritance%20%26%20Composition&amp;back=cs112/index.html">
             <div class="tool-card-header">
               <div class="tool-icon" style="background:#EEE9E4">
@@ -744,6 +749,7 @@
 const PROXY_URL = 'https://red-union-6b9e.crosa.workers.dev';
 
 const TOOLS = [
+  { name:'Debugger Explorer', file:'debugger_explorer.html', cat:'Foundations', desc:'Run editable Python with breakpoints watches locals call stack and guided debugging lessons', keywords:['debug','debugging','debugger','breakpoint','conditional breakpoint','watch','locals','step into','step out','step over','call stack','python'] },
   { name:'Birthday Problem Infographic', file:'birthday_infographic.html', cat:'Hash', desc:'birthday problem paradox collision probability hash table slots keys', keywords:['birthday','birthday problem','birthday paradox','probability','collision','hash','23','365'] },
   { name:'Python Classes, Inheritance & Composition', file:'python_classes.html', cat:'Foundations', desc:'Python classes objects methods self constructors dunder methods inheritance composition delegation', keywords:['class','classes','object','objects','oop','self','constructor','__init__','dunder','method','inheritance','subclass','super','override','polymorphism','composition','has-a','delegation'] },
   { name:'BST Insert Animation',   file:'bst_insert_animation.html',        cat:'Trees', desc:'BST insertion, comparison path, left right decision', keywords:['bst','insert','insertion','binary search tree','add node','place'] },
@@ -842,7 +848,7 @@ function appendMessage(html, cls) {
 
 async function callClaude(messages) {
   const SYSTEM = `You are a concise, friendly teaching assistant for CS112 Data Structures at Sacred Heart University. The course uses Python.
-Answer questions about: arrays, linked lists, stacks, queues, binary trees, binary search trees (BST), AVL trees and rotations, heaps (max/min, sift-up/down, array representation), hash tables (chaining, linear probing, quadratic probing, clustering), graphs (BFS, DFS, weighted), recursion, Big-O complexity, and Python classes/OOP.
+Answer questions about: Python debugging (breakpoints, watches, locals, stepping, and call stacks), arrays, linked lists, stacks, queues, binary trees, binary search trees (BST), AVL trees and rotations, heaps (max/min, sift-up/down, array representation), hash tables (chaining, linear probing, quadratic probing, clustering), graphs (BFS, DFS, weighted), recursion, Big-O complexity, and Python classes/OOP.
 Rules:
 - Be beginner-friendly. This is a 100-level course.
 - Use Python examples where helpful.
@@ -850,7 +856,7 @@ Rules:
 - You may use markdown when helpful: headings, bold, italics, links, inline code, fenced code blocks, and simple lists.
 - If outside CS112 scope, politely redirect.
 - End with a single line starting "TOOL:" naming the most relevant tool from this list, or "TOOL:none":
-  Python Classes, Inheritance & Composition, BST Insert Animation, Insert Order Effect, BST Search, BST Delete (Simple), BST Delete (Two Children), BST Violations, Tree Traversals, Level-Order Traversal, BST & AVL Tree Visualizer, Heap Build & Insert, Reheap Up & Down, Heap Array Indexing, Hash Table Chaining, Linear Probing & Clustering, Quadratic Probing, Graph Algorithm Visualizer`;
+  Debugger Explorer, Python Classes, Inheritance & Composition, BST Insert Animation, Insert Order Effect, BST Search, BST Delete (Simple), BST Delete (Two Children), BST Violations, Tree Traversals, Level-Order Traversal, BST & AVL Tree Visualizer, Heap Build & Insert, Reheap Up & Down, Heap Array Indexing, Hash Table Chaining, Linear Probing & Clustering, Quadratic Probing, Graph Algorithm Visualizer`;
 
   const response = await fetch(PROXY_URL, {
     method: 'POST',

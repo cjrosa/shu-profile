@@ -1,3 +1,7 @@
 :root {
   --bg2:     #ffffff;
 }
+
+/* Match CS339's border-free accordion headers, retaining category colors. */
+.theme-cs112 .cat-accordion .cat-header-inner { box-shadow: none; }
+.theme-cs112 .cat-header { padding: 0; }
