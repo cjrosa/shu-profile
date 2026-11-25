@@ -5,3 +5,47 @@
 /* Match CS339's border-free accordion headers, retaining category colors. */
 .theme-cs112 .cat-accordion .cat-header-inner { box-shadow: none; }
 .theme-cs112 .cat-header { padding: 0; }
+
+/* Match the featured tool presentation on CS339. */
+.featured-app {
+  position: relative;
+  isolation: isolate;
+  font-family: -apple-system, sans-serif;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, .7fr);
+  gap: 32px;
+  margin-bottom: 28px;
+  padding: 28px;
+  border: 1px solid #e5ccd3;
+  border-radius: 18px;
+  background: linear-gradient(90deg, #fff 15%, color-mix(in srgb, var(--course-cs112-accent, #b02945) 8%, white) 55%, color-mix(in srgb, var(--course-cs112-accent, #b02945) 22%, white) 100%);
+  color: var(--text);
+  text-decoration: none;
+  box-shadow: var(--shadow);
+  transition: box-shadow .2s, border-color .2s;
+}
+.featured-app:hover { border-color: var(--course-cs112-accent); box-shadow: var(--shadow-h); }
+.featured-app:focus-visible { outline: 3px solid var(--course-cs112-accent); outline-offset: 4px; }
+.featured-app-heading { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+.featured-app-label { color: var(--course-cs112-accent); font-size: 10px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; }
+.featured-app h2 { font-size: 14px; font-weight: 700; line-height: 1.2; margin: 5px 0 2px; }
+.featured-app p { color: var(--text2); font-size: 12px; line-height: 1.6; margin: 0 0 12px; max-width: 65ch; }
+.featured-app-cta { display: inline-flex; align-items: center; gap: 16px; background: var(--course-cs112-accent); color: #fff; padding: 11px 17px; border-radius: 8px; font-size: 11px; font-weight: 600; }
+.featured-app-art { display: block; width: 100%; height: auto; align-self: center; border-radius: 12px; }
+.featured-app::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #c995a2 15%, #ecd8df 55%, #fff 90%);
+  mask-image: radial-gradient(circle at 1px 1px, #000 1px, transparent 1.3px), linear-gradient(90deg, transparent 15%, #0005 55%, #000 100%);
+  mask-size: 16px 16px, 100% 100%;
+  mask-repeat: repeat, no-repeat;
+  mask-composite: intersect;
+}
+@media (max-width: 640px) {
+  .featured-app { grid-template-columns: 1fr; gap: 22px; padding: 20px; }
+}
+.featured-app .tool-icon { background: var(--course-cs112-accent-soft); color: var(--course-cs112-accent); }
