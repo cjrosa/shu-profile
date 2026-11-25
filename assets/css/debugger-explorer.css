@@ -98,11 +98,11 @@ header,.workspace{background:var(--editor-bg)}
 body{background:white}
 header{background:white}
 main{grid-template-columns:minmax(0,1fr) 285px;gap:14px;padding:14px;height:calc(100vh - 112px);min-height:540px;overflow:visible}
-.ide-card{display:grid;grid-template-columns:46px 260px minmax(0,1fr);min-width:0;min-height:0;border:1px solid var(--border);border-radius:14px;background:var(--panel-bg);overflow:hidden;box-shadow:0 2px 8px #00000006}
+.ide-card{display:grid;grid-template-columns:46px 260px minmax(0,1fr);min-width:0;min-height:0;border:1px solid var(--border);border-radius:14px;background:var(--panel-bg);overflow:hidden;box-shadow:none}
 .lesson{border:1px solid var(--border);border-radius:14px;background:#fff;min-height:0}
 body.hide-lesson main{grid-template-columns:minmax(0,1fr)}
 
-.ide-card[data-theme=dark]{box-shadow:0 3px 16px #0003;color:var(--text)}
+.ide-card[data-theme=dark]{box-shadow:none;color:var(--text)}
 .ide-card[data-theme=dark] .lesson{background:var(--panel-bg)}
 @media(max-width:1050px){main{grid-template-columns:minmax(0,1fr);height:auto}.ide-card{grid-template-columns:40px 225px minmax(0,1fr);min-height:650px}.lesson{grid-column:auto}body.hide-lesson main{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:640px){main{padding:8px;gap:8px}.ide-card{grid-template-columns:36px 180px minmax(260px,1fr);overflow:auto}.lesson{grid-column:auto}header{height:auto;flex-wrap:wrap}}
@@ -246,8 +246,25 @@ main{height:calc(100vh - 93px)}
 .ide-card.hide-left>.workspace{grid-column:2}
 @media(max-width:1050px){.ide-card.hide-left{grid-template-columns:38px minmax(0,1fr)}}
 @media(max-width:640px){.ide-card.hide-left{grid-template-columns:36px minmax(0,1fr)}}
-.ide-card.hide-terminal .output-panel{display:none}
+.ide-card.hide-terminal .output-panel,.ide-card.hide-terminal #terminal-divider{display:none}
 #quick-picker .picker-chevron{display:none;position:absolute;left:max(85px,calc(50% - 231px));top:10px;pointer-events:none;color:var(--muted);width:15px;height:15px}
 .picker-chevron svg{display:block;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 #quick-picker.command-mode .picker-chevron{display:block}
 #quick-picker.command-mode #picker-input{padding-left:27px}
+footer{background:transparent;color:#526172}
+footer.debug-active{background:#28618e;color:white}
+/* Fit the available viewport; scroll content inside the tool's panels. */
+html{height:100%;overflow:hidden}
+body{height:100dvh;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden}
+body>header{height:auto}
+body>main{height:100%;min-height:0;overflow:hidden}
+.ide-card{min-height:0}
+.workspace{height:auto;min-height:0;overflow:hidden}
+.sidebar{min-height:0;max-height:none}
+.editor{min-height:0}
+.output-panel{flex-shrink:0;min-height:0;max-height:calc(100% - 130px);resize:none;border-top:0}
+#terminal-divider{display:flex;align-items:center;justify-content:center;height:6px;flex:0 0 6px;cursor:row-resize;touch-action:none;user-select:none;background:var(--panel-bg);border-block:1px solid var(--border);color:var(--muted)}
+#terminal-divider span{width:3px;height:3px;border-radius:50%;background:currentColor;box-shadow:-6px 0 currentColor,6px 0 currentColor}
+#terminal-divider:hover,#terminal-divider:focus-visible{background:var(--active-bg);outline:1px solid var(--blue);outline-offset:-1px}
+.lesson{min-height:0;overflow:auto}
+@media(max-width:1050px){body>main{grid-template-rows:minmax(0,2fr) minmax(0,1fr)}body.hide-lesson>main{grid-template-rows:minmax(0,1fr)}}

@@ -46,6 +46,7 @@
   function setPhase(next) {
     phase = next;
     const busy = ['loading', 'running', 'paused', 'input'].includes(next);
+    document.querySelector('footer').classList.toggle('debug-active', busy);
     $('code').readOnly = busy;
     $('add-file').disabled = busy;
     $('start').disabled = ['loading', 'running', 'input'].includes(next);
@@ -270,6 +271,32 @@
   $('clear-breakpoints').onclick = () => { breakpoints = []; renderBreakpoints(); renderGutter(); inspect(); };
   $('toggle-breakpoints').onclick = () => { const enable = !breakpoints.some(bp => bp.enabled); breakpoints.forEach(bp => bp.enabled = enable); renderBreakpoints(); renderGutter(); inspect(); };
   const divider = $('sidebar-divider'), card = document.querySelector('.ide-card');
+  const terminalDivider = $('terminal-divider'), terminalPanel = document.querySelector('.output-panel');
+  function resizeTerminal(height) {
+    const max = Math.max(0, terminalPanel.parentElement.clientHeight - 130);
+    const min = Math.min(60, max);
+    terminalPanel.style.height = Math.max(min, Math.min(height, max)) + 'px';
+    terminalDivider.setAttribute('aria-valuemin', min);
+    terminalDivider.setAttribute('aria-valuemax', max);
+    terminalDivider.setAttribute('aria-valuenow', Math.round(terminalPanel.getBoundingClientRect().height));
+  }
+  terminalDivider.onpointerdown = event => {
+    if (event.button !== 0) return;
+    event.preventDefault(); terminalDivider.focus(); terminalDivider.setPointerCapture(event.pointerId);
+    terminalDivider.dataset.start = event.clientY;
+    terminalDivider.dataset.height = terminalPanel.getBoundingClientRect().height;
+  };
+  terminalDivider.onpointermove = event => {
+    if (terminalDivider.hasPointerCapture(event.pointerId)) resizeTerminal(Number(terminalDivider.dataset.height) + Number(terminalDivider.dataset.start) - event.clientY);
+  };
+  terminalDivider.onpointerup = event => { if (terminalDivider.hasPointerCapture(event.pointerId)) terminalDivider.releasePointerCapture(event.pointerId); };
+  terminalDivider.ondblclick = () => { terminalPanel.style.height = ''; };
+  terminalDivider.onkeydown = event => {
+    if (event.key === 'Home') terminalPanel.style.height = '';
+    else if (['ArrowUp', 'ArrowDown'].includes(event.key)) resizeTerminal(terminalPanel.getBoundingClientRect().height + (event.key === 'ArrowUp' ? 20 : -20));
+    else return;
+    event.preventDefault();
+  };
   function resizeSidebar(width) {
     const max = Math.max(180, card.clientWidth - 320);
     const next = Math.max(180, Math.min(width, max));
