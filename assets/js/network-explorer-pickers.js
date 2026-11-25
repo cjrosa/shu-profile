@@ -24,6 +24,12 @@ window.NetworkExplorerPickers = {
     let highlightedRow = null;
     let attentionRing = null;
     let attentionTimer = null;
+    let openTimer = null;
+    let previewTimer = null;
+    const cancelHover = () => {
+      clearTimeout(openTimer);
+      clearTimeout(previewTimer);
+    };
     $("canvas").addEventListener("network-highlight", event => {
       clearTimeout(attentionTimer);
       const { id } = event.detail;
@@ -61,14 +67,15 @@ window.NetworkExplorerPickers = {
         $("canvas").append(attentionRing);
       });
     }
-    for (const type of ["pointerover", "focusin"]) devicePickers.addEventListener(type, event => {
+    for (const type of ["focusin"]) devicePickers.addEventListener(type, event => {
       highlightItem(event.target.closest("[data-picker-id]"));
     });
     for (const type of ["pointerout", "focusout"]) devicePickers.addEventListener(type, event => {
       const row = event.relatedTarget?.closest?.("[data-picker-id]");
-      highlightItem(row && devicePickers.contains(row) ? row : null);
+      if (!row || !devicePickers.contains(row)) highlightItem(null);
     });
     function refreshDevicePickers() {
+      cancelHover();
       highlightItem(null);
       const net = getNetwork();
       const focused = document.activeElement,
@@ -131,6 +138,7 @@ window.NetworkExplorerPickers = {
         list.hidden = true;
         list.setAttribute("aria-label", label);
         const show = () => {
+          cancelHover();
           for (const other of devicePickers.children) {
             other.querySelector(".device-picker-list").hidden = true;
             other
@@ -141,13 +149,18 @@ window.NetworkExplorerPickers = {
           button.setAttribute("aria-expanded", "true");
         };
         const hide = () => {
+          cancelHover();
           highlightItem(null);
           list.hidden = true;
           button.setAttribute("aria-expanded", "false");
         };
         button.onclick = () => (list.hidden ? show() : hide());
-        group.onmouseenter = show;
+        group.onmouseenter = () => {
+          clearTimeout(openTimer);
+          openTimer = setTimeout(() => { if (group.isConnected) show(); }, 400);
+        };
         group.onmouseleave = () => {
+          cancelHover();
           if (!group.contains(document.activeElement)) hide();
         };
         group.onfocusout = (e) => {
@@ -174,8 +187,16 @@ window.NetworkExplorerPickers = {
           const locate = () => $("canvas").dispatchEvent(
             new CustomEvent("network-locate", { detail: d }),
           );
-          row.onpointerenter = locate;
-          row.onfocus = locate;
+          const preview = () => {
+            clearTimeout(previewTimer);
+            previewTimer = setTimeout(() => {
+              if (row.isConnected && !list.hidden) { highlightItem(row); locate(); }
+            }, 450);
+          };
+          row.onpointerenter = preview;
+          row.onpointermove = preview;
+          row.onpointerleave = () => { clearTimeout(previewTimer); highlightItem(null); };
+          row.onfocus = () => { clearTimeout(previewTimer); locate(); };
           row.innerHTML =
             (isNote ? noteSymbol() : noteTargetIcon(d.id)) +
             "<span>" +
@@ -235,6 +256,7 @@ window.NetworkExplorerPickers = {
       }
     }
     document.addEventListener("pointerdown", (e) => {
+      cancelHover();
       if (!devicePickers.contains(e.target)) highlightItem(null);
       if (!devicePickers.contains(e.target))
         for (const group of devicePickers.children) {

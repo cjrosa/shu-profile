@@ -281,7 +281,7 @@
   get('zoom-slider').min='10';
   get('zoom-reset').onclick=fit;
   get('zoom-reset').title='Fit network';get('zoom-reset').setAttribute('aria-label','Fit network');
-  window.NetworkExplorerViewport={fit};
+  window.NetworkExplorerViewport={fit,snapshot:()=>({...camera}),restore:state=>{if(!state)return;cancelLocate();Object.assign(camera,state);update();refreshOverview();}};
   overview.addEventListener('pointerdown', event => {
     if (event.button !== 0) return;
     event.preventDefault();

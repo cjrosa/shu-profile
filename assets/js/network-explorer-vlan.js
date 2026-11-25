@@ -37,5 +37,25 @@
   }
   return found;
  }
- const api={carries,validate,parse,classify,egress,segment};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerVlan=api;
+ // Configured, enabled VLAN membership, including untagged endpoints and bridges.
+ function members(net,vlan){
+  const devices=new Set(),links=new Set(),queue=[],seen=new Set();
+  for(const d of net.devices)if(d.type==='switch'&&has(d,vlan))for(const p of d.ports)if(p.enabled&&carries(p,vlan)){
+   devices.add(d.id);queue.push([d.id,p.id,egress(p,{},vlan).vlanTag]);
+  }
+  while(queue.length){
+   const [id,pid,tag]=queue.shift(),key=id+':'+pid+':'+tag;if(seen.has(key))continue;seen.add(key);
+   for(const l of net.links){
+    if(!l.enabled)continue;
+    const forward=l.a===id&&l.ap===pid,reverse=l.b===id&&l.bp===pid;if(!forward&&!reverse)continue;
+    const d=net.device(forward?l.b:l.a),p=d?.ports.find(p=>p.id===(forward?l.bp:l.ap));if(!p?.enabled)continue;
+    if(d.type==='switch'){const result=classify(d,p,tag===undefined?{}:{vlanTag:tag});if(result.error||result.vlan!==vlan)continue;}
+    else if(tag!==undefined&&!(d.type==='router'&&d.ports.some(q=>q.parentPort===p.id&&q.enabled&&q.vlanId===tag)))continue;
+    devices.add(d.id);links.add(l.id);
+    if(d.firewallMode==='transparent')for(const q of d.ports)if(q.id!==p.id&&q.enabled)queue.push([d.id,q.id,tag]);
+   }
+  }
+  return {devices:[...devices],links:[...links]};
+ }
+ const api={carries,validate,parse,classify,egress,segment,members};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.NetworkExplorerVlan=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

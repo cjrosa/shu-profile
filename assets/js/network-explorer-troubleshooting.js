@@ -232,7 +232,7 @@
     return candidates[Math.min(candidates.length - 1, Math.floor(random() * candidates.length))];
   }
   function mount(panel, api) {
-    let challenge = null, owner = null, baseline = null, hint = 0;
+    let challenge = null, owner = null, baseline = null, hint = 0, narrationUnlocked = false;
     const identity = () => api.identity ? api.identity() : api.network();
     panel.innerHTML = '<div class="trouble-actions"><button data-lab="new">New incident</button><button data-lab="check" disabled>Check repair</button><button data-lab="hint" disabled>Hint</button><button data-lab="look" disabled>Look here</button><button data-lab="reveal" disabled>Reveal fault</button><button data-lab="reset" disabled>Reset network</button></div><p class="trouble-status" role="status">Choose New incident to select a practice area and start investigating.</p><div class="trouble-evidence"></div><label class="trouble-reflection">Explain your fix <input placeholder="What failed? What evidence led you to the fix?" aria-label="Explain your fix"></label>';
     const icons = {
@@ -299,7 +299,7 @@
     }
     function line(text) { const p = document.createElement('p'); p.textContent = text; evidence.append(p); }
     function startChallenge(next, saved, starter = false, links = false) {
-      baseline = saved; challenge = next; owner = identity(); currentIdentity = owner; hint = 0;
+      baseline = saved; challenge = next; owner = identity(); currentIdentity = owner; hint = 0; narrationUnlocked = false;
       enabled(true); evidence.replaceChildren(); panel.querySelector('input').value = '';
       const description=incidentReport(next);
       summary.textContent='Incident report · '+description.title;
@@ -361,6 +361,7 @@
             reflection.hidden = !ok;
             guidance('check', ok?'Repair verified':'Still unresolved',ok ? 'A fresh ' + (challenge.testLabel || 'ping') + ' passed. Explain the cause and your fix.' : 'The fresh ' + (challenge.testLabel || 'ping') + ' still fails. Inspect the configuration and follow the exchange in Activity.');
             statusBox.dataset.severity=ok?'success':'error';
+            if (ok) narrationUnlocked = true;
           } else if (action === 'hint') {
             const hints = challenge.hints || (challenge.kind === 'vlan' ? [
               'The cable can be up while traffic is isolated. Follow the frame into the switch.',
@@ -384,6 +385,7 @@
             api.select(challenge.device || challenge.source);
             guidance('look', 'Look here', challenge.look || (challenge.testLabel ? 'Inspect the applications on ' + challenge.deviceName + '. ' + (challenge.command ? 'From ' + challenge.sourceName + ', try '+challenge.command+'.' : 'Use the Browser on '+challenge.sourceName+' to open '+challenge.url) : 'Inspect ' + (challenge.deviceName || challenge.sourceName) + '. ' + (challenge.device ? 'Compare port status and access VLANs in the Inspector. CLI ideas: show interfaces, show vlan brief. ' : 'CLI: Windows: ipconfig, arp -a; Linux: ip addr, ip neigh; macOS: ifconfig, arp -a. ') + 'Type help for supported commands; ping ' + challenge.target + ' to retest.'));
           } else if (action === 'reveal') {
+            narrationUnlocked = true;
             guidance('reveal', 'Fault revealed', challenge.reveal || (challenge.kind === 'vlan' ? challenge.deviceName + ' port ' + challenge.portName + ' was moved to VLAN ' + challenge.broken + '. Restore VLAN ' + challenge.original + '.' : challenge.kind === 'gateway' ? 'The default gateway on ' + challenge.sourceName + ' was cleared. Restore ' + challenge.original + ' in the host configuration.' : (challenge.deviceName || challenge.sourceName) + ' interface ' + challenge.portName + ' was disabled. Enable it in the Inspector.'));
           } else if (action === 'reset') {
             if (!api.restore(baseline)) return;
@@ -407,7 +409,9 @@
       startChallenge(chosen.fault, saved, settings.starter, settings.links);
       return true;
     }, {supports:area=>incidents.candidates(api.Network,api.network().save(),area,apiModel).length>0,styleSelect:api.styleSelect});
-    return () => { if (currentIdentity !== identity()) { clearChallenge(); message('Network loaded. Choose New incident to start a new challenge.'); } };
+    const refresh = () => { if (currentIdentity !== identity()) { clearChallenge(); message('Network loaded. Choose New incident to start a new challenge.'); } };
+    refresh.narrationLocked = () => !!challenge && !narrationUnlocked && hint < 3;
+    return refresh;
   }
   const apiModel = {probe, verify, apply, create, generate, generateBroken, incidentReport, reportReferences, mount};
   const api = apiModel;

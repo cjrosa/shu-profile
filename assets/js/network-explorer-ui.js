@@ -28,6 +28,14 @@
   let candidateBase = null;
   let ospfPaused = false;
   let refreshTroubleshooting = () => {};
+  let refreshOperations = () => {}, operationReplay = null, operationReplayDetail = 'key';
+  const operations = new NetworkExplorerOperations.Store();
+  const operationRestricted = () => !!refreshTroubleshooting.narrationLocked?.();
+  NetworkExplorerOperations.install(NetworkExplorer.Network, (network, descriptor) => {
+    if (operationReplay) throw Error('Return to live before starting an operation.');
+    if (network !== net && network !== staged?.trial) return null;
+    return operations.begin(network, descriptor, networkIdentity(), operationRestricted());
+  });
   const networkIdentities = new WeakMap();
   function networkIdentity(network = net) {
     if (!networkIdentities.has(network)) networkIdentities.set(network, {});
@@ -143,7 +151,7 @@
           }
         }
       } else {
-        discard();
+          discard(false);
         net = terminalSessions.adopt(
           net,
           new NetworkExplorer.Network(snapshot.data),
@@ -523,6 +531,7 @@
   let fastForwarding = false,
     simulationExamining = false;
   function updatePauseControl() {
+    if (operationReplay) { updateReplayControls(); return; }
     refreshHistoryButtons();
     const immediate = $("speed").value === "0";
     const fast = $("fast-forward");
@@ -590,7 +599,10 @@
             : "(config-if)#")
     );
   }
-  function discard() {
+  function discard(clearOperations = true) {
+    if (operationReplay) returnLiveOperation();
+    operations.interrupt(networkIdentity());
+    if (clearOperations) { operations.entries = []; refreshOperations(); }
     appConnecting = null;
     appGesture = null;
     arrivedFlights.clear();
@@ -606,6 +618,7 @@
     if(staged?.report.ospf && net.ospfOnlyWork()) {stop();commit(true);$("traffic").replaceChildren();}
   }
   function editable() {
+    if (operationReplay) { say('Return to live before editing the network.'); return false; }
     if(net.hasOspf() && net.ospfOnlyWork() && (!staged || staged.report.ospf)){
       if(staged){stop();staged=null;$("traffic").replaceChildren();}
       return true;
@@ -3914,7 +3927,7 @@
       "about:blank",
       "network-explorer-" + key,
       "popup=yes,width=" +
-        (key === "events" ? 1120 : key === "examine" ? 1100 : key === "troubleshooting" ? 760 : 430) +
+        (key === "events" ? 1120 : key === "examine" ? 1100 : ['troubleshooting','operations'].includes(key) ? 760 : 430) +
         ",height=650,resizable=yes,scrollbars=yes",
     );
     if (!popup) {
@@ -3983,7 +3996,9 @@
         },
         true,
       );
+    if (key === 'operations') NetworkExplorerOperationsUI.bindReplayMenus(host);
     host.addEventListener("click", (e) => {
+      if (operationReplay && !['operations','events'].includes(key)) return;
       const row = e.target.closest("[data-capture-id]");
       if (row) {
         $("events")
@@ -3995,6 +4010,7 @@
       if (control?.id) { $(control.id)?.click(); if (key === "troubleshooting") syncExternal(); }
     });
     host.addEventListener("keydown", (e) => {
+      if (operationReplay && !['operations','events'].includes(key)) {e.preventDefault();return;}
       if (
         e.target.closest("[data-capture-id]") &&
         ["Enter", " "].includes(e.key)
@@ -4017,10 +4033,16 @@
       }
     });
     host.addEventListener("input", (e) => {
+      if (operationReplay && !['operations','events'].includes(key)) return;
       const original = $(e.target.id);
       if (original) original.value = e.target.value;
     });
+    host.addEventListener('toggle', e => {
+      const stage=e.target.dataset?.operationStage;
+      if(key==='operations'&&stage){const original=operationsPanel.querySelector('[data-operation-stage="'+stage+'"]');if(original&&original.open!==e.target.open)original.open=e.target.open;}
+    },true);
     host.addEventListener("submit", (e) => {
+      if (operationReplay) {e.preventDefault();return;}
       e.preventDefault();
       const form = $(e.target.id);
       if (form)
@@ -4029,6 +4051,7 @@
         );
     });
     host.addEventListener("change", (e) => {
+      if (operationReplay && !['operations','events'].includes(key)) return;
       const original = $(e.target.id);
       if (original) {
         original.checked = e.target.checked;
@@ -4037,6 +4060,7 @@
       }
     });
     bindPortGlow(host);
+    if (key === 'operations') bindOperationReferencePreview(host);
     host.addEventListener("pointerover", (e) =>
       highlightTableDevice(e.target.closest("[data-table-mac]")),
     );
@@ -4064,6 +4088,8 @@
       }
       const html = entry.content();
       if (entry.host.innerHTML !== html) {
+        const operationList = entry.host.querySelector('.operation-list');
+        const operationScroll = operationList?.scrollTop || 0;
         const focused = entry.window.document.activeElement;
         const focusId = focused?.id;
         const start = focused?.selectionStart,
@@ -4072,6 +4098,8 @@
           captureTop = captureScroll?.scrollTop || 0,
           captureLeft = captureScroll?.scrollLeft || 0;
         entry.host.innerHTML = html;
+        const nextOperationList=entry.host.querySelector('.operation-list');
+        if(nextOperationList)nextOperationList.scrollTop=operationScroll;
         const nextCapture = entry.host.querySelector(".capture-scroll");
         if (nextCapture) {
           nextCapture.scrollTop = captureTop;
@@ -4760,7 +4788,8 @@
   function render({ background = false, refreshInspector = true } = {}) {
     $("canvas-title").dataset.networkTitle = net.title || "Network canvas";
     if (!document.body.classList.contains("welcome-open")) $("canvas-title").textContent = net.title || "Network canvas";
-    refreshTroubleshooting();
+    if (!operationReplay) refreshTroubleshooting();
+    refreshOperations();
     refreshDevicePickers();
     updatePauseControl();
     NetworkExplorerPlatform.normalize(net);
@@ -5372,6 +5401,7 @@
     );
     const notes = net.notes,
       tags = new Map(net.devices.map((d) => [d.id, d.tags]));
+    operations.capture(staged.trial, staged.report, networkIdentity());
     adoptTrafficNetwork(staged.trial);
     net.notes = notes;
     net.devices.forEach((d) => {
@@ -5392,6 +5422,8 @@
     }
   }
   function publishResults(oldCount) {
+    operations.settle(net, networkIdentity());
+    refreshOperations();
     for (const r of net.results.slice(oldCount))
       output(
         r.dhcp || r.dns || r.http || r.nmap
@@ -5426,6 +5458,7 @@
       );
   }
   function fastForward() {
+    if (operationReplay) { replayOperationStep(true); return; }
     if (fastForwarding || (!staged && !net.queue.length)) return;
     const background = net.hasOspf() && net.ospfOnlyWork() && (!staged || staged.report.ospf);
     stop();
@@ -5447,6 +5480,7 @@
           );
         const oldCount = net.results.length;
         const report = net.next();
+        operations.capture(net, report, networkIdentity());
         if (!report) {
           publishResults(oldCount);
           break;
@@ -6723,11 +6757,11 @@
   $("clear-state").onclick = () => {
     if (
       !confirm(
-        "Clear learned state and pending traffic? Device configuration will be retained.",
+        "Clear learned state and pending traffic? Device configuration and Operations will be retained.",
       )
     )
       return;
-    discard();
+    discard(false);
     net.reset();
     examined = false;
     render();
@@ -7569,7 +7603,12 @@
   const troubleshootingPanel = document.createElement("section");
   troubleshootingPanel.id = "troubleshooting-panel";
   troubleshootingPanel.hidden = true;
+  const operationsPanel = document.createElement('section');
+  operationsPanel.id = 'operations-panel';
+  operationsPanel.hidden = true;
+  toolOverlay.append(operationsPanel);
   const toolIcons = {
+    operations: '<path d="m3 6 7 6-7 6ZM14 6h7M14 12h7M14 18h7"/>',
     troubleshooting: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4M12 2V1"/>',
     events:
       '<path d="M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4"/><circle cx="4" cy="7" r="1"/><circle cx="20" cy="17" r="1"/>',
@@ -7579,8 +7618,8 @@
   let activeTool = "terminal",
     toolPinned = false,
     toolCloseTimer;
-  const dockKeys = ["terminal", "events", "troubleshooting"];
-  const dockPanels = {terminal: terminalPanel, events: eventsPanel, troubleshooting: troubleshootingPanel};
+  const dockKeys = ["terminal", "operations", "events", "troubleshooting"];
+  const dockPanels = {terminal: terminalPanel, events: eventsPanel, troubleshooting: troubleshootingPanel, operations: operationsPanel};
   const dockLayout = new NetworkExplorerDock.Layout(dockKeys);
   let dockManager = null, dockMinimized = true;
   function dockEvents() {
@@ -7592,7 +7631,8 @@
     const open = !dockMinimized;
     dockManager?.render();
     const visible = dockLayout.groups.map(g => externalPanels.has(g.active) ? g.tabs.find(k => !externalPanels.has(k)) : g.active).filter(Boolean);
-    refreshTroubleshooting();
+    if (!operationReplay) refreshTroubleshooting();
+    refreshOperations();
     terminalNotice.hidden = true;
     for (const panel of Object.values(dockPanels)) panel.querySelector(".close-tool")?.toggleAttribute("hidden", true);
     const splitButton = $("dock-split");
@@ -7763,7 +7803,22 @@
   dockHeader.className = "dock-header";
   dockHeader.innerHTML =
     '<div role="tablist" aria-label="Canvas tools"><button id="dock-tab-terminal" role="tab" aria-controls="terminal-panel">Terminal</button><button id="dock-tab-events" role="tab" aria-controls="events-panel">Activity</button><button id="dock-tab-troubleshooting" role="tab" aria-controls="troubleshooting-panel">Incidents</button></div><button id="dock-split" class="dock-icon" aria-label="Show two tools side by side" title="Show two tools side by side" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg></button><button id="dock-close" class="dock-icon" aria-label="Minimize bottom dock" title="Minimize bottom dock"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17h14"/></svg></button>';
-  for (const key of ["terminal", "events", "troubleshooting"]) {
+  const operationsTab = document.createElement('button');
+  operationsTab.id = 'dock-tab-operations'; operationsTab.setAttribute('role', 'tab');
+  operationsTab.setAttribute('aria-controls', 'operations-panel'); operationsTab.textContent = 'Operations';
+  dockHeader.querySelector('[role="tablist"]').append(operationsTab);
+  const operationsPop = document.createElement('button');
+  operationsPop.id = 'float-operations'; operationsPop.className = 'heading-popout dock-icon';
+  operationsPop.setAttribute('aria-label', 'Expand Operations'); operationsPop.title = 'Expand Operations';
+  operationsPop.innerHTML = troubleshootingPop.innerHTML;
+  operationsPanel.append(operationsPop);
+  operationsPop.onclick = () => {
+    openExternal('operations', 'Operations - Network Explorer', () => {
+      const clone = operationsPanel.cloneNode(true); clone.hidden = false; return clone.outerHTML;
+    }, () => openTool('operations', true));
+    refreshDock();
+  };
+  for (const key of dockKeys) {
     const tab = dockHeader.querySelector("#dock-tab-" + key);
     tab.innerHTML =
       '<svg viewBox="0 0 24 24" aria-hidden="true">' +
@@ -7788,7 +7843,7 @@
   }
   const dockBody = document.createElement("div");
   dockBody.className = "dock-body";
-  dockBody.append(terminalPanel, eventsPanel, troubleshootingPanel);
+  dockBody.append(terminalPanel, eventsPanel, troubleshootingPanel, operationsPanel);
   const resize = document.createElement("div");
   resize.className = "dock-resize";
   resize.tabIndex = 0;
@@ -7861,7 +7916,7 @@
     return true;
   }
   refreshTroubleshooting = NetworkExplorerTroubleshooting.mount(troubleshootingPanel, {
-    Network: NetworkExplorer.Network, network: () => net, identity: () => networkIdentity(), editable,
+    Network: NetworkExplorer.Network, network: () => operationReplay?.live || net, identity: () => networkIdentity(operationReplay?.live || net), editable,
     styleSelect: styleInspectorSelect,
     mentionIcon: noteTargetIcon, navigateMention: navigateNoteDevice,
     change: fn => mutate(fn),
@@ -7869,6 +7924,158 @@
     restore: data => replaceTroubleshootingNetwork(data, "Restore the challenge starting network (discard challenge edits)"),
     select: id => { cancelConnect(); select(id); },
     command: (id, command) => { cancelConnect(); select(id); openTool("terminal", true); $("command").value = command; $("command").focus(); }
+  });
+
+  // A recording is a separate presentation network; the live instance is never stepped.
+  function canReplayOperation() {
+    return !!operationReplay || (!staged && !phaseCallback && (!net.queue.length || net.ospfOnlyWork()) && !candidateBase);
+  }
+  function updateReplayControls() {
+    const replay = operationReplay; if (!replay) return;
+    const pause = $('pause-animation'), step = $('ospf-step'), fast = $('fast-forward');
+    if (pause) {
+      pause.hidden=false; pause.disabled=false;
+      pause.title=replay.playing?'Pause replay':'Play replay'; pause.setAttribute('aria-label',pause.title);
+      pause.setAttribute('aria-pressed',String(!replay.playing));
+      pause.innerHTML='<svg class="playback-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="'+(replay.playing?'M8 5v14M16 5v14':'m8 5 11 7-11 7Z')+'"/></svg>';
+    }
+    if(step){step.hidden=false;step.disabled=replay.index>=replay.entry.reports.length;step.title='Step recorded event';step.setAttribute('aria-label',step.title);}
+    if(fast){fast.hidden=false;fast.disabled=replay.index>=replay.entry.reports.length;}
+    const label=$('operation-replay-label');
+    if(label)label.textContent='Replay · '+replay.index+' / '+replay.entry.reports.length;
+  }
+  function returnLiveOperation() {
+    if(!operationReplay)return;
+    const replay=operationReplay;clearTimeout(replay.timer);
+    net=replay.live;selected=replay.selected;ospfPaused=replay.ospfPaused;operationReplay=null;
+    $('canvas').unpauseAnimations();$('traffic').replaceChildren();
+    $('operation-replay-banner').hidden=true;
+    for(const [element,previous] of replay.inert)element.inert=previous;
+    document.body.classList.remove('operation-replay');
+    $('ospf-step').title='Step one simulation event';$('ospf-step').setAttribute('aria-label','Step one simulation event');
+    render(); NetworkExplorerCapture.restoreView(replay.capture,net); window.NetworkExplorerViewport?.restore(replay.camera);
+    $(replay.entry.id+'-replay')?.focus({preventScroll:true});
+  }
+  function beginOperationReplay(entry, packetsOnly=false) {
+    if(!canReplayOperation() || (entry.restricted && operationRestricted()) || entry.status==='running')return;
+    if(operationReplay)returnLiveOperation();
+    stop();finishPlacement();cancelConnect();
+    const live=net;
+    const replayNet=new NetworkExplorer.Network(entry.topology);replayNet.queue=[];replayNet.history=[];replayNet.results=[];
+    Object.assign(replayNet,JSON.parse(JSON.stringify(entry.initial)));
+    const inert=[...document.querySelectorAll('#left-panel,#right-panel,#terminal-panel,#troubleshooting-panel,.canvas-network-actions')].map(element=>[element,element.inert]);
+    operationReplay={entry,live,selected,ospfPaused,index:0,playing:false,timer:null,inert,camera:window.NetworkExplorerViewport?.snapshot(),capture:NetworkExplorerCapture.snapshotView(),current:'Ready to replay the recorded operation.'};
+    net=replayNet;selected=null;ospfPaused=true;
+    inert.forEach(([element])=>element.inert=true);
+    document.body.classList.add('operation-replay');$('operation-replay-banner').hidden=false;
+    render();NetworkExplorerCapture.setOperation(entry.id);fitOpenedNetwork();
+    if(packetsOnly){replayOperationStep(true);NetworkExplorerCapture.setOperation(entry.id);openTool('events',true);}
+    else {openTool('operations',true);toggleOperationReplay();}
+  }
+  function replayOperationStep(all=false) {
+    const replay=operationReplay;if(!replay)return;
+    all = all || $('speed').value==='0';
+    clearTimeout(replay.timer);
+    if(all)replay.playing=false;
+    const milestones = new Set([0,replay.entry.reports.length-1,...NetworkExplorerOperations.stages(replay.entry).map(g=>replay.entry.reports.indexOf(g.reports.at(-1)))]);
+    let next=replay.index;
+    if(operationReplayDetail==='key')while(next<replay.entry.reports.length-1&&!milestones.has(next))next++;
+    const end=all?replay.entry.reports.length:Math.min(next+1,replay.entry.reports.length);
+    while(replay.index<end){
+      const report=replay.entry.reports[replay.index++];
+      net.history.push(report);net.clock=report.clock;
+      const d=net.device(report.device);
+      if(d&&report.after)(d.type==='switch'?net.mac:net.arp)[d.id]=JSON.parse(JSON.stringify(report.after));
+      replay.current=(d?.name||'Device')+': '+report.title;
+      if(!all && replay.index===end){if(report.link)animateFlights([report]);else if(report.kind.endsWith('-application'))animateApplicationDelivery(report);}
+    }
+    if(replay.index>=replay.entry.reports.length){replay.playing=false;replay.current='Recording complete · '+replay.entry.result;}
+    NetworkExplorerCapture.render(net);refreshOperations();updateReplayControls();syncExternal();
+    if(replay.playing)replay.timer=setTimeout(()=>replayOperationStep(),Math.max(250,Number($('speed').value)||250));
+  }
+  function toggleOperationReplay(){
+    const replay=operationReplay;if(!replay)return;
+    replay.playing=!replay.playing;clearTimeout(replay.timer);
+    if(replay.playing){$('canvas').unpauseAnimations();if(replay.index===replay.entry.reports.length){replay.index=0;net.history=[];net.arp={};net.mac={};}replayOperationStep($('speed').value==='0');}
+    else $('canvas').pauseAnimations();
+    updateReplayControls();
+  }
+  const replayBanner=document.createElement('div');replayBanner.id='operation-replay-banner';replayBanner.hidden=true;
+  replayBanner.innerHTML='<strong id="operation-replay-label">Replay</strong><span>Recorded network · read only</span><button id="operation-return-live" type="button">Return to live</button>';
+  toolOverlay.before(replayBanner);$('operation-return-live').onclick=returnLiveOperation;
+  // Stop edits and terminal shortcuts while viewing a recorded topology. Dock and playback remain usable.
+  // Viewport gestures run on the stage before this canvas guard; remaining presses are edits.
+  $('canvas').addEventListener('pointerdown', e => {
+    if(operationReplay){e.preventDefault();e.stopImmediatePropagation();}
+  },true);
+  for(const type of ['pointerdown','click','dblclick','contextmenu','keydown','submit','change'])document.addEventListener(type,e=>{
+    if(!operationReplay)return;
+    const target=e.target;
+    if(type==='pointerdown' && target.closest('#canvas'))return;
+    if(type==='keydown' && ['Space','ShiftLeft','ShiftRight','Escape'].includes(e.code) && !target.closest('input,textarea,select,[contenteditable="true"]'))return;
+    const blocked=target.closest('#canvas,#left-panel,#right-panel,#terminal-panel,#troubleshooting-panel,.canvas-network-actions') || (type==='keydown'&&!target.closest('#operations-panel,#events-panel,#operation-replay-banner,.dock-header'));
+    if(blocked){e.preventDefault();e.stopImmediatePropagation();}
+  },true);
+  function bindOperationReferencePreview(host) {
+    const clearVlan = () => {
+      $('canvas').querySelectorAll('.operation-vlan-highlight').forEach(node => node.classList.remove('operation-vlan-highlight'));
+      $('operation-vlan-rings')?.remove();
+    };
+    for (const type of ['pointerout', 'focusout']) host.addEventListener(type, event => {
+      const label = event.target.closest('[data-operation-vlan]');
+      if (label && !label.contains(event.relatedTarget)) clearVlan();
+    });
+    for (const type of ['pointerover', 'focusin']) host.addEventListener(type, event => {
+      const label = event.target.closest('[data-operation-vlan]');
+      if (label && !label.contains(event.relatedTarget)) {
+        clearVlan();
+        const entry = operations.entries.find(row => row.id === label.dataset.operation);
+        if (!entry || (operationReplay ? operationReplay.entry !== entry : entry.owner !== networkIdentity())) return;
+        const members = NetworkExplorerVlan.members(net, Number(label.dataset.operationVlan));
+        const canvas = $('canvas'), ns = 'http://www.w3.org/2000/svg';
+        const rings = document.createElementNS(ns, 'g');
+        rings.id = 'operation-vlan-rings'; rings.setAttribute('pointer-events', 'none'); rings.setAttribute('aria-hidden', 'true');
+        canvas.querySelectorAll('[data-device],[data-link]').forEach(node => {
+          const device = members.devices.includes(node.dataset.device);
+          if (!device && !members.links.includes(node.dataset.link)) return;
+          node.classList.add('operation-vlan-highlight');
+          if (!device) return;
+          const bounds = node.getBBox(), matrix = canvas.getCTM().inverse().multiply(node.getCTM());
+          const group = document.createElementNS(ns, 'g'), circle = document.createElementNS(ns, 'circle');
+          group.setAttribute('class', 'inventory-attention-ring');
+          group.setAttribute('transform', `matrix(${matrix.a} ${matrix.b} ${matrix.c} ${matrix.d} ${matrix.e} ${matrix.f})`);
+          circle.setAttribute('cx', bounds.x + bounds.width / 2); circle.setAttribute('cy', bounds.y + bounds.height / 2);
+          circle.setAttribute('r', Math.hypot(bounds.width, bounds.height) / 2 + 8);
+          group.append(circle); rings.append(group);
+        });
+        canvas.append(rings);
+      }
+      const pill = event.target.closest('[data-operation-action="locate"]');
+      if (!pill || pill.contains(event.relatedTarget)) return;
+      const entry = operations.entries.find(row => row.id === pill.dataset.operation);
+      if (!entry || (operationReplay ? operationReplay.entry !== entry : entry.owner !== networkIdentity())) return;
+      const report = entry.reports.find(row => row.order === Number(pill.dataset.index));
+      if (report && net.device(report.device)) {
+        $('canvas').dispatchEvent(new CustomEvent('network-highlight', { detail: { id: report.device } }));
+      }
+    });
+  }
+  bindOperationReferencePreview(operationsPanel);
+  refreshOperations=NetworkExplorerOperationsUI.mount(operationsPanel,{
+    entries:()=>{for(const e of operations.entries)if(e.restricted&&e.owner===networkIdentity(operationReplay?.live||net)&&!operationRestricted())e.restricted=false;return operations.entries;},
+    restricted:entry=>entry.restricted && (entry.owner!==networkIdentity(operationReplay?.live||net)||operationRestricted()),
+    replaying:()=>!!operationReplay,
+    replayState:entry=>operationReplay?.entry===entry?operationReplay.current:null,
+    canReplay:canReplayOperation,
+    canRun:entry=>!operationReplay&&entry.owner===networkIdentity()&&!!net.device(entry.args[0])&&canReplayOperation(),
+    clear:()=>{operations.entries=operations.entries.filter(e=>e.status==='running');},
+    changed:syncExternal,
+    detail:value=>{operationReplayDetail=value;},
+    replay:entry=>beginOperationReplay(entry),
+    packets:entry=>beginOperationReplay(entry,true),
+    hints:()=>openTool('troubleshooting',true),
+    locate:(entry,report)=>{if(!report)return;if(!operationReplay&&entry.owner!==networkIdentity())beginOperationReplay(entry,true);if(net.device(report.device))navigateNoteDevice(report.device);},
+    run:entry=>safely(()=>{if(operationReplay||entry.owner!==networkIdentity()||!canReplayOperation())return;net[entry.method](...entry.args);operations.settle(net,networkIdentity());running=true;stage();refreshOperations();}),
   });
 
   terminalPanel.hidden = true;
@@ -8460,6 +8667,7 @@
   fastForwardButton.onclick = fastForward;
   speedGroup.append(fastForwardButton, pauseAnimation);
   pauseAnimation.onclick = () => {
+    if(operationReplay){toggleOperationReplay();return;}
     if(net.hasOspf()){ospfPaused=!ospfPaused;if(!phaseCallback){updatePauseControl();if(!ospfPaused&&net.queue.length&&!staged){running=true;stage();}return;}}
     if (!phaseCallback) return;
     if (flightPaused) {
@@ -8481,8 +8689,8 @@
   ospfStep.id='ospf-step';ospfStep.type='button';ospfStep.className='canvas-icon-button';ospfStep.title='Step one simulation event';ospfStep.setAttribute('aria-label',ospfStep.title);
   ospfStep.innerHTML='<svg class="playback-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 10 7-10 7ZM19 5v14"/></svg>';
   speedGroup.append(ospfStep);
-  ospfStep.onclick=()=>{if(!net.hasOspf())return;ospfPaused=true;stop();if($('examine').open)$('examine').close();if(staged)commit(true);else{if(!net.queue.length)net.advanceOspf();const count=net.results.length;net.next();publishResults(count);}render();updatePauseControl();};
-  setInterval(()=>{if(!net.hasOspf()||ospfPaused||flightPaused||staged||running||candidateBase||$('examine').open||simulationExamining||document.body.classList.contains('welcome-open'))return;
+  ospfStep.onclick=()=>{if(operationReplay){operationReplay.playing=false;replayOperationStep();return;}if(!net.hasOspf())return;ospfPaused=true;stop();if($('examine').open)$('examine').close();if(staged)commit(true);else{if(!net.queue.length)net.advanceOspf();const count=net.results.length;const report=net.next();operations.capture(net,report,networkIdentity());publishResults(count);}render();updatePauseControl();};
+  setInterval(()=>{if(operationReplay||!net.hasOspf()||ospfPaused||flightPaused||staged||running||candidateBase||$('examine').open||simulationExamining||document.body.classList.contains('welcome-open'))return;
     if(!net.queue.length)net.advanceOspf();
     if(net.queue.length){running=true;stage();}else updatePauseControl();
   },1000);
@@ -8516,6 +8724,7 @@
   $("traffic").addEventListener("click", inspectFlight);
   $("traffic").addEventListener("keydown", inspectFlight);
   const cacheTimer = setInterval(() => {
+    if (operationReplay) return;
     drawCapacityMonitors();
     const expiredThreads=NetworkExplorerEcho.expireThreads(net);
     if(staged)NetworkExplorerEcho.expireThreads(staged.trial);
