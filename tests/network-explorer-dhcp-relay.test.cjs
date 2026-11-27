@@ -21,3 +21,23 @@ test('multiple pools serve local and relayed clients, renew and persist',()=>{
  const before=JSON.stringify(s.dhcpServer);assert.throws(()=>n.configureDhcpServer(s.id,{enabled:true,pools:[{...s.dhcpServer.pools[0]},{...s.dhcpServer.pools[0],name:'Overlap'}]}),/non-overlapping/);assert.equal(JSON.stringify(s.dhcpServer),before);
  assert.throws(()=>n.configureDhcpServer(s.id,{enabled:true,pools:[]}),/at least one/);
 });
+
+
+test('single-router relay explains missing server gateway and succeeds after repair',()=>{
+ const n=new Network(),client=n.add('host'),router=n.add('router'),server=n.add('host');
+ n.configureAddressMode(client.id,'dhcp');
+ n.configureInterface(router.id,'p0','10.1.1.1',24);
+ n.configureInterface(router.id,'p1','10.1.2.1',24);
+ n.configure(server.id,'10.1.2.2',24);
+ n.configureDhcpRelay(router.id,'p0',server.ip);
+ n.configureDhcpServer(server.id,{enabled:true,start:'10.1.1.2',end:'10.1.1.220',prefix:24,gateway:'10.1.1.1',leaseSeconds:120});
+ n.connect(client.id,'p0',router.id,'p0');n.connect(router.id,'p1',server.id,'p0');
+ n.acquireDhcp(client.id);assert.equal(drain(n).ok,false);
+ const blocked=n.history.find(e=>e.title==='DHCP Offer blocked: no server gateway');
+ assert.ok(blocked);assert.equal(blocked.outgoingFrames.length,0);
+ assert.ok(blocked.notes.some(note=>note.includes('10.1.1.1')&&note.includes('no usable default gateway')));
+ assert.ok(blocked.notes.some(note=>note.includes('pool gateway configures clients, not the server')));
+ n.configureGateway(server.id,'10.1.2.1');n.acquireDhcp(client.id);
+ assert.equal(drain(n).ok,true);assert.equal(client.ip,'10.1.1.2');assert.equal(client.gateway,'10.1.1.1');
+ assert.ok(n.history.some(e=>e.title==='Relay DHCP Offer to the client'));
+});
