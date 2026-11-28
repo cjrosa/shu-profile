@@ -3275,8 +3275,8 @@
     field.innerHTML =
       'DNS server<input id="host-dns" value="' +
       esc(d.dnsServerAddress || "") +
-      '" placeholder="Optional" ' +
-      (d.addressMode === "dhcp" ? "readonly" : "") +
+      '" placeholder="' +
+      (d.addressMode === "dhcp" ? 'Provided by DHCP, if configured" disabled' : 'Optional"') +
       ">";
     $("host-gateway").parentElement.after(field);
     $("host-dns").onchange = (e) =>
@@ -3499,7 +3499,8 @@
   }
   function bindDhcp(d) {
     if (d.type !== "host") return;
-    $("host-gateway").readOnly = d.addressMode === "dhcp";
+    $("host-gateway").disabled = d.addressMode === "dhcp";
+    $("host-gateway").placeholder = d.addressMode === "dhcp" ? "Provided by DHCP, if configured" : "Optional for this subnet";
     for (const type of ["dhcp", "dns", "web", "browser", "echo", "nmap", "generator", "spoofer"]) {
       const installed = $("host-" + type + "-app");
       if (installed)

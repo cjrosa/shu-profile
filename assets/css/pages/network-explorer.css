@@ -10398,3 +10398,19 @@ body[data-platform="paloalto"] #inspector .vlan-row { grid-template-columns:minm
 .connection-banner #connection-hint { min-width:0; color:var(--muted); }
 .connection-banner #cancel-connect { flex:none; min-height:24px; padding:2px 7px; margin:0; font-size:11px; }
 .connection-banner #cancel-connect[hidden] { display:none; }
+
+/* DHCP owns these optional host settings; keep supplied values legible. */
+#host-gateway:disabled,
+#host-dns:disabled {
+  background: #edf1f5;
+  border-color: var(--line);
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 1;
+}
+#host-gateway:disabled::placeholder,
+#host-dns:disabled::placeholder {
+  color: var(--muted);
+  font-style: italic;
+  opacity: .8;
+}
